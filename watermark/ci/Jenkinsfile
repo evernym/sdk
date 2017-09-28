@@ -25,8 +25,8 @@ node {
     
     }
     stage ('Test Building Python Wrapper') {
+        dir('watermark/wrappers/python'){
             app.inside {
-                sh "cd wrappers/python"
                 sh "echo Test: Test python wrapper"
                 sh "ls"
                 sh "pwd"
@@ -37,6 +37,7 @@ node {
                     python3.5 -m pytest
                 '''
             }
+        }
     }
 
     stage ('Building'){
