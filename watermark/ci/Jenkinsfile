@@ -24,6 +24,15 @@ node {
         app = build('watermark')
     
     }
+    stage ('Test Building Python Wrapper') {
+        testEnv.inside {
+            sh "echo Test: Test python wrapper"
+            sh '''
+                python3.5 -m pytest
+            '''
+        }
+    }
+
     stage ('Building'){
         app.inside {
             sh "rustc --version"
@@ -32,7 +41,6 @@ node {
         }
     }
 
-
     stage ('Testing'){
         sh "echo Testing"
         app.inside {
@@ -40,16 +48,6 @@ node {
         }
     }
 
-    stage ('Test Building Python Wrapper') {
-         dir('wrappers/python') {
-            testEnv.inside {
-                echo "Test: Test python wrapper"
-                sh '''
-                    python3.5 -m pytest
-                '''
-            }
-        }
-    }
 
 }
 
