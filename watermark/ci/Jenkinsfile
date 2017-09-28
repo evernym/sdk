@@ -32,12 +32,12 @@ node {
                 sh "pwd"
                 sh '''
                     python3.5 -m pip install --user -e .
-                '''
-                sh '''
                     python3.5 -m pytest
                     python3.5 setup.py sdist
-                    ls dist/*
+                    echo Testing that package exists:
+                    test -f dist/python3-cxs-0.0.1.tar.gz
                 '''
+            
                 
             }
         }
