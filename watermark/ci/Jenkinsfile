@@ -25,14 +25,16 @@ node {
     
     }
     stage ('Test Building Python Wrapper') {
-        app.inside {
-            sh "echo Test: Test python wrapper"
-            sh '''
-                python3.5 -m pip install pytest
-            '''
-            sh '''
-                python3.5 -m pytest
-            '''
+        dir('wrappers/python'){
+            app.inside {
+                sh "echo Test: Test python wrapper"
+                sh '''
+                    python3.5 -m pip --user -e .
+                '''
+                sh '''
+                    python3.5 -m pytest
+                '''
+            }
         }
     }
 
