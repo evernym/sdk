@@ -28,6 +28,9 @@ node {
         app.inside {
             sh "echo Test: Test python wrapper"
             sh '''
+                python3.5 -m pip install pytest
+            '''
+            sh '''
                 python3.5 -m pytest
             '''
         }
