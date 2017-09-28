@@ -38,7 +38,7 @@ node {
             sh "cd watermark; cargo test"
         }
     }
-    testWrapper(env)
+    testWrapper(app)
 }
 
 def testWrapper(env) {
