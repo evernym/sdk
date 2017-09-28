@@ -28,6 +28,16 @@ RUN apt-get install -y \
 # Install curl
 RUN apt-get update && apt-get install -y curl
 
+# Install python
+RUN apt-get update -y && apt-get install -y \
+    python3.5 \
+    python-setuptools \
+    python3-pip
+
+RUN pip3 install -U \
+    pip \
+    setuptools 
+
 # Install Rust
 ENV RUST_ARCHIVE=rust-1.20.0-x86_64-unknown-linux-gnu.tar.gz
 ENV RUST_DOWNLOAD_URL=https://static.rust-lang.org/dist/$RUST_ARCHIVE
