@@ -25,11 +25,10 @@ node {
     
     }
     stage ('Test Building Python Wrapper') {
-        dir('wrappers/python'){
             app.inside {
+                sh "cd wrappers/python"
                 sh "echo Test: Test python wrapper"
                 sh "ls"
-                sh "ls setup.py"
                 sh "pwd"
                 sh '''
                     python3.5 -m pip install --user -e .
@@ -38,7 +37,6 @@ node {
                     python3.5 -m pytest
                 '''
             }
-        }
     }
 
     stage ('Building'){
