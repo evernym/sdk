@@ -29,7 +29,7 @@ node {
             app.inside {
                 sh "echo Test: Test python wrapper"
                 sh '''
-                    python3.5 -m pip --user -e .
+                    python3.5 -m pip install --user -e .
                 '''
                 sh '''
                     python3.5 -m pytest
