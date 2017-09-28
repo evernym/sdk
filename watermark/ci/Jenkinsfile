@@ -35,7 +35,10 @@ node {
                 '''
                 sh '''
                     python3.5 -m pytest
+                    python3.5 setup.py sdist
+                    ls dist/*
                 '''
+                
             }
         }
     }
