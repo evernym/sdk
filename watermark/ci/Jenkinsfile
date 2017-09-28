@@ -28,6 +28,8 @@ node {
         dir('wrappers/python'){
             app.inside {
                 sh "echo Test: Test python wrapper"
+                sh "ls"
+                sh "pwd"
                 sh '''
                     python3.5 -m pip install --user -e .
                 '''
