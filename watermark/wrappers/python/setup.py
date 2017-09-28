@@ -6,6 +6,7 @@ setup(
         author='Mark Hadley',
         author_email='mark.hadley@evernym.com',
         description='cxs project',
+        install_requires['pytest'],
         test_requires=['pytest']
 )
 
