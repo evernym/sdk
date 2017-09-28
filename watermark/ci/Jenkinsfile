@@ -32,12 +32,25 @@ node {
         }
     }
 
+
     stage ('Testing'){
         sh "echo Testing"
         app.inside {
             sh "cd watermark; cargo test"
         }
     }
+
+    stage ('Test Building Python Wrapper') {
+         dir('wrappers/python') {
+            testEnv.inside {
+                echo "Test: Test python wrapper"
+                sh '''
+                    python3.5 -m pytest
+                '''
+            }
+        }
+    }
+
 }
 
 
