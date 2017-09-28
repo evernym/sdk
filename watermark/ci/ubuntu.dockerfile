@@ -36,8 +36,9 @@ RUN apt-get update -y && apt-get install -y \
 
 RUN pip3 install -U \
     pip \
-    setuptools
+    setuptools 
 
+RUN python3.5 -m pip install pytest
 
 # Install Rust
 ENV RUST_ARCHIVE=rust-1.20.0-x86_64-unknown-linux-gnu.tar.gz
