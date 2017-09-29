@@ -28,14 +28,14 @@ node {
         app.inside {
             sh "rustc --version"
             sh "gcc --version"
-            sh "cd watermark; cargo build"
+            sh "cd cxs/libcxs; cargo build"
         }
     }
 
     stage ('Testing'){
         sh "echo Testing"
         app.inside {
-            sh "cd watermark; cargo test"
+            sh "cd cxs/libcxs; cargo test"
         }
     }
 }
