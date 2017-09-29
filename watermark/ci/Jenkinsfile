@@ -42,7 +42,7 @@ node {
 
 def testNodeWrapper(env) {
     stage ('Test Node Wrapper'){
-        app.inside {
+        env.inside {
             sh 'npm -v'
             sh 'npm install'
             sh 'npm test'
