@@ -30,6 +30,9 @@ RUN apt-get install -y \
     nodejs \
     npm 
 
+# Test Node isntalled
+RUN node -v
+
 # Install curl
 RUN apt-get update && apt-get install -y curl
 
@@ -48,3 +51,4 @@ RUN curl -fsOSL $RUST_DOWNLOAD_URL \
 
 RUN useradd -ms /bin/bash -u $uid cxs
 USER cxs
+
