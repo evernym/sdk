@@ -16,7 +16,6 @@ node {
     stage ('Checkout'){
         checkout scm
     }
-    testNodeWrapper(app)
     stage ('Build docker environment'){
         sh "pwd"
         sh "ls ${pathToCi}"
@@ -24,6 +23,7 @@ node {
         app = build('watermark')
     
     }
+    testNodeWrapper(app)
     stage ('Building'){
         app.inside {
             sh "rustc --version"

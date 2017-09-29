@@ -25,6 +25,11 @@ RUN apt-get install -y \
     debhelper \
     wget
 
+# Install Nodejs 
+RUN apt-get install -y \ 
+    nodejs \
+    npm 
+
 # Install curl
 RUN apt-get update && apt-get install -y curl
 
