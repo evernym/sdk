@@ -41,14 +41,16 @@ node {
 }
 
 def testNodeWrapper(env) {
-    stage ('Test Node Wrapper'){
-        env.inside {
-            sh 'npm -v'
-            sh 'npm install'
-            sh 'npm test'
+    dir ('watermark/wrappers/node'){
+        stage ('Test Node Wrapper'){
+            env.inside {
+                sh 'npm -v'
+                sh 'npm install'
+                sh 'npm test'
+            }
         }
-    }
-    stage ('Build Node Package'){
+        stage ('Build Node Package'){
+        }
     }
 }
 
