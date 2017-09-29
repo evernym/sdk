@@ -23,7 +23,6 @@ node {
         app = build('cxs')
     
     }
-    testNodeWrapper(app)
     stage ('Building'){
         app.inside {
             sh "rustc --version"
@@ -38,6 +37,7 @@ node {
             sh "cd cxs/libcxs; cargo test"
         }
     }
+    testNodeWrapper(app)
 }
 
 def testNodeWrapper(env) {
