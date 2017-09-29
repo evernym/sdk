@@ -16,7 +16,7 @@ node {
     stage ('Checkout'){
         checkout scm
     }
-
+    testNodeWrapper(app)
     stage ('Build docker environment'){
         sh "pwd"
         sh "ls ${pathToCi}"
@@ -37,6 +37,13 @@ node {
         app.inside {
             sh "cd watermark; cargo test"
         }
+    }
+}
+
+def testNodeWrapper(env) {
+    stage ('Test Node Wrapper'){
+    }
+    stage ('Build Node Package'){
     }
 }
 
