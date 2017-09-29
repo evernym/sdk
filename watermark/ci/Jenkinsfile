@@ -42,7 +42,6 @@ node {
 
 def testNodeWrapper(env) {
     stage ('Test Node Wrapper'){
-        sh 'node -v'
         sh 'npm install'
         sh 'npm test'
     }
