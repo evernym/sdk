@@ -1,14 +1,14 @@
 #!groovy
 
 def app
-def pathToCi = 'watermark/ci'
+def pathToCi = 'cxs/ci'
 def dockerfile= 'dockerfile'
 
 def getUserUid() {
     return sh(returnStdout: true, script: 'id -u').trim()
 }
 
-def build(name, file = 'watermark/ci/ubuntu.dockerfile watermark/ci', customParams = '') {
+def build(name, file = 'cxs/ci/ubuntu.dockerfile cxs/ci', customParams = '') {
     return docker.build("$name-test", "--build-arg uid=${getUserUid()} -f $file")
 }
 
@@ -20,7 +20,7 @@ node {
         sh "pwd"
         sh "ls ${pathToCi}"
         sh "echo building"
-        app = build('watermark')
+        app = build('cxs')
     
     }
     testNodeWrapper(app)
@@ -41,7 +41,7 @@ node {
 }
 
 def testNodeWrapper(env) {
-    dir ('watermark/wrappers/node'){
+    dir ('cxs/wrappers/node'){
         stage ('Test Node Wrapper'){
             env.inside {
                 sh 'npm -v'
