@@ -50,6 +50,10 @@ def testNodeWrapper(env) {
             }
         }
         stage ('Build Node Package'){
+            env.inside {
+                sh 'npm pack'
+                sh 'test -f cxs-1.0.0.tgz'
+            }
         }
     }
 }
