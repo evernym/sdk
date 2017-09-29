@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/evernym/cxs/issues"
   },
-  "homepage": "https://github.com/evernym/cxs#readme"
+  "homepage": "https://github.com/evernym/cxs#readme",
+  "dependencies": {
+    "mocha": "^3.5.0"
+  }
 }
