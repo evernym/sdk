@@ -30,9 +30,6 @@ RUN apt-get install -y \
     nodejs \
     npm 
 
-# Test Node isntalled
-RUN nodejs -v
-
 # Install curl
 RUN apt-get update && apt-get install -y curl
 
