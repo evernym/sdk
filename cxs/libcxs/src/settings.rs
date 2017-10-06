@@ -38,7 +38,7 @@ pub fn process_config_file(path: &str) -> u32 {
 
     match SETTINGS.write() {
         Err(_) => return error::UNKNOWN_ERROR.code_num,
-        Ok(mut y) => y.merge(config::File::with_name(path)),
+        Ok(mut y) => y.merge(config::File::with_name(path)).unwrap(),
     };
 
     error::SUCCESS.code_num
@@ -124,6 +124,7 @@ pub mod tests {
             Ok(v) => assert_eq!(v,d),
         };
 
-        fs::remove_file(config_path).unwrap();
+        // Leave file around or other concurrent tests will fail
+        //fs::remove_file(config_path).unwrap();
     }
 }

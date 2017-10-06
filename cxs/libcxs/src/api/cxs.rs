@@ -95,7 +95,7 @@ pub extern fn cxs_connection_create(recipient_info: *const c_char, connection_ha
 
     if connection_handle.is_null() {return error::UNKNOWN_ERROR.code_num}
 
-    let handle = build_connection("Whatever.".to_owned());
+    let handle = build_connection(recipient_info.to_owned());
 
     unsafe { *connection_handle = handle }
 
@@ -210,7 +210,8 @@ mod tests {
 
         let result = cxs_init(CString::new(config_path).unwrap().into_raw());
         assert_eq!(result,0);
-        fs::remove_file(config_path).unwrap();
+        // Leave file around or other concurrent tests will fail
+        //fs::remove_file(config_path).unwrap();
     }
 
     #[test]
