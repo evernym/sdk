@@ -31,6 +31,7 @@
     "build": "dist"
   },
   "devDependencies": {
+    "@types/node": "^8.0.34",
     "tslint-config-standard": "^6.0.1",
     "typescript": "^2.5.3"
   }

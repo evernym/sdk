@@ -22,7 +22,7 @@ export class CXSRuntime implements ICXSAcessType {
 
       if (basepath === undefined) {
       // This basepath is in the local/appSpecific node_modules
-        basepath = path.resolve('../node_modules/cxs/lib/libcxs.so')
+        basepath = path.resolve(__dirname, '../lib/libcxs.so')
       }
 
       return basepath
@@ -34,3 +34,4 @@ export class CXSRuntime implements ICXSAcessType {
   }
 }
 export { init_cxs } from './api/init'
+export { Connection } from './api/connection'
