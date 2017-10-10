@@ -35,3 +35,4 @@ export class CXSRuntime implements ICXSAcessType {
 }
 export { init_cxs } from './api/init'
 export { Connection } from './api/connection'
+export { CXSRuntimeConfig } from './rustlib'
