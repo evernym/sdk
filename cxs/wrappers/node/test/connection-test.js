@@ -1,7 +1,4 @@
 var chai = require('chai');
-var fs = require('fs-extra');
-var ref = require('ref')
-var Struct = require('ref-struct')
 var parentDir = require('path');
 var currentDir = parentDir.dirname(module.filename);
 var Connection = require(parentDir.dirname(currentDir) + '/dist/api/connection').Connection
