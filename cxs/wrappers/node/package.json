@@ -23,7 +23,8 @@
     "mocha": "^3.5.0",
     "path": "^0.12.7",
     "tslint": "^5.7.0",
-    "weak": "^1.0.1"
+    "weak": "^1.0.1",
+    "typescript": "^2.5.3"
   },
   "directories": {
     "test": "test",
