@@ -6,7 +6,8 @@
   "description": "Node wrapper for cxs",
   "main": "dist/index.js",
   "scripts": {
-    "test": "mocha -gc --expose-gc test/**/*.js"
+    "test": "mocha -gc --expose-gc test/**/*.js",
+    "doc-gen": "./node_modules/.bin/jsdoc -d doc src/*"
   },
   "repository": {
     "type": "git",
@@ -34,6 +35,7 @@
   "devDependencies": {
     "@types/node": "^8.0.34",
     "tslint-config-standard": "^6.0.1",
+    "jsdoc": "^3.5.5",
     "typescript": "^2.5.3"
   }
 }
