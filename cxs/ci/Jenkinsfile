@@ -42,8 +42,9 @@ node('ubuntu') {
             }
         }
         testNodeWrapper(app)
-    } catch {
+    } catch (Exception ex) {
         currentBuild.result = "FAILED"
+        echo "$ex error"
     } finally {
         if env.BRANCH_NAME == "master" {
             archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
