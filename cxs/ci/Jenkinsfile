@@ -46,9 +46,7 @@ node('ubuntu') {
         currentBuild.result = "FAILED"
         echo "$ex error"
     } finally {
-        if ("${env.BRANCH_NAME}" == "master") {
-            archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
-        }
+       
         step([$class: 'WsCleanup'])
         
     }
@@ -69,6 +67,9 @@ def testNodeWrapper(env) {
 
                 sh 'npm pack'
                 sh 'test -f cxs-1.0.0.tgz'
+                if ("${env.BRANCH_NAME}" == "master") {
+                    archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
+                }
             }
         }
     }
