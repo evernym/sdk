@@ -46,7 +46,7 @@ node('ubuntu') {
         currentBuild.result = "FAILED"
         echo "$ex error"
     } finally {
-        if env.BRANCH_NAME == "master" {
+        if ${env.BRANCH_NAME} == "master" {
             archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
         } else {
             echo "${env.BRANCH_NAME}: skip publishing"
