@@ -67,9 +67,9 @@ def testNodeWrapper(env) {
 
                 sh 'npm pack'
                 sh 'test -f cxs-1.0.0.tgz'
-                if (env.BRANCH_NAME == "master") {
-                    archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
-                }
+                // if (env.BRANCH_NAME == "master") {
+                archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
+                // }
             }
         }
     }
