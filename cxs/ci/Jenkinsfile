@@ -64,12 +64,11 @@ def testNodeWrapper(env) {
         }
         stage ('Build Node Package'){
             env.inside {
-
-                sh 'npm pack'
-                sh 'test -f cxs-1.0.0.tgz'
-                // if (env.BRANCH_NAME == "master") {
-                archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
-                // }
+                if (env.BRANCH_NAME == "master") {
+                    sh 'npm pack'
+                    sh 'test -f cxs-1.0.0.tgz'
+                    archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
+                }
             }
         }
     }
