@@ -53,10 +53,10 @@ node('ubuntu') {
     }
 }
 
-def testNodeWrapper(env) {
+def testNodeWrapper(envn) {
     dir ('cxs/wrappers/node'){
         stage ('Test Node Wrapper'){
-            env.inside {
+            envn.inside {
                 sh 'npm -v'
                 sh 'npm install'
                 sh 'node_modules/.bin/tsc -p tsconfig.json'
@@ -64,7 +64,7 @@ def testNodeWrapper(env) {
             }
         }
         stage ('Build Node Package'){
-            env.inside {
+            envn.inside {
                 if (env.BRANCH_NAME == "master") {
                     sh 'npm pack'
                     sh 'test -f cxs-1.0.0.tgz'
