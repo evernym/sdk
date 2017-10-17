@@ -41,7 +41,7 @@ struct Connection {
 
 impl Connection {
     fn connect(&mut self) -> u32 {
-        if self.state != CxsStateType::CxsStateInitialized {return error::UNKNOWN_ERROR.code_num;}
+        if self.state != CxsStateType::CxsStateInitialized {return error::NOT_READY.code_num;}
 
         let url = format!("{}/agent/route",settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
 
@@ -127,7 +127,7 @@ pub fn create_agent_pairwise(handle: u32) -> Result<u32, u32> {
     let pw_verkey = get_pw_verkey(handle).unwrap();
     let url = format!("{}/agent/route",settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
 
-    let json_msg = format!("{{ \"to\":\"{}\", \"agentPayload\": {{ \"type\":\"CREATE_KEY\", \"forDID\":\"{}\", \"forDIDVerKey\":\"{}\", \"nonce\":\"anything\" }} }}", enterprise_did, pw_did, pw_verkey);
+    let json_msg = format!("{{ \"to\":\"{}\", \"agentPayload\": \"{{ \"type\":\"CREATE_KEY\", \"forDID\":\"{}\", \"forDIDVerKey\":\"{}\", \"nonce\":\"anything\" }}\" }}", enterprise_did, pw_did, pw_verkey);
 
     match httpclient::post(&json_msg,&url) {
         Ok(_) => return Ok(error::SUCCESS.code_num),
@@ -141,7 +141,7 @@ pub fn update_agent_profile(handle: u32) -> Result<u32, u32> {
     let pw_did = get_pw_did(handle).unwrap();
     let url = format!("{}/agent/route",settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
 
-    let json_msg = format!("{{ \"to\":\"{}\", \"agentPayload\": {{ \"type\":\"UPDATE_PROFILE_DATA\", \"name\":\"{}\", \"logoUrl\":\"{}\", \"nonce\":\"anything\" }} }}",
+    let json_msg = format!("{{ \"to\":\"{}\", \"agentPayload\": \"{{ \"type\":\"UPDATE_PROFILE_DATA\", \"name\":\"{}\", \"logoUrl\":\"{}\", \"nonce\":\"anything\" }}\" }}",
                                pw_did,
                                settings::get_config_value(settings::CONFIG_ENTERPRISE_NAME).unwrap(),
                                settings::get_config_value(settings::CONFIG_LOGO_URL).unwrap());
@@ -226,7 +226,7 @@ pub fn update_state(handle: u32) {
     };
 
     let url = format!("{}/agent/route",settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
-    let json_msg = format!("{{ \"to\":\"{}\", \"agentPayload\": {{ \"type\":\"getMsgs\" }} }}", pw_did);
+    let json_msg = format!("{{ \"to\":\"{}\", \"agentPayload\": \"{{ \"type\":\"getMsgs\" }}\" }}", pw_did);
 
     match httpclient::post(&json_msg,&url) {
         Err(_) => {},
@@ -296,7 +296,6 @@ mod tests {
     use utils::wallet;
     use std::thread;
     use std::time::Duration;
-    use std::mem;
     use mockito;
 
     #[test]

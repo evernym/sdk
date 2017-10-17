@@ -1,3 +1,4 @@
+var sleep = require('sleep');
 var chai = require('chai');
 var parentDir = require('path');
 var currentDir = parentDir.dirname(module.filename);
@@ -9,7 +10,6 @@ var expect = chai.expect;
 var assert = chai.assert;
 
 // console.log(release(handle)) // tslint:disable-line
-
 
 describe('A Connection object with ', function () {
     let connection;
@@ -37,6 +37,7 @@ describe('A Connection object with ', function () {
 
     it(' a call to connect with connection already created should return success', function () {
         connection.create("info")
+        sleep.sleep(2)
         assert.equal(connection.connect(), 0)
     })
 
