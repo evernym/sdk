@@ -296,6 +296,7 @@ mod tests {
     use utils::wallet;
     use std::thread;
     use std::time::Duration;
+    use std::mem;
     use mockito;
 
     #[test]
@@ -316,6 +317,16 @@ mod tests {
         assert!(!get_pw_verkey(handle).unwrap().is_empty());
         assert_eq!(get_state(handle),CxsStateType::CxsStateInitialized as u32);
         connect(handle);
+        _m.assert();
+
+        let _m = mockito::mock("POST", "/agent/route")
+            .with_status(202)
+            .with_header("content-type", "text/plain")
+            .with_body("message accepted")
+            .expect(1)
+            .create();
+
+        assert_eq!(get_state(handle),CxsStateType::CxsStateAccepted as u32);
         wallet::tests::delete_wallet("test_create_connection");
         _m.assert();
         release(handle);
