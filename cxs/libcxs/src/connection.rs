@@ -42,8 +42,17 @@ struct Connection {
 impl Connection {
     fn connect(&mut self) -> u32 {
         //TODO: check current state is valid for initiating connection
-        self.state = CxsStateType::CxsStateOfferSent;
-        error::SUCCESS.code_num
+        let url = format!("{}/agent/route",settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
+
+        let json_msg = format!("{{ \"to\":\"{}\", \"agentPayload\": {{ \"type\":\"SEND_INVITE\", \"keyDlgProof\":\"nothing\", \"phoneNumber\":\"{}\", \"nonce\":\"anything\" }} }}", self.pw_did, self.info);
+
+        match httpclient::post(&json_msg,&url) {
+            Err(_) => return error::UNKNOWN_ERROR.code_num,
+            Ok(_) => {
+                self.state = CxsStateType::CxsStateOfferSent;
+                return error::SUCCESS.code_num
+            },
+        }
     }
 
     fn get_state(&self) -> u32 { let state = self.state as u32; state }
@@ -142,11 +151,6 @@ pub fn update_agent_profile(handle: u32) -> Result<u32, u32> {
     }
 }
 
-pub fn send_agent_invite(handle: u32) -> Result<u32, u32> {
-
-    return Ok(error::SUCCESS.code_num);
-}
-
 extern "C" fn store_new_did_info_cb (handle: i32,
                                      err: i32,
                                      did: *const c_char,
@@ -159,11 +163,15 @@ extern "C" fn store_new_did_info_cb (handle: i32,
     set_pw_did(handle as u32, &did);
     set_pw_verkey(handle as u32, &verkey);
 
-    create_agent_pairwise(handle as u32);
+    match create_agent_pairwise(handle as u32) {
+        Err(_) => error!("could not create pairwise key on agent"),
+        Ok(_) => info!("created pairwise key on agent"),
+    };
 
-    update_agent_profile(handle as u32);
-
-    send_agent_invite(handle as u32);
+    match update_agent_profile(handle as u32) {
+        Err(_) => error!("could not update profile on agent"),
+        Ok(_) => info!("updated profile on agent"),
+    };
 
     set_state(handle as u32,CxsStateType::CxsStateInitialized);
 }
@@ -273,7 +281,7 @@ mod tests {
             .with_status(202)
             .with_header("content-type", "text/plain")
             .with_body("nice!")
-            .expect(2)
+            .expect(3)
             .create();
 
         settings::set_config_value(settings::CONFIG_AGENT_ENDPOINT,mockito::SERVER_URL);
@@ -284,6 +292,7 @@ mod tests {
         assert!(!get_pw_did(handle).unwrap().is_empty());
         assert!(!get_pw_verkey(handle).unwrap().is_empty());
         assert_eq!(get_state(handle),CxsStateType::CxsStateInitialized as u32);
+        connect(handle);
         wallet::tests::delete_wallet("test_create_connection");
         _m.assert();
         release(handle);
@@ -314,17 +323,6 @@ mod tests {
         let state = get_state(handle);
         assert_eq!(state, CxsStateType::CxsStateInitialized as u32);
         wallet::tests::delete_wallet("test_state_not_connected");
-        release(handle);
-    }
-
-    #[test]
-    fn test_connect() {
-        let handle = build_connection("test_connect".to_owned());
-        assert!(handle > 0);
-        let rc = connect(handle);
-        assert_eq!(rc, error::SUCCESS.code_num);
-        let state = get_state(handle);
-        assert_eq!(state, CxsStateType::CxsStateOfferSent as u32);
         release(handle);
     }
 

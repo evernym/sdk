@@ -87,7 +87,7 @@ describe('A Connection object with ', function () {
 
         connection.create("info2")
         assert.equal(connection.getState(), 0)
-        assert.equal(connection.state, StateType.Initialized)
+        assert.equal(connection.state, StateType.None)
     })
 
 

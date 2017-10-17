@@ -16,9 +16,9 @@ pub fn post(body_content: &str, url: &str) -> Result<String,String> {
 
     let mut content = String::new();
     match response.read_to_string(&mut content) {
-        Ok(_) => return Ok(content.to_owned()),
-        Err(_) => return Err("could not read response".to_string()),
-    };
+        Ok(_) => Ok(content.to_owned()),
+        Err(_) => Err("could not read response".to_string()),
+    }
 }
 
 
