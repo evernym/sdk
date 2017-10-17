@@ -11,6 +11,8 @@ use api::CxsStateType;
 use rand::Rng;
 use std::sync::Mutex;
 use std::ffi::CString;
+use settings;
+use utils::httpclient;
 
 lazy_static! {
     static ref CONNECTION_MAP: Mutex<HashMap<u32, Box<Connection>>> = Default::default();
@@ -37,6 +39,21 @@ struct Connection {
     state: CxsStateType,
 }
 
+impl Connection {
+    fn connect(&mut self) -> u32 {
+        //TODO: check current state is valid for initiating connection
+        self.state = CxsStateType::CxsStateOfferSent;
+        error::SUCCESS.code_num
+    }
+
+    fn get_state(&self) -> u32 { let state = self.state as u32; state }
+    fn set_pw_did(&mut self, did: &str) {self.pw_did = did.to_string();}
+    fn set_state(&mut self, state: CxsStateType) {self.state = state;}
+    fn get_pw_did(&self) -> String {self.pw_did.clone()}
+    fn get_pw_verkey(&self) -> String {self.pw_verkey.clone()}
+    fn set_pw_verkey(&mut self, verkey: &str) { self.pw_verkey = verkey.to_string();}
+}
+
 fn find_connection(info_string: &str) -> u32 {
     let connection_table = CONNECTION_MAP.lock().unwrap();
 
@@ -57,6 +74,13 @@ pub fn set_pw_did(handle: u32, did: &str) {
     }
 }
 
+pub fn set_state(handle: u32, state: CxsStateType) {
+    let mut connection_table = CONNECTION_MAP.lock().unwrap();
+
+    if let Some(cxn) = connection_table.get_mut(&handle) {
+        cxn.set_state(state);;
+    }
+}
 
 
 pub fn get_pw_did(handle: u32) -> Result<String,u32> {
@@ -85,6 +109,44 @@ pub fn get_pw_verkey(handle: u32) -> Result<String, u32> {
     }
 }
 
+pub fn create_agent_pairwise(handle: u32) -> Result<u32, u32> {
+
+    settings::set_defaults();
+    let enterprise_did = settings::get_config_value(settings::CONFIG_ENTERPRISE_DID_AGENT).unwrap();
+    let pw_did = get_pw_did(handle).unwrap();
+    let pw_verkey = get_pw_verkey(handle).unwrap();
+    let url = format!("{}/agent/route",settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
+
+    let json_msg = format!("{{ \"to\":\"{}\", \"agentPayload\": {{ \"type\":\"CREATE_KEY\", \"forDID\":\"{}\", \"forDIDVerKey\":\"{}\", \"nonce\":\"anything\" }} }}", enterprise_did, pw_did, pw_verkey);
+
+    match httpclient::post(&json_msg,&url) {
+        Ok(_) => return Ok(error::SUCCESS.code_num),
+        Err(_) => return Err(error::UNKNOWN_ERROR.code_num),
+    }
+}
+
+pub fn update_agent_profile(handle: u32) -> Result<u32, u32> {
+    settings::set_defaults();
+    let enterprise_did = settings::get_config_value(settings::CONFIG_ENTERPRISE_DID_AGENT).unwrap();
+    let pw_did = get_pw_did(handle).unwrap();
+    let url = format!("{}/agent/route",settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
+
+    let json_msg = format!("{{ \"to\":\"{}\", \"agentPayload\": {{ \"type\":\"UPDATE_PROFILE_DATA\", \"name\":\"{}\", \"logoUrl\":\"{}\", \"nonce\":\"anything\" }} }}",
+                               pw_did,
+                               settings::get_config_value(settings::CONFIG_ENTERPRISE_NAME).unwrap(),
+                               settings::get_config_value(settings::CONFIG_LOGO_URL).unwrap());
+
+    match httpclient::post(&json_msg,&url) {
+        Ok(_) => return Ok(error::SUCCESS.code_num),
+        Err(_) => return Err(error::UNKNOWN_ERROR.code_num),
+    }
+}
+
+pub fn send_agent_invite(handle: u32) -> Result<u32, u32> {
+
+    return Ok(error::SUCCESS.code_num);
+}
+
 extern "C" fn store_new_did_info_cb (handle: i32,
                                      err: i32,
                                      did: *const c_char,
@@ -95,7 +157,15 @@ extern "C" fn store_new_did_info_cb (handle: i32,
     check_useful_c_str!(pk, ());
     info!("handle: {} err: {} did: {} verkey: {} pk: {}", handle as u32, err, did, verkey, pk);
     set_pw_did(handle as u32, &did);
-    set_pw_verkey(handle as u32, &verkey)
+    set_pw_verkey(handle as u32, &verkey);
+
+    create_agent_pairwise(handle as u32);
+
+    update_agent_profile(handle as u32);
+
+    send_agent_invite(handle as u32);
+
+    set_state(handle as u32,CxsStateType::CxsStateInitialized);
 }
 
 pub fn build_connection (info_string: String) -> u32 {
@@ -105,6 +175,7 @@ pub fn build_connection (info_string: String) -> u32 {
 
     if new_handle > 0 {return new_handle}
 
+    info!("creating connection with handle {}", new_handle);
     // This is a new connection
     let new_handle = rand::thread_rng().gen::<u32>();
 
@@ -115,7 +186,7 @@ pub fn build_connection (info_string: String) -> u32 {
             pw_verkey:String::new(),
             did_endpoint: String::new(),
             wallet: String::new(),
-            state: CxsStateType::CxsStateInitialized,
+            state: CxsStateType::CxsStateNone,
         });
 
     let mut m = CONNECTION_MAP.lock().unwrap();
@@ -132,19 +203,7 @@ pub fn build_connection (info_string: String) -> u32 {
     new_handle
 }
 
-impl Connection {
-    fn connect(&mut self) -> u32 {
-        //TODO: check current state is valid for initiating connection
-        self.state = CxsStateType::CxsStateOfferSent;
-        error::SUCCESS.code_num
-    }
 
-    fn get_state(&self) -> u32 { let state = self.state as u32; state }
-    fn set_pw_did(&mut self, did: &str) {self.pw_did = did.to_string();}
-    fn get_pw_did(&self) -> String {self.pw_did.clone()}
-    fn get_pw_verkey(&self) -> String {self.pw_verkey.clone()}
-    fn set_pw_verkey(&mut self, verkey: &str) { self.pw_verkey = verkey.to_string();}
-}
 
 impl Drop for Connection {
     fn drop(&mut self) {}
@@ -206,14 +265,27 @@ mod tests {
     use utils::wallet;
     use std::thread;
     use std::time::Duration;
+    use mockito;
 
     #[test]
     fn test_create_connection() {
-        wallet::tests::make_wallet();
+        let _m = mockito::mock("POST", "/agent/route")
+            .with_status(202)
+            .with_header("content-type", "text/plain")
+            .with_body("nice!")
+            .expect(2)
+            .create();
+
+        settings::set_config_value(settings::CONFIG_AGENT_ENDPOINT,mockito::SERVER_URL);
+        wallet::tests::make_wallet("test_create_connection");
         let handle = build_connection("test_create_connection".to_owned());
         assert!(handle > 0);
-        thread::sleep(Duration::from_secs(1));
+        thread::sleep(Duration::from_secs(2));
         assert!(!get_pw_did(handle).unwrap().is_empty());
+        assert!(!get_pw_verkey(handle).unwrap().is_empty());
+        assert_eq!(get_state(handle),CxsStateType::CxsStateInitialized as u32);
+        wallet::tests::delete_wallet("test_create_connection");
+        _m.assert();
         release(handle);
     }
 
@@ -236,9 +308,12 @@ mod tests {
 
     #[test]
     fn test_state_not_connected() {
+        wallet::tests::make_wallet("test_state_not_connected");
         let handle = build_connection("test_state_not_connected".to_owned());
+        thread::sleep(Duration::from_secs(1));
         let state = get_state(handle);
         assert_eq!(state, CxsStateType::CxsStateInitialized as u32);
+        wallet::tests::delete_wallet("test_state_not_connected");
         release(handle);
     }
 
@@ -263,14 +338,6 @@ mod tests {
     fn test_connection_release_fails() {
         let rc = release(1);
         assert_eq!(rc, error::INVALID_CONNECTION_HANDLE.code_num);
-    }
-
-    #[test]
-    fn test_get_state() {
-        let handle = build_connection("test_state".to_owned());
-        let state = get_state(handle);
-        assert_eq!(state, CxsStateType::CxsStateInitialized as u32);
-        release(handle);
     }
 
     #[test]
@@ -334,32 +401,73 @@ mod tests {
 
     #[test]
     fn test_set_get_pw_verkey() {
-        wallet::tests::make_wallet();
-        let handle = build_connection("test_create_connection".to_owned());
+        wallet::tests::make_wallet("test_set_get_pw_verkey");
+        let handle = build_connection("test_set_get_pw_verkey".to_owned());
         thread::sleep(Duration::from_secs(1));
         assert!(!get_pw_did(handle).unwrap().is_empty());
         assert!(!get_pw_verkey(handle).unwrap().is_empty());
         set_pw_verkey(handle, &"HELLODOLLY");
         assert!(!get_pw_did(handle).unwrap().is_empty());
+        release(handle);
+        wallet::tests::delete_wallet("test_set_get_pw_verkey");
     }
 
     #[test]
     fn test_cb_adds_verkey() {
-        wallet::tests::make_wallet();
+        wallet::tests::make_wallet("test_cb_adds_verkey");
         let handle = build_connection("test_cb_adds_verkey".to_owned());
         let err = 0;
 
-            let did = CString::new("DUMMYDIDHERE").unwrap().as_ptr();
-            let verkey = CString::new("DUMMYVERKEY").unwrap().as_ptr();
-            let pk = CString::new("DUMMYPK").unwrap().as_ptr();
-            store_new_did_info_cb (handle as i32,
+        let did = CString::new("DUMMYDIDHERE").unwrap().as_ptr();
+        let verkey = CString::new("DUMMYVERKEY").unwrap().as_ptr();
+        let pk = CString::new("DUMMYPK").unwrap().as_ptr();
+        store_new_did_info_cb (handle as i32,
                                err,
                                did,
                                verkey,
                                pk);
         thread::sleep(Duration::from_secs(1));
         assert!(!get_pw_verkey(handle).unwrap().is_empty());
+        wallet::tests::delete_wallet("test_cb_adds_verkey");
     }
 
+    #[test]
+    fn test_create_agent_pairwise() {
+        ::utils::logger::LoggerUtils::init();
+        let _m = mockito::mock("POST", "/agent/route")
+            .with_status(202)
+            .with_header("content-type", "text/plain")
+            .with_body("nice!")
+            .create();
 
+        settings::set_config_value(settings::CONFIG_AGENT_ENDPOINT,mockito::SERVER_URL);
+        wallet::tests::make_wallet("test_create_agent_pairwise");
+        let handle = build_connection("test_create_agent_pairwise".to_owned());
+
+        match create_agent_pairwise(handle) {
+            Ok(x) => assert_eq!(x,error::SUCCESS.code_num),
+            Err(x) => assert_eq!(x,error::SUCCESS.code_num), //fail if we get here
+        };
+        wallet::tests::delete_wallet("test_create_agent_pairwise");
+    }
+
+    #[test]
+    fn test_create_agent_profile() {
+        ::utils::logger::LoggerUtils::init();
+        let _m = mockito::mock("POST", "/agent/route")
+            .with_status(202)
+            .with_header("content-type", "text/plain")
+            .with_body("nice!")
+            .create();
+
+        settings::set_config_value(settings::CONFIG_AGENT_ENDPOINT,mockito::SERVER_URL);
+        wallet::tests::make_wallet("test_create_agent_profile");
+        let handle = build_connection("test_create_agent_profile".to_owned());
+
+        match update_agent_profile(handle) {
+            Ok(x) => assert_eq!(x,error::SUCCESS.code_num),
+            Err(x) => assert_eq!(x,error::SUCCESS.code_num), //fail if we get here
+        };
+        wallet::tests::delete_wallet("test_create_agent_profile");
+    }
 }

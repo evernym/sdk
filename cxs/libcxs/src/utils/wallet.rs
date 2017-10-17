@@ -22,6 +22,15 @@ extern {
                                runtime_config: *const c_char,
                                credentials: *const c_char,
                                cb: Option<extern fn(xcommand_handle: i32, err: i32, handle: i32)>) -> i32;
+
+    fn indy_close_wallet(command_handle: i32,
+                                handle: i32,
+                                cb: Option<extern fn(xcommand_handle: i32, err: i32)>) -> i32;
+
+    fn indy_delete_wallet(command_handle: i32,
+                                 name: *const c_char,
+                                 credentials: *const c_char,
+                                 cb: Option<extern fn(xcommand_handle: i32, err: i32)>) -> i32;
 }
 
 
@@ -58,7 +67,8 @@ pub fn init_wallet<'a>(pool_name:&str, wallet_name:&str, wallet_type:&str) -> u3
 
         info!("indy_create_wallet returned {}", indy_err);
 
-        if indy_err != 0 {
+        // ignore 112 - wallet already exists
+        if indy_err != 112 && indy_err != 0 {
             return indy_error_to_cxs_error_code(indy_err);
         }
     }
@@ -84,13 +94,36 @@ pub mod tests {
     use std::thread;
     use std::time::Duration;
 
-    pub fn make_wallet() {
+    //TODO: make boilerplate test code use same wallet?
+
+    pub fn make_wallet(wallet_name: &str) {
         let pool_name = String::from("pool1");
-        let wallet_name = String::from("wallet1");
         let wallet_type = String::from("default");
         assert_eq!(error::SUCCESS.code_num, init_wallet(&pool_name, &wallet_name, &wallet_type));
         thread::sleep(Duration::from_secs(2));
     }
+
+    pub fn delete_wallet(wallet_name: &str) {
+        let handle = generate_command_handle();
+        extern "C" fn dummy_callback(_handle: i32, _err: i32) { }
+
+        let wallet_handle = get_wallet_handle();
+
+        unsafe {
+            let indy_err = indy_close_wallet(handle,
+                                             wallet_handle,
+                                             Some(dummy_callback));
+        }
+
+        unsafe {
+           let indy_err = indy_delete_wallet(handle,
+                                             CStringUtils::string_to_cstring(wallet_name.to_string()).as_ptr(),
+                                             null(),
+                                             Some(dummy_callback));
+        }
+        thread::sleep(Duration::from_secs(2));
+    }
+
     #[test]
     fn test_wallet() {
         let pool_name = String::from("pool1");
@@ -100,11 +133,13 @@ pub mod tests {
         assert_eq!(error::UNKNOWN_ERROR.code_num, init_wallet(&String::from(""),&wallet_name, &wallet_type));
 
         thread::sleep(Duration::from_secs(1));
+        delete_wallet("wallet1");
         let handle = get_wallet_handle();
         let wallet_name2 = String::from("wallet2");
         assert_eq!(error::SUCCESS.code_num, init_wallet(&pool_name, &wallet_name2, &wallet_type));
 
         thread::sleep(Duration::from_secs(1));
         assert_ne!(handle, get_wallet_handle());
+        delete_wallet("wallet2");
     }
 }

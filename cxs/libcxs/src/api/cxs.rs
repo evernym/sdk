@@ -261,6 +261,8 @@ mod tests {
     use std::ffi::CString;
     use std::error::Error;
     use std::io::prelude::*;
+    use utils::wallet;
+    use utils::pool;
     use std::fs;
 
     #[test]
@@ -286,6 +288,8 @@ mod tests {
         assert_eq!(result,0);
         // Leave file around or other concurrent tests will fail
 //        fs::remove_file(config_path).unwrap();
+        wallet::tests::delete_wallet("my_wallet");
+        pool::delete_pool_config("my_config");
     }
 
 
@@ -299,6 +303,8 @@ mod tests {
     fn test_init_no_config_path() {
         let result = cxs_init(ptr::null());
         assert_eq!(result,0);
+        wallet::tests::delete_wallet("wallet1");
+        pool::delete_pool_config("config1");
     }
 
 
@@ -346,7 +352,7 @@ mod tests {
         let mut state: u32 = 0;
         let rc = cxs_connection_get_state(handle, &mut state);
         assert_eq!(rc, error::SUCCESS.code_num);
-        assert_eq!(state,CxsStateType::CxsStateInitialized as u32);
+        assert_eq!(state,CxsStateType::CxsStateNone as u32);
     }
 
     #[test]

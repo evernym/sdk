@@ -139,6 +139,12 @@ pub fn get_config_value(key: &str) -> Result<String, u32> {
     }
 }
 
+pub fn set_config_value(key: &str, value: &str) {
+    let mut settings = SETTINGS.write().unwrap();
+
+    settings.set(key, value).unwrap();
+}
+
 
 #[cfg(test)]
 pub mod tests {
