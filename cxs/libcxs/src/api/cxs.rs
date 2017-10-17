@@ -36,13 +36,17 @@ pub extern fn cxs_init (config_path:*const c_char) -> u32 {
     if !config_path.is_null() {
         check_useful_c_str!(config_path,error::UNKNOWN_ERROR.code_num);
 
-        match settings::process_config_file(&config_path) {
-            Err(_) => {
-                error!("Invalid configuration specified");
-                return error::INVALID_CONFIGURATION.code_num;
-            },
-            Ok(_) => info!("Successfully parsed config: {}",config_path),
-        };
+        if config_path == "ENABLE_TEST_MODE" {
+            settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
+        } else {
+            match settings::process_config_file(&config_path) {
+                Err(_) => {
+                    error!("Invalid configuration specified");
+                    return error::INVALID_CONFIGURATION.code_num;
+                },
+                Ok(_) => info!("Successfully parsed config: {}", config_path),
+            };
+        }
     }
 
     let config_name = match settings::get_config_value(settings::CONFIG_POOL_CONFIG_NAME) {
