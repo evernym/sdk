@@ -52,7 +52,7 @@ impl Message{
         0
     }
 
-    fn to(&mut self, to_did: &str) -> Self {
+    fn to(&mut self, to_did: &str) -> &mut Self {
        let rc = match validate_did(to_did) {
            Ok(did) => self.to_did = did,
            Err(_) => panic!("Error validating did {}", error::INVALID_DID),
@@ -137,13 +137,13 @@ mod tests {
 
     #[test]
     fn test_to_with_valid_did_updates_message() {
-        assert_eq!(send_invite().to("8XFh8yBzrpJQmNyZzgoTqB"), Message{
+        assert_eq!(send_invite().to("8XFh8yBzrpJQmNyZzgoTqB"), &mut Message{
             msg_type: String::new(),
-            to_did: "8XFh8yBzrpJQmNyZzgoTqB",
+            to_did: String::from("8XFh8yBzrpJQmNyZzgoTqB"),
             to_verkey: String::new(),
             from_did: String::new(),
             from_verkey: String::new(),
-        })
+        });
     }
 
 
