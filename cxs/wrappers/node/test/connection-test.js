@@ -1,4 +1,4 @@
-var sleep = require('sleep');
+var mysleep = require('sleep');
 var chai = require('chai');
 var parentDir = require('path');
 var currentDir = parentDir.dirname(module.filename);
@@ -36,8 +36,8 @@ describe('A Connection object with ', function () {
 // connection_connect tests
 
     it(' a call to connect with connection already created should return success', function () {
-        connection.create("info")
-        sleep.sleep(2)
+        connection.create("connection_connect tests")
+        mysleep.msleep(1000)
         assert.equal(connection.connect(), 0)
     })
 
@@ -61,7 +61,8 @@ describe('A Connection object with ', function () {
     })
 
     it('a call to get_data where connection was released should return a null value', function () {
-        connection.create("info")
+        connection.create("connection_get_data tests")
+        mysleep.msleep(1000)
         assert.equal(connection.connect(), 0)
         var data = connection.getData()
         assert.notEqual(data, null)
@@ -73,7 +74,8 @@ describe('A Connection object with ', function () {
 // connection_getState tests
 
     it('call to getState where connection exists should return success', function () {
-        connection.create("info")
+        connection.create("connection_getState tests")
+        mysleep.msleep(1000)
         connection.connect()
         assert.equal(connection.getState(), 0)
         assert.equal(connection.state, StateType.OfferSent)
@@ -97,7 +99,8 @@ describe('A Connection object with ', function () {
 // connection_release tests
 
     it('call to connection_release where connection exists should return success', function () {
-        connection.create("info")
+        connection.create("connection_release tests")
+        mysleep.msleep(1000)
         assert.equal(connection.connect(), 0)
         assert.equal(connection.release(), 0)
         assert.equal(connection.connect(), 1003)
