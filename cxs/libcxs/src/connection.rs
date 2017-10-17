@@ -2,17 +2,17 @@ extern crate rand;
 extern crate serde_json;
 extern crate libc;
 
-use utils::cstring::CStringUtils;
 use self::libc::c_char;
+use utils::cstring::CStringUtils;
 use utils::wallet;
 use utils::error;
-use std::collections::HashMap;
+use utils::httpclient;
 use api::CxsStateType;
 use rand::Rng;
 use std::sync::Mutex;
+use std::collections::HashMap;
 use std::ffi::CString;
 use settings;
-use utils::httpclient;
 
 lazy_static! {
     static ref CONNECTION_MAP: Mutex<HashMap<u32, Box<Connection>>> = Default::default();
@@ -41,7 +41,8 @@ struct Connection {
 
 impl Connection {
     fn connect(&mut self) -> u32 {
-        //TODO: check current state is valid for initiating connection
+        if self.state != CxsStateType::CxsStateInitialized {return error::UNKNOWN_ERROR.code_num;}
+
         let url = format!("{}/agent/route",settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
 
         let json_msg = format!("{{ \"to\":\"{}\", \"agentPayload\": {{ \"type\":\"SEND_INVITE\", \"keyDlgProof\":\"nothing\", \"phoneNumber\":\"{}\", \"nonce\":\"anything\" }} }}", self.pw_did, self.info);
@@ -217,7 +218,29 @@ impl Drop for Connection {
     fn drop(&mut self) {}
 }
 
+pub fn update_state(handle: u32) {
+
+    let pw_did = match get_pw_did(handle) {
+        Ok(did) => did,
+        Err(_) => return,
+    };
+
+    let url = format!("{}/agent/route",settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
+    let json_msg = format!("{{ \"to\":\"{}\", \"agentPayload\": {{ \"type\":\"getMsgs\" }} }}", pw_did);
+
+    match httpclient::post(&json_msg,&url) {
+        Err(_) => {},
+        Ok(response) => {
+            if response.contains("message accepted") { set_state(handle, CxsStateType::CxsStateAccepted); }
+            //TODO: add expiration handling
+        },
+    }
+}
+
 pub fn get_state(handle: u32) -> u32 {
+    // Try to update state from agent first
+    update_state(handle);
+
     let m = CONNECTION_MAP.lock().unwrap();
     let result = m.get(&handle);
 
@@ -281,7 +304,7 @@ mod tests {
             .with_status(202)
             .with_header("content-type", "text/plain")
             .with_body("nice!")
-            .expect(3)
+            .expect(4)
             .create();
 
         settings::set_config_value(settings::CONFIG_AGENT_ENDPOINT,mockito::SERVER_URL);

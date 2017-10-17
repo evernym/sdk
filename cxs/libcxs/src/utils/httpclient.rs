@@ -106,5 +106,6 @@ mod tests {
             Err(x) => assert_eq!(1,0), //should fail if we get here
             Ok(x) => assert_eq!(x,"test_mode_response"),
         };
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
     }
 }
