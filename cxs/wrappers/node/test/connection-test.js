@@ -4,6 +4,7 @@ var currentDir = parentDir.dirname(module.filename);
 var Connection = require(parentDir.dirname(currentDir) + '/dist/api/connection').Connection
 var StateType = require(parentDir.dirname(currentDir) + '/dist/api/api').StateType
 var path = parentDir.dirname(currentDir) + "/lib/libcxs.so";
+var cxs = require('../dist/index.js')
 var expect = chai.expect;
 var assert = chai.assert;
 
@@ -13,6 +14,7 @@ var assert = chai.assert;
 describe('A Connection object with ', function () {
     let connection;
     beforeEach(function() {
+        const result = cxs.init_cxs('ENABLE_TEST_MODE')
         connection = new Connection(path)
     });
 
