@@ -28,6 +28,7 @@ use connection::{build_connection, connect, to_string, get_state, release};
 #[no_mangle]
 pub extern fn cxs_init (config_path:*const c_char) -> u32 {
 
+    //TODO: ensure routine is NOT idempotent, return error if already initialized
     ::utils::logger::LoggerUtils::init();
 
     settings::set_defaults();
@@ -69,7 +70,7 @@ pub extern fn cxs_init (config_path:*const c_char) -> u32 {
         x => return x,
     };
 
-    match wallet::create_wallet(&pool_name, &wallet_name, &wallet_type) {
+    match wallet::init_wallet(&pool_name, &wallet_name, &wallet_type) {
         0 => 0,
         x => return x,
     };

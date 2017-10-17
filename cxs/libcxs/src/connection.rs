@@ -1,21 +1,37 @@
 extern crate rand;
 extern crate serde_json;
+extern crate libc;
 
+use utils::cstring::CStringUtils;
+use self::libc::c_char;
+use utils::wallet;
 use utils::error;
 use std::collections::HashMap;
 use api::CxsStateType;
 use rand::Rng;
 use std::sync::Mutex;
+use std::ffi::CString;
 
 lazy_static! {
     static ref CONNECTION_MAP: Mutex<HashMap<u32, Box<Connection>>> = Default::default();
+}
+
+extern {
+    fn indy_create_and_store_my_did(command_handle: i32,
+                                            wallet_handle: i32,
+                                            did_json: *const c_char,
+                                            cb: Option<extern fn(xcommand_handle: i32, err: i32,
+                                                                 did: *const c_char,
+                                                                 verkey: *const c_char,
+                                                                 pk: *const c_char)>) -> i32;
 }
 
 #[derive(Serialize, Deserialize)]
 struct Connection {
     info: String,
     handle: u32,
-    did: String,
+    pw_did: String,
+    pw_verkey: String,
     did_endpoint: String,
     wallet: String,
     state: CxsStateType,
@@ -33,7 +49,57 @@ fn find_connection(info_string: &str) -> u32 {
     return 0;
 }
 
+pub fn set_pw_did(handle: u32, did: &str) {
+    let mut connection_table = CONNECTION_MAP.lock().unwrap();
+
+    if let Some(cxn) = connection_table.get_mut(&handle) {
+        cxn.set_pw_did(did);
+    }
+}
+
+
+
+pub fn get_pw_did(handle: u32) -> Result<String,u32> {
+    let connection_table = CONNECTION_MAP.lock().unwrap();
+
+    match connection_table.get(&handle) {
+        Some(cxn) => Ok(cxn.get_pw_did()),
+        None => Err(error::UNKNOWN_ERROR.code_num),
+    }
+}
+
+pub fn set_pw_verkey(handle: u32, verkey: &str) {
+    let mut connection_table = CONNECTION_MAP.lock().unwrap();
+
+    if let Some(cxn) = connection_table.get_mut(&handle) {
+        cxn.set_pw_verkey(verkey)
+    }
+}
+
+pub fn get_pw_verkey(handle: u32) -> Result<String, u32> {
+    let connection_table = CONNECTION_MAP.lock().unwrap();
+
+    match connection_table.get(&handle) {
+        Some(cxn) => Ok(cxn.get_pw_verkey()),
+        None => Err(error::UNKNOWN_ERROR.code_num),
+    }
+}
+
+extern "C" fn store_new_did_info_cb (handle: i32,
+                                     err: i32,
+                                     did: *const c_char,
+                                     verkey: *const c_char,
+                                     pk: *const c_char) {
+    check_useful_c_str!(did, ());
+    check_useful_c_str!(verkey, ());
+    check_useful_c_str!(pk, ());
+    info!("handle: {} err: {} did: {} verkey: {} pk: {}", handle as u32, err, did, verkey, pk);
+    set_pw_did(handle as u32, &did);
+    set_pw_verkey(handle as u32, &verkey)
+}
+
 pub fn build_connection (info_string: String) -> u32 {
+    info!("building connection with {}", info_string);
     // Check to make sure info_string is unique
     let new_handle = find_connection(&info_string);
 
@@ -45,7 +111,8 @@ pub fn build_connection (info_string: String) -> u32 {
     let c = Box::new(Connection {
             info: info_string,
             handle: new_handle,
-            did: String::new(),
+            pw_did: String::new(),
+            pw_verkey:String::new(),
             did_endpoint: String::new(),
             wallet: String::new(),
             state: CxsStateType::CxsStateInitialized,
@@ -54,6 +121,14 @@ pub fn build_connection (info_string: String) -> u32 {
     let mut m = CONNECTION_MAP.lock().unwrap();
     m.insert(new_handle, c);
 
+    let wallet_handle = wallet::get_wallet_handle();
+    let did_json = "{}";
+
+    info!("creating new connection and did (wallet: {}, handle {}", wallet_handle, new_handle);
+    unsafe {
+        let indy_err = indy_create_and_store_my_did(new_handle as i32, wallet_handle, CString::new(did_json).unwrap().as_ptr(), Some(store_new_did_info_cb));
+        println!("indy_err: {}", indy_err);
+    }
     new_handle
 }
 
@@ -65,6 +140,10 @@ impl Connection {
     }
 
     fn get_state(&self) -> u32 { let state = self.state as u32; state }
+    fn set_pw_did(&mut self, did: &str) {self.pw_did = did.to_string();}
+    fn get_pw_did(&self) -> String {self.pw_did.clone()}
+    fn get_pw_verkey(&self) -> String {self.pw_verkey.clone()}
+    fn set_pw_verkey(&mut self, verkey: &str) { self.pw_verkey = verkey.to_string();}
 }
 
 impl Drop for Connection {
@@ -124,11 +203,17 @@ pub fn release(handle:u32) -> u32 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use utils::wallet;
+    use std::thread;
+    use std::time::Duration;
 
     #[test]
     fn test_create_connection() {
+        wallet::tests::make_wallet();
         let handle = build_connection("test_create_connection".to_owned());
         assert!(handle > 0);
+        thread::sleep(Duration::from_secs(1));
+        assert!(!get_pw_did(handle).unwrap().is_empty());
         release(handle);
     }
 
@@ -246,4 +331,35 @@ mod tests {
         //let m = CONNECTION_MAP.lock().unwrap();
         //assert_eq!(0,m.len());
     }
+
+    #[test]
+    fn test_set_get_pw_verkey() {
+        wallet::tests::make_wallet();
+        let handle = build_connection("test_create_connection".to_owned());
+        thread::sleep(Duration::from_secs(1));
+        assert!(!get_pw_did(handle).unwrap().is_empty());
+        assert!(!get_pw_verkey(handle).unwrap().is_empty());
+        set_pw_verkey(handle, &"HELLODOLLY");
+        assert!(!get_pw_did(handle).unwrap().is_empty());
+    }
+
+    #[test]
+    fn test_cb_adds_verkey() {
+        wallet::tests::make_wallet();
+        let handle = build_connection("test_cb_adds_verkey".to_owned());
+        let err = 0;
+
+            let did = CString::new("DUMMYDIDHERE").unwrap().as_ptr();
+            let verkey = CString::new("DUMMYVERKEY").unwrap().as_ptr();
+            let pk = CString::new("DUMMYPK").unwrap().as_ptr();
+            store_new_did_info_cb (handle as i32,
+                               err,
+                               did,
+                               verkey,
+                               pk);
+        thread::sleep(Duration::from_secs(1));
+        assert!(!get_pw_verkey(handle).unwrap().is_empty());
+    }
+
+
 }

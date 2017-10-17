@@ -6,7 +6,7 @@ use config::Config;
 use std::sync::RwLock;
 use utils::error;
 use std::path::Path;
-use url::{Url, ParseError};
+use url::Url;
 
 
 pub static CONFIG_POOL_NAME: &'static str = "pool_name";
