@@ -12,11 +12,12 @@ pub static UNKNOWN_ERROR: Error = Error{code_num:1001, message:"Unknown Error"};
 pub static CONNECTION_ERROR: Error = Error{code_num:1002, message:"Error with Connection"};
 pub static INVALID_CONNECTION_HANDLE: Error = Error{code_num:1003, message:"Invalid Connection Handle"};
 pub static INVALID_CONFIGURATION: Error = Error{code_num:1004, message:"Invalid Configuration"};
-//pub static INVALID_DID: Error = Error{code_num:1005, message:"Invalid DID"};
-//pub static INVALID_VERKEY: Error = Error{code_num:1006, message:"Invalid VERKEY"};
-//pub static INVALID_NONCE: Error = Error{code_num:1007, message:"Invalid NONCE"};
 pub static NOT_READY: Error = Error{code_num:1005, message:"Object not ready for specified action"};
 pub static NO_ENDPOINT: Error = Error{code_num:1006, message:"No Endpoint set for Connection Object"};
+pub static INVALID_DID: Error = Error{code_num:1007, message:"Invalid DID"};
+pub static INVALID_VERKEY: Error = Error{code_num:1008, message:"Invalid VERKEY"};
+pub static INVALID_NONCE: Error = Error{code_num:1009, message:"Invalid NONCE"};
+
 lazy_static! {
     static ref ERROR_MESSAGES: HashMap<u32, &'static str> = {
         let mut m = HashMap::new();
