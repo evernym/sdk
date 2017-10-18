@@ -37,7 +37,7 @@ describe('A Connection object with ', function () {
     it(' a call to connect with connection already created should return success', function () {
         connection.create("connection_connect tests")
         mysleep.msleep(1000)
-        assert.equal(connection.connect(), 0)
+        assert.equal(connection.connect({sms: true}), 0)
 
     })
 
@@ -63,7 +63,7 @@ describe('A Connection object with ', function () {
     it('a call to get_data where connection was released should return a null value', function () {
         connection.create("connection_get_data tests")
         mysleep.msleep(1000)
-        assert.equal(connection.connect(), 0)
+        assert.equal(connection.connect({sms: true}), 0)
         var data = connection.getData()
         assert.notEqual(data, null)
         assert.equal(connection.release(), 0)
@@ -76,7 +76,7 @@ describe('A Connection object with ', function () {
     it('call to getState where connection exists should return success', function () {
         connection.create("connection_getState tests")
         mysleep.msleep(1000)
-        connection.connect()
+        connection.connect({sms: true})
         assert.equal(connection.getState(), 0)
         assert.equal(connection.state, StateType.OfferSent)
     })
@@ -101,7 +101,7 @@ describe('A Connection object with ', function () {
     it('call to connection_release where connection exists should return success', function () {
         connection.create("connection_release tests")
         mysleep.msleep(1000)
-        assert.equal(connection.connect(), 0)
+        assert.equal(connection.connect({sms: true}), 0)
         assert.equal(connection.release(), 0)
         assert.equal(connection.connect({sms: true}), 1003)
         assert.equal(connection.getData(), null)
