@@ -1,7 +1,7 @@
 export interface IConnections {
   create ( IRecipientInfo ): number
   connect ( IConnectOptions ): number
-  getData (): string
+  getData (): IConnectionData
   getState (): number
   release (): number
 }
@@ -25,4 +25,13 @@ export interface IRecipientInfo {
 
 export interface IConnectOptions {
   sms?: boolean
+}
+
+export interface IConnectionData {
+  info: string,
+  handle: number,
+  did: string,
+  did_endpoint: string,
+  wallet: string,
+  state: string
 }

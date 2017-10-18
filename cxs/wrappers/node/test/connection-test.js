@@ -44,14 +44,18 @@ describe('A Connection object with ', function () {
 // connection_get_data tests
 
     it('a call to get_data where connection exists should return back the connections data', function () {
-        connection.create("dog, cat, man")
+        connection.create({
+            id: "123",
+            DIDself: "456",
+            DIDremote: "789"
+        })
         var data = connection.getData()
-        var jsonData = JSON.parse(data)
         assert.notEqual(data, null)
-        assert.equal(jsonData.handle, connection.connectionHandle)
+        assert.equal(data.handle, connection.connectionHandle)
     })
 
     it('a call to get_data where connection doesnt exist should return a null value', function () {
+        console.log(connection.getData())
         assert.equal(connection.getData(), null)
     })
 
@@ -128,6 +132,39 @@ describe('A Connection object with ', function () {
         // this will timeout if condition is never met
         // get_data will return "" because the connection object was released
         return waitFor(() => !getData(handle))
+    })
+
+
+    //need to change the test when did is actually added to the connection data
+    it('my_did() should return did', function () {
+        connection.create({
+            id: "123",
+            DIDself: "456",
+            DIDremote: "789"
+        })
+        assert.equal(connection.connect({sms: true}), 0)
+        assert.equal(connection.myDid(), "")
+    })
+
+    //need to change the test when did is actually added to the connection data
+    it('did_endpoint() should return did', function () {
+        connection.create({
+            id: "123",
+            DIDself: "456",
+            DIDremote: "789"
+        })
+        assert.equal(connection.connect({sms: true}), 0)
+        assert.equal(connection.did_endpoint(), "")
+    })
+
+    it('myId() should return enterprise customers id', function () {
+        connection.create({
+            id: "123",
+            DIDself: "456",
+            DIDremote: "789"
+        })
+        assert.equal(connection.connect({sms: true}), 0)
+        assert.equal(connection.myId(), "123")
     })
 
 })
