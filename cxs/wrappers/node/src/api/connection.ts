@@ -35,19 +35,10 @@ export class Connection implements IConnections {
     return this.RUST_API.cxs_connection_connect(this.connectionHandle, connectionType)
   }
 
-  // getData (): IConnectionData {
-  //   const dataToRelease = this.RUST_API.cxs_connection_get_data(this.connectionHandle)
-  //   /* tslint:disable */
-  //   const data = String.fromCharCode.apply(null, dataToRelease)
-  //   // console.log(data)
-  //   // this.RUST_API.free(dataToRelease)
-  //   // console.log(data.toString())
-  //   return JSON.parse("")
-  // }
   getData (): IConnectionData {
     const dataToRelease = this.RUST_API.cxs_connection_get_data(this.connectionHandle)
     /* tslint:disable */
-    this.RUST_API.free(dataToRelease)
+    // this.RUST_API.free(dataToRelease)
     return JSON.parse(dataToRelease)
   }
 

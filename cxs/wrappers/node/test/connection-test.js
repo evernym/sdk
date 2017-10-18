@@ -54,8 +54,8 @@ describe('A Connection object with ', function () {
         assert.equal(data.handle, connection.connectionHandle)
     })
 
+
     it('a call to get_data where connection doesnt exist should return a null value', function () {
-        console.log(connection.getData())
         assert.equal(connection.getData(), null)
     })
 
