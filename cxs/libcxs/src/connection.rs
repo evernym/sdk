@@ -45,9 +45,9 @@ impl Connection {
     fn connect(&mut self) -> u32 {
         if self.state != CxsStateType::CxsStateInitialized {return error::NOT_READY.code_num;}
 
-        let url = format!("{}/agent/route",settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
+        let url = format!("{}/agency/route",settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
 
-        let json_msg = format!("{{ \"to\":\"{}\", \"agentPayload\": {{ \"type\":\"SEND_INVITE\", \"keyDlgProof\":\"nothing\", \"phoneNumber\":\"{}\", \"nonce\":\"anything\" }} }}", self.pw_did, self.info);
+        let json_msg = format!("{{\"to\":\"{}\",\"agentPayload\":\"{{\\\"type\\\":\\\"SEND_INVITE\\\",\\\"keyDlgProof\\\":\\\"nothing\\\",\\\"phoneNumber\\\":\\\"{}\\\"}}\"}}", self.pw_did, self.info);
 
         match httpclient::post(&json_msg,&url) {
             Err(_) => return error::UNKNOWN_ERROR.code_num,
@@ -165,9 +165,9 @@ pub fn create_agent_pairwise(handle: u32) -> Result<u32, u32> {
     let enterprise_did = settings::get_config_value(settings::CONFIG_ENTERPRISE_DID_AGENT).unwrap();
     let pw_did = get_pw_did(handle).unwrap();
     let pw_verkey = get_pw_verkey(handle).unwrap();
-    let url = format!("{}/agent/route",settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
+    let url = format!("{}/agency/route",settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
 
-    let json_msg = format!("{{ \"to\":\"{}\", \"agentPayload\": \"{{ \"type\":\"CREATE_KEY\", \"forDID\":\"{}\", \"forDIDVerKey\":\"{}\", \"nonce\":\"anything\" }}\" }}", enterprise_did, pw_did, pw_verkey);
+    let json_msg = format!("{{\"to\":\"{}\",\"agentPayload\":\"{{\\\"type\\\":\\\"CREATE_KEY\\\",\\\"forDID\\\":\\\"{}\\\",\\\"forDIDVerKey\\\":\\\"{}\\\",\\\"nonce\\\":\\\"anything\\\"}}\"}}", enterprise_did, pw_did, pw_verkey);
 
     match httpclient::post(&json_msg,&url) {
         Ok(_) => return Ok(error::SUCCESS.code_num),
@@ -179,9 +179,9 @@ pub fn update_agent_profile(handle: u32) -> Result<u32, u32> {
     settings::set_defaults();
     let enterprise_did = settings::get_config_value(settings::CONFIG_ENTERPRISE_DID_AGENT).unwrap();
     let pw_did = get_pw_did(handle).unwrap();
-    let url = format!("{}/agent/route",settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
+    let url = format!("{}/agency/route",settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
 
-    let json_msg = format!("{{ \"to\":\"{}\", \"agentPayload\": \"{{ \"type\":\"UPDATE_PROFILE_DATA\", \"name\":\"{}\", \"logoUrl\":\"{}\", \"nonce\":\"anything\" }}\" }}",
+    let json_msg = format!("{{\"to\":\"{}\",\"agentPayload\":\"{{\\\"type\\\":\\\"UPDATE_PROFILE_DATA\\\",\\\"name\\\":\\\"{}\\\",\\\"logoUrl\\\":\\\"{}\\\",\\\"nonce\\\":\\\"anything\\\"}}\"}}",
                                pw_did,
                                settings::get_config_value(settings::CONFIG_ENTERPRISE_NAME).unwrap(),
                                settings::get_config_value(settings::CONFIG_LOGO_URL).unwrap());
@@ -249,7 +249,6 @@ pub fn build_connection (info_string: String) -> u32 {
     info!("creating new connection and did (wallet: {}, handle {}", wallet_handle, new_handle);
     unsafe {
         let indy_err = indy_create_and_store_my_did(new_handle as i32, wallet_handle, CString::new(did_json).unwrap().as_ptr(), Some(store_new_did_info_cb));
-        println!("indy_err: {}", indy_err);
     }
     new_handle
 }
@@ -267,8 +266,8 @@ pub fn update_state(handle: u32) {
         Err(_) => return,
     };
 
-    let url = format!("{}/agent/route",settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
-    let json_msg = format!("{{ \"to\":\"{}\", \"agentPayload\": \"{{ \"type\":\"getMsgs\" }}\" }}", pw_did);
+    let url = format!("{}/agency/route",settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
+    let json_msg = format!("{{\"to\":\"{}\",\"agentPayload\":\"{{\\\"type\\\":\\\"getMsgs\\\"}}\"}}", pw_did);
 
     match httpclient::post(&json_msg,&url) {
         Err(_) => {},
@@ -342,7 +341,7 @@ mod tests {
 
     #[test]
     fn test_create_connection() {
-        let _m = mockito::mock("POST", "/agent/route")
+        let _m = mockito::mock("POST", "/agency/route")
             .with_status(202)
             .with_header("content-type", "text/plain")
             .with_body("nice!")
@@ -360,7 +359,7 @@ mod tests {
         connect(handle);
         _m.assert();
 
-        let _m = mockito::mock("POST", "/agent/route")
+        let _m = mockito::mock("POST", "/agency/route")
             .with_status(202)
             .with_header("content-type", "text/plain")
             .with_body("message accepted")
@@ -507,7 +506,7 @@ mod tests {
     #[test]
     fn test_create_agent_pairwise() {
         ::utils::logger::LoggerUtils::init();
-        let _m = mockito::mock("POST", "/agent/route")
+        let _m = mockito::mock("POST", "/agency/route")
             .with_status(202)
             .with_header("content-type", "text/plain")
             .with_body("nice!")
@@ -527,7 +526,7 @@ mod tests {
     #[test]
     fn test_create_agent_profile() {
         ::utils::logger::LoggerUtils::init();
-        let _m = mockito::mock("POST", "/agent/route")
+        let _m = mockito::mock("POST", "/agency/route")
             .with_status(202)
             .with_header("content-type", "text/plain")
             .with_body("nice!")

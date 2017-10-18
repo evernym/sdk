@@ -111,6 +111,6 @@ mod tests {
 
     #[test]
     fn test_no_endpoint_error(){
-        assert_eq!(error_message(&NO_ENDPOINT.code_num), SUCCESS.message);
+        assert_eq!(error_message(&NO_ENDPOINT.code_num), NO_ENDPOINT.message);
     }
 }

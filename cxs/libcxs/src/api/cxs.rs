@@ -335,7 +335,7 @@ mod tests {
     #[test]
     fn test_cxs_connection_connect() {
         settings::set_config_value(settings::CONFIG_AGENT_ENDPOINT,mockito::SERVER_URL);
-        let _m = mockito::mock("POST", "/agent/route")
+        let _m = mockito::mock("POST", "/agency/route")
             .with_status(202)
             .with_header("content-type", "text/plain")
             .with_body("nice!")
@@ -344,13 +344,14 @@ mod tests {
 
         wallet::tests::make_wallet("test_cxs_connection_connect");
         let mut handle: u32 = 0;
-        let rc = cxs_connection_create(CString::new("test_connect").unwrap().into_raw(), &mut handle);
+        let rc = cxs_connection_create(CString::new("test_cxs_connection_connect").unwrap().into_raw(), &mut handle);
         assert_eq!(rc, error::SUCCESS.code_num);
         thread::sleep(Duration::from_secs(2));
         assert!(handle > 0);
 
         let rc = cxs_connection_connect(handle, CString::new("QR").unwrap().into_raw());
         assert_eq!(rc, error::SUCCESS.code_num);
+        wallet::tests::delete_wallet("test_cxs_connection_connect");
         _m.assert();
     }
 
