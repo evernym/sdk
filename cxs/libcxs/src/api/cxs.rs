@@ -173,7 +173,8 @@ pub extern fn cxs_connection_create(recipient_info: *const c_char, connection_ha
 
 #[no_mangle]
 pub extern fn cxs_connection_connect(connection_handle: u32, connection_type: *const c_char) -> u32 {
-    connect(connection_handle)
+    check_useful_c_str!(connection_type, error::UNKNOWN_ERROR.code_num);
+    connect(connection_handle,&connection_type)
 }
 
 #[no_mangle]
