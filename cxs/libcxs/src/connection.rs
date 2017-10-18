@@ -37,6 +37,8 @@ struct Connection {
     did_endpoint: String,
     wallet: String,
     state: CxsStateType,
+    uuid: String,
+    endpoint: String, // For QR code invitation
 }
 
 impl Connection {
@@ -62,6 +64,12 @@ impl Connection {
     fn get_pw_did(&self) -> String {self.pw_did.clone()}
     fn get_pw_verkey(&self) -> String {self.pw_verkey.clone()}
     fn set_pw_verkey(&mut self, verkey: &str) { self.pw_verkey = verkey.to_string();}
+
+    fn get_uuid(&self) -> String { self.uuid.clone()}
+    fn get_endpoint(&self) -> String{self.endpoint.clone()}
+
+    fn set_uuid(&mut self, uuid: &str) { self.uuid = uuid.to_string();}
+    fn set_endpoint(&mut self, endpoint: &str) {self.endpoint = endpoint.to_string();}
 }
 
 fn find_connection(info_string: &str) -> u32 {
@@ -102,6 +110,32 @@ pub fn get_pw_did(handle: u32) -> Result<String,u32> {
     }
 }
 
+pub fn get_uuid(handle: u32) -> Result<String, u32> {
+    let connection_table = CONNECTION_MAP.lock().unwrap();
+    match connection_table.get(&handle){
+        Some(cxn) => Ok(cxn.get_uuid()),
+        None => Err(error::UNKNOWN_ERROR.code_num),
+    }
+}
+
+pub fn set_uuid(handle: u32, uuid: &str){
+    let mut connection_table = CONNECTION_MAP.lock().unwrap();
+    if let Some(cxn) = connection_table.get_mut(&handle) {
+        cxn.set_uuid(uuid);
+    }
+
+}
+
+pub fn set_endpoint(handle: u32, endpoint:&str){
+    let mut connection_table = CONNECTION_MAP.lock().unwrap();
+    if let Some(cxn) = connection_table.get_mut(&handle) {
+        cxn.set_endpoint(endpoint)
+    }
+}
+
+
+
+
 pub fn set_pw_verkey(handle: u32, verkey: &str) {
     let mut connection_table = CONNECTION_MAP.lock().unwrap();
 
@@ -109,7 +143,13 @@ pub fn set_pw_verkey(handle: u32, verkey: &str) {
         cxn.set_pw_verkey(verkey)
     }
 }
-
+pub fn get_endpoint(handle: u32) -> Result<String, u32>{
+    let connection_table = CONNECTION_MAP.lock().unwrap();
+    match connection_table.get(&handle) {
+        Some(cxn) => Ok(cxn.get_endpoint()),
+        None => Err(error::NO_ENDPOINT.code_num),
+    }
+}
 pub fn get_pw_verkey(handle: u32) -> Result<String, u32> {
     let connection_table = CONNECTION_MAP.lock().unwrap();
 
@@ -196,6 +236,8 @@ pub fn build_connection (info_string: String) -> u32 {
             did_endpoint: String::new(),
             wallet: String::new(),
             state: CxsStateType::CxsStateNone,
+            uuid: String::new(),
+            endpoint: String::new(),
         });
 
     let mut m = CONNECTION_MAP.lock().unwrap();
@@ -500,5 +542,25 @@ mod tests {
             Err(x) => assert_eq!(x,error::SUCCESS.code_num), //fail if we get here
         };
         wallet::tests::delete_wallet("test_create_agent_profile");
+        release(handle);
     }
+
+    #[test]
+    fn test_get_set_uuid_and_endpoint(){
+        ::utils::logger::LoggerUtils::init();
+        let uuid = "THISISA!UUID";
+        let endpoint = "hello";
+        let test_name = "test_get_set_uuid_and_endpoint";
+        let wallet_name = test_name;
+        wallet::tests::make_wallet(wallet_name);
+        let handle = build_connection(test_name.to_owned());
+        assert_eq!(get_endpoint(handle).unwrap(), "");
+        set_uuid(handle, uuid);
+        set_endpoint(handle,endpoint);
+        assert_eq!(get_uuid(handle).unwrap(), uuid);
+        assert_eq!(get_endpoint(handle).unwrap(), endpoint);
+        wallet::tests::delete_wallet(wallet_name);
+        release(handle);
+    }
+
 }
