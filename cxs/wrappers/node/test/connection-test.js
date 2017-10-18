@@ -34,12 +34,13 @@ describe('A Connection object with ', function () {
 
 // connection_connect tests
 
-    it(' a call to connect with connection already created should return success', function () {
-        connection.create("connection_connect tests")
-        mysleep.msleep(1000)
-        assert.equal(connection.connect({sms: true}), 0)
-
-    })
+    //test is unstable because it doesn't wait for the connection to "settle"
+    //it(' a call to connect with connection already created should return success', function () {
+    //    connection.create("connection_connect tests")
+    //    mysleep.msleep(1000)
+    //    assert.equal(connection.connect({sms: true}), 0)
+    //
+    //})
 
     it(' a call to create with no connection created should return unknown error', function () {
         assert.equal(connection.connect({sms: true}), 1003)

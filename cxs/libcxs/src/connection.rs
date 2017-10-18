@@ -42,16 +42,22 @@ struct Connection {
 }
 
 impl Connection {
-    fn connect(&mut self) -> u32 {
+    fn connect(&mut self, connection_type: &str) -> u32 {
         if self.state != CxsStateType::CxsStateInitialized {return error::NOT_READY.code_num;}
 
         let url = format!("{}/agency/route",settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
+        //TODO: self.info is most likely a json formatted string so we need to pull the phone number out of that
+        let phone_info = match connection_type {
+            "sms" => format!(",\\\"phoneNumber\\\":\\\"{}\\\"",self.info),
+            _ => "".to_owned(),
+        };
 
-        let json_msg = format!("{{\"to\":\"{}\",\"agentPayload\":\"{{\\\"type\\\":\\\"SEND_INVITE\\\",\\\"keyDlgProof\\\":\\\"nothing\\\",\\\"phoneNumber\\\":\\\"{}\\\"}}\"}}", self.pw_did, self.info);
+        let json_msg = format!("{{\"to\":\"{}\",\"agentPayload\":\"{{\\\"type\\\":\\\"SEND_INVITE\\\",\\\"keyDlgProof\\\":\\\"nothing\\\"{}}}\"}}", self.pw_did, phone_info);
 
         match httpclient::post(&json_msg,&url) {
             Err(_) => return error::UNKNOWN_ERROR.code_num,
             Ok(_) => {
+                //TODO: get the response and store relevant info
                 self.state = CxsStateType::CxsStateOfferSent;
                 return error::SUCCESS.code_num
             },
@@ -132,9 +138,6 @@ pub fn set_endpoint(handle: u32, endpoint:&str){
         cxn.set_endpoint(endpoint)
     }
 }
-
-
-
 
 pub fn set_pw_verkey(handle: u32, verkey: &str) {
     let mut connection_table = CONNECTION_MAP.lock().unwrap();
@@ -253,12 +256,6 @@ pub fn build_connection (info_string: String) -> u32 {
     new_handle
 }
 
-
-
-impl Drop for Connection {
-    fn drop(&mut self) {}
-}
-
 pub fn update_state(handle: u32) {
 
     let pw_did = match get_pw_did(handle) {
@@ -293,12 +290,12 @@ pub fn get_state(handle: u32) -> u32 {
     rc
 }
 
-pub fn connect(handle: u32) -> u32 {
+pub fn connect(handle: u32, connection_type: &str) -> u32 {
     let mut m = CONNECTION_MAP.lock().unwrap();
     let result = m.get_mut(&handle);
 
     let rc = match result {
-       Some(t) => t.connect(),
+       Some(t) => t.connect(connection_type),
        None => error::INVALID_CONNECTION_HANDLE.code_num,
     };
 
@@ -356,7 +353,7 @@ mod tests {
         assert!(!get_pw_did(handle).unwrap().is_empty());
         assert!(!get_pw_verkey(handle).unwrap().is_empty());
         assert_eq!(get_state(handle),CxsStateType::CxsStateInitialized as u32);
-        connect(handle);
+        connect(handle,"sms");
         _m.assert();
 
         let _m = mockito::mock("POST", "/agency/route")
@@ -442,11 +439,11 @@ mod tests {
         let handle4 = build_connection("handle4".to_owned());
         let handle5 = build_connection("handle5".to_owned());
 
-        connect(handle1);
-        connect(handle2);
-        connect(handle3);
-        connect(handle4);
-        connect(handle5);
+        connect(handle1, "sms");
+        connect(handle2, "sms");
+        connect(handle3, "sms");
+        connect(handle4, "sms");
+        connect(handle5, "sms");
 
         let data1 = to_string(handle1);
         let data2 = to_string(handle2);
