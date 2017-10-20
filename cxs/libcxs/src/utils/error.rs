@@ -17,6 +17,9 @@ pub static NO_ENDPOINT: Error = Error{code_num:1006, message:"No Endpoint set fo
 pub static INVALID_DID: Error = Error{code_num:1007, message:"Invalid DID"};
 pub static INVALID_VERKEY: Error = Error{code_num:1008, message:"Invalid VERKEY"};
 pub static INVALID_NONCE: Error = Error{code_num:1009, message:"Invalid NONCE"};
+pub static INVALID_KEY_DELEGATE: Error = Error{code_num:1010, message:"Invalid DELEGATE"};
+pub static INVALID_URL: Error = Error{code_num:1011, message:"Invalid DELEGATE"};
+pub static NOT_BASE58: Error = Error{code_num:1012, message:"Value needs to be base58"};
 
 lazy_static! {
     static ref ERROR_MESSAGES: HashMap<u32, &'static str> = {
@@ -30,7 +33,6 @@ lazy_static! {
         insert_message(&mut m, &NO_ENDPOINT);
         m
     };
-
 
 }
 
