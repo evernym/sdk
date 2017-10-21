@@ -22,18 +22,24 @@ use std::collections::HashMap;
     //sendMsg (sender_pairwsie_ did, msg_uid, msg_type, status_code_to_answer_msg, data_opt, response_of_msg)
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
-pub struct Message<T, V>{
-    to_did: T,
-    payload: V
+pub struct Message<V>{
+    to_did: String,
+    payload: Option<V>,
 }
 
-impl Message<T, V>{
+impl<V> Message<V>{
 
-    fn create(load_type:V) -> Message<T, V>{
-        Message{
-            to_did: T,
-            payload: V,
+    fn create() -> Result<Message<V>, u32>{
+        match V::create(){
+            Ok(x) => {
+                Message{
+                    to_did: String::new(),
+                    payload: None,
+                }
+            },
+            Err(x) => Err(error::UNKNOWN_ERROR.code_num)
         }
+
     }
     fn to(&mut self, to_did: &str) -> Result<&mut Self, u32> {
         self.to_did = validate_did(to_did)?;
