@@ -1,7 +1,7 @@
 export interface IConnections {
   create ( IRecipientInfo ): number
-  connect ( IConnectOptions ): number
   getData (): IConnectionData
+  connect ( IConnectOptions ): Promise<void>
   getState (): number
   release (): number
 }
@@ -24,7 +24,8 @@ export interface IRecipientInfo {
 }
 
 export interface IConnectOptions {
-  sms?: boolean
+  phone?: string,
+  timeout?: number
 }
 
 export interface IConnectionData {

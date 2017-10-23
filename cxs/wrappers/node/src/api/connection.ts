@@ -1,9 +1,8 @@
 import * as ffi from 'ffi'
-import * as ref from 'ref'
+import { alloc, deref, Type, types as refTypes } from 'ref'
 import * as weak from 'weak'
 import { CXSRuntime } from '../index'
 import { CXSRuntimeConfig } from '../rustlib'
-
 import {
     IConnectionData,
     IConnections,
@@ -11,28 +10,29 @@ import {
     IRecipientInfo,
     StateType
 } from './api'
+import { ConnectionTimeoutError } from './errors'
 
 export class Connection implements IConnections {
-  public connectionHandle: ref.types.uint32
+  public connectionHandle: Type
   public state: StateType
-  private RUST_API: ffi
+  private RUST_API: { [ index: string ]: ffi.ForeignFunction }
 
   constructor ( path?: string ) {
-    this.initRustApi(path)
+    this._initRustApi(path)
   }
 
   create ( recipientInfo: IRecipientInfo ): number {
-    const connectionHandlePtr = ref.alloc(ref.types.uint32)
+    const connectionHandlePtr = alloc(refTypes.uint32)
     const result = this.RUST_API.cxs_connection_create(JSON.stringify(recipientInfo), connectionHandlePtr)
-    this.connectionHandle = ref.deref(connectionHandlePtr, ref.types.uint32)
-    this.clearOnExit()
+    this.connectionHandle = deref(connectionHandlePtr)
+    this._clearOnExit()
 
     return result
   }
 
-  connect ( options: IConnectOptions ): number {
-    const connectionType: string = options.sms ? 'SMS' : 'QR'
-    return this.RUST_API.cxs_connection_connect(this.connectionHandle, connectionType)
+  async connect ( options: IConnectOptions = {} ): Promise<void> {
+    const timeout = options.timeout || 10000
+    await this._waitFor(() => this._connect(options) === 0, timeout)
   }
 
   getData (): IConnectionData {
@@ -55,28 +55,49 @@ export class Connection implements IConnections {
   }
 
   getState (): StateType {
-    const statusPtr = ref.alloc(ref.types.uint32)
+    const statusPtr = alloc(refTypes.uint32)
     const result = this.RUST_API.cxs_connection_get_state(this.connectionHandle, statusPtr)
-    this.state = ref.deref(statusPtr, ref.types.uint32)
-    return result
+    this.state = deref(statusPtr)
+    return this.state
   }
 
   release (): number {
     return this.RUST_API.cxs_connection_release(this.connectionHandle)
   }
 
-  private initRustApi (path?) {
-    this.RUST_API = new CXSRuntime(new CXSRuntimeConfig(path)).ffi
+  private _initRustApi (path?) {
+    this.RUST_API = new CXSRuntime(new CXSRuntimeConfig(path))._ffi
   }
 
-  // clearOnExit creates a callback that will release the Rust Object
+  // _clearOnExit creates a callback that will release the Rust Object
   // when the node Connection object is Garbage collected
-  private clearOnExit () {
+  private _clearOnExit () {
     const weakRef = weak(this)
     const release = this.RUST_API.cxs_connection_release
     const handle = this.connectionHandle
     weak.addCallback(weakRef, () => {
       release(handle)
     })
+  }
+
+  private _connect = (options: IConnectOptions): number => {
+    const phone = options.phone
+    const connectionType: string = phone ? 'SMS' : 'QR'
+    return this.RUST_API.cxs_connection_connect(this.connectionHandle,
+      JSON.stringify({ connection_type: connectionType, phone }))
+  }
+
+  private _sleep = (sleepTime: number): Promise<void> => new Promise((res) => setTimeout(res, sleepTime))
+
+  private _waitFor = async (predicate: () => any, timeout: number, sleepTime: number = 1000) => {
+    if (timeout < 0) {
+      throw new ConnectionTimeoutError()
+    }
+    const res = predicate()
+    if (!res) {
+      await this._sleep(sleepTime)
+      return this._waitFor(predicate, timeout - sleepTime)
+    }
+    return res
   }
 }
