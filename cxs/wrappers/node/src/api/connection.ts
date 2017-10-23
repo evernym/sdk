@@ -22,8 +22,11 @@ export class Connection implements IConnections {
   }
 
   create ( recipientInfo: IRecipientInfo ): number {
+    const myDid = recipientInfo.DIDself !== undefined ? recipientInfo.DIDself : null
+    const theirDid = recipientInfo.DIDremote !== undefined ? recipientInfo.DIDremote : null
+    const id = recipientInfo.id // TODO verifiy that id is a string
     const connectionHandlePtr = alloc(refTypes.uint32)
-    const result = this.RUST_API.cxs_connection_create(JSON.stringify(recipientInfo), connectionHandlePtr)
+    const result = this.RUST_API.cxs_connection_create(id, myDid, theirDid, connectionHandlePtr)
     this.connectionHandle = deref(connectionHandlePtr)
     this._clearOnExit()
 
@@ -43,15 +46,15 @@ export class Connection implements IConnections {
   }
 
   myDid (): string {
-    return this.getData().did
+    return this.getData().pw_did
   }
 
-  did_endpoint (): string {
+  didEndpoint (): string {
     return this.getData().did_endpoint
   }
 
   myId (): string {
-    return JSON.parse(this.getData().info).id
+    return this.getData().source_id
   }
 
   getState (): StateType {

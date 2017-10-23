@@ -29,10 +29,14 @@ export interface IConnectOptions {
 }
 
 export interface IConnectionData {
-  info: string,
+  source_id: string
+  invite_detail: string,
   handle: number,
-  did: string,
+  pw_did: string,
+  pw_verkey: string,
   did_endpoint: string,
+  endpoint: string,
+  uuid: string,
   wallet: string,
   state: string
 }

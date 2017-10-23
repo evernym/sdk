@@ -25,7 +25,7 @@ const waitFor = async (predicate) => {
 describe('A Connection object with ', function () {
     this.timeout(10000)
 
-    before(async function() {
+    before(async function () {
         cxs.init_cxs('ENABLE_TEST_MODE')
         await sleep(3000)
     });
@@ -37,36 +37,39 @@ describe('A Connection object with ', function () {
         assert.equal(connection.create({
             id: "234",
             DIDself: "456",
-            DIDremote: "0"}), 0)
+            DIDremote: "0"
+        }), 0)
     })
 
-    it('null param in create should return success', function () {
+    it('object with id as param in create should return success', function () {
         const connection = new Connection(path)
-        assert.equal(connection.create(null), 0)
+        assert.equal(connection.create({ id: "999" }), 0)
     })
 
-// connection_connect tests
+    // connection_connect tests
 
-    it(' a call to connect with connection already created should return success', function () { 
-        const connection = new Connection(path)       
-        connection.create("connection_connect tests")
-        return connection.connect({sms: true})
+    it(' a call to connect with connection already created should return success', async function () {
+        const connection = new Connection(path)
+        connection.create({
+            id: "234",
+            DIDself: "548NLfYrPxtB299RVafcjR",
+            DIDremote: "0"
+        })
+
+        return connection.connect({ sms: true })
     })
 
     it(' a call to create with no connection created should return unknown error', function () {
         const connection = new Connection(path)
-        assert.equal(connection._connect({sms: true}), 1003)
+        assert.equal(connection._connect({ sms: true }), 1003)
     })
 
 
-// connection_get_data tests
+    // connection_get_data tests
 
     it('a call to get_data where connection exists should return back the connections data', function () {
-        connection.create({
-            id: "123",
-            DIDself: "456",
-            DIDremote: "789"
-        })
+        const connection = new Connection(path)
+        connection.create({ id: "234" })
         const data = connection.getData()
         assert.notEqual(data, null)
         assert.equal(data.handle, connection.connectionHandle)
@@ -80,10 +83,10 @@ describe('A Connection object with ', function () {
 
     it('a call to get_data where connection was released should return a null value', async function () {
         const connection = new Connection(path)
-        assert.equal(connection.create("connection_get_data tests"), 0)
+        assert.equal(connection.create({ id: "234" }), 0)
 
-        await connection.connect({sms: true})
-        
+        await connection.connect({ sms: true })
+
         assert.equal(connection.getState(), StateType.OfferSent)
         assert.notEqual(connection.getData(), null)
         assert.equal(connection.release(), 0)
@@ -94,33 +97,44 @@ describe('A Connection object with ', function () {
 
     it('call to getState where connection exists should return success', async function () {
         const connection = new Connection(path)
-        connection.create("connection_getState tests")
-        await connection.connect({sms: true})
-        assert.equal(connection.getState(),StateType.OfferSent)
+        connection.create({ id: "234" })
+        await connection.connect({ sms: true })
+        assert.equal(connection.getState(), StateType.OfferSent)
     })
 
     it('call to getState where no connection exists should have a state value of 0', function () {
         const connection = new Connection(path)
-        assert.equal(connection.getState(),StateType.None)
+        assert.equal(connection.getState(), StateType.None)
     })
 
 
     it('call to get_state where connection exists but not connected should have a state value of 1', function () {
         const connection = new Connection(path)
-        connection.create("info2")
+        connection.create({ id: "234" })
         return waitFor(() => connection.getState() === StateType.Initialized)
     })
 
 
-// connection_release tests
+    // connection_release tests
 
     it('call to connection_release where connection exists should return success', async function () {
         const connection = new Connection(path)
-        connection.create("connection_release tests")
-        await connection.connect({sms: true})
+        connection.create({ id: "234" })
+        await connection.connect({ sms: true })
         assert.equal(connection.release(), 0)
-        assert.equal(connection._connect({sms: true}), 1003)
+        assert.equal(connection._connect({ sms: true }), 1003)
         assert.equal(connection.getData(), null)
+    })
+
+    it('didEndpoint() should return empty string', async function () {
+        const connection = new Connection(path)
+        connection.create({
+            id: "123",
+            DIDself: "456",
+            DIDremote: "789"
+        })
+        await connection.connect({ sms: true })
+        assert.equal(connection.didEndpoint(), "")
     })
 
     it('call to connection_release with no connection should return unknown error', function () {
@@ -131,8 +145,8 @@ describe('A Connection object with ', function () {
     it('connection and GC deletes object should return null whet get_data is called ', function () {
         this.timeout(30000)
         const connection = new Connection(path)
-        connection.create("msg")
-        connection._connect({sms: true})
+        connection.create({ id: "234" })
+        connection._connect({ sms: true })
         const getData = connection.RUST_API.cxs_connection_get_data
         const handle = connection.connectionHandle
         assert.notEqual(connection.getData(handle), null)
@@ -147,35 +161,29 @@ describe('A Connection object with ', function () {
 
 
     //need to change the test when did is actually added to the connection data
-    it('my_did() should return did', function () {
+    it('myDid() should return did', async function () {
+        const connection = new Connection(path)
         connection.create({
             id: "123",
             DIDself: "456",
             DIDremote: "789"
         })
-        assert.equal(connection.connect({sms: true}), 0)
-        assert.equal(connection.myDid(), "")
+        await connection.connect({ sms: true })
+        assert.equal(connection.myDid(), "456")
     })
 
-    //need to change the test when did is actually added to the connection data
-    it('did_endpoint() should return did', function () {
-        connection.create({
-            id: "123",
-            DIDself: "456",
-            DIDremote: "789"
-        })
-        assert.equal(connection.connect({sms: true}), 0)
-        assert.equal(connection.did_endpoint(), "")
-    })
 
-    it('myId() should return enterprise customers id', function () {
+    it('myId() should return enterprise customers id', async function () {
+        const connection = new Connection(path)
         connection.create({
             id: "123",
             DIDself: "456",
             DIDremote: "789"
         })
-        assert.equal(connection.connect({sms: true}), 0)
+        await sleep(2000)
+        await connection.connect({ sms: true })
         assert.equal(connection.myId(), "123")
     })
+
 
 })
