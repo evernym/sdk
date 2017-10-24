@@ -126,16 +126,6 @@ describe('A Connection object with ', function () {
         assert.equal(connection.getData(), null)
     })
 
-    it('didEndpoint() should return empty string', async function () {
-        const connection = new Connection(path)
-        connection.create({
-            id: "123",
-            DIDself: "456",
-            DIDremote: "789"
-        })
-        await connection.connect({ sms: true })
-        assert.equal(connection.didEndpoint(), "")
-    })
 
     it('call to connection_release with no connection should return unknown error', function () {
         const connection = new Connection(path)
@@ -168,7 +158,6 @@ describe('A Connection object with ', function () {
             DIDself: "456",
             DIDremote: "789"
         })
-        await connection.connect({ sms: true })
         assert.equal(connection.myDid(), "456")
     })
 
@@ -180,9 +169,17 @@ describe('A Connection object with ', function () {
             DIDself: "456",
             DIDremote: "789"
         })
-        await sleep(2000)
-        await connection.connect({ sms: true })
         assert.equal(connection.myId(), "123")
+    })
+
+    it('didEndpoint() should return empty string', async function () {
+        const connection = new Connection(path)
+        connection.create({
+            id: "123",
+            DIDself: "456",
+            DIDremote: "789"
+        })
+        assert.equal(connection.didEndpoint(), "")
     })
 
 
