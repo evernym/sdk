@@ -47,7 +47,7 @@ export class Connection implements IConnections {
   getState (): StateType {
     const statusPtr = alloc(refTypes.uint32)
     const result = this.RUST_API.cxs_connection_get_state(this.connectionHandle, statusPtr)
-    if (!result) {
+    if (result) {
       throw new CXSInternalError(`cxs_connection_get_state -> ${result}`)
     }
     this.state = deref(statusPtr)
