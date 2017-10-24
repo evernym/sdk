@@ -27,60 +27,61 @@ use std::rc::Rc;
 pub enum MessageType {
     EmptyPayload{},
     CreateKey(CreateKeyMsg),
-    UpdateProfileData(UpdateProfileDataMsg),
-//    SendInvite(SendInviteMsg),
-//    InviteAnswered(InviteAnsweredMsg),
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
-pub struct Message{
+#[derive(Serialize, Debug, PartialEq, PartialOrd, Clone)]
+pub struct Message<T>{
     #[serde(skip_serializing)]
-    payload: MessageType,
+    payload: T,
+    #[serde(skip_serializing, default)]
+    msg_type: String,
     to_did: String,
     agent_payload: String,
+    parse_rc: u32,
 }
 
-impl Message{
+impl<T> Message<T> {
 
-    pub fn create() -> Message{
+    pub fn create(msg: T, _msg_type: &str) -> Message<T> {
         Message{
+            msg_type: _msg_type.to_string().to_owned(),
             to_did: String::new(),
-            payload: MessageType::EmptyPayload {},
+            payload: msg,
             agent_payload: String::new(),
+            parse_rc: error::SUCCESS.code_num,
         }
     }
 
-    fn to(&mut self, to_did: &str) -> Result<&mut Self, u32> {
-        self.to_did = validate_did(to_did)?;
-        Ok(self)
+    fn to(&mut self, to_did: &str) -> &mut Self {
+        match validate_did(to_did){
+            Ok(x) => self,
+            Err(x) => {
+                self.parse_rc = x;
+                self
+            },
+        }
     }
 
-    fn payload(&mut self, load_type:MessageType) -> Result<&mut Self, u32>{
-        self.payload = load_type;
-        Ok(self)
-    }
-
-    fn serialize_payload(&mut self) -> u32{
-//        let mut msg_type = json!(self.payload);
-        self.agent_payload = match self.payload{
-            MessageType::CreateKey(ref x) => json!(x).to_string(),
-            MessageType::EmptyPayload{} => "{}".to_string(),
-            _ => "Unknown Error".to_string(),
-        };
-        error::SUCCESS.code_num
-    }
-
-    fn serialize_message(&mut self) -> Result<String, u32>{
-        self.serialize_payload();
-        Ok(json!(self).to_string())
-    }
+//    fn serialize_payload(&mut self) -> u32{
+////        let mut msg_type = json!(self.payload);
+//        self.agent_payload = match self.payload{
+//            MessageType::CreateKey(ref x) => json!(x).to_string(),
+//            MessageType::EmptyPayload{} => "{}".to_string(),
+//            _ => "Unknown Error".to_string(),
+//        };
+//        error::SUCCESS.code_num
+//    }
+//
+//    fn serialize_message(&mut self) -> Result<String, u32>{
+//        self.serialize_payload();
+//        Ok(json!(self).to_string())
+//    }
 }
 
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateKeyMsg {
-    msg_type: String,
     for_did: String,
     for_verkey: String,
     nonce: String,
@@ -89,31 +90,32 @@ pub struct CreateKeyMsg {
 impl CreateKeyMsg {
     pub fn create() -> CreateKeyMsg {
         CreateKeyMsg {
-            msg_type: "CREATE_KEY".to_string(),
             for_did: String::new(),
             for_verkey: String::new(),
             nonce: String::new(),
         }
     }
 
-    pub fn for_did(&mut self, did: &str) -> Result<&mut Self, u32> {
-        self.for_did = validate_did(did)?;
-        Ok(self)
-    }
-
-    pub fn for_verkey(&mut self, verkey: &str) -> Result<&mut Self, u32> {
-        self.for_verkey = validate_verkey(verkey)?;
-        Ok(self)
-    }
-
-    pub fn nonce(&mut self, nonce: &str) -> Result<&mut Self, u32> {
-        self.nonce = validate_nonce(nonce)?;
-        Ok(self)
-    }
+//    pub fn for_did(&mut self, did: &str) -> Result<&mut Self, u32> {
+//        self.for_did = validate_did(did)?;
+//        Ok(self)
+//    }
+//
+//    pub fn for_verkey(&mut self, verkey: &str) -> Result<&mut Self, u32> {
+//        self.for_verkey = validate_verkey(verkey)?;
+//        Ok(self)
+//    }
+//
+//    pub fn nonce(&mut self, nonce: &str) -> Result<&mut Self, u32> {
+//        self.nonce = validate_nonce(nonce)?;
+//        Ok(self)
+//    }
 }
 
-fn send_invite() -> u32 {
-
+fn create_key() -> Message<CreateKeyMsg> {
+    let msg_type = "CREATE_KEY";
+    let mut key_msg = CreateKeyMsg::create();
+    Message::create(key_msg, msg_type)
 }
 
 fn validate_did(did: &str) -> Result<String, u32> {
@@ -173,6 +175,12 @@ mod tests {
 
 
     #[test]
+    fn test_create_key_returns_message_with_create_key_as_payload(){
+        let message = create_key();
+        assert_eq!(message.payload, CreateKeyMsg::create());
+    }
+
+    #[test]
     fn test_did_is_b58_and_valid_length() {
         let to_did = "8XFh8yBzrpJQmNyZzgoTqB";
         match validate_did(&to_did) {
@@ -225,72 +233,10 @@ mod tests {
     fn test_validate_verkey_with_non_base58() {
         let verkey = "*kVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A";
         match validate_verkey(&verkey) {
-            Err(x) => assert_eq!(x, "Type not of base 58"),
+            Err(x) => assert_eq!(x, error::NOT_BASE58.code_num),
             Ok(x) => panic!("Should be invalid verkey"),
         }
     }
 
-    #[test]
-    fn test_message_create_gives_empty_message(){
-        let mut message = Message::create();
-        assert_eq!(message.payload, MessageType::EmptyPayload {});
-    }
-
-    #[test]
-    fn test_empty_create_key_serializes_properly(){
-        let mut message = Message::create();
-        let create_key = CreateKeyMsg{
-            msg_type: "CREATE_KEY".to_string(),
-            for_did: String::new(),
-            for_verkey: String::new(),
-            nonce: String::new(),
-        };
-
-        message.payload(MessageType::CreateKey(create_key));
-
-        message.serialize_payload();
-        let key_json = json!(message);
-        println!("{:?}", key_json.to_string());
-//        assert_eq!(message.payload, MessageType::CreateKey(create_msg));
-
-        //        assert_eq!(message.payload.unwrap(), create_msg);
-    }
-
-    #[test]
-    fn test_create_key_serializes_properly(){
-        let to_did = "8XFh8yBzrpJQmNyZzgoTqB";
-        let for_did = "11235yBzrpJQmNyZzgoTqB";
-        let for_verkey = "EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A";
-        let nonce = "nonce";
-        let mut message = Message::create()
-            .to(to_did).unwrap()
-            .payload(MessageType::CreateKey(
-                CreateKeyMsg::create()
-                .for_did(&for_did).unwrap()
-                .for_verkey(&for_verkey).unwrap()
-                .nonce(&nonce).unwrap().clone())).unwrap()
-            .serialize_message().unwrap();
-
-        println!("{}", message);
-
-        //        assert_eq!(message.payload, MessageType::CreateKey(create_msg));
-
-        //        assert_eq!(message.payload.unwrap(), create_msg);
-    }
-
-    #[test]
-    fn test_key_serializes_properly(){
-        let to_did = "8XFh8yBzrpJQmNyZzgoTqB";
-        let for_did = "11235yBzrpJQmNyZzgoTqB";
-        let for_verkey = "EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A";
-        let nonce = "nonce";
-
-
-        println!("{}", message);
-
-        //        assert_eq!(message.payload, MessageType::CreateKey(create_msg));
-
-        //        assert_eq!(message.payload.unwrap(), create_msg);
-    }
 
 }
