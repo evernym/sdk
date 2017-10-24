@@ -148,39 +148,4 @@ describe('A Connection object with ', function () {
         // get_data will return "" because the connection object was released
         return waitFor(() => !getData(handle))
     })
-
-
-    //need to change the test when did is actually added to the connection data
-    it('myDid() should return did', async function () {
-        const connection = new Connection(path)
-        connection.create({
-            id: "123",
-            DIDself: "456",
-            DIDremote: "789"
-        })
-        assert.equal(connection.myDid(), "456")
-    })
-
-
-    it('myId() should return enterprise customers id', async function () {
-        const connection = new Connection(path)
-        connection.create({
-            id: "123",
-            DIDself: "456",
-            DIDremote: "789"
-        })
-        assert.equal(connection.myId(), "123")
-    })
-
-    it('didEndpoint() should return empty string', async function () {
-        const connection = new Connection(path)
-        connection.create({
-            id: "123",
-            DIDself: "456",
-            DIDremote: "789"
-        })
-        assert.equal(connection.didEndpoint(), "")
-    })
-
-
 })

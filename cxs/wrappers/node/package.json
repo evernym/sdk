@@ -8,6 +8,7 @@
   "typings": "dist/index.d.ts",
   "scripts": {
     "compile": "./node_modules/.bin/tsc -p ./tsconfig.json",
+    "lint": "./node_modules/.bin/tslint --type-check -c ./tslint.json -p ./tsconfig.json",
     "test": "mocha -gc --expose-gc test/**/*.js",
     "doc-gen": "./node_modules/.bin/jsdoc -d doc src/*"
   },
