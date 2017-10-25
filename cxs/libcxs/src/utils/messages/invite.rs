@@ -7,7 +7,6 @@ use utils::messages::GeneralMessage;
 use serde::ser::{Serialize, Serializer, SerializeStruct};
 use serde_json::{Value, Error};
 
-
 #[derive(Clone, Serialize, Debug, PartialEq, PartialOrd)]
 pub enum MessageType {
     EmptyPayload{},
@@ -164,6 +163,7 @@ impl CreateKeyMsg{
     }
 }
 
+//Todo: Every GeneralMessage extension, duplicates code
 impl GeneralMessage for CreateKeyMsg  {
     type Msg = CreateKeyMsg;
 
@@ -225,6 +225,7 @@ impl SendInvite{
     }
 }
 
+//Todo: Every GeneralMessage extension, duplicates code
 impl GeneralMessage for SendInvite{
     type Msg = SendInvite;
 
@@ -278,6 +279,7 @@ impl UpdateProfileData{
     }
 }
 
+//Todo: Every GeneralMessage extension, duplicates code
 impl GeneralMessage for UpdateProfileData{
     type Msg = UpdateProfileData;
 
@@ -394,6 +396,7 @@ impl AcceptInvitation{
     }
 }
 
+//Todo: Every GeneralMessage extension, duplicates code
 impl GeneralMessage for AcceptInvitation{
     type Msg = AcceptInvitation;
 
