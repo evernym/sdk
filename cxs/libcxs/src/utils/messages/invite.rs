@@ -7,24 +7,12 @@ use utils::messages::GeneralMessage;
 use serde::ser::{Serialize, Serializer, SerializeStruct};
 use serde_json::{Value, Error};
 
-//TYPES:
-//SET_AGENCY_KEY (Type)
-//CONNECT   (sender did, sender_verkey) ie enterprise did, enterprise did
-//REGISTER (sender did)  ie enterprise did
-//CREATE_AGENT (sender did)
-
-
-//UPDATE_PROFILE_DATA (sender pairwise did, name, logo)
-//SEND_INVITE   (sender_pairwise_DID, delegate, phone_number)
-//INVITE_ANSWERED (sender pairwise did, msg_uid, delegate, ent_name, logo_url, sender_DID, sender_ver, remote del, remote endpt, push_com
-//getMsgs (sender pairwise did, msg_uid, msg_type, status_code, edge_payload)
-//sendMsg (sender_pairwsie_ did, msg_uid, msg_type, status_code_to_answer_msg, data_opt, response_of_msg)
 
 #[derive(Clone, Serialize, Debug, PartialEq, PartialOrd)]
 pub enum MessageType {
     EmptyPayload{},
     CreateKey(CreateKeyMsg),
-    SendInvite(SendInviteMsg),
+    SendInvite(SendInvite),
 }
 
 #[derive(Clone, Serialize, Debug, PartialEq, PartialOrd)]
@@ -43,7 +31,9 @@ struct CreateKeyPayload{
 pub struct CreateKeyMsg {
     #[serde(rename = "to")]
     to_did: String,
-    agent_payload: CreateKeyPayload,
+    agent_payload: String,
+    #[serde(skip_serializing, default)]
+    payload: CreateKeyPayload,
     #[serde(skip_serializing, default)]
     validate_rc: u32,
 }
@@ -62,7 +52,9 @@ struct UpdateProfileDataPayload{
 pub struct UpdateProfileData {
     #[serde(rename = "to")]
     to_did: String,
-    agent_payload: UpdateProfileDataPayload,
+    agent_payload: String,
+    #[serde(skip_serializing, default)]
+    payload: UpdateProfileDataPayload,
     #[serde(skip_serializing, default)]
     validate_rc: u32,
 }
@@ -79,10 +71,12 @@ struct SendInvitePayload{
 
 #[derive(Serialize, Debug, PartialEq, PartialOrd, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct SendInviteMsg {
+pub struct SendInvite {
     #[serde(rename = "to")]
     to_did: String,
-    agent_payload: SendInvitePayload,
+    agent_payload: String,
+    #[serde(skip_serializing, default)]
+    payload: SendInvitePayload,
     #[serde(skip_serializing, default)]
     validate_rc: u32,
 }
@@ -107,7 +101,9 @@ pub struct AcceptInvitationPayload {
 pub struct AcceptInvitation {
     #[serde(rename = "to")]
     to_did: String,
-    agent_payload: AcceptInvitationPayload,
+    agent_payload: String,
+    #[serde(skip_serializing, default)]
+    payload: AcceptInvitationPayload,
     #[serde(skip_serializing, default)]
     validate_rc: u32,
 }
@@ -117,12 +113,13 @@ impl CreateKeyMsg{
     fn create() -> CreateKeyMsg {
         CreateKeyMsg {
             to_did: String::new(),
-            agent_payload: CreateKeyPayload{
+            payload: CreateKeyPayload{
                 msg_type: "CREATE_KEY".to_string(),
                 for_did: String::new(),
                 for_verkey: String::new(),
                 nonce: String::new(),
             },
+            agent_payload: String::new(),
             validate_rc: error::SUCCESS.code_num,
         }
     }
@@ -130,7 +127,7 @@ impl CreateKeyMsg{
     pub fn for_did(&mut self, did: &str) ->&mut Self{
         match validation::validate_did(did){
             Ok(x) => {
-                self.agent_payload.for_did = x;
+                self.payload.for_did = x;
                 self
             },
             Err(x) => {
@@ -143,7 +140,7 @@ impl CreateKeyMsg{
     pub fn for_verkey(&mut self, verkey: &str) -> &mut Self {
         match validation::validate_verkey(verkey){
             Ok(x) => {
-                self.agent_payload.for_verkey = x;
+                self.payload.for_verkey = x;
                 self
             },
             Err(x) => {
@@ -156,7 +153,7 @@ impl CreateKeyMsg{
     pub fn nonce(&mut self, nonce: &str) -> &mut Self {
         match validation::validate_nonce(nonce){
             Ok(x) => {
-                self.agent_payload.nonce = x;
+                self.payload.nonce = x;
                 self
             },
             Err(x) => {
@@ -181,20 +178,22 @@ impl GeneralMessage for CreateKeyMsg  {
         if self.validate_rc != error::SUCCESS.code_num {
             return Err(self.validate_rc)
         }
+        self.agent_payload = json!(self.payload).to_string();
         Ok(json!(self).to_string())
     }
 }
 
-impl SendInviteMsg{
+impl SendInvite{
 
-    fn create() -> SendInviteMsg {
-        SendInviteMsg {
+    fn create() -> SendInvite {
+        SendInvite {
             to_did: String::new(),
-            agent_payload: SendInvitePayload{
+            payload: SendInvitePayload{
                 msg_type: "SEND_INVITE".to_string(),
                 key_delegate: String::new(),
                 phone_number: String::new(),
             },
+            agent_payload: String::new(),
             validate_rc: error::SUCCESS.code_num,
         }
     }
@@ -202,7 +201,7 @@ impl SendInviteMsg{
     fn key_delegate(&mut self, key: &str) -> &mut Self{
         match validation::validate_key_delegate(key){
             Ok(x) => {
-                self.agent_payload.key_delegate = x;
+                self.payload.key_delegate = x;
                 self
             }
             Err(x) => {
@@ -215,7 +214,7 @@ impl SendInviteMsg{
     fn phone_number(&mut self, p_num: &str)-> &mut Self{
         match validation::validate_phone_number(p_num){
             Ok(x) => {
-                self.agent_payload.phone_number = x;
+                self.payload.phone_number = x;
                  self
             }
             Err(x) => {
@@ -226,8 +225,8 @@ impl SendInviteMsg{
     }
 }
 
-impl GeneralMessage for SendInviteMsg{
-    type Msg = SendInviteMsg;
+impl GeneralMessage for SendInvite{
+    type Msg = SendInvite;
 
     fn set_to_did(&mut self, to_did: String){
         self.to_did = to_did;
@@ -240,6 +239,7 @@ impl GeneralMessage for SendInviteMsg{
         if self.validate_rc != error::SUCCESS.code_num {
             return Err(self.validate_rc)
         }
+        self.agent_payload = json!(self.payload).to_string();
         Ok(json!(self).to_string())
     }
 }
@@ -249,24 +249,25 @@ impl UpdateProfileData{
     fn create() -> UpdateProfileData {
         UpdateProfileData {
             to_did: String::new(),
-            agent_payload: UpdateProfileDataPayload{
+            payload: UpdateProfileDataPayload{
                 msg_type: "UPDATE_PROFILE_DATA".to_string(),
                 name: String::new(),
                 logo_url: String::new(),
             },
+            agent_payload: String::new(),
             validate_rc: error::SUCCESS.code_num,
         }
     }
 
     fn name(&mut self, name: &str) -> &mut Self{
-        self.agent_payload.name = name.to_string();
+        self.payload.name = name.to_string();
         self
     }
 
     fn logo_url(&mut self, url: &str)-> &mut Self{
         match validation::validate_url(url){
             Ok(x) => {
-                self.agent_payload.logo_url = x;
+                self.payload.logo_url = x;
                 self
             }
             Err(x) => {
@@ -291,6 +292,7 @@ impl GeneralMessage for UpdateProfileData{
         if self.validate_rc != error::SUCCESS.code_num {
             return Err(self.validate_rc)
         }
+        self.agent_payload = json!(self.payload).to_string();
         Ok(json!(self).to_string())
     }
 }
@@ -300,7 +302,7 @@ impl AcceptInvitation{
     fn create() -> AcceptInvitation {
         AcceptInvitation {
             to_did: String::new(),
-            agent_payload: AcceptInvitationPayload{
+            payload: AcceptInvitationPayload{
                 msg_type: "INVITE_ANSWERED".to_string(),
                 msg_uid: String::new(),
                 enterprise_name: String::new(),
@@ -311,25 +313,26 @@ impl AcceptInvitation{
                 remote_endpoint: String::new(),
                 push_com_method: String::new(),
             },
+            agent_payload: String::new(),
             validate_rc: error::SUCCESS.code_num,
         }
     }
 
     fn msg_uid(&mut self, uid: &str) -> &mut Self{
         //Todo: validate msg_uid??
-        self.agent_payload.msg_uid = uid.to_string();
+        self.payload.msg_uid = uid.to_string();
         self
     }
 
     fn enterprise_name(&mut self, name: &str) -> &mut Self {
-        self.agent_payload.enterprise_name = name.to_string();
+        self.payload.enterprise_name = name.to_string();
         self
     }
 
     fn logo_url(&mut self, url: &str)-> &mut Self {
         match validation::validate_url(url){
             Ok(x) => {
-                self.agent_payload.logo_url = x;
+                self.payload.logo_url = x;
                 self
             }
             Err(x) => {
@@ -342,7 +345,7 @@ impl AcceptInvitation{
     fn sender_did(&mut self, did: &str) -> &mut Self {
         match validation::validate_did(did){
             Ok(x) => {
-                self.agent_payload.sender_did = x;
+                self.payload.sender_did = x;
                 self
             },
             Err(x) => {
@@ -355,7 +358,7 @@ impl AcceptInvitation{
     fn sender_verkey(&mut self, verkey: &str) -> &mut Self {
         match validation::validate_verkey(verkey){
             Ok(x) => {
-                self.agent_payload.sender_verkey = x;
+                self.payload.sender_verkey = x;
                 self
             },
             Err(x) => {
@@ -368,7 +371,7 @@ impl AcceptInvitation{
     fn key_delegate(&mut self, key: &str) -> &mut Self {
         match validation::validate_key_delegate(key){
             Ok(x) => {
-                self.agent_payload.key_delegate = x;
+                self.payload.key_delegate = x;
                 self
             }
             Err(x) => {
@@ -380,13 +383,13 @@ impl AcceptInvitation{
 
     fn remote_endpoint(&mut self, endpoint: &str) -> &mut Self {
         //todo: is this validate URL??
-        self.agent_payload.remote_endpoint = endpoint.to_string();
+        self.payload.remote_endpoint = endpoint.to_string();
         self
     }
 
     fn push_com_method(&mut self, method: &str) -> &mut Self {
         //todo: is this validate URL??
-        self.agent_payload.push_com_method = method.to_string();
+        self.payload.push_com_method = method.to_string();
         self
     }
 }
@@ -405,31 +408,32 @@ impl GeneralMessage for AcceptInvitation{
         if self.validate_rc != error::SUCCESS.code_num {
             return Err(self.validate_rc)
         }
+        self.agent_payload = json!(self.payload).to_string();
         Ok(json!(self).to_string())
     }
 }
 
 fn create_key() -> CreateKeyMsg {
     let mut msg = CreateKeyMsg::create();
-    msg.agent_payload.msg_type = "CREATE_KEY".to_string();
+    msg.payload.msg_type = "CREATE_KEY".to_string();
     msg
 }
 
-fn send_invite() -> SendInviteMsg{
-    let mut msg = SendInviteMsg::create();
-    msg.agent_payload.msg_type = "SEND_INVITE".to_string();
+fn send_invite() -> SendInvite{
+    let mut msg = SendInvite::create();
+    msg.payload.msg_type = "SEND_INVITE".to_string();
     msg
 }
 
 fn update_data() -> UpdateProfileData{
     let mut msg = UpdateProfileData::create();
-    msg.agent_payload.msg_type = "UPDATE_PROFILE_DATA".to_string();
+    msg.payload.msg_type = "UPDATE_PROFILE_DATA".to_string();
     msg
 }
 
 fn accept_invitation() -> AcceptInvitation{
     let mut msg = AcceptInvitation::create();
-    msg.agent_payload.msg_type = "INVITE_ANSWERED".to_string();
+    msg.payload.msg_type = "INVITE_ANSWERED".to_string();
     msg
 }
 
@@ -447,7 +451,7 @@ mod tests {
             msg_type: "CREATE_KEY".to_string(),
             nonce: String::new(),
         };
-        assert_eq!(msg.agent_payload, msg_payload);
+        assert_eq!(msg.payload, msg_payload);
     }
 
     #[test]
@@ -467,7 +471,7 @@ mod tests {
             .for_did(for_did)
             .for_verkey(for_verkey)
             .nonce(nonce).clone();
-        assert_eq!(msg.agent_payload, msg_payload);
+        assert_eq!(msg.payload, msg_payload);
     }
 
     #[test]
@@ -483,11 +487,12 @@ mod tests {
             .nonce(nonce)
             .serialize_message().unwrap();
         assert_eq!(msg, "{\"agentPayload\":\
-            {\"forDIDVerKey\":\"EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A\",\
-            \"forDid\":\"11235yBzrpJQmNyZzgoTqB\",\
-            \"nonce\":\"nonce\",\
-            \"type\":\"CREATE_KEY\"},\
-        \"to\":\"8XFh8yBzrpJQmNyZzgoTqB\"}");
+        \"{\\\"forDIDVerKey\\\":\\\"EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A\\\",\
+            \\\"forDid\\\":\\\"11235yBzrpJQmNyZzgoTqB\\\",\
+            \\\"nonce\\\":\\\"nonce\\\",\
+            \\\"type\\\":\\\"CREATE_KEY\\\"}\",\
+        \"to\":\"8XFh8yBzrpJQmNyZzgoTqB\"}"
+        );
     }
 
     #[test]
@@ -500,11 +505,13 @@ mod tests {
             .phone_number(&phone)
             .key_delegate(&key)
             .serialize_message().unwrap();
+
         assert_eq!(msg, "{\"agentPayload\":\
-        {\"keyDlgProof\":\"key\",\
-            \"phoneNumber\":\"phone\",\
-            \"type\":\"SEND_INVITE\"},\
+        \"{\\\"keyDlgProof\\\":\\\"key\\\",\
+            \\\"phoneNumber\\\":\\\"phone\\\",\
+            \\\"type\\\":\\\"SEND_INVITE\\\"}\",\
         \"to\":\"8XFh8yBzrpJQmNyZzgoTqB\"}"
+
         );
     }
 
@@ -519,10 +526,11 @@ mod tests {
             .logo_url(&url)
             .serialize_message().unwrap();
         assert_eq!(msg, "{\"agentPayload\":\
-        {\"logoUrl\":\"https://random.com\",\
-            \"name\":\"name\",\
-            \"type\":\"UPDATE_PROFILE_DATA\"},\
+        \"{\\\"logoUrl\\\":\\\"https://random.com\\\",\
+            \\\"name\\\":\\\"name\\\",\
+            \\\"type\\\":\\\"UPDATE_PROFILE_DATA\\\"}\",\
         \"to\":\"8XFh8yBzrpJQmNyZzgoTqB\"}");
+
     }
 
     #[test]
@@ -548,15 +556,17 @@ mod tests {
             .push_com_method(&push_method)
             .serialize_message().unwrap();
         assert_eq!(msg, "{\"agentPayload\":\
-        {\"enterpriseName\":\"name\",\
-        \"keyDelegate\":\"key\",\
-        \"logoUrl\":\"https://random.com\",\
-        \"msgUid\":\"123\",\
-        \"pushComMethod\":\"push??\",\
-        \"remoteEndpoint\":\"https://??.com\",\
-        \"senderDid\":\"99Fh8yBzrpJQmNyZzgoTqB\",\
-        \"senderVerkey\":\"EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A\",\
-        \"type\":\"INVITE_ANSWERED\"},\"to\":\"8XFh8yBzrpJQmNyZzgoTqB\"}"
+        \"{\\\"enterpriseName\\\":\\\"name\\\",\
+            \\\"keyDelegate\\\":\\\"key\\\",\
+            \\\"logoUrl\\\":\\\"https://random.com\\\",\
+            \\\"msgUid\\\":\\\"123\\\",\
+            \\\"pushComMethod\\\":\\\"push??\\\",\
+            \\\"remoteEndpoint\\\":\\\"https://??.com\\\",\
+            \\\"senderDid\\\":\\\"99Fh8yBzrpJQmNyZzgoTqB\\\",\
+            \\\"senderVerkey\\\":\\\"EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A\\\",\
+            \\\"type\\\":\\\"INVITE_ANSWERED\\\"}\",\
+        \"to\":\"8XFh8yBzrpJQmNyZzgoTqB\"}"
+
         );
     }
 

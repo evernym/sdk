@@ -4,6 +4,9 @@ pub mod validation;
 pub trait GeneralMessage{
     type Msg;
 
+    //todo: add version
+    //todo: add encryption
+
     fn to(&mut self, to_did: &str) -> &mut Self {
         match validation::validate_did(to_did){
             Ok(x) => {
