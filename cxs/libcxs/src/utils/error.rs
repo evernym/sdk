@@ -21,6 +21,7 @@ pub static INVALID_NONCE: Error = Error{code_num:1011, message:"Invalid NONCE"};
 pub static INVALID_KEY_DELEGATE: Error = Error{code_num:1012, message:"Invalid DELEGATE"};
 pub static INVALID_URL: Error = Error{code_num:1013, message:"Invalid URL"};
 pub static NOT_BASE58: Error = Error{code_num:1014, message:"Value needs to be base58"};
+pub static MSG_SERIALIZE_ERROR: Error = Error{code_num:1015, message:"Message to json failed"};
 
 lazy_static! {
     static ref ERROR_MESSAGES: HashMap<u32, &'static str> = {

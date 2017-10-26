@@ -12,6 +12,8 @@ pub enum MessageType {
     EmptyPayload{},
     CreateKey(CreateKeyMsg),
     SendInvite(SendInvite),
+    AcceptInvite(AcceptInvitation),
+    UpdateInfo(UpdateProfileData)
 }
 
 #[derive(Clone, Serialize, Debug, PartialEq, PartialOrd)]
@@ -170,11 +172,12 @@ impl GeneralMessage for CreateKeyMsg  {
     fn set_to_did(&mut self, to_did: String){
         self.to_did = to_did;
     }
+
     fn set_validate_rc(&mut self, rc: u32){
         self.validate_rc = rc;
     }
 
-    fn serialize_message(&mut self) -> Result<String, u32>{
+    fn serialize_message(&mut self) -> Result<String, u32> {
         if self.validate_rc != error::SUCCESS.code_num {
             return Err(self.validate_rc)
         }
@@ -198,7 +201,7 @@ impl SendInvite{
         }
     }
 
-    fn key_delegate(&mut self, key: &str) -> &mut Self{
+    pub fn key_delegate(&mut self, key: &str) -> &mut Self{
         match validation::validate_key_delegate(key){
             Ok(x) => {
                 self.payload.key_delegate = x;
@@ -211,7 +214,7 @@ impl SendInvite{
         }
     }
 
-    fn phone_number(&mut self, p_num: &str)-> &mut Self{
+    pub fn phone_number(&mut self, p_num: &str)-> &mut Self{
         match validation::validate_phone_number(p_num){
             Ok(x) => {
                 self.payload.phone_number = x;
@@ -236,14 +239,15 @@ impl GeneralMessage for SendInvite{
         self.validate_rc = rc;
     }
 
-    fn serialize_message(&mut self) -> Result<String, u32>{
+    fn serialize_message(&mut self) -> Result<String, u32> {
         if self.validate_rc != error::SUCCESS.code_num {
             return Err(self.validate_rc)
         }
         self.agent_payload = json!(self.payload).to_string();
         Ok(json!(self).to_string())
     }
-}
+
+    }
 
 impl UpdateProfileData{
 
@@ -260,12 +264,12 @@ impl UpdateProfileData{
         }
     }
 
-    fn name(&mut self, name: &str) -> &mut Self{
+    pub fn name(&mut self, name: &str) -> &mut Self{
         self.payload.name = name.to_string();
         self
     }
 
-    fn logo_url(&mut self, url: &str)-> &mut Self{
+    pub fn logo_url(&mut self, url: &str)-> &mut Self{
         match validation::validate_url(url){
             Ok(x) => {
                 self.payload.logo_url = x;
@@ -290,13 +294,14 @@ impl GeneralMessage for UpdateProfileData{
         self.validate_rc = rc;
     }
 
-    fn serialize_message(&mut self) -> Result<String, u32>{
+    fn serialize_message(&mut self) -> Result<String, u32> {
         if self.validate_rc != error::SUCCESS.code_num {
             return Err(self.validate_rc)
         }
         self.agent_payload = json!(self.payload).to_string();
         Ok(json!(self).to_string())
     }
+
 }
 
 impl AcceptInvitation{
@@ -320,18 +325,18 @@ impl AcceptInvitation{
         }
     }
 
-    fn msg_uid(&mut self, uid: &str) -> &mut Self{
+    pub fn msg_uid(&mut self, uid: &str) -> &mut Self{
         //Todo: validate msg_uid??
         self.payload.msg_uid = uid.to_string();
         self
     }
 
-    fn enterprise_name(&mut self, name: &str) -> &mut Self {
+    pub fn enterprise_name(&mut self, name: &str) -> &mut Self {
         self.payload.enterprise_name = name.to_string();
         self
     }
 
-    fn logo_url(&mut self, url: &str)-> &mut Self {
+    pub fn logo_url(&mut self, url: &str)-> &mut Self {
         match validation::validate_url(url){
             Ok(x) => {
                 self.payload.logo_url = x;
@@ -344,7 +349,7 @@ impl AcceptInvitation{
         }
     }
 
-    fn sender_did(&mut self, did: &str) -> &mut Self {
+    pub fn sender_did(&mut self, did: &str) -> &mut Self {
         match validation::validate_did(did){
             Ok(x) => {
                 self.payload.sender_did = x;
@@ -357,7 +362,7 @@ impl AcceptInvitation{
         }
     }
 
-    fn sender_verkey(&mut self, verkey: &str) -> &mut Self {
+    pub fn sender_verkey(&mut self, verkey: &str) -> &mut Self {
         match validation::validate_verkey(verkey){
             Ok(x) => {
                 self.payload.sender_verkey = x;
@@ -370,7 +375,7 @@ impl AcceptInvitation{
         }
     }
 
-    fn key_delegate(&mut self, key: &str) -> &mut Self {
+    pub fn key_delegate(&mut self, key: &str) -> &mut Self {
         match validation::validate_key_delegate(key){
             Ok(x) => {
                 self.payload.key_delegate = x;
@@ -383,13 +388,13 @@ impl AcceptInvitation{
         }
     }
 
-    fn remote_endpoint(&mut self, endpoint: &str) -> &mut Self {
+    pub fn remote_endpoint(&mut self, endpoint: &str) -> &mut Self {
         //todo: is this validate URL??
         self.payload.remote_endpoint = endpoint.to_string();
         self
     }
 
-    fn push_com_method(&mut self, method: &str) -> &mut Self {
+    pub fn push_com_method(&mut self, method: &str) -> &mut Self {
         //todo: is this validate URL??
         self.payload.push_com_method = method.to_string();
         self
@@ -407,7 +412,7 @@ impl GeneralMessage for AcceptInvitation{
         self.validate_rc = rc;
     }
 
-    fn serialize_message(&mut self) -> Result<String, u32>{
+    fn serialize_message(&mut self) -> Result<String, u32> {
         if self.validate_rc != error::SUCCESS.code_num {
             return Err(self.validate_rc)
         }
@@ -416,29 +421,30 @@ impl GeneralMessage for AcceptInvitation{
     }
 }
 
-fn create_key() -> CreateKeyMsg {
+pub fn create_keys() -> CreateKeyMsg {
     let mut msg = CreateKeyMsg::create();
     msg.payload.msg_type = "CREATE_KEY".to_string();
     msg
 }
 
-fn send_invite() -> SendInvite{
+pub fn send_invite() -> SendInvite{
     let mut msg = SendInvite::create();
     msg.payload.msg_type = "SEND_INVITE".to_string();
     msg
 }
 
-fn update_data() -> UpdateProfileData{
+pub fn update_data() -> UpdateProfileData{
     let mut msg = UpdateProfileData::create();
     msg.payload.msg_type = "UPDATE_PROFILE_DATA".to_string();
     msg
 }
 
-fn accept_invitation() -> AcceptInvitation{
+pub fn accept_invitation() -> AcceptInvitation{
     let mut msg = AcceptInvitation::create();
     msg.payload.msg_type = "INVITE_ANSWERED".to_string();
     msg
 }
+
 
 #[cfg(test)]
 mod tests {
@@ -447,7 +453,7 @@ mod tests {
 
     #[test]
     fn test_create_key_returns_message_with_create_key_as_payload(){
-        let msg = create_key();
+        let msg = create_keys();
         let msg_payload = CreateKeyPayload{
             for_did: String::new(),
             for_verkey: String::new(),
@@ -469,7 +475,7 @@ mod tests {
             msg_type: "CREATE_KEY".to_string(),
             nonce: nonce.to_string(),
         };
-        let msg = create_key()
+        let msg = create_keys()
             .to(to_did)
             .for_did(for_did)
             .for_verkey(for_verkey)
@@ -483,7 +489,7 @@ mod tests {
         let for_did = "11235yBzrpJQmNyZzgoTqB";
         let for_verkey = "EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A";
         let nonce = "nonce";
-        let msg = create_key()
+        let msg = create_keys()
             .to(to_did)
             .for_did(for_did)
             .for_verkey(for_verkey)
@@ -579,7 +585,7 @@ mod tests {
         let for_did = "11235yBzrpJQmNyZzgoTqB";
         let for_verkey = "EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A";
         let nonce = "nonce";
-        let mut msg = create_key()
+        let mut msg = create_keys()
             .to(to_did)
             .for_did(for_did)
             .for_verkey(for_verkey)
