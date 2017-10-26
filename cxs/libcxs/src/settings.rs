@@ -18,6 +18,7 @@ pub static CONFIG_AGENCY_PAIRWISE_DID: &'static str = "agency_pairwise_did";
 pub static CONFIG_AGENCY_PAIRWISE_VERKEY: &'static str = "agency_pairwise_verkey";
 pub static CONFIG_AGENT_PAIRWISE_DID: &'static str = "agent_pairwise_did";
 pub static CONFIG_AGENT_PAIRWISE_VERKEY: &'static str = "agent_pairwise_verkey";
+pub static CONFIG_ENTERPRISE_DID: &'static str = "enterprise_did";
 pub static CONFIG_ENTERPRISE_DID_AGENCY: &'static str = "enterprise_did_agency";
 pub static CONFIG_ENTERPRISE_DID_AGENT: &'static str = "enterprise_did_agent";
 pub static CONFIG_ENTERPRISE_NAME: &'static str = "enterprise_name";
@@ -37,10 +38,12 @@ pub fn set_defaults() -> u32 {
     settings.set_default(CONFIG_WALLET_NAME,"wallet1");
     settings.set_default(CONFIG_WALLET_TYPE,"default");
     settings.set_default(CONFIG_AGENT_ENDPOINT,"http://127.0.0.1:8080");
+
     settings.set_default(CONFIG_AGENCY_PAIRWISE_DID,"default1");
     settings.set_default(CONFIG_AGENCY_PAIRWISE_VERKEY,"default");
     settings.set_default(CONFIG_AGENT_PAIRWISE_DID,"default");
     settings.set_default(CONFIG_AGENT_PAIRWISE_VERKEY,"default");
+    settings.set_default(CONFIG_ENTERPRISE_DID,"default");
     settings.set_default(CONFIG_ENTERPRISE_DID_AGENCY,"default");
     settings.set_default(CONFIG_ENTERPRISE_DID_AGENT,"default");
     settings.set_default(CONFIG_ENTERPRISE_NAME,"default");
@@ -76,6 +79,8 @@ fn validate_config() -> Result<u32, String> {
                 Err(x) => valid = false,
                 Ok(_) => valid = true,
             }
+        } else if setting.0 == CONFIG_ENTERPRISE_DID && !is_valid(setting.1) {
+            valid = false;
         } else if setting.0 == CONFIG_ENTERPRISE_DID_AGENCY && !is_valid(setting.1) {
             valid = false;
         } else if setting.0 == CONFIG_ENTERPRISE_DID_AGENT && !is_valid(setting.1) {
