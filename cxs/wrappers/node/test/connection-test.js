@@ -122,13 +122,13 @@ describe('A Connection object with ', function () {
     const connection = new Connection(path)
     assert.equal(connection.release(), 1003)
   })
-  
-  it('getData() should return CxsStateType as an integer', async function() {
+
+  it('getData() should return CxsStateType as an integer', async function () {
     const connection = new Connection(path)
     connection.create({ id: '234' })
     await connection.connect({ sms: true })
     const data = connection.getData()
-    assert.equal(data['state'],"2")
+    assert.equal(data['state'], 2)
   })
 
   it('connection and GC deletes object should return null whet get_data is called ', function () {
