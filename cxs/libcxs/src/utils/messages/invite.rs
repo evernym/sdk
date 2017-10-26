@@ -4,8 +4,6 @@ extern crate serde_json;
 use utils::error;
 use utils::messages::validation;
 use utils::messages::GeneralMessage;
-use serde::ser::{Serialize, Serializer, SerializeStruct};
-use serde_json::{Value, Error};
 
 #[derive(Clone, Serialize, Debug, PartialEq, PartialOrd)]
 pub enum MessageType {

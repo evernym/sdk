@@ -6,6 +6,7 @@ pub trait GeneralMessage{
 
     //todo: add version
     //todo: add encryption
+    //todo: deserialize_message
 
     fn to(&mut self, to_did: &str) -> &mut Self {
         match validation::validate_did(to_did){
