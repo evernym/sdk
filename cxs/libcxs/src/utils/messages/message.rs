@@ -34,7 +34,7 @@ impl GetMessages{
         GetMessages {
             to_did: String::new(),
             payload: GetMessagesPayload{
-                msg_type: "getMsgs".to_string(),
+                msg_type: "GET_MSGS".to_string(),
                 message: String::new(),
                 uid: String::new(),
                 status_code: String::new(),
