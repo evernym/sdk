@@ -1,6 +1,8 @@
 extern crate libc;
 
 pub mod cxs;
+pub mod connection;
+pub mod issuer_claim;
 
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone, Copy)]
 pub enum Errorcode

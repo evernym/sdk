@@ -96,6 +96,16 @@ fn find_connection(did: &str) -> u32 {
     return 0;
 }
 
+pub fn is_valid_connection_handle(handle: u32) -> bool {
+    let connection_table = CONNECTION_MAP.lock().unwrap();
+
+    if let Some(cxn) = connection_table.get(&handle) {
+        true
+    } else {
+        false
+    }
+}
+
 pub fn set_pw_did(handle: u32, did: &str) {
     let mut connection_table = CONNECTION_MAP.lock().unwrap();
 
@@ -109,10 +119,8 @@ pub fn set_state(handle: u32, state: CxsStateType) {
 
     if let Some(cxn) = connection_table.get_mut(&handle) {
         cxn.set_state(state);
-        ;
     }
 }
-
 
 pub fn get_pw_did(handle: u32) -> Result<String, u32> {
     let connection_table = CONNECTION_MAP.lock().unwrap();
@@ -363,7 +371,6 @@ mod tests {
 
     #[test]
     fn test_create_connection() {
-        ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
         let _m = mockito::mock("POST", "/agency/route")
