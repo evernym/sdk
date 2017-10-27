@@ -383,6 +383,7 @@ pub fn release(handle: u32) -> u32 {
 
     rc
 }
+
 fn get_invite_detail(response: &str) -> String {
     match serde_json::from_str(response) {
         Ok(json) => {
