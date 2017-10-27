@@ -2,7 +2,7 @@ extern crate rust_base58;
 extern crate serde_json;
 
 use utils::error;
-use utils::messages::GeneralMessage;
+use messages::GeneralMessage;
 
 #[derive(Clone, Serialize, Debug, PartialEq, PartialOrd)]
 #[serde(rename_all = "camelCase")]
@@ -94,7 +94,7 @@ impl GeneralMessage for GetMessages{
 #[cfg(test)]
 mod tests {
     use super::*;
-    use utils::messages::{get_messages};
+    use messages::{get_messages};
 
 
     #[test]
