@@ -10,8 +10,8 @@ use rand::Rng;
 use std::sync::Mutex;
 use std::collections::HashMap;
 use settings;
-use ::utils::messages::GeneralMessage;
-use ::utils::messages;
+use messages::GeneralMessage;
+use messages;
 
 lazy_static! {
     static ref CONNECTION_MAP: Mutex<HashMap<u32, Box<Connection>>> = Default::default();
