@@ -7,6 +7,7 @@ use std::thread;
 use std::time::Duration;
 use std::ffi::CString;
 use cxs::api;
+use std::vec::Vec;
 
 static CONFIG: &'static str = r#"
 {
@@ -38,11 +39,20 @@ fn connection_ete() {
 
     let mut handle: u32 = 0;
     let id = CString::new("{\"id\":\"ckmMPiEDcH4R5URY\"}").unwrap();
-    let options = CString::new("{\"phone\":\"8017170266\"}").unwrap();
+    let options = CString::new("{\"phone\":\"\"}").unwrap(); //ADD PHONE NUMBER
     r = api::cxs::cxs_connection_create(id.as_ptr(), std::ptr::null(), std::ptr::null(), &mut handle);
     assert!(r == 0);
     thread::sleep(Duration::from_secs(1));
     r = api::cxs::cxs_connection_connect(handle, options.as_ptr());
     assert!(r == 0);
     thread::sleep(Duration::from_secs(1));
+    unsafe {
+        print!("{}", CString::from_raw(api::cxs::cxs_connection_get_data(handle)).into_string().unwrap());
+    }
+
+    while true {
+        let mut status: u32 = 0;
+        print!("{}", api::cxs::cxs_connection_get_state(handle, &mut status));
+        thread::sleep_ms(5000);
+    }
 }

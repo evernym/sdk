@@ -278,7 +278,7 @@ pub fn update_state(handle: u32) {
     };
 
     let url = format!("{}/agency/route", settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
-    let json_msg = format!("{{\"to\":\"{}\",\"agentPayload\":\"{{\\\"type\\\":\\\"getMsgs\\\"}}\"}}", pw_did);
+    let json_msg = format!("{{\"to\":\"{}\",\"agentPayload\":\"{{\\\"type\\\":\\\"GET_MSGS\\\"}}\"}}", pw_did);
 
     match httpclient::post(&json_msg, &url) {
         Err(_) => {}
