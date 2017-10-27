@@ -43,26 +43,21 @@ pub trait GeneralMessage{
 
 
 pub fn create_keys() -> CreateKeyMsg {
-    let mut msg = CreateKeyMsg::create();
-    msg
+    CreateKeyMsg::create()
 }
 
 pub fn send_invite() -> SendInvite{
-    let mut msg = SendInvite::create();
-    msg
+    SendInvite::create()
 }
 
 pub fn update_data() -> UpdateProfileData{
-    let mut msg = UpdateProfileData::create();
-    msg
+    UpdateProfileData::create()
 }
 
 pub fn accept_invitation() -> AcceptInvitation{
-    let mut msg = AcceptInvitation::create();
-    msg
+    AcceptInvitation::create()
 }
 
 pub fn get_messages() -> GetMessages {
-    let mut msg = GetMessages::create();
-    msg
+    GetMessages::create()
 }

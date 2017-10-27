@@ -2,7 +2,6 @@ extern crate rust_base58;
 extern crate serde_json;
 
 use utils::error;
-use utils::messages::validation;
 use utils::messages::GeneralMessage;
 
 #[derive(Clone, Serialize, Debug, PartialEq, PartialOrd)]
