@@ -21,7 +21,7 @@ export class Connection implements IConnections {
     this._initRustApi(path)
   }
 
-  create ( recipientInfo: IRecipientInfo ): number {
+  async create ( recipientInfo: IRecipientInfo ): Promise<number> {
     const myDid = recipientInfo.DIDself !== undefined ? recipientInfo.DIDself : null
     const theirDid = recipientInfo.DIDremote !== undefined ? recipientInfo.DIDremote : null
     const id = recipientInfo.id // TODO verifiy that id is a string
@@ -38,13 +38,13 @@ export class Connection implements IConnections {
     await this._waitFor(() => this._connect(options) === 0, timeout)
   }
 
-  getData (): IConnectionData {
+  async getData (): Promise<IConnectionData> {
     const dataToRelease = this.RUST_API.cxs_connection_get_data(this.connectionHandle)
     // this.RUST_API.free(dataToRelease)
     return JSON.parse(dataToRelease)
   }
 
-  getState (): StateType {
+  async getState (): Promise<StateType> {
     const statusPtr = alloc(refTypes.uint32)
     const result = this.RUST_API.cxs_connection_get_state(this.connectionHandle, statusPtr)
     if (result) {
@@ -54,7 +54,7 @@ export class Connection implements IConnections {
     return this.state
   }
 
-  release (): number {
+  async release (): Promise<number> {
     return this.RUST_API.cxs_connection_release(this.connectionHandle)
   }
 

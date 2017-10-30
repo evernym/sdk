@@ -1,9 +1,9 @@
 export interface IConnections {
-  create ( IRecipientInfo ): number
-  getData (): IConnectionData
+  create ( IRecipientInfo ): Promise<number>
+  getData (): Promise<IConnectionData>
   connect ( IConnectOptions ): Promise<void>
-  getState (): number
-  release (): number
+  getState (): Promise<number>
+  release (): Promise<number>
 }
 
 export enum StateType {
