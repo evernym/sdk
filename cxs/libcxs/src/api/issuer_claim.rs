@@ -166,7 +166,9 @@ mod tests {
 
     #[test]
     fn test_cxs_issuer_create_claim_success() {
-        assert_eq!(cxs_issuer_create_claim(0, ptr::null(), 32, CString::new("{\"attr\":\"value\"}").unwrap().into_raw(),Some(create_cb)), error::SUCCESS.code_num);
+        assert_eq!(cxs_issuer_create_claim(0, ptr::null(), 32,
+                                           CString::new("{\"attr\":\"value\"}").unwrap().into_raw(),
+                                           Some(create_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
 

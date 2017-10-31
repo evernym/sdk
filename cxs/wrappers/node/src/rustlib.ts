@@ -21,6 +21,7 @@ export const FFI_STRING_DATA = 'string'
 export const FFI_CONNECTION_TYPE = 'string'
 export const FFI_VOID = ref.types.void
 export const FFI_CONNECTION_HANDLE_PTR = ref.refType(FFI_CONNECTION_HANDLE)
+export const FFI_CALLBACK_PTR = 'pointer'
 
 // Rust Lib Native Types
 export type rust_did = string
@@ -45,11 +46,14 @@ export class CXSRuntimeConfig {
 }
 
 export const FFIConfiguration = {
+  // issuerClaim
+  cxs_issuer_create_claim: [FFI_ERROR_CODE,
+    ['int', 'string', 'int', 'string', 'pointer']],
 
 // connection.rs
   cxs_connection_connect: [FFI_ERROR_CODE, [FFI_CONNECTION_HANDLE, FFI_CONNECTION_TYPE]],
-  cxs_connection_create: [FFI_ERROR_CODE, [FFI_STRING_DATA, FFI_STRING_DATA, FFI_STRING_DATA,
-    FFI_CONNECTION_HANDLE_PTR]],
+  cxs_connection_create: [FFI_ERROR_CODE, [FFI_STRING_DATA,
+    FFI_STRING_DATA, FFI_STRING_DATA, FFI_CONNECTION_HANDLE_PTR]],
   cxs_connection_get_data: [FFI_STRING_DATA, [FFI_CONNECTION_HANDLE]],
   cxs_connection_get_state: [FFI_ERROR_CODE, [FFI_CONNECTION_HANDLE, FFI_UNSIGNED_INT_PTR]],
   cxs_connection_release: [FFI_ERROR_CODE, [FFI_CONNECTION_HANDLE]],
