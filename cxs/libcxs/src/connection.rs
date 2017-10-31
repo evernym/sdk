@@ -32,7 +32,6 @@ struct Connection {
     pw_did: String,
     pw_verkey: String,
     did_endpoint: String,
-    wallet: String,
     state: CxsStateType,
     uuid: String,
     endpoint: String,
@@ -198,8 +197,8 @@ pub fn create_agent_pairwise(handle: u32) -> Result<u32, u32> {
     let url = format!("{}/agency/route", settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
 
     let json_msg = match messages::create_keys()
-        .to(&pw_did)
-        .for_did(&enterprise_did)
+        .for_did(&pw_did)
+        .to(&enterprise_did)
         .for_verkey(&pw_verkey)
         .nonce("anything")
         .serialize_message(){
@@ -260,7 +259,6 @@ pub fn build_connection (source_id: Option<String>,
         pw_did: String::new(),
         pw_verkey: String::new(),
         did_endpoint: String::new(),
-        wallet: String::new(),
         state: CxsStateType::CxsStateNone,
         uuid: String::new(),
         endpoint: String::new(),
@@ -597,7 +595,6 @@ mod tests {
             pw_did: "8XFh8yBzrpJQmNyZzgoTqB".to_string(),
             pw_verkey: "EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A".to_string(),
             did_endpoint: String::new(),
-            wallet: String::new(),
             state: CxsStateType::CxsStateNone,
             uuid: String::new(),
             endpoint: String::new(),
@@ -627,7 +624,6 @@ mod tests {
             pw_did: "8XFh8yBzrpJQmNyZzgoTqB".to_string(),
             pw_verkey: "EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A".to_string(),
             did_endpoint: String::new(),
-            wallet: String::new(),
             state: CxsStateType::CxsStateNone,
             uuid: String::new(),
             endpoint: String::new(),
