@@ -1,5 +1,5 @@
 export interface IConnections {
-  create ( IRecipientInfo ): Promise<number>
+  create ( IRecipientInfo ): number
   getData (): Promise<IConnectionData>
   connect ( IConnectOptions ): Promise<void>
   getState (): Promise<number>

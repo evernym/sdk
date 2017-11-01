@@ -6,6 +6,7 @@ const StateType = require(parentDir.dirname(currentDir) + '/dist/api/api').State
 const path = parentDir.dirname(currentDir) + '/lib/libcxs.so'
 const cxs = require('../dist/index.js')
 const assert = chai.assert
+const ffi = require('ffi')
 
 const sleep = (time) => new Promise((resolve) => setTimeout(resolve, time))
 
@@ -66,27 +67,33 @@ describe('A Connection object with ', function () {
 
   it('a call to get_data where connection exists should return back the connections data', async function () {
     const connection = new Connection(path)
-    const res = await connection.create({ id: '234' })
+    // TODO we are not awaiting on this create, which 
+    // is an async function that has a promise behind it.
+    connection.create({ id: '234' })
     const data = await connection.getData()
     assert.notEqual(data, null)
     assert.equal(data.handle, connection.connectionHandle)
   })
 
-  it('a call to get_data where connection doesnt exist should return a null value', async function () {
+  it('a call to get_data where connection doesnt exist should return null', async function () {
     const connection = new Connection(path)
-    assert.equal(await connection.getData(), null)
+    const data = await connection.getData()
+    assert.equal(data, null)
   })
 
-  it('a call to get_data where connection was released should return a null value', async function () {
+  it('a call to get_data where connection was released should return null', async function () {
     const connection = new Connection(path)
     assert.equal(await connection.create({ id: '234' }), 0)
 
     await connection.connect({ sms: true })
 
-    assert.equal(await connection.getState(), StateType.OfferSent)
-    assert.notEqual(await connection.getData(), null)
-    assert.equal(await connection.release(), 0)
-    assert.equal(await connection.getData(), null)
+    assert.equal(connection.getState(), StateType.OfferSent)
+    let data = await connection.getData()
+    assert.notEqual(data, null)
+    assert.equal(data.handle, connection.connectionHandle)
+    assert.equal(connection.release(), 0)
+    data = await connection.getData()
+    assert.equal(data, null)
   })
 
     // connection_getState tests
@@ -116,9 +123,11 @@ describe('A Connection object with ', function () {
     const connection = new Connection(path)
     connection.create({ id: '234' })
     await connection.connect({ sms: true })
-    assert.equal(await connection.release(), 0)
-    assert.equal(await connection._connect({ sms: true }), 1003)
-    assert.equal(await connection.getData(), null)
+    // TODO No await on release and _connect
+    assert.equal(connection.release(), 0)
+    assert.equal(connection._connect({ sms: true }), 1003)
+    const result = await connection.getData()
+    assert.equal(result, null)
   })
 
   it('call to connection_release with no connection should return unknown error', async function () {
@@ -133,24 +142,50 @@ describe('A Connection object with ', function () {
     const data2 = await connection.getData()
     assert.equal(data2['state'], 1)
     await connection.connect({ sms: true })
-    const data = await connection.getData()
-    assert.equal(data['state'], 2)
+    const result = await connection.getData()
+    assert.equal(result['state'], 2)
   })
 
-  it('connection and GC deletes object should return null when get_data is called ', function () {
+  it('connection and GC deletes object should return null when get_data is called ', async function () {
     this.timeout(30000)
     let connection = new Connection(path)
     connection.create({ id: '234' })
     connection._connect({ sms: true })
-    const getData = connection.RUST_API.cxs_connection_get_data
+    const getData = connection.RUST_API.cxs_connection_serialize
     const handle = connection.connectionHandle
-    assert.notEqual(connection.getData(handle), null)
+    const data = await connection.getData()
+    assert.notEqual(data, null)
 
     connection = null
     global.gc()
 
-        // this will timeout if condition is never met
-        // get_data will return "" because the connection object was released
-    return waitFor(() => !getData(handle))
+    let isComplete = false
+    //  hold on to callbacks so it doesn't become garbage collected
+    const callbacks = []
+
+    while (!isComplete) {
+      const data = await new Promise(function (resolve, reject) {
+        const callback = ffi.Callback('void', ['uint32', 'uint32', 'string'],
+          function (handle, err, data) {
+            if (err) {
+              reject(err)
+              return
+            }
+            resolve(data)
+          })
+        callbacks.push(callback)
+        getData(
+          handle,
+          callback
+        )
+      })
+      if (!data) {
+        isComplete = true
+      }
+    }
+
+      // this will timeout if condition is never met
+      // get_data will return "" because the connection object was released
+    return isComplete
   })
 })
