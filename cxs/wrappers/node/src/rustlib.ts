@@ -22,11 +22,8 @@ export const FFI_CONNECTION_TYPE = 'string'
 export const FFI_VOID = ref.types.void
 export const FFI_CONNECTION_HANDLE_PTR = ref.refType(FFI_CONNECTION_HANDLE)
 export const FFI_CALLBACK_PTR = 'pointer'
-<<<<<<< HEAD
 export const FFI_COMMAND_HANDLE = 'uint32'
 export const FFI_CLAIM_HANDLE = 'uint32'
-=======
->>>>>>> master
 
 // Rust Lib Native Types
 export type rust_did = string

@@ -87,11 +87,11 @@ describe('A Connection object with ', function () {
 
     await connection.connect({ sms: true })
 
-    assert.equal(connection.getState(), StateType.OfferSent)
+    assert.equal(await connection.getState(), StateType.OfferSent)
     let data = await connection.getData()
     assert.notEqual(data, null)
     assert.equal(data.handle, connection.connectionHandle)
-    assert.equal(connection.release(), 0)
+    assert.equal(await connection.release(), 0)
     data = await connection.getData()
     assert.equal(data, null)
   })
@@ -123,8 +123,9 @@ describe('A Connection object with ', function () {
     const connection = new Connection(path)
     connection.create({ id: '234' })
     await connection.connect({ sms: true })
-    // TODO No await on release and _connect
-    assert.equal(connection.release(), 0)
+    assert.equal(await connection.release(), 0)
+    // TODO This should be the connect call, not
+    // private call.
     assert.equal(connection._connect({ sms: true }), 1003)
     const result = await connection.getData()
     assert.equal(result, null)

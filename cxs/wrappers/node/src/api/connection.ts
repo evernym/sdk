@@ -21,7 +21,7 @@ export class Connection implements IConnections {
     this._initRustApi(path)
   }
 
-  async create ( recipientInfo: IRecipientInfo ): Promise<number> {
+  create ( recipientInfo: IRecipientInfo ): number {
     const myDid = recipientInfo.DIDself !== undefined ? recipientInfo.DIDself : null
     const theirDid = recipientInfo.DIDremote !== undefined ? recipientInfo.DIDremote : null
     const id = recipientInfo.id // TODO verifiy that id is a string

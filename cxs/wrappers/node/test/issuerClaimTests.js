@@ -67,7 +67,7 @@ describe('An issuerClaim', async function() {
 
   })
 
-  it.only('can be sent and then serialized, deserialized', async function () {
+  it('can be sent and then serialized, deserialized', async function () {
     // create a connection, send the claim, serialize and then deserialize
     // and compare
     const path = '../lib/libcxs.so'
