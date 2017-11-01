@@ -143,10 +143,15 @@ cxs_error_t cxs_issuer_send_claim(cxs_claim_handle_t claim_handle, cxs_connectio
 cxs_error_t cxs_issuer_terminate_claim(cxs_claim_handle_t claim_handle, cxs_claim_state_t state_type, const char *msg);
 
 /** Populates status with the current state of this claim. */
-cxs_error_t cxs_issuer_claim_serialize(cxs_claim_handle_t claim_handle, void (*cb)(cxs_claim_handle_t claim_handle, cxs_error_t err, const char *state));
+cxs_error_t cxs_issuer_claim_serialize(cxs_claim_handle_t claim_handle,
+                                       void (*cb)(cxs_claim_handle_t claim_handle, cxs_error_t err, const char *claim_string));
 
 /** Re-creates a claim object from the specified serialization. */
-cxs_error_t cxs_issuer_claim_deserialize(cxs_command_handle_t, const char *serialized_claim, void (*cb)(cxs_command_handle_t command_handle, cxs_error_t err, cxs_claim_handle_t *claim_handle));
+cxs_error_t cxs_issuer_claim_deserialize(cxs_command_handle_t,
+                                         const char *serialized_claim,
+                                         void (*cb)(cxs_command_handle_t command_handle,
+                                                    cxs_error_t err,
+                                                    cxs_claim_handle_t claim_handle));
 
 /**
  * proof object

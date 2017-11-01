@@ -21,14 +21,49 @@ export class IssuerClaim {
             reject (err)
             return
           }
-          resolve (claimHandle)
+          // resolve (JSON.parse(JSON.stringify(claimHandle.value)))
+          const value = JSON.stringify(claimHandle)
+          resolve(Number(value))
         })
       )
     )
     this.setClaimHandle(data)
-    this.setState(1)
+    this._setState(await this._callCxsAndGetCurrentState())
     // what should a create call return?
     return 0
+  }
+  async _callCxsAndGetCurrentState () {
+    const buff = await this.serialize()
+    const json = JSON.parse(buff)
+    const key = 'state'
+    const state = json[key]
+    return state
+  }
+
+  async _getStateFromJsonString (str) {
+    const key = 'state'
+    const json = JSON.parse(str)
+    const state = json[key]
+    return state
+  }
+  async deserialize (claimAsString) {
+    const commandHandle = 75482210
+    await new Promise<void> ((resolve, reject) =>
+    this._RUST_API.cxs_issuer_claim_deserialize(commandHandle, claimAsString,
+      Callback('void', ['uint32', 'uint32', 'uint32'],
+        (xcommandHandle, err, claimHandle) => {
+          if (err > 0 ) {
+            // TODO Handle error better!
+            reject(err)
+            return
+          }
+          this._claimHandle = Number(JSON.stringify(claimHandle))
+          resolve(claimHandle)
+        })
+      )
+    )
+    const state = await this._callCxsAndGetCurrentState()
+    this._setState(state)
   }
   getSourceId () {
     return this._sourceId
@@ -52,11 +87,12 @@ export class IssuerClaim {
       connectionHandle,
       Callback('void', ['uint32', 'uint32'], (xcommandHandle, err) => {
         if (err > 0 ) {
-          console.log("error")
           reject(err)
           return
         }
-        this.setState(2)
+        // TODO I Dont like this, can we make this more like
+        // the deserialize, but keep it in the callback?
+        this._setState(2)
         resolve(xcommandHandle)
       })))
   }
@@ -65,8 +101,24 @@ export class IssuerClaim {
     return this._state
   }
 
-  setState (state) {
+  _setState (state) {
     this._state = state
+  }
+
+  async serialize () {
+    const claimHandle = this._claimHandle
+    // const serializedClaimPtr = ref.alloc(ref.types.CString)
+    const ptr = await new Promise<string> ((resolve, reject) =>
+      this._RUST_API.cxs_issuer_claim_serialize(claimHandle,
+      Callback('void', ['uint32', 'uint32', 'string'], (xclaimHandle, err, serializedClaim) => {
+        if (err > 0 ) {
+          reject(err)
+          return
+        }
+        const data = JSON.stringify(JSON.parse(serializedClaim))
+        resolve(data)
+      })))
+    return ptr
   }
 
   private _initRustApi (path?) {

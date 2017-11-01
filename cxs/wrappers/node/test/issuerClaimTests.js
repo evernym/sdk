@@ -53,4 +53,43 @@ describe('An issuerClaim', async function() {
     assert.equal(await claim.getState(),2)
   })
 
+  it('can be serialized and deserialized', async function () {
+    const sourceId = 'SerializeDeserialize'
+    const claim = new IssuerClaim(sourceId)
+    await claim.create()
+    const jsonClaim = await claim.serialize()
+    console.log(jsonClaim)
+    assert.equal(JSON.parse(jsonClaim)['state'],1)
+    const claim2 = new IssuerClaim('deserialized')
+    await claim2.deserialize(jsonClaim)
+    assert.equal(claim.getClaimHandle(), claim2.getClaimHandle())
+    assert.equal(claim.getState(), claim2.getState())
+
+  })
+
+  it.only('can be sent and then serialized, deserialized', async function () {
+    // create a connection, send the claim, serialize and then deserialize
+    // and compare
+    const path = '../lib/libcxs.so'
+    cxs.init_cxs('ENABLE_TEST_MODE')
+    var connection = new Connection()
+    await connection.create({ id: '234' })
+    const connectionHandle = await connection.getHandle()
+    await connection.connect()
+
+    const sourceId = 'SendSerializeDeserialize'
+    const sourceId2 = 'DeserializedClaim'
+    const claim = new IssuerClaim(sourceId)
+    const claim2 = new IssuerClaim(sourceId2)
+
+    await claim.create()
+    await claim.send(connectionHandle)
+    await claim2.create()
+    const claimSerialized = await claim.serialize()
+
+    await claim2.deserialize(claimSerialized)
+    assert.equal(claim.getState(), 2)
+    assert.equal(claim.getState(), claim2.getState())
+  })
+
 })
