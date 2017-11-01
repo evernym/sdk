@@ -129,6 +129,9 @@ describe('A Connection object with ', function () {
   it('getData() should return CxsStateType as an integer', async function () {
     const connection = new Connection(path)
     await connection.create({ id: '234' })
+    await sleep(3000)    
+    const data2 = await connection.getData()
+    assert.equal(data2['state'], 1)
     await connection.connect({ sms: true })
     const data = await connection.getData()
     assert.equal(data['state'], 2)

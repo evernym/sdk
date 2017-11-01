@@ -14,7 +14,7 @@ extern "C" fn send_offer_cb(command_handle: u32, err: u32) {
     if err != 0 {panic!("failed to send claim offer")}
     println!("Claim offer sent!");
 }
-
+#[allow(unused_assignments)]
 #[allow(unused_variables)]
 extern "C" fn create_and_send_offer_cb(command_handle: u32, err: u32, claim_handle: u32) {
     if err != 0 {panic!("failed to create claim handle in create_and_send_offer_cb!")}

@@ -57,10 +57,14 @@ export class Connection implements IConnections {
   async release (): Promise<number> {
     return this.RUST_API.cxs_connection_release(this.connectionHandle)
   }
-
+  async getHandle () {
+    return this.connectionHandle
+  }
   private _initRustApi (path?) {
     this.RUST_API = new CXSRuntime(new CXSRuntimeConfig(path))._ffi
   }
+
+  
 
   // _clearOnExit creates a callback that will release the Rust Object
   // when the node Connection object is Garbage collected

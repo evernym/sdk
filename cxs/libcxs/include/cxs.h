@@ -124,7 +124,11 @@ cxs_error_t cxs_issuer_create_claim(cxs_command_handle_t command_handle,
                                                 cxs_claim_handle_t *claim_handle));
 
 /** Asynchronously sends the claim offer to the connection. */
-cxs_error_t cxs_issuer_send_claim_offer(cxs_claim_handle_t claim_handle, cxs_connection_handle_t connection_handle);
+cxs_error_t cxs_issuer_send_claim_offer(cxs_command_handle_t command_handle,
+                                        cxs_claim_handle_t claim_handle,
+                                        cxs_connection_handle_t connection_handle,
+                                        void (*)(cxs_command_handle_t command_handle,
+                                                 cxs_error_t err)));
 
 /** Populates claim_request with the latest claim request received. */
 cxs_error_t cxs_issuer_get_claim_request(cxs_claim_handle_t claim_handle, char *claim_request);
