@@ -138,7 +138,7 @@ describe('A Connection object with ', function () {
 
   it('getData() should return CxsStateType as an integer', async function () {
     const connection = new Connection(path)
-    await connection.create({ id: '234' })
+    await connection.create({ id: 'returnCxsTypeInteger' })
     await sleep(3000)    
     const data2 = await connection.getData()
     assert.equal(data2['state'], 1)
@@ -150,7 +150,7 @@ describe('A Connection object with ', function () {
   it('connection and GC deletes object should return null when get_data is called ', async function () {
     this.timeout(30000)
     let connection = new Connection(path)
-    connection.create({ id: '234' })
+    connection.create({ id: 'GarbageCollector' })
     connection._connect({ sms: true })
     const getData = connection.RUST_API.cxs_connection_serialize
     const handle = connection.connectionHandle
