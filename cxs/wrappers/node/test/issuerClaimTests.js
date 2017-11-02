@@ -23,16 +23,13 @@ describe('An issuerClaim', async function () {
 
   it('has a claimHandle and a sourceId after it is created', async function () {
     const sourceId = 'Claim'
-    const claim = new IssuerClaim(sourceId)
-    await claim.create()
+    const claim = await IssuerClaim.create(sourceId)
     assert(claim.getClaimHandle() > 0)
     assert.equal(claim.getSourceId(), sourceId)
   })
 
   it('has state that can be found', async function () {
-    const claim = new IssuerClaim('TestState')
-    assert.equal(claim.getState(), 0)
-    await claim.create()
+    const claim = await IssuerClaim.create('TestState')
     assert.equal(claim.getState(), 1)
   })
 
@@ -44,19 +41,17 @@ describe('An issuerClaim', async function () {
     const connectionHandle = await connection.getHandle()
     await connection.connect()
     assert.equal(await connection.getState(), 2)
-    const claim = new IssuerClaim(sourceId)
-    await claim.create()
+    const claim = await IssuerClaim.create(sourceId)
     await claim.send(connectionHandle)
     assert.equal(await claim.getState(), 2)
   })
 
   it('can be created, then serialized, then deserialized', async function () {
     const sourceId = 'SerializeDeserialize'
-    const claim = new IssuerClaim(sourceId)
-    await claim.create()
+    const claim = await IssuerClaim.create(sourceId)
     const jsonClaim = await claim.serialize()
     assert.equal(jsonClaim.state, 1)
-    const claim2 = new IssuerClaim('deserialized')
+    const claim2 = await IssuerClaim.create('deserialized')
     await claim2.deserialize(JSON.stringify(jsonClaim))
     assert.equal(claim.getClaimHandle(), claim2.getClaimHandle())
     assert.equal(claim.getState(), claim2.getState())
@@ -73,16 +68,27 @@ describe('An issuerClaim', async function () {
 
     const sourceId = 'SendSerializeDeserialize'
     const sourceId2 = 'DeserializedClaim'
-    const claim = new IssuerClaim(sourceId)
-    const claim2 = new IssuerClaim(sourceId2)
+    const claim = await IssuerClaim.create(sourceId)
+    const claim2 = await IssuerClaim.create(sourceId2)
 
-    await claim.create()
     await claim.send(connectionHandle)
-    await claim2.create()
     const claimSerialized = await claim.serialize()
 
     await claim2.deserialize(JSON.stringify(claimSerialized))
     assert.equal(claim.getState(), 2)
     assert.equal(claim.getState(), claim2.getState())
+  })
+
+  it('is created from a static method', async function () {
+    const sourceId = 'staticMethodCreation'
+    const claim = await IssuerClaim.create(sourceId)
+    assert(claim.getSourceId, sourceId)
+  })
+
+  it.only('will have different claim handles even with the same sourceIds', async function () {
+    const sourceId = 'sameSourceIds'
+    const claim = await IssuerClaim.create(sourceId)
+    const claim2 = await IssuerClaim.create(sourceId)
+    assert.notEqual(claim.getClaimHandle(), claim2.getClaimHandle)
   })
 })
