@@ -11,11 +11,12 @@ const ffi = require('ffi')
 const sleep = (time) => new Promise((resolve) => setTimeout(resolve, time))
 
 const waitFor = async (predicate) => {
-  if (!predicate()) {
+  const ret = await predicate()
+  if (!ret) {
     await sleep(1000)
     return waitFor(predicate)
   }
-  return predicate()
+  return ret
 }
 
 // console.log(release(handle)) // tslint:disable-line
@@ -110,11 +111,10 @@ describe('A Connection object with ', function () {
     assert.equal(await connection.getState(), StateType.None)
   })
 
-  it('call to get_state where connection exists but not connected should have a state value of 1', async function () {
+  it.only('call to get_state where connection exists but not connected should have a state value of 1', async function () {
     const connection = new Connection(path)
-    connection.create({ id: '234' })
-    // assert.equal(await connection.getState(), StateType.Initialized)
-    return waitFor(async () => connection.getState() === StateType.Initialized)
+    await connection.create({ id: '234' })
+    return waitFor(async () => (await connection.getState()) === StateType.Initialized)
   })
 
     // connection_release tests
