@@ -86,10 +86,7 @@ def testNodeWrapper(envn) {
                 sh 'npm -v'
                 sh 'npm install'
                 sh 'npm rebuild'
-// disabling until lint errors are able to 
-// be displayed in IDE and not just through
-// the lint command.
-//                sh 'npm run lint'
+                sh 'npm run lint'
                 sh 'npm run compile'
                 sh 'npm test'
             }
