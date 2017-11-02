@@ -4,6 +4,8 @@ const IssuerClaim = require('../dist/index').IssuerClaim
 const cxs = require('../dist/index')
 const Connection = require('../dist/api/connection').Connection
 
+const StateType = require('../dist/api/api').StateType
+
 describe('An issuerClaim', async function () {
   it('can be created.', async function () {
     const claim = new IssuerClaim('Bank Claim')
@@ -46,13 +48,12 @@ describe('An issuerClaim', async function () {
     assert.equal(await claim.getState(), 2)
   })
 
-  it('can be created, then serialized, then deserialized', async function () {
+  it('can be created, then serialized, then deserialized and have the same sourceId, state, and claimHandle', async function () {
     const sourceId = 'SerializeDeserialize'
     const claim = await IssuerClaim.create(sourceId)
     const jsonClaim = await claim.serialize()
     assert.equal(jsonClaim.state, 1)
-    const claim2 = await IssuerClaim.create('deserialized')
-    await claim2.deserialize(JSON.stringify(jsonClaim))
+    const claim2 = await IssuerClaim.deserialize(jsonClaim)
     assert.equal(claim.getClaimHandle(), claim2.getClaimHandle())
     assert.equal(claim.getState(), claim2.getState())
   })
@@ -67,16 +68,15 @@ describe('An issuerClaim', async function () {
     await connection.connect()
 
     const sourceId = 'SendSerializeDeserialize'
-    const sourceId2 = 'DeserializedClaim'
     const claim = await IssuerClaim.create(sourceId)
-    const claim2 = await IssuerClaim.create(sourceId2)
 
     await claim.send(connectionHandle)
-    const claimSerialized = await claim.serialize()
+    const claimData = await claim.serialize()
 
-    await claim2.deserialize(JSON.stringify(claimSerialized))
-    assert.equal(claim.getState(), 2)
+    const claim2 = await IssuerClaim.deserialize(claimData)
+    assert.equal(claim.getState(), StateType.OfferSent)
     assert.equal(claim.getState(), claim2.getState())
+    assert.equal(claim.getClaimHandle(), claim2.getClaimHandle())
   })
 
   it('is created from a static method', async function () {
@@ -85,10 +85,18 @@ describe('An issuerClaim', async function () {
     assert(claim.getSourceId, sourceId)
   })
 
-  it.only('will have different claim handles even with the same sourceIds', async function () {
+  it('will have different claim handles even with the same sourceIds', async function () {
     const sourceId = 'sameSourceIds'
     const claim = await IssuerClaim.create(sourceId)
     const claim2 = await IssuerClaim.create(sourceId)
     assert.notEqual(claim.getClaimHandle(), claim2.getClaimHandle)
+  })
+
+  it('deserialize is a static method', async function () {
+    const sourceId = 'deserializeStatic'
+    const claim = await IssuerClaim.create(sourceId)
+    const serializedJson = await claim.serialize()
+    const claimDeserialized = await IssuerClaim.deserialize(serializedJson)
+    assert(claimDeserialized.getState, StateType.Initialized)
   })
 })

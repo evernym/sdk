@@ -3,7 +3,6 @@ import { weak } from 'weak'
 import { CXSRuntime, CXSRuntimeConfig } from '../index'
 import { IClaimData, StateType } from './api'
 export class IssuerClaim {
-  
   private _sourceId: string
   private _claimHandle: number
   private _state: number
@@ -20,6 +19,13 @@ export class IssuerClaim {
     return claim
   }
 
+  static async deserialize (issuerClaim: IClaimData): Promise<IssuerClaim> {
+    const sourceId = issuerClaim.source_id
+    const claim = await IssuerClaim.create(sourceId)
+    await claim._initFromClaimData(issuerClaim)
+    return claim
+  }
+
   async _callCxsAndGetCurrentState () {
     const buff = await this.serialize()
     const json = buff
@@ -27,25 +33,6 @@ export class IssuerClaim {
     return state
   }
 
-  async deserialize (claimAsString): Promise<void> {
-    const commandHandle = 75482210
-    let callback = null
-    await new Promise<void> ((resolve, reject) => {
-      callback = Callback('void', ['uint32', 'uint32', 'uint32'],
-      (xcommandHandle, err, claimHandle) => {
-        if (err > 0 ) {
-          // TODO Handle error better!
-          reject(err)
-          return
-        }
-        this._claimHandle = Number(JSON.stringify(claimHandle))
-        resolve(claimHandle)
-      })
-      this._RUST_API.cxs_issuer_claim_deserialize(commandHandle, claimAsString, callback)
-    })
-    const state = await this._callCxsAndGetCurrentState()
-    this._setState(state)
-  }
   getSourceId () {
     return this._sourceId
   }
@@ -121,6 +108,25 @@ export class IssuerClaim {
       this._RUST_API.cxs_issuer_create_claim(0, null, 32, '{"attr":"value"}', callback)
     })
     this.setClaimHandle(data)
+    this._setState(await this._callCxsAndGetCurrentState())
+  }
+
+  private async _initFromClaimData (claimData: IClaimData): Promise<void> {
+    let callback = null
+    const commandHandle = 75483
+    const xclaimHandle = await new Promise<void> ((resolve, reject) => {
+      callback = Callback('void', ['uint32', 'uint32', 'uint32'],
+      (xcommandHandle, err, claimHandle) => {
+        if (err > 0 ) {
+        // TODO Handle error better!
+          reject(err)
+          return
+        }
+        resolve(claimHandle)
+      })
+      this._RUST_API.cxs_issuer_claim_deserialize(commandHandle, JSON.stringify(claimData), callback)
+    })
+    this.setClaimHandle(xclaimHandle)
     this._setState(await this._callCxsAndGetCurrentState())
   }
 
