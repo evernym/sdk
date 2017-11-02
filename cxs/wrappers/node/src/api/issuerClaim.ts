@@ -2,6 +2,7 @@ import { Callback, ForeignFunction } from 'ffi'
 import { weak } from 'weak'
 import { CXSRuntime, CXSRuntimeConfig } from '../index'
 import { IClaimData, StateType } from './api'
+
 export class IssuerClaim {
   private _sourceId: string
   private _claimHandle: number
