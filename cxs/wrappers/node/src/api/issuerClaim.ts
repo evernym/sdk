@@ -49,23 +49,20 @@ export class IssuerClaim {
     return this._state
   }
 
-  _setState (state) {
-    this._state = state
-  }
-
   async serialize (): Promise<IClaimData> {
+    let callback = null
     const claimHandle = this._claimHandle
-    // const serializedClaimPtr = ref.alloc(ref.types.CString)
-    const ptr = await new Promise<IClaimData> ((resolve, reject) =>
-      this._RUST_API.cxs_issuer_claim_serialize(claimHandle,
-      Callback('void', ['uint32', 'uint32', 'string'], (xclaimHandle, err, serializedClaim) => {
+    const ptr = await new Promise<IClaimData> ((resolve, reject) => {
+      callback = Callback('void', ['uint32', 'uint32', 'string'], (xclaimHandle, err, serializedClaim) => {
         if (err > 0 ) {
           reject(err)
           return
         }
         const data: IClaimData = JSON.parse(serializedClaim)
         resolve(data)
-      })))
+      })
+      this._RUST_API.cxs_issuer_claim_serialize(claimHandle, callback)
+    })
     return ptr
   }
 
@@ -75,7 +72,6 @@ export class IssuerClaim {
     // to something more robust, perhaps a global hashmap?
     const commandHandle = 78442
     const claimHandle = this._claimHandle
-    // callback(command_handle, error)
 
     await new Promise<void> ((resolve, reject) => {
       callback = Callback('void', ['uint32', 'uint32'], (xcommandHandle, err) => {
@@ -83,16 +79,17 @@ export class IssuerClaim {
           reject(err)
           return
         }
-        // TODO I Dont like this, can we make this more like
-        // the deserialize, but keep it in the callback?
-        this._setState(StateType.OfferSent)
         resolve(xcommandHandle)
 
       })
       this._RUST_API.cxs_issuer_send_claim_offer(commandHandle, claimHandle, connectionHandle, callback)
     })
+    this._setState(StateType.OfferSent)
   }
 
+  private _setState (state) {
+    this._state = state
+  }
   private async init (): Promise<void> {
     let callback = null
     const data = await new Promise<number>((resolve,reject) => {
@@ -101,7 +98,6 @@ export class IssuerClaim {
           reject (err)
           return
         }
-        // resolve (JSON.parse(JSON.stringify(claimHandle.value)))
         const value = JSON.stringify(claimHandle)
         resolve(Number(value))
       })
@@ -118,7 +114,6 @@ export class IssuerClaim {
       callback = Callback('void', ['uint32', 'uint32', 'uint32'],
       (xcommandHandle, err, claimHandle) => {
         if (err > 0 ) {
-        // TODO Handle error better!
           reject(err)
           return
         }
