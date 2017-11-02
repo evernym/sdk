@@ -1,5 +1,4 @@
 import { Callback, ForeignFunction } from 'ffi'
-import * as ref from 'ref'
 import { CXSRuntime, CXSRuntimeConfig } from '../index'
 export class IssuerClaim {
   _sourceId: string
