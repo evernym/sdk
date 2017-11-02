@@ -35,14 +35,14 @@ describe('A Connection object with ', function () {
       id: '234',
       DIDself: '456',
       DIDremote: '0'
-    }) 
-    assert.equal(res,0)
+    })
+    assert.equal(res, 0)
   })
 
   it('object with id as param in create should return success', async function () {
     const connection = new Connection(path)
     const res = await connection.create({ id: '999' })
-    assert.equal(res,0)
+    assert.equal(res, 0)
   })
 
     // connection_connect tests
@@ -60,14 +60,14 @@ describe('A Connection object with ', function () {
 
   it(' a call to create with no connection created should return unknown error', async function () {
     const connection = new Connection(path)
-    assert.equal(await connection._connect({sms: true }), 1003)
+    assert.equal(await connection._connect({ sms: true }), 1003)
   })
 
     // connection_get_data tests
 
   it('a call to get_data where connection exists should return back the connections data', async function () {
     const connection = new Connection(path)
-    // TODO we are not awaiting on this create, which 
+    // TODO we are not awaiting on this create, which
     // is an async function that has a promise behind it.
     connection.create({ id: '234' })
     const data = await connection.getData()
@@ -132,14 +132,14 @@ describe('A Connection object with ', function () {
   })
 
   it('call to connection_release with no connection should return unknown error', async function () {
-    const connection = await new Connection(path)
+    const connection = new Connection(path)
     assert.equal(await connection.release(), 1003)
   })
 
   it('getData() should return CxsStateType as an integer', async function () {
     const connection = new Connection(path)
     await connection.create({ id: 'returnCxsTypeInteger' })
-    await sleep(3000)    
+    await sleep(3000)
     const data2 = await connection.getData()
     assert.equal(data2['state'], 1)
     await connection.connect({ sms: true })
@@ -150,7 +150,7 @@ describe('A Connection object with ', function () {
   it('connection and GC deletes object should return null when get_data is called ', async function () {
     this.timeout(30000)
     let connection = new Connection(path)
-    connection.create({ id: 'GarbageCollector' })
+    await connection.create({ id: 'GarbageCollector' })
     connection._connect({ sms: true })
     const getData = connection.RUST_API.cxs_connection_serialize
     const handle = connection.connectionHandle
