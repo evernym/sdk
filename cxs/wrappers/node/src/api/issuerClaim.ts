@@ -110,7 +110,7 @@ export class IssuerClaim {
   private async _initFromClaimData (claimData: IClaimData): Promise<void> {
     let callback = null
     const commandHandle = 75483
-    const xclaimHandle = await new Promise<void> ((resolve, reject) => {
+    const xclaimHandle = await new Promise<number> ((resolve, reject) => {
       callback = Callback('void', ['uint32', 'uint32', 'uint32'],
       (xcommandHandle, err, claimHandle) => {
         if (err > 0 ) {
