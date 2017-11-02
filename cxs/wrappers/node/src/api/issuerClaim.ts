@@ -68,9 +68,7 @@ export class IssuerClaim {
 
   async send (connectionHandle): Promise<void> {
     let callback = null
-    // TODO:this will need to change in the future
-    // to something more robust, perhaps a global hashmap?
-    const commandHandle = 78442
+    const commandHandle = 0
     const claimHandle = this._claimHandle
 
     await new Promise<void> ((resolve, reject) => {
