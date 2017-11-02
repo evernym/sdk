@@ -69,7 +69,6 @@ export class IssuerClaim {
 
   async send (connectionHandle): Promise<void> {
     let callback = null
-    const commandHandle = 0
     const claimHandle = this._claimHandle
 
     await new Promise<void> ((resolve, reject) => {
@@ -81,7 +80,7 @@ export class IssuerClaim {
         resolve(xcommandHandle)
 
       })
-      this._RUST_API.cxs_issuer_send_claim_offer(commandHandle, claimHandle, connectionHandle, callback)
+      this._RUST_API.cxs_issuer_send_claim_offer(0, claimHandle, connectionHandle, callback)
     })
     this._setState(StateType.OfferSent)
   }
@@ -108,7 +107,6 @@ export class IssuerClaim {
 
   private async _initFromClaimData (claimData: IClaimData): Promise<void> {
     let callback = null
-    const commandHandle = 75483
     const xclaimHandle = await new Promise<number> ((resolve, reject) => {
       callback = Callback('void', ['uint32', 'uint32', 'uint32'],
       (xcommandHandle, err, claimHandle) => {
@@ -118,7 +116,7 @@ export class IssuerClaim {
         }
         resolve(claimHandle)
       })
-      this._RUST_API.cxs_issuer_claim_deserialize(commandHandle, JSON.stringify(claimData), callback)
+      this._RUST_API.cxs_issuer_claim_deserialize(0, JSON.stringify(claimData), callback)
     })
     this.setClaimHandle(xclaimHandle)
     this._setState(await this._callCxsAndGetCurrentState())
