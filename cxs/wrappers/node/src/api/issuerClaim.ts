@@ -1,4 +1,5 @@
 import { Callback, ForeignFunction } from 'ffi'
+import { weak } from 'weak'
 import { CXSRuntime, CXSRuntimeConfig } from '../index'
 import { IClaimData, StateType } from './api'
 export class IssuerClaim {
@@ -122,7 +123,14 @@ export class IssuerClaim {
       this._RUST_API.cxs_issuer_send_claim_offer(commandHandle, claimHandle, connectionHandle, callback)
     })
   }
-
+  private _clearOnExit () {
+    const weakRef = weak(this)
+    const release = this._RUST_API.cxs_connection_release
+    const handle = this._claimHandle
+    weak.addCallback(weakRef, () => {
+      release(handle)
+    })
+  }
   private _initRustApi (path?) {
     this._RUST_API = new CXSRuntime(new CXSRuntimeConfig(path))._ffi
   }

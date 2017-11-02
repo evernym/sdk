@@ -111,7 +111,7 @@ describe('A Connection object with ', function () {
     assert.equal(await connection.getState(), StateType.None)
   })
 
-  it.only('call to get_state where connection exists but not connected should have a state value of 1', async function () {
+  it('call to get_state where connection exists but not connected should have a state value of 1', async function () {
     const connection = new Connection(path)
     await connection.create({ id: '234' })
     return waitFor(async () => (await connection.getState()) === StateType.Initialized)
