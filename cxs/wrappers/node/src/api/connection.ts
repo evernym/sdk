@@ -3,6 +3,7 @@ import * as weak from 'weak'
 import { CXSRuntime } from '../index'
 import { CXSRuntimeConfig } from '../rustlib'
 import {
+    createFFICallbackPromise,
     IConnectionData,
     IConnections,
     IConnectOptions,
@@ -10,22 +11,6 @@ import {
     StateType
 } from './api'
 import { ConnectionTimeoutError, CXSInternalError } from './errors'
-
-const createFFICallbackPromise = <T>(fn, cb) => {
-  let cbRef = null
-  // console.log("IN FFICALLBACK\n\n")// tslint:disable-line
-  return (new Promise<T>( (resolve, reject) => fn(resolve, reject, cbRef = cb(resolve, reject))))
-    .then((res) => {
-      // console.log("\n\n.then\n\n") //tslint:disable-line
-      cbRef = null
-      return res
-    })
-    .catch((err) => {
-      // console.log("\n\ncatch err: " + err)// tslint:disable-line
-      cbRef = null
-      throw err
-    })
-}
 
 export class Connection implements IConnections {
   public connectionHandle: string
@@ -46,8 +31,7 @@ export class Connection implements IConnections {
               reject(rc)
             }
           },
-          (resolve, reject) => ffi.Callback('void', ['uint32', 'uint32', 'string'], (xHandle, err, rtnHandle) => {
-            console.log("\n\nCALLBACK\n\n") // tslint:disable-line
+          (resolve, reject) => ffi.Callback('void', ['uint32', 'uint32', 'uint32'], (xHandle, err, rtnHandle) => {
             if (err) {
               reject(err)
               return
@@ -72,7 +56,6 @@ export class Connection implements IConnections {
       const data = await createFFICallbackPromise<string>(
             (resolve, reject, cb) => {
               rc = this.RUST_API.cxs_connection_serialize(0, this.connectionHandle, cb)
-
               if (rc) {
                 resolve(null)
               }
@@ -93,50 +76,48 @@ export class Connection implements IConnections {
 
   async deserialize (connectionData): Promise<void> {
     const commandHandle = 0
-    let callback = null
-    let result = 0
     try {
-      this.connectionHandle = await new Promise<string>((resolve, reject) => {
-        result = this.RUST_API.cxs_connection_deserialize(
-                    commandHandle,
-                    connectionData,
-                    callback = ffi.Callback('void', ['uint32', 'uint32', 'uint32'], (xHandle, _rc, handle) => {
-                      if (_rc) {
-                        reject(_rc)
-                      }
-                      resolve(JSON.stringify(handle))
-                    }))
-        if (result) {
-          reject(result)
-        }
-      })
-      callback = null
+      this.connectionHandle = await createFFICallbackPromise<string>(
+          (resolve, reject, cb) => {
+            const rc = this.RUST_API.cxs_connection_deserialize(commandHandle, connectionData, cb)
+            if (rc) {
+              reject(rc)
+            }
+          },
+          (resolve, reject) => ffi.Callback('void', ['uint32', 'uint32', 'uint32'], (xHandle, _rc, handle) => {
+            if (_rc) {
+              reject(_rc)
+            }
+            resolve(JSON.stringify(handle))
+          })
+      )
     } catch (error) {
       throw new CXSInternalError(`cxs_connection_deserialize -> ${error}`)
     }
   }
 
+  async getState (): Promise<number> {
+    return this.state
+  }
+
   async updateState (): Promise<void> {
-    let callback = null
     try {
-      this.state = await new Promise<number>((resolve, reject) => {
-        const rc = this.RUST_API.cxs_connection_update_state(
-                    0,
-                    this.connectionHandle,
-                    callback = ffi.Callback('void', ['uint32', 'uint32', 'uint32'], (handle, err, state) => {
-                      if (err) {
-                        reject(err)
-                        return
-                      }
-                      resolve(state)
-                    }))
-        if (rc) {
-          resolve(StateType.None)
-        }
-      })
-      callback = null
+      this.state = await createFFICallbackPromise<number>(
+          (resolve, reject, cb) => {
+            const rc = this.RUST_API.cxs_connection_update_state(0, this.connectionHandle, cb)
+            if (rc) {
+              resolve(StateType.None)
+            }
+          },
+          (resolve, reject) => ffi.Callback('void', ['uint32', 'uint32', 'uint32'], (handle, err, state) => {
+            if (err) {
+              reject(err)
+            }
+            resolve(state)
+          })
+      )
     } catch (error) {
-      throw new CXSInternalError(`cxs_connection_get_state -> ${error}`)
+      throw new CXSInternalError(`cxs_connection_updateState -> ${error}`)
     }
   }
 
@@ -162,23 +143,24 @@ export class Connection implements IConnections {
   }
 
   private async _connect (options: IConnectOptions): Promise<number> {
-    let callback = null
     const phone = options.phone
     const connectionType: string = phone ? 'SMS' : 'QR'
-    let connectResult = null
-    return await new Promise<number>((resolve, reject) => {
-      connectResult = this.RUST_API.cxs_connection_connect(
-            0,
-            this.connectionHandle,
-            JSON.stringify({connection_type: connectionType, phone}),
-            callback = ffi.Callback('void', ['uint32', 'uint32'], (xhandle, err) => {
-              resolve(err)
-            }))
-      if (connectResult) {
-        resolve(connectResult)
-      }
-      callback = null
-    })
+    const connectionData: string = JSON.stringify({connection_type: connectionType, phone})
+    try {
+      return await createFFICallbackPromise<number>(
+          (resolve, reject, cb) => {
+            const rc = this.RUST_API.cxs_connection_connect(0, this.connectionHandle, connectionData, cb)
+            if (rc) {
+              resolve(rc)
+            }
+          },
+          (resolve, reject) => ffi.Callback('void', ['uint32', 'uint32'], (xHandle, err) => {
+            resolve(err)
+          })
+        )
+    } catch (error) {
+      throw new CXSInternalError(`cxs_connection_updateState -> ${error}`)
+    }
   }
 
   private _sleep = (sleepTime: number): Promise<void> => new Promise((res) => setTimeout(res, sleepTime))
