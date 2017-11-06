@@ -159,7 +159,7 @@ export class Connection implements IConnections {
           })
         )
     } catch (error) {
-      throw new CXSInternalError(`cxs_connection_updateState -> ${error}`)
+      throw new CXSInternalError(`cxs_connection_connect -> ${error}`)
     }
   }
 
