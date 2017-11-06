@@ -32,7 +32,7 @@ describe('A Connection object with ', function () {
 
   // connection_create tests
 
-  it('valid parameters in create should return success', async () => {
+  it.only('valid parameters in create should return success', async () => {
     const connection = new Connection(path)
     await connection.create({
       id: '234',
