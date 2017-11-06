@@ -1,7 +1,7 @@
 import { Callback, ForeignFunction } from 'ffi'
 import { weak } from 'weak'
 import { CXSRuntime, CXSRuntimeConfig } from '../index'
-import { IClaimData, StateType } from './api'
+import { createFFICallbackPromise, IClaimData, StateType } from './api'
 import { CXSInternalError } from './errors'
 
 export class IssuerClaim {
@@ -52,42 +52,51 @@ export class IssuerClaim {
   }
 
   async serialize (): Promise<IClaimData> {
-    let callback = null
     const claimHandle = this._claimHandle
-    const ptr = await new Promise<IClaimData> ((resolve, reject) => {
-      callback = Callback('void', ['uint32', 'uint32', 'string'], (xclaimHandle, err, serializedClaim) => {
-        if (err > 0 ) {
-          reject(err)
-          return
-        }
-        const data: IClaimData = JSON.parse(serializedClaim)
-        resolve(data)
-      })
-      const rc = this._RUST_API.cxs_issuer_claim_serialize(0, claimHandle, callback)
-      if (rc) {
-        // TODO: handle correct exception
-        resolve(null)
-      }
-    })
-    return ptr
+    let rc = null
+    try {
+      return await createFFICallbackPromise<IClaimData>(
+          (resolve, reject, cb) => {
+            rc = this._RUST_API.cxs_issuer_claim_serialize(0, claimHandle, cb)
+            if (rc) {
+              // TODO: handle correct exception
+              resolve(null)
+            }
+          },
+          (resolve, reject) => Callback('void', ['uint32', 'uint32', 'string'], (handle, err, serializedClaim) => {
+            if (err) {
+              reject(err)
+              return
+            }
+            const _data: IClaimData = JSON.parse(serializedClaim)
+            resolve(_data)
+          })
+      )
+    } catch (err) {
+      throw new CXSInternalError(`cxs_issuer_claim_serialize -> ${rc}`)
+    }
   }
 
   async send (connectionHandle): Promise<void> {
-    let callback = null
     const claimHandle = this._claimHandle
     try {
-      await new Promise<void> ((resolve, reject) => {
-        callback = Callback('void', ['uint32', 'uint32'], (xcommandHandle, err) => {
-          if (err > 0 ) {
-            reject(err)
-            return
-          }
-          resolve(xcommandHandle)
+      await createFFICallbackPromise<void>(
+          (resolve, reject, cb) => {
+            const rc = this._RUST_API.cxs_issuer_send_claim_offer(0, claimHandle, connectionHandle, cb)
+            if (rc) {
+              reject(rc)
+            }
+            this._setState(StateType.OfferSent)
 
-        })
-        this._RUST_API.cxs_issuer_send_claim_offer(0, claimHandle, connectionHandle, callback)
-        this._setState(StateType.OfferSent)
-      })
+          },
+          (resolve, reject) => Callback('void', ['uint32', 'uint32'], (xcommandHandle, err) => {
+            if (err) {
+              reject(err)
+              return
+            }
+            resolve(xcommandHandle)
+          })
+        )
     } catch (err) {
       // TODO handle error
       throw new CXSInternalError(`cxs_issuer_send_claim_offer -> ${err}`)
@@ -98,37 +107,46 @@ export class IssuerClaim {
     this._state = state
   }
   private async init (): Promise<void> {
-    let callback = null
-    const data = await new Promise<number>((resolve,reject) => {
-      callback = Callback('void', ['uint32', 'uint32', 'uint32'], (commandHandle, err, claimHandle) => {
-        if (err > 0) {
-          reject (err)
-          return
-        }
-        const value = JSON.stringify(claimHandle)
-        resolve(Number(value))
-      })
-      this._RUST_API.cxs_issuer_create_claim(0, null, 32, '{"attr":"value"}', callback)
-    })
-    this.setClaimHandle(data)
-    this._setState(await this._callCxsAndGetCurrentState())
+    try {
+      const data = await createFFICallbackPromise<number>(
+          (resolve, reject, cb) => {
+            this._RUST_API.cxs_issuer_create_claim(0, null, 32, '{"attr":"value"}', cb)
+          },
+          (resolve, reject) => Callback('void', ['uint32', 'uint32', 'uint32'], (commandHandle, err, claimHandle) => {
+            if (err) {
+              reject(err)
+              return
+            }
+            const value = JSON.stringify(claimHandle)
+            resolve(Number(value))
+          })
+        )
+      this.setClaimHandle(data)
+      this._setState(await this._callCxsAndGetCurrentState())
+    } catch (err) {
+      throw new CXSInternalError(`cxs_issuer_create_claim -> ${err}`)
+    }
   }
 
   private async _initFromClaimData (claimData: IClaimData): Promise<void> {
-    let callback = null
-    const xclaimHandle = await new Promise<number> ((resolve, reject) => {
-      callback = Callback('void', ['uint32', 'uint32', 'uint32'],
-      (xcommandHandle, err, claimHandle) => {
-        if (err > 0 ) {
-          reject(err)
-          return
-        }
-        resolve(claimHandle)
-      })
-      this._RUST_API.cxs_issuer_claim_deserialize(0, JSON.stringify(claimData), callback)
-    })
-    this.setClaimHandle(xclaimHandle)
-    this._setState(await this._callCxsAndGetCurrentState())
+    try {
+      const xclaimHandle = await createFFICallbackPromise<number>(
+          (resolve, reject, cb) => {
+            this._RUST_API.cxs_issuer_claim_deserialize(0, JSON.stringify(claimData), cb)
+          },
+          (resolve, reject) => Callback('void', ['uint32', 'uint32', 'uint32'], (commandHandle, err, claimHandle) => {
+            if (err) {
+              reject(err)
+              return
+            }
+            resolve(claimHandle)
+          })
+      )
+      this.setClaimHandle(xclaimHandle)
+      this._setState(await this._callCxsAndGetCurrentState())
+    } catch (err) {
+      throw new CXSInternalError(`cxs_issuer_claim_deserialize -> ${err}`)
+    }
   }
 
   private _clearOnExit () {
