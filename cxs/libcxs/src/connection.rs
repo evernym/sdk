@@ -188,7 +188,7 @@ pub fn get_pw_verkey(handle: u32) -> Result<String, u32> {
 }
 
 pub fn create_agent_pairwise(handle: u32) -> Result<u32, u32> {
-    let enterprise_did = settings::get_config_value(settings::CONFIG_ENTERPRISE_DID_AGENCY).unwrap();
+    let enterprise_did = settings::get_config_value(settings::CONFIG_ENTERPRISE_DID_AGENT).unwrap();
     let pw_did = match get_pw_did(handle) {
         Ok(x) => x,
         Err(x) => return Err(error::UNKNOWN_ERROR.code_num),
