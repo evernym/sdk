@@ -74,12 +74,12 @@ export class Connection implements IConnections {
     }
   }
 
-  async deserialize (connectionData): Promise<void> {
+  async deserialize (connectionData: IConnectionData): Promise<void> {
     const commandHandle = 0
     try {
       this.connectionHandle = await createFFICallbackPromise<string>(
           (resolve, reject, cb) => {
-            const rc = this.RUST_API.cxs_connection_deserialize(commandHandle, connectionData, cb)
+            const rc = this.RUST_API.cxs_connection_deserialize(commandHandle, JSON.stringify(connectionData), cb)
             if (rc) {
               reject(rc)
             }
