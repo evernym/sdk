@@ -45,22 +45,22 @@ export class IssuerClaim {
   }
 
   async updateState (): Promise<void> {
-    let callback = null
     let state = null
     const claimHandle = this._claimHandle
-    state = await new Promise<string>(
-      (resolve, reject) => {
-        callback = Callback('void', ['uint32', 'uint32', 'uint32', 'uint32'],
-          (xcommandHandle, err, xstate) => {
-            if (err > 0) {
-              reject(err)
-              return
-            }
-            resolve(JSON.stringify(xstate))
-          })
+    state = await createFFICallbackPromise<string>(
+      (resolve, reject, callback) => {
         const commandHandle = 1
         this._RUST_API.cxs_issuer_claim_update_state(commandHandle, claimHandle, callback)
-      })
+      },
+      (resolve, reject) => Callback('void', ['uint32', 'uint32', 'uint32', 'uint32'],
+        (xcommandHandle, err, xstate) => {
+          if (err > 0) {
+            reject(err)
+            return
+          }
+          resolve(JSON.stringify(xstate))
+        })
+      )
     this._setState(Number(state))
   }
 
