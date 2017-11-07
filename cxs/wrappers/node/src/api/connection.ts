@@ -122,6 +122,7 @@ export class Connection implements IConnections {
                   reject(err)
                   return
                 }
+                // TODO This concerns me that we are not copying this value.
                 resolve(state)
               }))
         if (rc) {

@@ -35,6 +35,26 @@ export class IssuerClaim {
     return state
   }
 
+  async updateState (): Promise<void> {
+    let callback = null
+    let state = null
+    const claimHandle = this._claimHandle
+    state = await new Promise<string>(
+      (resolve, reject) => {
+        callback = Callback('void', ['uint32', 'uint32', 'uint32', 'uint32'],
+          (xcommandHandle, err, xstate) => {
+            if (err > 0) {
+              reject(err)
+              return
+            }
+            resolve(JSON.stringify(xstate))
+          })
+        const commandHandle = 1
+        const rc = this._RUST_API.cxs_issuer_claim_update_state(commandHandle, claimHandle, callback)
+      })
+    this._setState(Number(state))
+  }
+
   getSourceId () {
     return this._sourceId
   }
@@ -52,6 +72,7 @@ export class IssuerClaim {
   }
 
   async serialize (): Promise<IClaimData> {
+    // TODO fix the this object inside the callback
     let callback = null
     const claimHandle = this._claimHandle
     const ptr = await new Promise<IClaimData> ((resolve, reject) => {
@@ -65,6 +86,7 @@ export class IssuerClaim {
       })
       const rc = this._RUST_API.cxs_issuer_claim_serialize(0, claimHandle, callback)
       if (rc) {
+        this._RUST_API.cxs_issuer_claim_serialize(0, claimHandle, callback)
         // TODO: handle correct exception
         resolve(null)
       }
@@ -111,7 +133,8 @@ export class IssuerClaim {
       this._RUST_API.cxs_issuer_create_claim(0, null, 32, '8XFh8yBzrpJQmNyZzgoTqB', '{"attr":"value"}', callback)
     })
     this.setClaimHandle(data)
-    this._setState(await this._callCxsAndGetCurrentState())
+    // this._setState(await this._callCxsAndGetCurrentState())
+    this.updateState()
   }
 
   private async _initFromClaimData (claimData: IClaimData): Promise<void> {
@@ -129,6 +152,8 @@ export class IssuerClaim {
     })
     this.setClaimHandle(xclaimHandle)
     this._setState(await this._callCxsAndGetCurrentState())
+    // TODO add await?
+    this.updateState()
   }
 
   private _clearOnExit () {
