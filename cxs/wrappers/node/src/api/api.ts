@@ -63,8 +63,21 @@ export interface IConnectionData {
 export interface IClaimData {
   source_id: string
   handle: number
-  claim_def: string
+  schema_seq_no: number
   claim_attributes: string
-  issued_did: string
+  issuer_did: string
   state: StateType
+}
+
+export const createFFICallbackPromise = <T>(fn, cb) => {
+  let cbRef = null
+  return (new Promise<T>( (resolve, reject) => fn(resolve, reject, cbRef = cb(resolve, reject))))
+        .then((res) => {
+          cbRef = null
+          return res
+        })
+        .catch((err) => {
+          cbRef = null
+          throw err
+        })
 }
