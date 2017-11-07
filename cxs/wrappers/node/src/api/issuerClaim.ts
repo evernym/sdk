@@ -38,9 +38,26 @@ export class IssuerClaim {
     return claim
   }
 
-  async _callCxsAndGetCurrentState () {
-    const json: IClaimData = await this.serialize()
-    return json.state
+  async updateState (): Promise<void> {
+    const claimHandle = this._claimHandle
+    const state = await createFFICallbackPromise<string>(
+      (resolve, reject, callback) => {
+        const commandHandle = 1
+        const rc = this._RUST_API.cxs_issuer_claim_update_state(commandHandle, claimHandle, callback)
+        if (rc) {
+          reject(rc)
+        }
+      },
+      (resolve, reject) => Callback('void', ['uint32', 'uint32', 'uint32', 'uint32'],
+        (xcommandHandle, err, xstate) => {
+          if (err > 0) {
+            reject(err)
+            return
+          }
+          resolve(JSON.stringify(xstate))
+        })
+      )
+    this._setState(Number(state))
   }
 
   getIssuedDid () {
@@ -108,7 +125,6 @@ export class IssuerClaim {
               reject(rc)
             }
             this._setState(StateType.OfferSent)
-
           },
           (resolve, reject) => Callback('void', ['uint32', 'uint32'], (xcommandHandle, err) => {
             if (err) {
@@ -149,7 +165,7 @@ export class IssuerClaim {
           })
         )
       this.setClaimHandle(data)
-      this._setState(await this._callCxsAndGetCurrentState())
+      await this.updateState()
     } catch (err) {
       throw new CXSInternalError(`cxs_issuer_create_claim -> ${err}`)
     }
@@ -170,7 +186,7 @@ export class IssuerClaim {
           })
       )
       this.setClaimHandle(xclaimHandle)
-      this._setState(await this._callCxsAndGetCurrentState())
+      await this.updateState()
     } catch (err) {
       throw new CXSInternalError(`cxs_issuer_claim_deserialize -> ${err}`)
     }
