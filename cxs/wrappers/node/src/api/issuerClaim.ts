@@ -5,26 +5,35 @@ import { createFFICallbackPromise, IClaimData, StateType } from './api'
 import { CXSInternalError } from './errors'
 
 export class IssuerClaim {
+  private _attr: string
+  private _schemaNum: number
   private _sourceId: string
   private _claimHandle: number
   private _state: number
   private _RUST_API: { [ index: string ]: ForeignFunction }
+  private _issuerDID: string
   constructor (sourceId) {
     this._sourceId = sourceId
     this._initRustApi(null)
     this._claimHandle = null
     this._state = StateType.None
+    this._schemaNum = null
+    this._attr = null
+    this._issuerDID = null
   }
-  static async create (sourceId): Promise<IssuerClaim> {
+  static async create (sourceId: string, schemaNumber: number, did: string, attributes: string): Promise<IssuerClaim> {
     const claim = new IssuerClaim(sourceId)
-    await claim.init()
+    await claim.init(sourceId, schemaNumber, did, attributes)
     return claim
   }
 
-  static async deserialize (issuerClaim: IClaimData): Promise<IssuerClaim> {
-    const sourceId = issuerClaim.source_id
-    const claim = await IssuerClaim.create(sourceId)
-    await claim._initFromClaimData(issuerClaim)
+  static async deserialize (claimData: IClaimData): Promise<IssuerClaim> {
+    const sourceId = claimData.source_id
+    const attr = claimData.claim_attributes
+    const schemaNumber = claimData.schema_seq_no
+    const did = claimData.issuer_did
+    const claim = await IssuerClaim.create(sourceId, schemaNumber, did, attr)
+    await claim._initFromClaimData(claimData)
     return claim
   }
 
@@ -35,12 +44,23 @@ export class IssuerClaim {
     return state
   }
 
+  getIssuedDid () {
+    return this._issuerDID
+  }
   getSourceId () {
     return this._sourceId
   }
 
   getClaimHandle () {
     return this._claimHandle
+  }
+
+  getSchemaNum () {
+    return this._schemaNum
+  }
+
+  getAttr () {
+    return this._attr
   }
 
   setClaimHandle (handle) {
@@ -55,7 +75,7 @@ export class IssuerClaim {
     const claimHandle = this._claimHandle
     let rc = null
     try {
-      return await createFFICallbackPromise<IClaimData>(
+      const data = await createFFICallbackPromise<string>(
           (resolve, reject, cb) => {
             rc = this._RUST_API.cxs_issuer_claim_serialize(0, claimHandle, cb)
             if (rc) {
@@ -68,10 +88,10 @@ export class IssuerClaim {
               reject(err)
               return
             }
-            const _data: IClaimData = JSON.parse(serializedClaim)
-            resolve(_data)
+            resolve(serializedClaim)
           })
       )
+      return JSON.parse(data)
     } catch (err) {
       throw new CXSInternalError(`cxs_issuer_claim_serialize -> ${rc}`)
     }
@@ -106,11 +126,17 @@ export class IssuerClaim {
   private _setState (state) {
     this._state = state
   }
-  private async init (): Promise<void> {
+
+  private async init (sourceId: string, schemaNumber: number, did: string, attr: string): Promise<void> {
+    this._schemaNum = schemaNumber
+    this._attr = attr
+    this._sourceId = sourceId
+    this._issuerDID = did
     try {
       const data = await createFFICallbackPromise<number>(
           (resolve, reject, cb) => {
-            this._RUST_API.cxs_issuer_create_claim(0, null, 32, '{"attr":"value"}', cb)
+            // TODO: check if cxs_issuer_create_claim has a return value
+            this._RUST_API.cxs_issuer_create_claim(0, this._sourceId, this._schemaNum, this._issuerDID, this._attr, cb)
           },
           (resolve, reject) => Callback('void', ['uint32', 'uint32', 'uint32'], (commandHandle, err, claimHandle) => {
             if (err) {

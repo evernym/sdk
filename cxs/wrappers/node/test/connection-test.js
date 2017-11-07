@@ -119,6 +119,22 @@ describe('A Connection object with ', function () {
     assert.equal(connection.connectionHandle, undefined)
   })
 
+  it('a call to deserialize with incorrect data should throw error', async () => {
+    const connection = new Connection(path)
+    await connection.create({ id: '234' })
+    assert.notEqual(connection.connectionHandle, undefined)
+
+    await connection.connect({ sms: true })
+    await connection.updateState()
+    assert.equal(connection.state, StateType.OfferSent)
+    let data = await connection.serialize()
+    const connection2 = new Connection(path)
+    await connection2.deserialize(data)
+    assert.equal(connection2.connectionHandle, connection.connectionHandle)
+    let data2 = await connection2.serialize()
+    assert.equal(JSON.stringify(data2), JSON.stringify(data))
+  })
+
   // connection_getState tests
   it('call to updateState where connection exists should return success', async () => {
     const connection = new Connection(path)
