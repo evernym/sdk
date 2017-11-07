@@ -1,9 +1,7 @@
 import { Connection } from './connection'
 
 export interface IConnections {
-  // create ( recipientInfo: IRecipientInfo, path?: string ): Promise<Connection>
   serialize (): Promise<IConnectionData>
-  // deserialize (connectionData: IConnectionData): Promise<void>
   connect ( IConnectOptions ): Promise<void>
   updateState (): Promise<void>
   release (): Promise<number>

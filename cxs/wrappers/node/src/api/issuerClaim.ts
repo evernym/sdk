@@ -103,7 +103,7 @@ export class IssuerClaim {
     try {
       await createFFICallbackPromise<void>(
           (resolve, reject, cb) => {
-            const rc = this._RUST_API.cxs_issuer_send_claim_offer(0, claimHandle, connection.connectionHandle, cb)
+            const rc = this._RUST_API.cxs_issuer_send_claim_offer(0, claimHandle, connection.getHandle(), cb)
             if (rc) {
               reject(rc)
             }

@@ -98,7 +98,7 @@ export class Connection implements IConnections {
     return this.RUST_API.cxs_connection_release(this.connectionHandle)
   }
 
-  async getHandle () {
+  getHandle () {
     return this.connectionHandle
   }
 
