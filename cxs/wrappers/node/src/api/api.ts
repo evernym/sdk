@@ -1,4 +1,3 @@
-import { Connection } from './connection'
 
 export interface IConnections {
   serialize (): Promise<IConnectionData>
