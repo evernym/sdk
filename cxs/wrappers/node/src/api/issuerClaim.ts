@@ -59,7 +59,7 @@ export class IssuerClaim {
             resolve(JSON.stringify(xstate))
           })
         const commandHandle = 1
-        const rc = this._RUST_API.cxs_issuer_claim_update_state(commandHandle, claimHandle, callback)
+        this._RUST_API.cxs_issuer_claim_update_state(commandHandle, claimHandle, callback)
       })
     this._setState(Number(state))
   }
