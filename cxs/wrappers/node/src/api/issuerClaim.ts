@@ -1,7 +1,7 @@
 import { Callback, ForeignFunction } from 'ffi'
 import { weak } from 'weak'
 import { CXSRuntime, CXSRuntimeConfig } from '../index'
-import { createFFICallbackPromise, IClaimData, StateType } from './api'
+import { createFFICallbackPromise, Error, IClaimData, StateType } from './api'
 import { Connection } from './connection'
 import { CXSInternalError } from './errors'
 
@@ -115,7 +115,7 @@ export class IssuerClaim {
     }
   }
 
-  async send (connection: Connection): Promise<void> {
+  async sendOffer (connection: Connection): Promise<void> {
     const claimHandle = this._claimHandle
     try {
       await createFFICallbackPromise<void>(
@@ -124,7 +124,7 @@ export class IssuerClaim {
             if (rc) {
               reject(rc)
             }
-            this._setState(StateType.OfferSent)
+            // this._setState(StateType.OfferSent)
           },
           (resolve, reject) => Callback('void', ['uint32', 'uint32'], (xcommandHandle, err) => {
             if (err) {
@@ -134,9 +134,35 @@ export class IssuerClaim {
             resolve(xcommandHandle)
           })
         )
+      await this.updateState()
     } catch (err) {
       // TODO handle error
       throw new CXSInternalError(`cxs_issuer_send_claim_offer -> ${err}`)
+    }
+  }
+
+  async sendClaim (connection: Connection): Promise<void> {
+    try {
+      await createFFICallbackPromise<void>(
+        (resolve, reject, cb) => {
+          const rc = this._RUST_API.cxs_issuer_send_claim(0, this._claimHandle, connection.getHandle(), cb)
+          if (rc) {
+            reject(rc)
+          }
+        },
+        (resolve, reject) => Callback('void', ['uint32', 'uint32'], (xcommandHandle, err) => {
+          if (err) {
+            console.log("In err of callback")
+            reject(err)
+            return
+          }
+          console.log("Before resolve in cb")
+          resolve(xcommandHandle)
+        })
+      )
+      await this.updateState()
+    } catch (err) {
+      throw new CXSInternalError(`cxs_issuer_send_claim -> ${err}`)
     }
   }
 
