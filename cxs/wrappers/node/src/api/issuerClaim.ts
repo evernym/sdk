@@ -1,7 +1,7 @@
 import { Callback, ForeignFunction } from 'ffi'
 import { weak } from 'weak'
 import { CXSRuntime, CXSRuntimeConfig } from '../index'
-import { createFFICallbackPromise, Error, IClaimData, StateType } from './api'
+import { createFFICallbackPromise, IClaimData, StateType } from './api'
 import { Connection } from './connection'
 import { CXSInternalError } from './errors'
 
@@ -29,11 +29,7 @@ export class IssuerClaim {
   }
 
   static async deserialize (claimData: IClaimData): Promise<IssuerClaim> {
-    const sourceId = claimData.source_id
-    const attr = claimData.claim_attributes
-    const schemaNumber = claimData.schema_seq_no
-    const did = claimData.issuer_did
-    const claim = await IssuerClaim.create(sourceId, schemaNumber, did, attr)
+    const claim = new IssuerClaim(claimData.source_id)
     await claim._initFromClaimData(claimData)
     return claim
   }
@@ -152,11 +148,9 @@ export class IssuerClaim {
         },
         (resolve, reject) => Callback('void', ['uint32', 'uint32'], (xcommandHandle, err) => {
           if (err) {
-            console.log("In err of callback")
             reject(err)
             return
           }
-          console.log("Before resolve in cb")
           resolve(xcommandHandle)
         })
       )

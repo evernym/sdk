@@ -170,18 +170,20 @@ describe('An issuerClaim', async function () {
     }
   })
 
-  it.only('sending claim with valid claim offer should have state CxsStateAccepted', async function () {
+  it('sending claim with valid claim offer should have state CxsStateAccepted', async function () {
     await cxs.init_cxs('ENABLE_TEST_MODE')
     let connection = await Connection.create({id: '123'})
     await connection.connect({ sms: true })
     const sourceId = 'Claim'
-    const claim = await IssuerClaim.create(sourceId, SCHEMANUM, DID, ATTR)
+    let claim = await IssuerClaim.create(sourceId, SCHEMANUM, DID, ATTR)
     await claim.sendOffer(connection)
     assert.equal(await claim.getState(), StateType.OfferSent)
-    let jsonClaim = claim.serialize()
-    jsonClaim.state =
-
-    // await claim.sendClaim(connection)
-    // assert.equal(await claim.getState(), StateType.Accepted)
+    let jsonClaim = await claim.serialize()
+    jsonClaim.state = StateType.RequestReceived
+    jsonClaim.handle += 1
+    claim = await IssuerClaim.deserialize(jsonClaim)
+    console.log('\n\n' + JSON.stringify(await claim.serialize()))
+    await claim.sendClaim(connection)
+    assert.equal(await claim.getState(), StateType.Accepted)
   })
 })
