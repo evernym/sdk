@@ -120,7 +120,7 @@ export class IssuerClaim {
             if (rc) {
               reject(rc)
             }
-            // this._setState(StateType.OfferSent)
+            this._setState(StateType.OfferSent)
           },
           (resolve, reject) => Callback('void', ['uint32', 'uint32'], (xcommandHandle, err) => {
             if (err) {
@@ -130,7 +130,6 @@ export class IssuerClaim {
             resolve(xcommandHandle)
           })
         )
-      await this.updateState()
     } catch (err) {
       // TODO handle error
       throw new CXSInternalError(`cxs_issuer_send_claim_offer -> ${err}`)
