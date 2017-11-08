@@ -182,7 +182,6 @@ describe('An issuerClaim', async function () {
     jsonClaim.state = StateType.RequestReceived
     jsonClaim.handle += 1
     claim = await IssuerClaim.deserialize(jsonClaim)
-    console.log('\n\n' + JSON.stringify(await claim.serialize()))
     await claim.sendClaim(connection)
     assert.equal(await claim.getState(), StateType.Accepted)
   })
