@@ -279,7 +279,7 @@ mod tests {
             \"handle\":3166777436,\"pw_did\":\"MYX5tk3VUeX9XbwMxgGQaQ\",\
             \"pw_verkey\":\"CCRFnXZjvLm6zmeZ8kfKHgVHYHCyxAaQqwbhFEsXd5vz\",\
             \"did_endpoint\":\"\",\"state\":2,\"uuid\":\"\",\"endpoint\":\"\",\
-            \"invite_detail\":\"{\\\"connReqId\\\":\\\"CXqcDCE\\\",\
+            \"envite_detail\":\"{\\\"connReqId\\\":\\\"CXqcDCE\\\",\
             \\\"senderAgentKeyDlgProof\\\":\\\"sdfsdf\\\",\
             \\\"senderDID\\\":\\\"JiLBHundRhwYaMbPWno8Vg\\\",\
             \\\"senderDIDVerKey\\\":\\\"AevwvcQBLv5CERRJShzUncV7ubapSgbDZxus42zS8fk1\\\",\
@@ -301,7 +301,7 @@ mod tests {
             \"handle\":3166777436,\"pw_did\":\"MYX5tk3VUeX9XbwMxgGQaQ\",\
             \"pw_verkey\":\"CCRFnXZjvLm6zmeZ8kfKHgVHYHCyxAaQqwbhFEsXd5vz\",\
             \"did_endpoint\":\"\",\"state\":2,\"uuid\":\"\",\"endpoint\":\"\",\
-            \"invite_detail\":\"{\\\"connReqId\\\":\\\"CXqcDCE\\\",\
+            \"\":\"{\\\"connReqId\\\":\\\"CXqcDCE\\\",\
             \\\"senderAgentKeyDlgProof\\\":\\\"sdfsdf\\\",\
             \\\"senderDID\\\":\\\"JiLBHundRhwYaMbPWno8Vg\\\",\
             \\\"senderDIDVerKey\\\":\\\"AevwvcQBLv5CERRJShzUncV7ubapSgbDZxus42zS8fk1\\\",\
