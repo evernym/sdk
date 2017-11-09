@@ -26,7 +26,6 @@ export const FFI_CALLBACK_PTR = 'pointer'
 export const FFI_COMMAND_HANDLE = 'uint32'
 export const FFI_CLAIM_HANDLE = 'uint32'
 
-
 // Rust Lib Native Types
 export type rust_did = string
 export type rust_error_code = number
