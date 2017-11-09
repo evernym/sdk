@@ -367,7 +367,6 @@ fn get_invite_detail(response: &str) -> InviteDetail {
         Ok(json) => {
             let json: serde_json::Value = json;
             convert_invite_details(&json["inviteDetail"])
-
         }
         Err(_) => {
             info!("Connect called without a valid response from server");
@@ -700,7 +699,7 @@ mod tests {
     }
 
     #[test]
-    fn test_condense_invite_details(){
+    fn test_convert_invite_details(){
         let response = r#"{ "inviteDetail": {"senderEndpoint": "34.210.228.152:80",
                 "connReqId": "CXqcDCE",
                 "senderAgentKeyDlgProof": "sdfsdf",
@@ -712,10 +711,9 @@ mod tests {
             }}"#;
         use serde_json::Value;
         let original_json:Value = serde_json::from_str(&response).unwrap();
-        println!("original_json: {:?}", original_json);
         let invite_detail:&Value = &original_json["inviteDetail"];
-        println!("invite_detail: {:?}", invite_detail);
         let converted_json = convert_invite_details(invite_detail);
+        assert_eq!(converted_json.e, original_json["inviteDetail"]["senderEndpoint"])
     }
 
     #[test]
