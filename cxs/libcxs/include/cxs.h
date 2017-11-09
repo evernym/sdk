@@ -187,7 +187,7 @@ cxs_error_t cxs_proof_update_state(cxs_command_handle_t command_handle, cxs_proo
 cxs_error_t cxs_proof_serialize(cxs_command_handle_t command_handle, cxs_proof_handle_t proof_handle, void (*cb)(cxs_command_handle_t xcommand_handle, cxs_error_t err, const char *state));
 
 /** Re-creates a claim object from the specified serialization. */
-cxs_error_t cxs_issuer_claim_deserialize(cxs_command_handle_t command_handle, const char *serialized_proof, void (*cb)(cxs_command_handle_t xcommand_handle, cxs_error_t err, cxs_proof_handle_t proof_handle));
+cxs_error_t cxs_proof_deserialize(cxs_command_handle_t command_handle, const char *serialized_proof, void (*cb)(cxs_command_handle_t xcommand_handle, cxs_error_t err, cxs_proof_handle_t proof_handle));
 
 
 #ifdef __cplusplus
