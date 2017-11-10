@@ -23,7 +23,7 @@ pub static INVALID_KEY_DELEGATE: Error = Error{code_num:1012, message:"Invalid D
 pub static INVALID_URL: Error = Error{code_num:1013, message:"Invalid URL"};
 pub static NOT_BASE58: Error = Error{code_num:1014, message:"Value needs to be base58"};
 pub static INVALID_ISSUER_CLAIM_HANDLE: Error = Error{code_num:1015, message:"Invalid Claim Issuer Handle"};
-pub static INVALID_PROOF_HANDLE: Error = Error{code_num:1016, message:"Invalid Proof Handle"};
+pub static INVALID_PROOF_HANDLE: Error = Error{code_num:1017, message:"Invalid Proof Handle"};
 
 lazy_static! {
     static ref ERROR_MESSAGES: HashMap<u32, &'static str> = {
