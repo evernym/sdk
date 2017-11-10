@@ -31,10 +31,16 @@ impl Proof {
         //TODO: validate proof request
         Ok(error::SUCCESS.code_num)
     }
+
+    fn get_proof_request_state(&mut self) {
+        return
+    }
+
+    fn get_state(&self) -> u32 {let state = self.state as u32; state}
 }
 
 pub fn create_proof(source_id: Option<String>,
-                    proof_request_did: String,
+                    proof_requester_did: String,
                     proof_data: String) -> Result<u32, String> {
 
     let new_handle = rand::thread_rng().gen::<u32>();
@@ -46,7 +52,7 @@ pub fn create_proof(source_id: Option<String>,
         source_id: source_id_unwrap,
         msg_uid: String::new(),
         proof_attributes: proof_data,
-        proof_requester_did: String::new(),
+        proof_requester_did: proof_requester_did,
         state: CxsStateType::CxsStateNone,
     });
 
@@ -66,6 +72,34 @@ pub fn create_proof(source_id: Option<String>,
     Ok(new_handle)
 }
 
+pub fn is_valid_handle(handle: u32) -> bool {
+    match PROOF_MAP.lock().unwrap().get(&handle) {
+        Some(_) => true,
+        None => false,
+    }
+}
+
+//pub fn update_state(handle: u32) {
+//    match PROOF_MAP.lock().unwrap().get_mut(&handle) {
+//        Some(t) => t.update_state(),
+//        None => {}
+//    };
+//}
+
+pub fn get_state(handle: u32) -> u32 {
+    match PROOF_MAP.lock().unwrap().get(&handle) {
+        Some(t) => t.get_state(),
+        None => CxsStateType::CxsStateNone as u32,
+    }
+}
+
+pub fn release(handle: u32) -> u32 {
+    match PROOF_MAP.lock().unwrap().remove(&handle) {
+        Some(t) => error::SUCCESS.code_num,
+        None => error::INVALID_PROOF_HANDLE.code_num,
+    }
+}
+
 pub fn to_string(handle: u32) -> Result<String, u32> {
     match PROOF_MAP.lock().unwrap().get(&handle) {
         Some(p) => Ok(serde_json::to_string(&p).unwrap().to_owned()),
@@ -73,18 +107,46 @@ pub fn to_string(handle: u32) -> Result<String, u32> {
     }
 }
 
-pub fn from_string(proof_data: String) -> Result<u32, u32> {
+pub fn from_string(proof_data: &str) -> Result<u32, u32> {
+    let derived_proof: Proof = match serde_json::from_str(proof_data) {
+        Ok(x) => x,
+        Err(_) => return Err(error::UNKNOWN_ERROR.code_num),
+    };
 
+    let new_handle = derived_proof.handle;
+
+    if is_valid_handle(new_handle) {return Ok(new_handle);}
+    let proof = Box::from(derived_proof);
+
+    {
+        let mut m = PROOF_MAP.lock().unwrap();
+        info!("inserting handle {} into proof table", new_handle);
+        m.insert(new_handle, proof);
+    }
+
+    Ok(new_handle)
+}
+
+fn get_offer_details(response: &str) -> Result<String, u32> {
+    if settings::test_mode_enabled() {return Ok("test_mode_response".to_owned());}
+    match serde_json::from_str(response) {
+        Ok(json) => {
+            let json: serde_json::Value = json;
+            let detail = &json["uid"];
+            Ok(detail.to_string())
+        },
+        Err(_) => {
+            info!("Connect called without a valid response from server");
+            Err(error::UNKNOWN_ERROR.code_num)
+        },
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    extern crate mockito;
 
     use super::*;
-    use utils::wallet;
     use std::thread;
-    use std::time::Duration;
 
     extern "C" fn create_cb(command_handle: u32, err: u32, connection_handle: u32) {
         assert_eq!(err, 0);
@@ -124,25 +186,20 @@ mod tests {
     }
 
     #[test]
-    fn test_release_proof_succeeds() {
-
+    fn test_from_string_succeeds() {
+        set_default_and_enable_test_mode();
+        let handle = match create_proof(None,
+                                        "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
+                                        "{\"attr\":\"value\"}".to_owned()) {
+            Ok(x) => x,
+            Err(_) => panic!("Proof creation failed"),
+        };
+        let proof_data = to_string(handle).unwrap();
+        assert!(!proof_data.is_empty());
+        release(handle);
+        let new_handle = from_string(&proof_data).unwrap();
+        let new_proof_data = to_string(new_handle).unwrap();
+        assert_eq!(new_handle,handle);
+        assert_eq!(new_proof_data,proof_data);
     }
-
-//    #[test]
-//    fn test_from_string_succeeds() {
-//        set_default_and_enable_test_mode();
-//        let handle = match create_proof(None,
-//                                        "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
-//                                        "{\"attr\":\"value\"}".to_owned()) {
-//            Ok(x) => x,
-//            Err(_) => panic!("Proof creation failed"),
-//        };
-//        let proof_data = to_string(handle).unwrap();
-//        assert!(!proof_data.is_empty());
-////        release(handle);
-//        let new_handle = from_string(&proof_data).unwrap();
-//        let new_proof_data = to_string(new_handle).unwrap();
-//        assert_eq!(new_handle,handle);
-//        assert_eq!(new_proof_data,proof_data);
-//    }
 }
