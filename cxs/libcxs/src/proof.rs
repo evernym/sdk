@@ -13,7 +13,7 @@ use messages::GeneralMessage;
 use connection;
 
 lazy_static! {
-    static ref ISSUER_CLAIM_MAP: Mutex<HashMap<u32, Box<Proof>>> = Default::default();
+    static ref PROOF_MAP: Mutex<HashMap<u32, Box<Proof>>> = Default::default();
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -22,11 +22,18 @@ struct Proof {
     handle: u32,
     proof_attributes: String,
     msg_uid: String,
-    proof_request_did: String,
+    proof_requester_did: String,
     state: CxsStateType,
 }
 
-pub fn proof_create(source_id: Option<String>,
+impl Proof {
+    fn validate_proof_request(&self) -> Result<u32, String> {
+        //TODO: validate proof request
+        Ok(error::SUCCESS.code_num)
+    }
+}
+
+pub fn create_proof(source_id: Option<String>,
                     proof_request_did: String,
                     proof_data: String) -> Result<u32, String> {
 
@@ -39,22 +46,103 @@ pub fn proof_create(source_id: Option<String>,
         source_id: source_id_unwrap,
         msg_uid: String::new(),
         proof_attributes: proof_data,
-        proof_request_did: String::new(),
+        proof_requester_did: String::new(),
         state: CxsStateType::CxsStateNone,
     });
 
-//    match new_issuer_claim.validate_claim_offer() {
-//        Ok(_) => info!("successfully validated issuer_claim {}", new_handle),
-//        Err(x) => return Err(x),
-//    };
-//
-//    new_issuer_claim.state = CxsStateType::CxsStateInitialized;
-//
-//    {
-//        let mut m = ISSUER_CLAIM_MAP.lock().unwrap();
-//        info!("inserting handle {} into claim_issuer table", new_handle);
-//        m.insert(new_handle, new_issuer_claim);
-//    }
+    match new_proof.validate_proof_request() {
+        Ok(_) => info!("successfully validated proof {}", new_handle),
+        Err(x) => return Err(x),
+    };
+
+    new_proof.state = CxsStateType::CxsStateInitialized;
+
+    {
+        let mut m = PROOF_MAP.lock().unwrap();
+        info!("inserting handle {} into proof table", new_handle);
+        m.insert(new_handle, new_proof);
+    }
 
     Ok(new_handle)
+}
+
+pub fn to_string(handle: u32) -> Result<String, u32> {
+    match PROOF_MAP.lock().unwrap().get(&handle) {
+        Some(p) => Ok(serde_json::to_string(&p).unwrap().to_owned()),
+        None => Err(error::INVALID_PROOF_HANDLE.code_num)
+    }
+}
+
+pub fn from_string(proof_data: String) -> Result<u32, u32> {
+
+}
+
+#[cfg(test)]
+mod tests {
+    extern crate mockito;
+
+    use super::*;
+    use utils::wallet;
+    use std::thread;
+    use std::time::Duration;
+
+    extern "C" fn create_cb(command_handle: u32, err: u32, connection_handle: u32) {
+        assert_eq!(err, 0);
+        assert!(connection_handle > 0);
+        println!("successfully called create_cb")
+    }
+
+    fn set_default_and_enable_test_mode(){
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
+    }
+
+    #[test]
+    fn test_create_proof_succeeds() {
+        set_default_and_enable_test_mode();
+
+        match create_proof(None,
+                           "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
+                           "{\"attr\":\"value\"}".to_owned()) {
+            Ok(x) => assert!(x > 0),
+            Err(_) => assert_eq!(0, 1),
+        }
+    }
+
+    #[test]
+    fn test_to_string_succeeds() {
+        set_default_and_enable_test_mode();
+
+        let handle = match create_proof(None,
+                           "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
+                           "{\"attr\":\"value\"}".to_owned()) {
+            Ok(x) => x,
+            Err(_) => panic!("Proof creation failed"),
+        };
+        let proof_string = to_string(handle).unwrap();
+        assert!(!proof_string.is_empty());
+    }
+
+    #[test]
+    fn test_release_proof_succeeds() {
+
+    }
+
+//    #[test]
+//    fn test_from_string_succeeds() {
+//        set_default_and_enable_test_mode();
+//        let handle = match create_proof(None,
+//                                        "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
+//                                        "{\"attr\":\"value\"}".to_owned()) {
+//            Ok(x) => x,
+//            Err(_) => panic!("Proof creation failed"),
+//        };
+//        let proof_data = to_string(handle).unwrap();
+//        assert!(!proof_data.is_empty());
+////        release(handle);
+//        let new_handle = from_string(&proof_data).unwrap();
+//        let new_proof_data = to_string(new_handle).unwrap();
+//        assert_eq!(new_handle,handle);
+//        assert_eq!(new_proof_data,proof_data);
+//    }
 }
