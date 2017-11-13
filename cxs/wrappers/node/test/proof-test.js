@@ -64,14 +64,4 @@ describe('A Proof', async () => {
       assert.equal(error.toString(), 'Error: cxs_proof_serialize -> 1017')
     }
   })
-
-  it('will return the same proof when one with same source_id has already been created', async () => {
-    const sourceId = 'Idempotency'
-    const proof = await Proof.create(sourceId, DID, ATTR)
-    const jsonProof = await proof.serialize()
-    const idempotentProof = await Proof.create(sourceId, DID, ATTR)
-    const idempotentJson = await idempotentProof.serialize()
-    assert.equal(proof.handle, idempotentProof.handle)
-    assert.equal(JSON.stringify(idempotentJson), JSON.stringify(jsonProof))
-  })
 })

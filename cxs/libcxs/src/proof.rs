@@ -54,13 +54,9 @@ pub fn create_proof(source_id: Option<String>,
                     requester_did: String,
                     proof_data: String) -> Result<u32, String> {
 
+    let new_handle = rand::thread_rng().gen::<u32>();
+
     let source_id_unwrap = source_id.unwrap_or("".to_string());
-
-    let new_handle = match find_proof(&source_id_unwrap) {
-        Ok(x) => x,
-        Err(_) => rand::thread_rng().gen::<u32>(),
-    };
-
 
     let mut new_proof = Box::new(Proof {
         handle: new_handle,
@@ -211,26 +207,6 @@ mod tests {
         let new_proof_data = to_string(new_handle).unwrap();
         assert_eq!(new_handle,handle);
         assert_eq!(new_proof_data,proof_data);
-    }
-
-    #[test]
-    fn test_create_idempotency() {
-        set_default_and_enable_test_mode();
-        let handle = match create_proof(Some("1".to_string()),
-                                        "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
-                                        "{\"attr\":\"value\"}".to_owned()) {
-            Ok(x) => x,
-            Err(_) => panic!("Proof creation failed"),
-        };
-        let handle2 = match create_proof(Some("1".to_string()),
-                                        "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
-                                        "{\"attr\":\"value\"}".to_owned()) {
-            Ok(x) => x,
-            Err(_) => panic!("Proof creation failed"),
-        };
-        assert_eq!(handle,handle2);
-        release(handle);
-        release(handle2);
     }
 
     #[test]
