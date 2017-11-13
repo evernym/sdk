@@ -4,7 +4,6 @@ extern crate libc;
 
 use utils::wallet;
 use utils::error;
-use utils::httpclient;
 use api::CxsStateType;
 use rand::Rng;
 use std::sync::Mutex;
@@ -16,7 +15,32 @@ use messages;
 lazy_static! {
     static ref CONNECTION_MAP: Mutex<HashMap<u32, Box<Connection>>> = Default::default();
 }
-
+#[allow(non_snake_case)]
+#[derive(Serialize, Deserialize)]
+pub struct InviteDetail {
+    e: String,
+    rid: String,
+    sakdp: String,
+    sn: String,
+    sD: String,
+    lu: String,
+    sVk: String,
+    tn: String,
+}
+impl InviteDetail {
+    fn new() -> InviteDetail {
+        InviteDetail {
+            e: String::new(),
+            rid: String::new(),
+            sakdp: String::new(),
+            sn: String::new(),
+            sD: String::new(),
+            lu: String::new(),
+            sVk: String::new(),
+            tn: String::new(),
+        }
+    }
+}
 #[derive(Serialize, Deserialize)]
 struct ConnectionOptions {
     #[serde(default)]
@@ -36,7 +60,7 @@ struct Connection {
     uuid: String,
     endpoint: String,
     // For QR code invitation
-    invite_detail: String,
+    invite_detail: InviteDetail,
 }
 
 impl Connection {
@@ -52,25 +76,18 @@ impl Connection {
             Err(_) => return error::INVALID_OPTION.code_num
         };
 
-        let url = format!("{}/agency/route", settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
-
-        let json_msg = match messages::send_invite()
+        match messages::send_invite()
             .to(&self.pw_did)
             .key_delegate("key")
             .phone_number(&options_obj.phone)
-            .serialize_message(){
-            Ok(x) => x,
-            Err(x) => return x
-        };
-
-        match httpclient::post(&json_msg,&url) {
+            .send() {
             Err(_) => {
-                return error::POST_MSG_FAILURE.code_num
+                error::POST_MSG_FAILURE.code_num
             },
             Ok(response) => {
                 self.state = CxsStateType::CxsStateOfferSent;
                 self.invite_detail = get_invite_detail(&response);
-                return error::SUCCESS.code_num;
+                error::SUCCESS.code_num
             }
         }
     }
@@ -85,16 +102,6 @@ impl Connection {
     fn get_endpoint(&self) -> String { self.endpoint.clone() }
     fn set_uuid(&mut self, uuid: &str) { self.uuid = uuid.to_string(); }
     fn set_endpoint(&mut self, endpoint: &str) { self.endpoint = endpoint.to_string(); }
-}
-
-fn find_connection(source_id: &str) -> Result<u32,u32> {
-    for (handle, connection) in CONNECTION_MAP.lock().unwrap().iter() { //TODO this could be very slow with lots of objects
-        if connection.source_id == source_id {
-            return Ok(*handle);
-        }
-    };
-
-    Err(0)
 }
 
 pub fn is_valid_handle(handle: u32) -> bool {
@@ -128,7 +135,7 @@ pub fn get_pw_did(handle: u32) -> Result<String, u32> {
 pub fn get_uuid(handle: u32) -> Result<String, u32> {
     match CONNECTION_MAP.lock().unwrap().get(&handle) {
         Some(cxn) => Ok(cxn.get_uuid()),
-        None => Err(error::UNKNOWN_ERROR.code_num),
+        None => Err(error::INVALID_CONNECTION_HANDLE.code_num),
     }
 }
 
@@ -163,7 +170,7 @@ pub fn get_endpoint(handle: u32) -> Result<String, u32> {
 pub fn get_pw_verkey(handle: u32) -> Result<String, u32> {
     match CONNECTION_MAP.lock().unwrap().get(&handle) {
         Some(cxn) => Ok(cxn.get_pw_verkey()),
-        None => Err(error::UNKNOWN_ERROR.code_num),
+        None => Err(error::INVALID_CONNECTION_HANDLE.code_num),
     }
 }
 
@@ -178,47 +185,34 @@ pub fn create_agent_pairwise(handle: u32) -> Result<u32, u32> {
     let enterprise_did = settings::get_config_value(settings::CONFIG_ENTERPRISE_DID_AGENCY).unwrap();
     let pw_did = match get_pw_did(handle) {
         Ok(x) => x,
-        Err(x) => return Err(error::UNKNOWN_ERROR.code_num),
+        Err(x) => return Err(x),
     };
     let pw_verkey = get_pw_verkey(handle).unwrap();
-    let url = format!("{}/agency/route", settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
 
-    let json_msg = match messages::create_keys()
+    match messages::create_keys()
         .for_did(&pw_did)
         .to(&enterprise_did)
         .for_verkey(&pw_verkey)
         .nonce("anything")
-        .serialize_message(){
-        Ok(x) => x,
-        Err(x) => return Err(x),
-    };
-
-    match httpclient::post(&json_msg, &url) {
-        Ok(_) => return Ok(error::SUCCESS.code_num),
-        Err(_) => return Err(error::POST_MSG_FAILURE.code_num),
+        .send() {
+        Ok(_) => Ok(error::SUCCESS.code_num),
+        Err(_) => Err(error::POST_MSG_FAILURE.code_num),
     }
 }
 
 pub fn update_agent_profile(handle: u32) -> Result<u32, u32> {
-    let enterprise_did = settings::get_config_value(settings::CONFIG_ENTERPRISE_DID_AGENT).unwrap();
     let pw_did = match get_pw_did(handle) {
         Ok(x) => x,
-        Err(_) => return Err(error::UNKNOWN_ERROR.code_num),
+        Err(x) => return Err(x),
     };
-    let url = format!("{}/agency/route", settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
 
-    let json_msg = match messages::update_data()
+    match messages::update_data()
         .to(&pw_did)
         .name(&settings::get_config_value(settings::CONFIG_ENTERPRISE_NAME).unwrap())
         .logo_url(&settings::get_config_value(settings::CONFIG_LOGO_URL).unwrap())
-        .serialize_message(){
-        Ok(x) => x,
-        Err(x) => return Err(x)
-    };
-
-    match httpclient::post(&json_msg, &url) {
-        Ok(_) => return Ok(error::SUCCESS.code_num),
-        Err(_) => return Err(error::POST_MSG_FAILURE.code_num),
+        .send() {
+        Ok(_) => Ok(error::SUCCESS.code_num),
+        Err(_) => Err(error::POST_MSG_FAILURE.code_num),
     }
 }
 
@@ -228,10 +222,7 @@ pub fn update_agent_profile(handle: u32) -> Result<u32, u32> {
 //       mock the agency during the connection phase
 //
 pub fn create_connection(source_id: String) -> u32 {
-     let new_handle = match find_connection(&source_id) {
-        Ok(x) => return x,
-        Err(_) => rand::thread_rng().gen::<u32>(),
-    };
+    let new_handle = rand::thread_rng().gen::<u32>();
 
     info!("creating connection with handle {} and id {}", new_handle, source_id);
     // This is a new connection
@@ -245,13 +236,10 @@ pub fn create_connection(source_id: String) -> u32 {
         state: CxsStateType::CxsStateNone,
         uuid: String::new(),
         endpoint: String::new(),
-        invite_detail: String::new(),
+        invite_detail: InviteDetail::new()
     });
 
-    {
-        let mut m = CONNECTION_MAP.lock().unwrap();
-        m.insert(new_handle, c);
-    }
+    CONNECTION_MAP.lock().unwrap().insert(new_handle, c);;
 
     new_handle
 }
@@ -277,14 +265,9 @@ pub fn update_state(handle: u32) -> u32{
 
     let url = format!("{}/agency/route", settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
 
-    let json_msg = match messages::get_messages()
+    match messages::get_messages()
         .to(&pw_did)
-        .serialize_message(){
-        Ok(x) => x,
-        Err(x) => return x,
-    };
-
-    match httpclient::post(&json_msg, &url) {
+        .send() {
         Err(_) => {error::POST_MSG_FAILURE.code_num}
         Ok(response) => {
             if response.contains("message accepted") { set_state(handle, CxsStateType::CxsStateAccepted); }
@@ -311,7 +294,7 @@ pub fn to_string(handle: u32) -> Result<String,u32> {
 pub fn from_string(connection_data: &str) -> Result<u32,u32> {
     let derived_connection: Connection = match serde_json::from_str(connection_data) {
         Ok(x) => x,
-        Err(_) => return Err(error::UNKNOWN_ERROR.code_num),
+        Err(_) => return Err(error::INVALID_JSON.code_num),
     };
 
     let new_handle = derived_connection.handle;
@@ -320,11 +303,9 @@ pub fn from_string(connection_data: &str) -> Result<u32,u32> {
 
     let connection = Box::from(derived_connection);
 
-    {
-        let mut m = CONNECTION_MAP.lock().unwrap();
-        info!("inserting handle {} into connection table", new_handle);
-        m.insert(new_handle, connection);
-    }
+    info!("inserting handle {} into connection table", new_handle);
+
+    CONNECTION_MAP.lock().unwrap().insert(new_handle, connection);
 
     Ok(new_handle)
 }
@@ -336,18 +317,43 @@ pub fn release(handle: u32) -> u32 {
     }
 }
 
-fn get_invite_detail(response: &str) -> String {
+fn get_invite_detail(response: &str) -> InviteDetail {
+
     match serde_json::from_str(response) {
         Ok(json) => {
             let json: serde_json::Value = json;
-            let detail = &json["inviteDetail"];
-            detail.to_string()
+            convert_invite_details(&json["inviteDetail"])
         }
         Err(_) => {
             info!("Connect called without a valid response from server");
-            String::from("")
+            InviteDetail::new()
         }
     }
+}
+/* mappings
+`senderEndpoint` -> `e`
+`connReqId` -> `rid`
+`senderAgentKeyDlgProof` -> `sakdp`
+`senderName` -> `sn`
+`senderDID` -> `sD`
+`senderLogoUrl` -> `lu`
+`senderDIDVerKey` -> `sVk`
+`targetName` -> `tn`
+*/
+pub fn convert_invite_details(json: &serde_json::Value) -> InviteDetail {
+    println!("{}",json["senderEndpoint"]);
+    let json_converted = InviteDetail {
+        e: String::from(json["senderEndpoint"].as_str().unwrap()),
+        rid: String::from(json["connReqId"].as_str().unwrap()),
+        sakdp: String::from(json["senderAgentKeyDlgProof"].as_str().unwrap()),
+        sn: String::from(json["senderName"].as_str().unwrap()),
+        sD: String::from(json["senderDID"].as_str().unwrap()),
+        lu: String::from(json["senderLogoUrl"].as_str().unwrap()),
+        sVk: String::from(json["senderDIDVerKey"].as_str().unwrap()),
+        tn: String::from(json["targetName"].as_str().unwrap()),
+    };
+    println!("{}", serde_json::to_string(&json_converted).unwrap());
+    json_converted
 }
 
 #[cfg(test)]
@@ -398,18 +404,6 @@ mod tests {
         wallet::tests::delete_wallet("test_create_connection");
         _m.assert();
         release(handle);
-    }
-
-    #[test]
-    fn test_create_idempotency() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
-        let handle = build_connection("test_create_idempotency".to_owned());
-        let handle2 = build_connection("test_create_idempotency".to_owned());
-        assert_eq!(handle,handle2);
-        release(handle);
-        release(handle2);
     }
 
     #[test]
@@ -496,7 +490,7 @@ mod tests {
             state: CxsStateType::CxsStateNone,
             uuid: String::new(),
             endpoint: String::new(),
-            invite_detail: String::new(),
+            invite_detail: InviteDetail::new()
         });
 
         {
@@ -525,13 +519,10 @@ mod tests {
             state: CxsStateType::CxsStateNone,
             uuid: String::new(),
             endpoint: String::new(),
-            invite_detail: String::new(),
+            invite_detail: InviteDetail::new()
         });
 
-        {
-            let mut m = CONNECTION_MAP.lock().unwrap();
-            m.insert(handle, c);
-        }
+        CONNECTION_MAP.lock().unwrap().insert(handle, c);
 
         match update_agent_profile(handle) {
             Ok(x) => assert_eq!(x, error::SUCCESS.code_num),
@@ -620,6 +611,16 @@ mod tests {
 
     #[test]
     fn test_jsonfying_invite_details() {
+        /*
+        `senderEndpoint` -> `e`
+        `connReqId` -> `rid`
+        `senderAgentKeyDlgProof` -> `sakdp`
+        `senderName` -> `sn`
+        `senderDID` -> `sD`
+        `senderLogoUrl` -> `lu`
+        `senderDIDVerKey` -> `sVk`
+        `targetName` -> `tn`
+        */
         let response = "{ \"inviteDetail\": {
                 \"senderEndpoint\": \"34.210.228.152:80\",
                 \"connReqId\": \"CXqcDCE\",
@@ -632,8 +633,28 @@ mod tests {
             }}";
 
         let invite_detail = get_invite_detail(response);
-        info!("Invite Detail Test: {}", invite_detail);
-        assert!(invite_detail.contains("sdfsdf"));
+        let stringifyied = serde_json::to_string(&invite_detail).unwrap();
+        info!("Invite Detail Test: {}", stringifyied);
+        assert!(stringifyied.contains("sdfsdf"));
+        assert_eq!(invite_detail.sakdp, "sdfsdf");
+    }
+
+    #[test]
+    fn test_convert_invite_details(){
+        let response = r#"{ "inviteDetail": {"senderEndpoint": "34.210.228.152:80",
+                "connReqId": "CXqcDCE",
+                "senderAgentKeyDlgProof": "sdfsdf",
+                "senderName": "Evernym",
+                "senderDID": "JiLBHundRhwYaMbPWno8Vg",
+                "senderLogoUrl": "https://postimg.org/image/do2r09ain/",
+                "senderDIDVerKey": "AevwvcQBLv5CERRJShzUncV7ubapSgbDZxus42zS8fk1",
+                "targetName": "there"
+            }}"#;
+        use serde_json::Value;
+        let original_json:Value = serde_json::from_str(&response).unwrap();
+        let invite_detail:&Value = &original_json["inviteDetail"];
+        let converted_json = convert_invite_details(invite_detail);
+        assert_eq!(converted_json.e, original_json["inviteDetail"]["senderEndpoint"])
     }
 
     #[test]

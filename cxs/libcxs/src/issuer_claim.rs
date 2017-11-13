@@ -248,7 +248,7 @@ pub fn get_state(handle: u32) -> u32 {
 pub fn release(handle: u32) -> u32 {
     match ISSUER_CLAIM_MAP.lock().unwrap().remove(&handle) {
         Some(t) => error::SUCCESS.code_num,
-        None => error::INVALID_CONNECTION_HANDLE.code_num,
+        None => error::INVALID_ISSUER_CLAIM_HANDLE.code_num,
     }
 }
 
@@ -269,7 +269,7 @@ pub fn to_string(handle: u32) -> Result<String,u32> {
 pub fn from_string(claim_data: &str) -> Result<u32,u32> {
     let derived_claim: IssuerClaim = match serde_json::from_str(claim_data) {
         Ok(x) => x,
-        Err(_) => return Err(error::UNKNOWN_ERROR.code_num),
+        Err(_) => return Err(error::INVALID_JSON.code_num),
     };
 
     let new_handle = derived_claim.handle;
