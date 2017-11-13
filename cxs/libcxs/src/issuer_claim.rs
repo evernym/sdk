@@ -5,7 +5,7 @@ extern crate libc;
 use std::sync::Mutex;
 use std::collections::HashMap;
 use rand::Rng;
-                    use api::CxsStateType;
+use api::CxsStateType;
 use utils::error;
 use messages;
 use settings;
