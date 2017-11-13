@@ -33,7 +33,7 @@ describe('A Proof', async () => {
     assert.equal(proof.getSourceId(), sourceId)
   })
 
-  it.only('has state of Initialized after creating', async () => {
+  it('has state of Initialized after creating', async () => {
     const sourceId = 'Proof ID'
     const proof = await Proof.create(sourceId, DID, ATTR)
     assert.equal(proof.getState(), StateType.Initialized)
@@ -65,7 +65,7 @@ describe('A Proof', async () => {
     }
   })
 
-  it.only('will return the same proof when one with same source_id has already been created', async () => {
+  it('will return the same proof when one with same source_id has already been created', async () => {
     const sourceId = 'Idempotency'
     const proof = await Proof.create(sourceId, DID, ATTR)
     const jsonProof = await proof.serialize()
