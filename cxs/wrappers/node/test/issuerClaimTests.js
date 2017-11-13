@@ -170,7 +170,7 @@ describe('An issuerClaim', async function () {
     }
   })
 
-  it.only('sending claim with valid claim offer should have state CxsStateAccepted', async function () {
+  it('sending claim with valid claim offer should have state CxsStateAccepted', async function () {
     await cxs.init_cxs('ENABLE_TEST_MODE')
     let connection = await Connection.create({id: '123'})
     await connection.connect({ sms: true })

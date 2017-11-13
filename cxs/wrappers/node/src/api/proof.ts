@@ -111,6 +111,8 @@ export class Proof {
           })
         )
       this.setProofHandle(data)
+      // Todo: when updateState is working, call that instead of explicitly hardcoding the state
+      this._setState(StateType.Initialized)
     //   await this.updateState()
     } catch (err) {
       throw new CXSInternalError(`cxs_proof_create -> ${err}`)

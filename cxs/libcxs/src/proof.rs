@@ -23,6 +23,7 @@ struct Proof {
     proof_attributes: String,
     msg_uid: String,
     proof_requester_did: String,
+    proover_did: String,
     state: CxsStateType,
 }
 
@@ -37,6 +38,95 @@ impl Proof {
     }
 
     fn get_state(&self) -> u32 {let state = self.state as u32; state}
+
+    fn get_proof_response(&mut self, msg_uid: &str) {
+        info!("Checking for outstanding proofResponse for {} with uid: {}", self.handle, msg_uid);
+        let response = match messages::get_messages().to(&self.proover_did).uid(msg_uid).send() {
+            Ok(x) => x,
+            Err(x) => {
+                warn!("invalid response to get_messages for proof {}", self.handle);
+                return
+            },
+        };
+
+        let json: serde_json::Value = match serde_json::from_str(&response) {
+            Ok(json) => json,
+            Err(_) => {
+                warn!("invalid json in get_messages for proof {}", self.handle);
+                return
+            },
+        };
+
+        let msgs = match json["msgs"].as_array() {
+            Some(array) => array,
+            None => {
+                warn!("invalid msgs array returned for proof {}", self.handle);
+                return
+            },
+        };
+
+        for msg in msgs {
+            if msg["typ"].to_string() == "\"proofResponse\"" {
+                //get the followup-claim-req using refMsgId
+                self.state = CxsStateType::CxsStateRequestReceived;
+                //TODO: store the claim request, blinded-master-secret, etc
+                return
+            }
+        }
+
+        info!("no proofResponse found for proof {}", self.handle);
+    }
+
+    fn get_proof_status(&mut self) {
+
+        //Todo: make sure that the States are correct for the Proof flow
+        if self.state == CxsStateType::CxsStateRequestReceived {
+            return;
+        }
+        else if self.state != CxsStateType::CxsStateOfferSent || self.msg_uid.is_empty() ||
+            self.proof_requester_did.is_empty() {
+            return;
+        }
+
+        // state is "OfferSent" so check to see if there is a new claimReq
+        let response = match messages::get_messages().to(&self.proover_did).uid(&self.msg_uid).send() {
+            Ok(x) => {
+                println!("messages: {:?}", x);
+                x
+            },
+            Err(x) => {
+                warn!("invalid response to get_messages for proof {}", self.handle);
+                return
+            },
+        };
+
+        let json: serde_json::Value = match serde_json::from_str(&response) {
+            Ok(json) => json,
+            Err(_) => {
+                warn!("invalid json in get_messages for proof {}", self.handle);
+                return
+            },
+        };
+
+        let msgs = match json["msgs"].as_array() {
+            Some(array) => array,
+            None => {
+                warn!("invalid msgs array returned for proof {}", self.handle);
+                return
+            },
+        };
+
+        for msg in msgs {
+            if msg["statusCode"].to_string() == "\"MS-104\"" {
+                //get the followup-proof_response using refMsgId
+                self.get_proof_response(&msg["refMsgId"].to_string().as_ref());
+            }
+        }
+    }
+
+    fn update_state(&mut self) {
+        self.get_proof_status();
+    }
 }
 
 pub fn create_proof(source_id: Option<String>,
@@ -53,6 +143,7 @@ pub fn create_proof(source_id: Option<String>,
         msg_uid: String::new(),
         proof_attributes: proof_data,
         proof_requester_did: proof_requester_did,
+        proover_did: String::new(),
         state: CxsStateType::CxsStateNone,
     });
 
@@ -79,12 +170,12 @@ pub fn is_valid_handle(handle: u32) -> bool {
     }
 }
 
-//pub fn update_state(handle: u32) {
-//    match PROOF_MAP.lock().unwrap().get_mut(&handle) {
-//        Some(t) => t.update_state(),
-//        None => {}
-//    };
-//}
+pub fn update_state(handle: u32) {
+    match PROOF_MAP.lock().unwrap().get_mut(&handle) {
+        Some(t) => t.update_state(),
+        None => {}
+    };
+}
 
 pub fn get_state(handle: u32) -> u32 {
     match PROOF_MAP.lock().unwrap().get(&handle) {
@@ -147,6 +238,7 @@ mod tests {
 
     use super::*;
     use std::thread;
+    extern crate mockito;
 
     extern "C" fn create_cb(command_handle: u32, err: u32, connection_handle: u32) {
         assert_eq!(err, 0);
@@ -203,25 +295,25 @@ mod tests {
         assert_eq!(new_proof_data,proof_data);
     }
 
-//    #[test]
-//    fn test_create_idempotency() {
-//        set_default_and_enable_test_mode();
-//        let handle = match create_proof(Some("1".to_string()),
-//                                        "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
-//                                        "{\"attr\":\"value\"}".to_owned()) {
-//            Ok(x) => x,
-//            Err(_) => panic!("Proof creation failed"),
-//        };
-//        let handle2 = match create_proof(Some("1".to_string()),
-//                                        "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
-//                                        "{\"attr\":\"value\"}".to_owned()) {
-//            Ok(x) => x,
-//            Err(_) => panic!("Proof creation failed"),
-//        };
-//        assert_eq!(handle,handle2);
-//        release(handle);
-//        release(handle2);
-//    }
+    #[test]
+    fn test_create_idempotency() {
+        set_default_and_enable_test_mode();
+        let handle = match create_proof(Some("1".to_string()),
+                                        "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
+                                        "{\"attr\":\"value\"}".to_owned()) {
+            Ok(x) => x,
+            Err(_) => panic!("Proof creation failed"),
+        };
+        let handle2 = match create_proof(Some("1".to_string()),
+                                        "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
+                                        "{\"attr\":\"value\"}".to_owned()) {
+            Ok(x) => x,
+            Err(_) => panic!("Proof creation failed"),
+        };
+        assert_eq!(handle,handle2);
+        release(handle);
+        release(handle2);
+    }
 
     #[test]
     fn test_release_proof() {
@@ -234,5 +326,36 @@ mod tests {
         };
         assert_eq!(release(handle), 0);
         assert!(!is_valid_handle(handle));
+    }
+
+    #[test]
+    fn test_update_state_with_pending_proof_request() {
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
+        settings::set_config_value(settings::CONFIG_AGENT_ENDPOINT, mockito::SERVER_URL);
+
+        let response = "{\"msgs\":[{\"uid\":\"6gmsuWZ\",\"typ\":\"conReq\",\"statusCode\":\"MS-102\",\"statusMsg\":\"message sent\"},\
+            {\"statusCode\":\"MS-104\",\"edgeAgentPayload\":\"{\\\"attr\\\":\\\"value\\\"}\",\"sendStatusCode\":\"MS-101\",\"typ\":\"proofResponse\",\"statusMsg\":\"message accepted\",\"uid\":\"6a9u7Jt\",\"refMsgId\":\"CKrG14Z\"}]}";
+
+        let _m = mockito::mock("POST", "/agency/route")
+            .with_status(200)
+            .with_body(response)
+//            .expect(2)
+            .create();
+
+        //Todo: State needs to be updated to make more sense for Proofs
+        let mut proof = Box::new(Proof {
+            handle: 123,
+            source_id: "test_has_pending_proof_request".to_owned(),
+            msg_uid: "1234".to_owned(),
+            proof_attributes: "nothing".to_owned(),
+            proof_requester_did: "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
+            proover_did: "7XFh8yBzrpJQmNyZzgoTqB".to_owned(),
+            state: CxsStateType::CxsStateOfferSent,
+        });
+
+        proof.update_state();
+        _m.assert();
+        assert_eq!(proof.get_state(), CxsStateType::CxsStateRequestReceived as u32);
     }
 }
