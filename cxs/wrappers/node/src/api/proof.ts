@@ -1,8 +1,8 @@
 import { Callback, ForeignFunction } from 'ffi'
-import { weak } from 'weak'
+import * as weak from 'weak'
 import { CXSRuntime, CXSRuntimeConfig } from '../index'
 import { createFFICallbackPromise, IProofData, StateType } from './api'
-import { Connection } from './connection'
+// import { Connection } from './connection'
 import { CXSInternalError } from './errors'
 
 export class Proof {

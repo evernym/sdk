@@ -40,13 +40,27 @@ impl Proof {
     fn get_state(&self) -> u32 {let state = self.state as u32; state}
 }
 
+fn find_proof(source_id: &str) -> Result<u32,u32> {
+    for (handle, proof) in PROOF_MAP.lock().unwrap().iter() { //TODO this could be very slow with lots of objects
+        if proof.source_id == source_id {
+            return Ok(*handle);
+        }
+    };
+
+    Err(0)
+}
+
 pub fn create_proof(source_id: Option<String>,
                     requester_did: String,
                     proof_data: String) -> Result<u32, String> {
 
-    let new_handle = rand::thread_rng().gen::<u32>();
-
     let source_id_unwrap = source_id.unwrap_or("".to_string());
+
+    let new_handle = match find_proof(&source_id_unwrap) {
+        Ok(x) => x,
+        Err(_) => rand::thread_rng().gen::<u32>(),
+    };
+
 
     let mut new_proof = Box::new(Proof {
         handle: new_handle,
