@@ -72,6 +72,7 @@ export interface IProofData {
   handle: number
   proof_attributes: string
   proof_requester_did: string
+  proover_did: string
   state: StateType
 }
 
