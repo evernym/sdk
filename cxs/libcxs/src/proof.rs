@@ -202,4 +202,37 @@ mod tests {
         assert_eq!(new_handle,handle);
         assert_eq!(new_proof_data,proof_data);
     }
+
+//    #[test]
+//    fn test_create_idempotency() {
+//        set_default_and_enable_test_mode();
+//        let handle = match create_proof(Some("1".to_string()),
+//                                        "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
+//                                        "{\"attr\":\"value\"}".to_owned()) {
+//            Ok(x) => x,
+//            Err(_) => panic!("Proof creation failed"),
+//        };
+//        let handle2 = match create_proof(Some("1".to_string()),
+//                                        "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
+//                                        "{\"attr\":\"value\"}".to_owned()) {
+//            Ok(x) => x,
+//            Err(_) => panic!("Proof creation failed"),
+//        };
+//        assert_eq!(handle,handle2);
+//        release(handle);
+//        release(handle2);
+//    }
+
+    #[test]
+    fn test_release_proof() {
+        set_default_and_enable_test_mode();
+        let handle = match create_proof(Some("1".to_string()),
+                                        "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
+                                        "{\"attr\":\"value\"}".to_owned()) {
+            Ok(x) => x,
+            Err(_) => panic!("Proof creation failed"),
+        };
+        assert_eq!(release(handle), 0);
+        assert!(!is_valid_handle(handle));
+    }
 }

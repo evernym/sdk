@@ -103,6 +103,11 @@ pub extern fn cxs_proof_deserialize(command_handle: u32,
     error::SUCCESS.code_num
 }
 
+#[no_mangle]
+pub extern fn cxs_proof_release(proof_handle: u32) -> u32 {
+    proof::release(proof_handle)
+}
+
 
 #[allow(unused_variables, unused_mut)]
 pub extern fn cxs_proof_send_request(command_handle: u32,
@@ -202,7 +207,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cxs_issuer_claim_deserialize_succeeds() {
+    fn test_cxs_proof_deserialize_succeeds() {
         set_default_and_enable_test_mode();
         let original = "{\"source_id\":\"test_proof_serialize\",\"handle\":2035188318,\"proof_attributes\":\"{\\\"attr\\\":\\\"value\\\"}\",\"msg_uid\":\"\",\"proof_requester_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"state\":1}";
         cxs_proof_deserialize(0,CString::new(original).unwrap().into_raw(), Some(deserialize_cb));

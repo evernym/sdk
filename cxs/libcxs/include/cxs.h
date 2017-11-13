@@ -147,7 +147,7 @@ cxs_error_t cxs_issuer_claim_deserialize(cxs_command_handle_t, const char *seria
 /** Terminates a claim for the specified reason. */
 cxs_error_t cxs_issuer_terminate_claim(cxs_command_handle_t command_handle, cxs_claim_handle_t claim_handle, cxs_claim_state_t state_type, const char *msg);
 
-//* Releases a claim object from memory, invalidating the handle. */
+/** Releases the claim from memory. */
 cxs_error_t cxs_issuer_claim_release(cxs_claim_handle_t claim_handle);
 
 /** Populates claim_request with the latest claim request received. (not in MVP) */
@@ -189,6 +189,8 @@ cxs_error_t cxs_proof_serialize(cxs_command_handle_t command_handle, cxs_proof_h
 /** Re-creates a claim object from the specified serialization. */
 cxs_error_t cxs_proof_deserialize(cxs_command_handle_t command_handle, const char *serialized_proof, void (*cb)(cxs_command_handle_t xcommand_handle, cxs_error_t err, cxs_proof_handle_t proof_handle));
 
+/** Releases the proof from memory. */
+cxs_error_t cxs_proof_release(cxs_proof_handle_t proof_handle);
 
 #ifdef __cplusplus
 }

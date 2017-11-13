@@ -25,6 +25,7 @@ export const FFI_CONNECTION_HANDLE_PTR = ref.refType(FFI_CONNECTION_HANDLE)
 export const FFI_CALLBACK_PTR = 'pointer'
 export const FFI_COMMAND_HANDLE = 'uint32'
 export const FFI_CLAIM_HANDLE = 'uint32'
+export const FFI_PROOF_HANDLE = 'uint32'
 
 // Rust Lib Native Types
 export type rust_did = string
@@ -72,7 +73,8 @@ export const FFIConfiguration = {
   cxs_proof_create: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_SOURCE_ID, FFI_STRING_DATA, FFI_STRING_DATA,
     FFI_CALLBACK_PTR]],
   cxs_proof_deserialize: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_STRING_DATA, FFI_CALLBACK_PTR]],
-  cxs_proof_serialize: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CLAIM_HANDLE, FFI_CALLBACK_PTR]],
+  cxs_proof_release: [FFI_ERROR_CODE, [FFI_PROOF_HANDLE]],
+  cxs_proof_serialize: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_PROOF_HANDLE, FFI_CALLBACK_PTR]],
   // cxs_proof_update_state: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CLAIM_HANDLE, FFI_CALLBACK_PTR]],
 
   free: [FFI_VOID, ['void*']]
