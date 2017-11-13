@@ -1,4 +1,4 @@
-import * as ffi from 'ffi'
+import { Callback } from 'ffi'
 import { CXSRuntime } from '../index'
 import { CXSRuntimeConfig } from '../rustlib'
 import { createFFICallbackPromise } from './api'
@@ -18,7 +18,7 @@ export async function init_cxs (filename: string): Promise<void> {
           resolve(rc)
         }
       },
-      (resolve, reject) => ffi.Callback('void', ['uint32', 'uint32', 'string'], (xhandle, err) => {
+      (resolve, reject) => Callback('void', ['uint32', 'uint32', 'string'], (xhandle, err) => {
         if (err) {
           reject(err)
           return
