@@ -96,10 +96,7 @@ pub extern fn cxs_proof_deserialize(command_handle: u32,
             Ok(x) => (error::SUCCESS.code_num, x),
             Err(x) => (x, 0),
         };
-<<<<<<< HEAD
 
-=======
->>>>>>> rustlib_singleton
         cb(command_handle, rc, handle);
     });
 
