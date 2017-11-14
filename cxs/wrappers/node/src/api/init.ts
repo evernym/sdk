@@ -2,7 +2,7 @@ import { Callback } from 'ffi'
 
 import { CXSInternalError } from '../errors'
 import { initRustAPI, rustAPI } from '../rustlib'
-import { createFFICallbackPromise } from './api'
+import { createFFICallbackPromise } from '../utils/ffi-helpers'
 
 export interface IInitCXSOptions {
   libCXSPath?: string

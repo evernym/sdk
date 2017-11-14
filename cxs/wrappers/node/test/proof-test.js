@@ -1,11 +1,8 @@
 const assert = require('chai').assert
 // const cxs = require('../dist/index')
-const Proof = require('../dist/api/proof').Proof
+const { Proof, StateType, Error } = require('../dist/index')
 // const Connection = require('../dist/api/connection').Connection
 
-const common = require('../dist/api/common.js')
-const StateType = common.StateType
-const Error = common.Error
 const ATTR = '{"attr":"value"}'
 const DID = '8XFh8yBzrpJQmNyZzgoTqB'
 
