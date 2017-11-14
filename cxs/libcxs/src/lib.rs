@@ -28,6 +28,7 @@ use std::path::Path;
 pub mod api;
 pub mod connection;
 pub mod issuer_claim;
+pub mod claim_request;
 
 pub fn create_path(s:&str) -> &Path {
     Path::new(s)

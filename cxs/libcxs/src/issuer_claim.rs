@@ -486,5 +486,6 @@ mod tests {
         }
         assert_eq!(get_state_from_string(string), 1);
     }
+
 }
 
