@@ -4,12 +4,12 @@ use self::libc::c_char;
 use std::ffi::CString;
 use std::env;
 use utils::callback::CallbackUtils;
+use utils::timeout::TimeoutUtils;
 use std::fs;
 use std::io::Write;
 use std::ptr::null;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::channel;
-use std::time::Duration;
 use utils::error;
 
 
@@ -137,7 +137,7 @@ pub fn create_pool_ledger_config(pool_name: &str, pool_config: Option<&str>) -> 
             return err as u32;
         }
 
-        let err = receiver.recv_timeout(Duration::from_secs(5)).unwrap();
+        let err = receiver.recv_timeout(TimeoutUtils::short_timeout()).unwrap();
 
         if err != 0 && err != 306 {
             return err as u32;
@@ -171,7 +171,7 @@ pub fn open_pool_ledger(pool_name: &str, config: Option<&str>) -> Result<u32, u3
             return Err(error::UNKNOWN_ERROR.code_num);
         }
 
-        let (err, pool_handle) = receiver.recv_timeout(Duration::from_secs(10)).unwrap();
+        let (err, pool_handle) = receiver.recv_timeout(TimeoutUtils::medium_timeout()).unwrap();
 
         if err != error::SUCCESS.code_num as i32 {
             return Err(error::UNKNOWN_ERROR.code_num);
@@ -198,7 +198,7 @@ pub fn refresh(pool_handle: i32) -> Result<(), u32> {
         if res != error::SUCCESS.code_num as i32 {
             return Err(error::UNKNOWN_ERROR.code_num);
         }
-        let res = receiver.recv_timeout(Duration::from_secs(5)).unwrap();
+        let res = receiver.recv_timeout(TimeoutUtils::short_timeout()).unwrap();
         if res != error::SUCCESS.code_num as i32 {
             return Err(error::UNKNOWN_ERROR.code_num);
         }
@@ -217,7 +217,7 @@ pub fn close(pool_handle: i32) -> Result<(), u32> {
         if res != error::SUCCESS.code_num as i32 {
             return Err(error::UNKNOWN_ERROR.code_num);
         }
-        let res = receiver.recv_timeout(Duration::from_secs(5)).unwrap();
+        let res = receiver.recv_timeout(TimeoutUtils::short_timeout()).unwrap();
         if res != error::SUCCESS.code_num as i32 {
             return Err(error::UNKNOWN_ERROR.code_num);
         }
@@ -238,7 +238,7 @@ pub fn delete(pool_name: &str) -> Result<(), u32> {
         if res != error::SUCCESS.code_num as i32 {
             return Err(error::UNKNOWN_ERROR.code_num)
         }
-        let res = receiver.recv_timeout(Duration::from_secs(5)).unwrap();
+        let res = receiver.recv_timeout(TimeoutUtils::short_timeout()).unwrap();
         if res != error::SUCCESS.code_num as i32 {
             return Err(error::UNKNOWN_ERROR.code_num)
         }
