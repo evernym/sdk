@@ -4,14 +4,14 @@ static ISSUER_DID: &'static str = "issuer_did";
 static SEQUENCE_NUMBER: &'static str = "schema_seq_no";
 static BLINDED_MS: &'static str ="blinded_ms";
 static PROVER_DID: &'static str = "prover_did";
-static U: &'static str = "U";
+static U: &'static str = "u";
 static UR: &'static str = "ur";
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
-struct ClaimRequest{
-    blinded_ms: Option<BlindedMasterSecret> ,
-    issuer_did: String,
-    schema_seq_no: String,
+pub struct ClaimRequest{
+    pub blinded_ms: Option<BlindedMasterSecret> ,
+    pub issuer_did: String,
+    pub schema_seq_no: String,
 
 }
 
@@ -24,25 +24,26 @@ impl ClaimRequest {
        }
     }
 
-    pub fn create_from_api_msg(value:&serde_json::Value) -> ClaimRequest {
-        let master_secret_json = &value[BLINDED_MS];
+    pub fn create_from_api_msg(payload:&serde_json::Value) -> ClaimRequest {
+        let master_secret_json = &payload[BLINDED_MS];
         let prover_did = String::from(master_secret_json[PROVER_DID].as_str().unwrap());
+
         let ms_u = master_secret_json[U].as_str().unwrap();
         let ms_ur = match master_secret_json[UR].as_str() {
             Some("null") => None,
             Some(x) => Some(String::from(x)),
             None => None,
         };
+
         let blinded_master_secret = BlindedMasterSecret {
             prover_did,
             U: String::from(ms_u),
             ur: ms_ur,
         };
-
         ClaimRequest{
             blinded_ms: Some(blinded_master_secret),
-            issuer_did: String::from(value[ISSUER_DID].as_str().unwrap()),
-            schema_seq_no: match value[SEQUENCE_NUMBER].as_u64() {
+            issuer_did: String::from(payload[ISSUER_DID].as_str().unwrap()),
+            schema_seq_no: match payload[SEQUENCE_NUMBER].as_u64() {
                 Some(x) => String::from(x.to_string()),
                 None => panic!("panic at create claim request"),
             }
@@ -51,10 +52,10 @@ impl ClaimRequest {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-struct BlindedMasterSecret {
-    prover_did: String,
-    U: String,
-    ur: Option<String>,
+pub struct BlindedMasterSecret {
+    pub prover_did: String,
+    pub U: String,
+    pub ur: Option<String>,
 }
 
 
@@ -113,7 +114,7 @@ mod tests {
             "mid":"",
             "blinded_ms":{
                 "prover_did": "FQ7wPBUgSPnDGJnS1EYjTK",
-                "U": "923...607",
+                "u": "923...607",
                 "ur":null
             },
             "issuer_did":"QTrbV4raAcND4DWWzBmdsh",
@@ -172,7 +173,7 @@ mod tests {
             "mid":"",
             "blinded_ms":{
                 "prover_did": "FQ7wPBUgSPnDGJnS1EYjTK",
-                "U": "923...607",
+                "u": "923...607",
                 "ur":null
             },
             "issuer_did":"QTrbV4raAcND4DWWzBmdsh",

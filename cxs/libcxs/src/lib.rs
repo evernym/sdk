@@ -29,6 +29,7 @@ pub mod api;
 pub mod connection;
 pub mod issuer_claim;
 pub mod claim_request;
+pub mod proof;
 
 pub fn create_path(s:&str) -> &Path {
     Path::new(s)
