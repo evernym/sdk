@@ -1,28 +1,34 @@
-import * as ffi from 'ffi'
-import { CXSRuntime } from '../index'
-import { CXSRuntimeConfig } from '../rustlib'
-import { CXSInternalError } from './errors'
+import { Callback } from 'ffi'
 
-export async function init_cxs (filename: string): Promise<number> {
-  const config = new CXSRuntimeConfig(null)
-  const rust = new CXSRuntime(config)
+import { CXSInternalError } from '../errors'
+import { initRustAPI, rustAPI } from '../rustlib'
+import { createFFICallbackPromise } from '../utils/ffi-helpers'
+
+export interface IInitCXSOptions {
+  libCXSPath?: string
+}
+
+export async function initCxs (configPath: string, options: IInitCXSOptions = {}): Promise<void> {
+  initRustAPI(options.libCXSPath)
+  let rc = null
   try {
-    return await new Promise<number>((resolve, reject) => {
-      const rc = rust._ffi.cxs_init(
-            0,
-            filename,
-            ffi.Callback('void', ['uint32', 'uint32'],
-                (xhandle, err) => {
-                  if (err) {
-                    reject(err)
-                  }
-                }))
-      if (rc) {
-        reject(rc)
-      } else {
-        resolve(rc)
-      }
-    })
+    return await createFFICallbackPromise<void>(
+      (resolve, reject, cb) => {
+        rc = rustAPI().cxs_init(0, configPath, cb)
+        if (rc) {
+          reject(rc)
+        } else {
+          resolve(rc)
+        }
+      },
+      (resolve, reject) => Callback('void', ['uint32', 'uint32', 'string'], (xhandle, err) => {
+        if (err) {
+          reject(err)
+          return
+        }
+        resolve(err)
+      })
+    )
   } catch (err) {
     throw new CXSInternalError(`cxs_init -> ${err}`)
   }
