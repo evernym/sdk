@@ -41,7 +41,6 @@ export class IssuerClaim extends GCWatcher {
     this._issuerDID = null
   }
 
-
   // SourceId: String for SDK User's reference
   // schemaNumber: number representing the schema sequence number of the claim def
   // issuerDid: String, DID associated with the claim def
