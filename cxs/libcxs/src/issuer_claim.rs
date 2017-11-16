@@ -11,10 +11,28 @@ use messages;
 use settings;
 use messages::GeneralMessage;
 use connection;
+use claim_request::ClaimRequest;
 
 lazy_static! {
     static ref ISSUER_CLAIM_MAP: Mutex<HashMap<u32, Box<IssuerClaim>>> = Default::default();
 }
+static X_CLAIM_JSON: &str =
+    r#"{"claim":{"sex":["male","5944657099558967239210949258394887428692050081607692519917050011144233115103"],
+            "name":["Alex","1139481716457488690172217916278103335"],
+            "height":["175","175"],
+            "age":["28","28"]},
+            "schema_seq_no":1,"signature":{"primary_claim":{"m2":"20422830146126298072435154364609688311215455372812191522510963615911197566669",
+            "a":"63278417442659036669400207009188145697780040051013688149129256743084966944528018225851811786642635489831571302866283859548986662378660197412546425265143614707831895279255687895675751698590585098567712192115877143987215992997043294541884675031280360751560521858749232517644822329119678418891734891999969994336787838346708066475554811401305388198469874303955982449914596797006164947169494007654191130837373504283790479819949019734180572560323746301426795874966758705582341228577546833918138882259158566308938859465340183493113227787793173036569687904567822911316789916700474950018489718630556431551954131019312798482435",
+            "e":"259344723055062059907025491480697571938277889515152306249728583105665800713306759149981690559193987143012367913206299323899696942213235956742929880197442747734002082458742544271217",
+            "v":"5448939297853492897399717699539987539533578749867908562762944680268135685568567694260903659584370412643098340744441419451405915373661562565021706607145415122811375641444019538229177574690774531481658120571799333405654388187880203110551180255667817449809910102311767393528025399975601051786676433371392016118214791671204242832547887535483159158088937798628236468649812562884826102823687360319110876054605559703891759045504465130542443075386046668867837639362548961441542181537142758771598043861916300605771981322856145348134135739082583728247027138545297124443408399679058667885317337958616542267235439777554294124026816217852292197406039776334339390803515774060293652261032039824844850903758098551881051874925659952378263321151966685500514992357258732078333637170928029095753968644343981540303973079686119201809045542624"},
+            "non_revocation_claim":null},"issuer_did":"NcYxiDXkpYi6ov5FcYDi1e"}"#;
+
+static CLAIM_DATA: &str =
+    r#"{"sex":["male","5944657099558967239210949258394887428692050081607692519917050011144233115103"],
+        "name":["Alex","1139481716457488690172217916278103335"],
+        "height":["175","175"],
+        "age":["28","28"]
+        }"#;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct IssuerClaim {
@@ -26,6 +44,7 @@ struct IssuerClaim {
     issuer_did: String,
     issued_did: String,
     state: CxsStateType,
+    claim_request: Option<ClaimRequest>,
 }
 
 impl IssuerClaim {
@@ -79,6 +98,15 @@ impl IssuerClaim {
         }
 
         //TODO: call to libindy to encrypt payload
+//        let mut claim_request:&ClaimRequest = match self.claim_request {
+//            Some(c) => &c,
+//            None => {
+//                info!("Cannot Send Claim without a valid Claim Request");
+//                panic!("Cannot Send Claim without a valid Claim Request");
+//            },
+//        };
+//        let claim_req = self.claim_request.clone().unwrap();
+//        let mut  data = create_claim_payload(&claim_req,&CLAIM_DATA).unwrap();
         let data = format!("{{ \"claimDefNo\":\"{}\",\"claimAttributes\":\"{}\"}}",self.schema_seq_no,self.claim_attributes);
         let to = connection::get_pw_did(connection_handle).unwrap();
 
@@ -98,7 +126,6 @@ impl IssuerClaim {
             }
         }
     }
-
     fn get_claim_req(&mut self, msg_uid: &str) {
         info!("Checking for outstanding claimReq for {} with uid: {}", self.handle, msg_uid);
          let response = match messages::get_messages().to(&self.issued_did).uid(msg_uid).send() {
@@ -126,10 +153,17 @@ impl IssuerClaim {
         };
 
         for msg in msgs {
-            if msg["typ"].to_string() == "\"claimReq\"" {
+            if msg["typ"] == String::from("claimReq") {
                 //get the followup-claim-req using refMsgId
                 self.state = CxsStateType::CxsStateRequestReceived;
-                //TODO: store the claim request, blinded-master-secret, etc
+                let payload: serde_json::Value = match serde_json::from_str(&msg["edgeAgentPayload"].as_str().unwrap()){
+                    Ok(x) => x,
+                    Err(_) => {
+                        warn!("invalid json for claimReq's edgeAgentPayload");
+                        return
+                    },
+                };
+                self.claim_request = Some(ClaimRequest::create_from_api_msg(&payload));
                 return
             }
         }
@@ -153,7 +187,6 @@ impl IssuerClaim {
                 return
             },
         };
-
         let json: serde_json::Value = match serde_json::from_str(&response) {
             Ok(json) => json,
             Err(_) => {
@@ -173,7 +206,7 @@ impl IssuerClaim {
         for msg in msgs {
             if msg["statusCode"].to_string() == "\"MS-104\"" {
                 //get the followup-claim-req using refMsgId
-                self.get_claim_req(&msg["refMsgId"].to_string().as_ref());
+                self.get_claim_req(&msg["refMsgId"].as_str().unwrap());
             }
         }
     }
@@ -186,6 +219,10 @@ impl IssuerClaim {
     fn get_state(&self) -> u32 { let state = self.state as u32; state }
     fn get_offer_uid(&self) -> String { self.msg_uid.clone() }
     fn set_offer_uid(&mut self, uid: &str) {self.msg_uid = uid.to_owned();}
+}
+
+pub fn create_claim_payload<'a>(claim_req: &ClaimRequest, claim_data: &str) -> Result< &'a str, u32> {
+    return Ok(&X_CLAIM_JSON);
 }
 
 pub fn get_offer_uid(handle: u32) -> Result<String,u32> {
@@ -213,6 +250,7 @@ pub fn issuer_claim_create(schema_seq_no: u32,
         issuer_did,
         state: CxsStateType::CxsStateNone,
         schema_seq_no,
+        claim_request: None,
     });
 
     match new_issuer_claim.validate_claim_offer() {
@@ -312,7 +350,7 @@ fn get_offer_details(response: &str) -> Result<String,u32> {
         Ok(json) => {
             let json: serde_json::Value = json;
             let detail = &json["uid"];
-            Ok(detail.to_string())
+            Ok(String::from(detail.as_str().unwrap()))
         },
         Err(_) => {
             info!("Connect called without a valid response from server");
@@ -320,6 +358,8 @@ fn get_offer_details(response: &str) -> Result<String,u32> {
         },
     }
 }
+
+
 
 #[cfg(test)]
 mod tests {
@@ -329,6 +369,38 @@ mod tests {
     use std::thread;
     use std::time::Duration;
     use super::*;
+
+    static SCHEMA: &str = r#"{{
+                            "seqNo":32,
+                            "data":{{
+                                "name":"gvt",
+                                "version":"1.0",
+                                "keys":["age","sex","height","name"]
+                            }}
+                         }}"#;
+
+    static CLAIM_REQ_STRING: &str =
+        r#"{
+           "msg_type":"CLAIM_REQUEST",
+           "version":"0.1",
+           "to_did":"BnRXf8yDMUwGyZVDkSENeq",
+           "from_did":"GxtnGN6ypZYgEqcftSQFnC",
+           "iid":"cCanHnpFAD",
+           "mid":"",
+           "blinded_ms":{
+              "prover_did":"FQ7wPBUgSPnDGJnS1EYjTK",
+              "u":"923...607",
+              "ur":null
+           },
+           "issuer_did":"QTrbV4raAcND4DWWzBmdsh",
+           "schema_seq_no":48,
+           "optional_data":{
+              "terms_of_service":"<Large block of text>",
+              "price":6
+           }
+        }"#;
+
+
 
     fn set_default_and_enable_test_mode(){
         settings::set_defaults();
@@ -383,7 +455,7 @@ mod tests {
         assert_eq!(send_claim_offer(handle,connection_handle).unwrap(),error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(500));
         assert_eq!(get_state(handle),CxsStateType::CxsStateOfferSent as u32);
-        assert_eq!(get_offer_uid(handle).unwrap(),"\"6a9u7Jt\"");
+        assert_eq!(get_offer_uid(handle).unwrap(),"6a9u7Jt");
         _m.assert();
     }
 
@@ -408,6 +480,7 @@ mod tests {
             issued_did: "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
             issuer_did: "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
             state: CxsStateType::CxsStateRequestReceived,
+            claim_request: None,
             };
 
         let connection_handle = create_connection("test_send_claim_offer".to_owned());
@@ -444,9 +517,8 @@ mod tests {
         settings::set_config_value(settings::CONFIG_AGENT_ENDPOINT, mockito::SERVER_URL);
 
         let response = "{\"msgs\":[{\"uid\":\"6gmsuWZ\",\"typ\":\"conReq\",\"statusCode\":\"MS-102\",\"statusMsg\":\"message sent\"},\
-            {\"statusCode\":\"MS-104\",\"edgeAgentPayload\":\"{\\\"attr\\\":\\\"value\\\"}\",\"sendStatusCode\":\"MSS-101\",\"typ\":\"claimOffer\",\"statusMsg\":\"message accepted\",\"uid\":\"6a9u7Jt\",\"refMsgId\":\"CKrG14Z\"},\
-            {\"statusCode\":\"MS-103\",\"edgeAgentPayload\":\"{\\\"attr\\\":\\\"value\\\"}\",\"typ\":\"claimReq\",\"statusMsg\":\"message pending\",\"uid\":\"CKrG14Z\"}]}";
-
+        {\"statusCode\":\"MS-104\",\"edgeAgentPayload\":\"{\\\"attr\\\":\\\"value\\\"}\",\"sendStatusCode\":\"MSS-101\",\"typ\":\"claimOffer\",\"statusMsg\":\"message accepted\",\"uid\":\"6a9u7Jt\",\"refMsgId\":\"CKrG14Z\"},\
+        {\"msg_type\":\"CLAIM_REQUEST\",\"typ\":\"claimReq\",\"edgeAgentPayload\":\"{\\\"blinded_ms\\\":{\\\"prover_did\\\":\\\"FQ7wPBUgSPnDGJnS1EYjTK\\\",\\\"u\\\":\\\"923...607\\\",\\\"ur\\\":\\\"null\\\"},\\\"version\\\":\\\"0.1\\\",\\\"mid\\\":\\\"\\\",\\\"to_did\\\":\\\"BnRXf8yDMUwGyZVDkSENeq\\\",\\\"from_did\\\":\\\"GxtnGN6ypZYgEqcftSQFnC\\\",\\\"iid\\\":\\\"cCanHnpFAD\\\",\\\"issuer_did\\\":\\\"QTrbV4raAcND4DWWzBmdsh\\\",\\\"schema_seq_no\\\":48,\\\"optional_data\\\":{\\\"terms_of_service\\\":\\\"<Large block of text>\\\",\\\"price\\\":6}}\"}]}";
         let _m = mockito::mock("POST", "/agency/route")
         .with_status(200)
         .with_body(response)
@@ -459,14 +531,18 @@ mod tests {
         schema_seq_no: 32,
         msg_uid: "1234".to_owned(),
         claim_attributes: "nothing".to_owned(),
-        issuer_did: "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
+        issuer_did: "QTrbV4raAcND4DWWzBmdsh".to_owned(),
         issued_did: "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
         state: CxsStateType::CxsStateOfferSent,
+        claim_request: None,
         };
 
         claim.update_state();
         _m.assert();
-        assert_eq ! (claim.get_state(), CxsStateType::CxsStateRequestReceived as u32);
+        assert_eq !(claim.get_state(), CxsStateType::CxsStateRequestReceived as u32);
+        let claim_request = claim.claim_request.unwrap();
+        assert_eq!(claim_request.issuer_did, "QTrbV4raAcND4DWWzBmdsh");
+        assert_eq!(claim_request.schema_seq_no, "48");
     }
 
     #[test]
@@ -486,5 +562,32 @@ mod tests {
         }
         assert_eq!(get_state_from_string(string), 1);
     }
+
+    #[test]
+    fn test_issuer_claim_can_build_claim_from_correct_parts(){
+        use serde_json::Value;
+        let schema_str = SCHEMA;
+        let claim_req_value = &serde_json::from_str(CLAIM_REQ_STRING).unwrap();
+        let claim_req:ClaimRequest = ClaimRequest::create_from_api_msg(&claim_req_value);
+        let mut issuer_claim = IssuerClaim {
+            handle: 123,
+            source_id: "correct_claim_parts".to_owned(),
+            schema_seq_no: 32,
+            msg_uid: "1234".to_owned(),
+            claim_attributes: "nothing".to_owned(),
+            issuer_did: "QTrbV4raAcND4DWWzBmdsh".to_owned(),
+            issued_did: "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
+            state: CxsStateType::CxsStateOfferSent,
+            claim_request: Some(claim_req.clone()),
+        };
+
+
+        let ClaimPayload = match create_claim_payload(&claim_req, &CLAIM_DATA) {
+            Ok(c) => c,
+            Err(_) => panic!("Error creating claim payload"),
+        };
+        assert_eq!(ClaimPayload, X_CLAIM_JSON);
+    }
+
 }
 
