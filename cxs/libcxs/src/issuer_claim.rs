@@ -58,7 +58,6 @@ impl IssuerClaim {
                 return Err(x);
             },
             Ok(response) => {
-
                 self.msg_uid = match get_offer_details(&response) {
                     Ok(x) => x,
                     Err(x) => return Err(x),
