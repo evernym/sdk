@@ -65,7 +65,7 @@ extern "C" fn create_and_send_offer_cb(command_handle: u32, err: u32, claim_hand
     loop {
         unsafe {
             if CONNECTION_HANDLE > 0 {connection_handle = CONNECTION_HANDLE; break;}
-            else {thread::sleep(Duration::from_millis(50));}
+                else {thread::sleep(Duration::from_millis(50));}
         }
     }
     assert!(connection_handle > 0);
