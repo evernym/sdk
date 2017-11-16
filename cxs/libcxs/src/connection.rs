@@ -390,8 +390,6 @@ mod tests {
     extern crate mockito;
     use super::*;
     use utils::wallet;
-    use std::thread;
-    use std::time::Duration;
 
     extern "C" fn create_cb(command_handle: u32, err: u32, connection_handle: u32) {
         assert_eq!(err, 0);
