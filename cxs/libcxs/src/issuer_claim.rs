@@ -50,8 +50,9 @@ impl IssuerClaim {
         //TODO: call to libindy to encrypt payload
         let to_did = connection::get_pw_did(connection_handle).unwrap();
         let from_did = settings::get_config_value(settings::CONFIG_ENTERPRISE_DID_AGENT).unwrap();
-        let payload = format!("{{\"msg_type\":\"CLAIM_OFFER\",\"version\":\"0.1\",\"to_did\":\"{}\",\"from_did\":\"{}\",\"claim\":{},\"schema_seq_no\":{},\"issuer_did\":\"{}\"}}",to_did,from_did,self.claim_attributes,self.schema_seq_no,self.issuer_did);
-
+        //Todo: call to message class to build payload
+        let added_data = r#""claim_name":"Profile detail","issuer_name":"Test Enterprise","optional_data":{"terms_of_service":"<Large block of text>","price":6}"#;
+        let payload = format!("{{\"msg_type\":\"CLAIM_OFFER\",\"version\":\"0.1\",\"to_did\":\"{}\",\"from_did\":\"{}\",\"claim\":{},\"schema_seq_no\":{},\"issuer_did\":\"{}\",{}}}",to_did,from_did,self.claim_attributes,self.schema_seq_no,self.issuer_did,added_data);
         match messages::send_message().to(&to_did).msg_type("claimOffer").edge_agent_payload(&payload).send() {
             Err(x) => {
                 warn!("could not send claimOffer: {}", x);
