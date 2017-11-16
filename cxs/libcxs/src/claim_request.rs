@@ -191,7 +191,4 @@ mod tests {
         assert_eq!(seq_no, "48");
         assert_eq!(master_secret.prover_did, "FQ7wPBUgSPnDGJnS1EYjTK");
     }
-
-
-
 }
