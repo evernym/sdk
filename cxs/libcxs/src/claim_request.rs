@@ -1,5 +1,7 @@
 extern crate serde_json;
 
+use utils::error;
+
 static ISSUER_DID: &'static str = "issuer_did";
 static SEQUENCE_NUMBER: &'static str = "schema_seq_no";
 static BLINDED_MS: &'static str ="blinded_ms";
@@ -24,11 +26,24 @@ impl ClaimRequest {
        }
     }
 
-    pub fn create_from_api_msg(payload:&serde_json::Value) -> ClaimRequest {
+    pub fn create_from_api_msg(payload:&serde_json::Value) -> Result<ClaimRequest, u32> {
         let master_secret_json = &payload[BLINDED_MS];
-        let prover_did = String::from(master_secret_json[PROVER_DID].as_str().unwrap());
+        let prover_did = match master_secret_json[PROVER_DID].as_str() {
+            Some(x) => x,
+            None => {
+                warn!("no master secret in claim request");
+                return Err(error::INVALID_JSON.code_num)
+            }
+        };
 
-        let ms_u = master_secret_json[U].as_str().unwrap();
+        let ms_u = match master_secret_json[U].as_str() {
+            Some(x) => x,
+            None => {
+                warn!("no master secret in claim request");
+                return Err(error::INVALID_JSON.code_num)
+            },
+        };
+        
         let ms_ur = match master_secret_json[UR].as_str() {
             Some("null") => None,
             Some(x) => Some(String::from(x)),
@@ -36,18 +51,27 @@ impl ClaimRequest {
         };
 
         let blinded_master_secret = BlindedMasterSecret {
-            prover_did,
+            prover_did: String::from(prover_did),
             U: String::from(ms_u),
             ur: ms_ur,
         };
-        ClaimRequest{
+
+        let issuer_did = match payload[ISSUER_DID].as_str() {
+            Some(x) => x,
+            None => {
+                warn!("no issuer did in claim request");
+                return Err(error::INVALID_JSON.code_num)
+            }
+        };
+
+        Ok(ClaimRequest{
             blinded_ms: Some(blinded_master_secret),
-            issuer_did: String::from(payload[ISSUER_DID].as_str().unwrap()),
+            issuer_did: String::from(issuer_did),
             schema_seq_no: match payload[SEQUENCE_NUMBER].as_u64() {
                 Some(x) => String::from(x.to_string()),
                 None => panic!("panic at create claim request"),
             }
-        }
+        })
     }
 }
 
@@ -183,8 +207,10 @@ mod tests {
                 "price":6
             }
             });
-        let claim_req = ClaimRequest::create_from_api_msg(&claim_req_str);
-        let issuer_did = claim_req.issuer_did;
+        let claim_req = match ClaimRequest::create_from_api_msg(&claim_req_str) {
+            Ok(x) => x,
+            Err(_) => panic!("Could not create claim from claim_req_str"),
+        };        let issuer_did = claim_req.issuer_did;
         let seq_no = claim_req.schema_seq_no;
         let master_secret = claim_req.blinded_ms.unwrap();
         assert_eq!(issuer_did, "QTrbV4raAcND4DWWzBmdsh");

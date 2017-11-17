@@ -104,7 +104,7 @@ impl IssuerClaim {
 
     fn get_claim_req(&mut self, msg_uid: &str) {
         info!("Checking for outstanding claimReq for {} with uid: {}", self.handle, msg_uid);
-         let response = match messages::get_messages().to(&self.issued_did).uid(msg_uid).send() {
+        let response = match messages::get_messages().to(&self.issued_did).uid(msg_uid).send() {
             Ok(x) => x,
             Err(x) => {
                 warn!("invalid response to get_messages for claim {}", self.handle);
@@ -132,29 +132,42 @@ impl IssuerClaim {
             if msg["typ"] == String::from("claimReq") {
                 //get the followup-claim-req using refMsgId
                 self.state = CxsStateType::CxsStateRequestReceived;
-                let payload: serde_json::Value = match serde_json::from_str(&msg["edgeAgentPayload"].as_str().unwrap()){
+
+                let string_payload = match msg["edgeAgentPayload"].as_str() {
+                    Some(x) => x,
+                    None => {
+                        warn!("claim request has no edge agent payload");
+                        return
+                    }
+                };
+
+                let payload: serde_json::Value = match serde_json::from_str(string_payload) {
                     Ok(x) => x,
-                    Err(_) => {
-                        warn!("invalid json for claimReq's edgeAgentPayload");
+                    Err(x) => {
+                        warn!("invalid json for claim requests edgeAgentPayload");
                         return
                     },
                 };
-                self.claim_request = Some(ClaimRequest::create_from_api_msg(&payload));
+
+                self.claim_request = match ClaimRequest::create_from_api_msg(&payload) {
+                    Ok(x) => Some(x),
+                    Err(_) => {
+                        warn!("invalid claim request for claim {}", self.handle);
+                        return
+                    }
+                };
                 return
             }
         }
-
-        info!("no claimReqs found for claim {}", self.handle);
     }
 
-    fn get_claim_offer_status(&mut self) {
+        fn get_claim_offer_status(&mut self) {
         if self.state == CxsStateType::CxsStateRequestReceived {
             return;
         }
         else if self.state != CxsStateType::CxsStateOfferSent || self.msg_uid.is_empty() || self.issued_did.is_empty() {
             return;
         }
-
         // state is "OfferSent" so check to see if there is a new claimReq
         let response = match messages::get_messages().to(&self.issued_did).uid(&self.msg_uid).send() {
             Ok(x) => x,
@@ -178,11 +191,18 @@ impl IssuerClaim {
                 return
             },
         };
-
+//        println!("MSGS in update state: {:?}", msgs);
         for msg in msgs {
             if msg["statusCode"].to_string() == "\"MS-104\"" {
                 //get the followup-claim-req using refMsgId
-                self.get_claim_req(&msg["refMsgId"].as_str().unwrap());
+                let ref_msg_id = match msg["refMsgId"].as_str() {
+                    Some(x) => x,
+                    None => {
+                        warn!("invalid message reference id for claim {}", self.handle);
+                        return
+                    }
+                };
+                self.get_claim_req(ref_msg_id);
             }
         }
     }
@@ -321,8 +341,14 @@ fn get_offer_details(response: &str) -> Result<String,u32> {
     match serde_json::from_str(response) {
         Ok(json) => {
             let json: serde_json::Value = json;
-            let detail = &json["uid"];
-            Ok(String::from(detail.as_str().unwrap()))
+            let detail = match json["uid"].as_str() {
+                Some(x) => x,
+                None => {
+                    info!("response had no uid");
+                    return Err(error::INVALID_JSON.code_num)
+                },
+            };
+            Ok(String::from(detail))
         },
         Err(_) => {
             info!("Connect called without a valid response from server");
