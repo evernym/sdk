@@ -39,7 +39,7 @@ impl ClaimRequest {
         let ms_u = match master_secret_json[U].as_str() {
             Some(x) => x,
             None => {
-                warn!("no master secret in claim request");
+                warn!("master secret in claim request has missing fields");
                 return Err(error::INVALID_JSON.code_num)
             },
         };
@@ -69,7 +69,9 @@ impl ClaimRequest {
             issuer_did: String::from(issuer_did),
             schema_seq_no: match payload[SEQUENCE_NUMBER].as_u64() {
                 Some(x) => String::from(x.to_string()),
-                None => panic!("panic at create claim request"),
+                None => {
+                    warn!("no sequence number in claim request");
+                    return Err(error::INVALID_JSON.code_num)                },
             }
         })
     }
