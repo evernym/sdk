@@ -17,6 +17,13 @@ pub struct ClaimRequest{
 
 }
 
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct BlindedMasterSecret {
+    pub prover_did: String,
+    pub u: String,
+    pub ur: Option<String>,
+}
+
 impl ClaimRequest {
     pub fn new(secret: Option<BlindedMasterSecret>, did: &str, seq_no: &str) -> ClaimRequest {
        ClaimRequest {
@@ -52,7 +59,7 @@ impl ClaimRequest {
 
         let blinded_master_secret = BlindedMasterSecret {
             prover_did: String::from(prover_did),
-            U: String::from(ms_u),
+            u: String::from(ms_u),
             ur: ms_ur,
         };
 
@@ -75,13 +82,6 @@ impl ClaimRequest {
             }
         })
     }
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-pub struct BlindedMasterSecret {
-    pub prover_did: String,
-    pub U: String,
-    pub ur: Option<String>,
 }
 
 
@@ -166,11 +166,11 @@ mod tests {
 
         let master_secret = BlindedMasterSecret{
             prover_did: prover_did.to_owned(),
-            U: ms_u.to_owned(),
+            u: ms_u.to_owned(),
             ur: ms_ur.to_owned(),
         };
         assert_eq!(master_secret.prover_did, "FQ7wPBUgSPnDGJnS1EYjTK");
-        assert_eq!(master_secret.U, "923...607");
+        assert_eq!(master_secret.u, "923...607");
         assert_eq!(master_secret.ur, None);
         use std::clone::Clone;
         let master_secret_clone = master_secret.clone();
