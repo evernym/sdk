@@ -191,7 +191,7 @@ impl IssuerClaim {
                 return
             },
         };
-//        println!("MSGS in update state: {:?}", msgs);
+
         for msg in msgs {
             if msg["statusCode"].to_string() == "\"MS-104\"" {
                 //get the followup-claim-req using refMsgId
