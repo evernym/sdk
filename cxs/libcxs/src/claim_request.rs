@@ -43,7 +43,7 @@ impl ClaimRequest {
                 return Err(error::INVALID_JSON.code_num)
             },
         };
-        
+
         let ms_ur = match master_secret_json[UR].as_str() {
             Some("null") => None,
             Some(x) => Some(String::from(x)),
