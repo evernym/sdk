@@ -736,7 +736,6 @@ mod tests {
         assert_eq!(get_state_from_string(string), 1);
     }
 
-
     #[test]
     fn test_issuer_claim_can_build_claim_from_correct_parts(){
         let test_name = "test_issuer_claim_can_build_from_correct_parts";
@@ -803,8 +802,6 @@ mod tests {
         wallet::close_wallet(wallet_handle).unwrap();
         wallet::delete_wallet("test_issuer_claim_request_changes_reflect_in_claim").unwrap();
     }
-
-
 
 }
 

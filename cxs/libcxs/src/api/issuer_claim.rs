@@ -7,6 +7,7 @@ use connection;
 use issuer_claim;
 use std::thread;
 use std::ptr;
+
 /**
  * claim object
  */

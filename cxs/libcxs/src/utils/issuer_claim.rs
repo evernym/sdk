@@ -49,6 +49,8 @@ pub mod tests{
     use std::sync::mpsc::channel;
     use utils::callback::CallbackUtils;
     use utils::timeout::TimeoutUtils;
+    use std::ffi::CString;
+    use std::ptr::null;
 
     pub fn create_dummy_wallet(wallet_name: &str) -> Result<u32,u32>{
         make_wallet(wallet_name);

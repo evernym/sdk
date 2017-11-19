@@ -17,7 +17,6 @@ pub struct ClaimRequest{
     pub issuer_did: String,
     // TODO: Either change this to u32 or convert other things to i32
     pub schema_seq_no: i32,
-
 }
 
 impl ClaimRequest {
