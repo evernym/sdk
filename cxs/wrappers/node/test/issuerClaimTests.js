@@ -1,4 +1,5 @@
 const assert = require('chai').assert
+const expect = require('chai').expect;
 const { IssuerClaim, Connection, StateType, Error } = require('../dist/index')
 
 let config = {
@@ -191,7 +192,8 @@ exports.issuerClaimTests = function () {
     })
 
     it('can be created from a json', async function () {
-      await IssuerClaim.create(config)
+      let claim = await IssuerClaim.create(config)
+      return expect(claim.sourceId).to.become(config.sourceId)
     })
   })
 }
