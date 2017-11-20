@@ -100,7 +100,6 @@ exports.issuerClaimTests = function () {
     it('is created from a static method', async function () {
       const sourceId = 'staticMethodCreation'
       config.sourceId = sourceId
-      config.sourceId = sourceId
       const claim = await IssuerClaim.create(config)
       assert(claim.getSourceId(), sourceId)
     })
@@ -154,8 +153,7 @@ exports.issuerClaimTests = function () {
       let releasedConnection = await Connection.create({id: '123'})
       await releasedConnection.release()
       const sourceId = 'Claim'
-      config.sourceId = sourceId
-      const claim = await IssuerClaim.create(config)
+      const claim = await IssuerClaim.create({ ...config, sourceId })
       try {
         await claim.sendClaim(releasedConnection)
       } catch (error) {
@@ -166,8 +164,7 @@ exports.issuerClaimTests = function () {
     it('sending claim with no claim offer should throw exception', async function () {
       let connection = await Connection.create({id: '123'})
       const sourceId = 'Claim'
-      config.sourceId = sourceId
-      const claim = await IssuerClaim.create(config)
+      const claim = await IssuerClaim.create({ ...config, sourceId })
       try {
         await claim.sendClaim(connection)
       } catch (error) {
@@ -175,12 +172,11 @@ exports.issuerClaimTests = function () {
       }
     })
 
-    it.only('sending claim with valid claim offer should have state CxsStateAccepted', async function () {
+    it('sending claim with valid claim offer should have state CxsStateAccepted', async function () {
       let connection = await Connection.create({id: '123'})
       await connection.connect({ sms: true })
       const sourceId = 'Claim'
-      config.sourceId = sourceId
-      let claim = await IssuerClaim.create(config)
+      let claim = await IssuerClaim.create({ ...config, sourceId })
       await claim.sendOffer(connection)
       assert.equal(await claim.getState(), StateType.OfferSent)
       let jsonClaim = await claim.serialize()
@@ -192,7 +188,8 @@ exports.issuerClaimTests = function () {
     })
 
     it('can be created from a json', async function () {
-      expect(await IssuerClaim.create(config).sourceId).to.equal(config.sourceId)
+      const claim = await IssuerClaim.create(config)
+      expect(claim.getSourceId()).to.equal(config.sourceId)
     })
   })
 }
