@@ -17,7 +17,7 @@ node('ubuntu') {
         }
         app = buildDocker()
         buildRust(app)
-        //testRust(app) 
+        testRust(app) 
         createZip(app)
         testNodeWrapper(app)
         if (env.BRANCH_NAME == "master") {

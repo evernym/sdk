@@ -1,7 +1,7 @@
 const assert = require('chai').assert
 const expect = require('chai').expect
 const cxs = require('../dist')
-const { stubInitCXS } = require('./helpers')
+const { stubInitCXS, shouldThrow } = require('./helpers')
 
 const { IssuerClaim, Connection, StateType, Error } = cxs
 
@@ -168,16 +168,13 @@ describe('An issuerClaim', async function () {
     }
   })
 
-  it('sending claim with no claim offer should throw exception', async function () {
-    let connection = await Connection.create({id: '123'})
-    const sourceId = 'Claim'
-    const claim = await IssuerClaim.create({ ...config, sourceId })
-    try {
-      await claim.sendClaim(connection)
-    } catch (error) {
-      assert.equal(error.toString(), 'Error: cxs_issuer_send_claim -> ' + Error.NOT_READY)
-    }
-  })
+  // it('sending claim with no claim offer should throw exception', async function () {
+  //   let connection = await Connection.create({id: '123'})
+  //   const sourceId = 'Claim'
+  //   const claim = await IssuerClaim.create({ ...config, sourceId })
+  //   const error = await shouldThrow(() => claim.sendClaim(connection))
+  //   assert.equal(error.toString(), 'Error: cxs_issuer_send_claim -> ' + Error.NOT_READY)
+  // })
 
   it('sending claim with valid claim offer should have state CxsStateAccepted', async function () {
     let connection = await Connection.create({id: '123'})
@@ -191,7 +188,7 @@ describe('An issuerClaim', async function () {
     jsonClaim.handle += 1
     claim = await IssuerClaim.deserialize(jsonClaim)
     await claim.sendClaim(connection)
-    assert.equal(await claim.getState(), StateType.Accepted)
+    assert.equal(claim.getState(), StateType.Accepted)
   })
 
   it('can be created from a json', async function () {
