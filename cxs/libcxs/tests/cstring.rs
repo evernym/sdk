@@ -5,10 +5,11 @@ use self::libc::c_char;
 use std::ffi::CStr;
 use std::str::Utf8Error;
 use std::ffi::CString;
-
 pub struct CStringUtils {}
 
+#[allow(dead_code)]
 impl CStringUtils {
+    #[allow(dead_code)]
     pub fn c_str_to_string(cstr: *const c_char) -> Result<Option<String>, Utf8Error> {
         if cstr.is_null() {
             return Ok(None);
@@ -22,12 +23,12 @@ impl CStringUtils {
         }
     }
 
+    #[allow(dead_code)]
     pub fn string_to_cstring(s: String) -> CString {
         CString::new(s).unwrap()
     }
 }
 
-#[macro_export]
 //TODO DOCUMENT WHAT THIS DOES
 macro_rules! check_useful_c_str {
     ($x:ident, $e:expr) => {
