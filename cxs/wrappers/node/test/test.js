@@ -22,7 +22,7 @@ describe('Running tests', async function () {
     assert.equal(await onlyOnce(), 0)
   })
 
-  it('Issuer Claim tests', issuerClaimTests)
+  it.only('Issuer Claim tests', issuerClaimTests)
   it('Proof Tests', proofTests)
   it('Issuer Claim Ffi Tests', issuerClaimFfiTests)
   it('Connection Tests', connectionTests)

@@ -175,7 +175,7 @@ exports.issuerClaimTests = function () {
       }
     })
 
-    it('sending claim with valid claim offer should have state CxsStateAccepted', async function () {
+    it.only('sending claim with valid claim offer should have state CxsStateAccepted', async function () {
       let connection = await Connection.create({id: '123'})
       await connection.connect({ sms: true })
       const sourceId = 'Claim'
@@ -192,8 +192,7 @@ exports.issuerClaimTests = function () {
     })
 
     it('can be created from a json', async function () {
-      let claim = await IssuerClaim.create(config)
-      return expect(claim.sourceId).to.become(config.sourceId)
+      expect(await IssuerClaim.create(config).sourceId).to.equal(config.sourceId)
     })
   })
 }
