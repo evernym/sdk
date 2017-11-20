@@ -2,29 +2,24 @@ extern crate cxs;
 extern crate tempfile;
 extern crate libc;
 extern crate mockito;
+extern crate serde_json;
+
 #[macro_use]
 extern crate lazy_static;
-
-#[macro_use]
-mod cstring;
-
-extern crate serde_json;
 mod utils;
-use utils::demo::generic_cb;
+use utils::demo::*;
+//use utils::demo::generic_cb;
 use utils::timeout::TimeoutUtils;
-use cstring::CStringUtils;
-//use std::collections::HashMap;
-//use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
-//use self::libc::c_char;
-use tempfile::NamedTempFileOptions;
+use utils::cstring::CStringUtils;
+use utils::claim_def_wallet;
+
+use self::tempfile::NamedTempFileOptions;
 use std::io::Write;
 use std::thread;
 use std::time::Duration;
 use std::ffi::CString;
 use cxs::api;
-use utils::demo::*;
 use std::sync::mpsc::channel;
-mod claim_def_wallet;
 use cxs::utils::wallet::{init_wallet, get_wallet_handle};
 
 static SERIALIZED_CONNECTION: &str = r#"{"source_id":"test_cxs_connection_connect","handle":2608616713,"pw_did":"62LeFLkN9ZeCr32j73PUyD","pw_verkey":"3jnnnL65mTW786LaTJSwEKENEMwmMowuJTYmVho23qNU","did_endpoint":"","state":4,"uuid":"","endpoint":"","invite_detail":{"e":"34.210.228.152:80","rid":"6oHwpBN","sakdp":"key","sn":"enterprise","sD":"62LeFLkN9ZeCr32j73PUyD","lu":"https://s19.postimg.org/ykyz4x8jn/evernym.png","sVk":"3jnnnL65mTW786LaTJSwEKENEMwmMowuJTYmVho23qNU","tn":"there"}}"#;
@@ -39,7 +34,7 @@ static CLAIM_DEF_SCHEMA_SEQ_NUM: u32 = 12;
 
 #[ignore]
 #[test]
-fn test_stage_1_init_create_connect_send_offer(){
+fn test_demo(){
     let serialize_connection_fn = api::connection::cxs_connection_serialize;
     let serialize_claim_fn = api::issuer_claim::cxs_issuer_claim_serialize;
 
@@ -133,39 +128,6 @@ fn test_stage_1_init_create_connect_send_offer(){
 //#[test]
 fn receive_request_send_claim(connection_handle: u32, claim_handle:u32){
 
-//    // Init SDK  *********************************************************************
-//    let issuer_did = "TCwEv4tiAuA5DfC7VTdu83";
-//    let schema_seq_num = 11;
-//    let config_string = format!("{{\"agent_endpoint\":\"{}\",\
-//    \"agency_pairwise_did\":\"72x8p4HubxzUK1dwxcc5FU\",\
-//    \"agent_pairwise_did\":\"UJGjM6Cea2YVixjWwHN9wq\",\
-//    \"enterprise_did_agency\":\"{}\",\
-//    \"enterprise_did_agent\":\"JmvnKLYj7b7e5ywLxkRMjM\",\
-//    \"enterprise_name\":\"enterprise\",\
-//    \"logo_url\":\"https://s19.postimg.org/ykyz4x8jn/evernym.png\",\
-//    \"agency_pairwise_verkey\":\"7118p4HubxzUK1dwxcc5FU\",\
-//    \"agent_pairwise_verkey\":\"U22jM6Cea2YVixjWwHN9wq\"}}", "https://agency-ea-sandbox.evernym.com",
-//                                issuer_did);
-//    let mut file = NamedTempFileOptions::new()
-//        .suffix(".json")
-//        .create()
-//        .unwrap();
-//    file.write_all(config_string.as_bytes()).unwrap();
-//
-//    let path = CString::new(file.path().to_str().unwrap()).unwrap();
-//    let r = api::cxs::cxs_init(0,path.as_ptr(),Some(generic_cb));
-//    assert_eq!(r,0);
-//    thread::sleep(Duration::from_secs(1));
-//
-//    // deserialize connection *********************************************************
-//    let serialized_connection = SERIALIZED_CONNECTION;
-//    let connection_handle = deserialize_cxs_object(serialized_connection, api::connection::cxs_connection_deserialize);
-//    assert!(connection_handle>0);
-//
-//    // deserialize claim **************************************************************
-//    let claim_handle = deserialize_cxs_object(SERIALIZED_CLAIM, api::issuer_claim::cxs_issuer_claim_deserialize);
-//    assert!(claim_handle>0);
-
     // update claim *******************************************************************
     let target_claim_state = 3;
     let claim_state = wait_for_updated_state(claim_handle, target_claim_state, api::issuer_claim::cxs_issuer_claim_update_state);
@@ -184,10 +146,42 @@ fn insert_claim_def(){
 //    let wallet_handle = init_wallet("wallet1", "pool1", "default").unwrap();
     let claim_def_issuer_did= CLAIM_DEF_ISSUER_DID;
     let schema_string = claim_def_wallet::create_default_schema(CLAIM_DEF_SCHEMA_SEQ_NUM);
-    claim_def_wallet::put_claim_def_in_wallet(get_wallet_handle(), claim_def_issuer_did, &schema_string);
+    claim_def_wallet::put_claim_def_in_wallet(get_wallet_handle(), claim_def_issuer_did, &schema_string); }
+
+fn init_sdk(){
+        // Init SDK  *********************************************************************
+        let issuer_did = "TCwEv4tiAuA5DfC7VTdu83";
+        let schema_seq_num = 11;
+        let config_string = format!("{{\"agent_endpoint\":\"{}\",\
+        \"agency_pairwise_did\":\"72x8p4HubxzUK1dwxcc5FU\",\
+        \"agent_pairwise_did\":\"UJGjM6Cea2YVixjWwHN9wq\",\
+        \"enterprise_did_agency\":\"{}\",\
+        \"enterprise_did_agent\":\"JmvnKLYj7b7e5ywLxkRMjM\",\
+        \"enterprise_name\":\"enterprise\",\
+        \"logo_url\":\"https://s19.postimg.org/ykyz4x8jn/evernym.png\",\
+        \"agency_pairwise_verkey\":\"7118p4HubxzUK1dwxcc5FU\",\
+        \"agent_pairwise_verkey\":\"U22jM6Cea2YVixjWwHN9wq\"}}", "https://agency-ea-sandbox.evernym.com",
+                                    issuer_did);
+        let mut file = NamedTempFileOptions::new()
+            .suffix(".json")
+            .create()
+            .unwrap();
+        file.write_all(config_string.as_bytes()).unwrap();
+
+        let path = CString::new(file.path().to_str().unwrap()).unwrap();
+        let r = api::cxs::cxs_init(0,path.as_ptr(),Some(generic_cb));
+        assert_eq!(r,0);
+        thread::sleep(Duration::from_secs(1));
+
+        // deserialize connection *********************************************************
+        let serialized_connection = SERIALIZED_CONNECTION;
+        let connection_handle = deserialize_cxs_object(serialized_connection, api::connection::cxs_connection_deserialize);
+        assert!(connection_handle>0);
+
+        // deserialize claim **************************************************************
+        let claim_handle = deserialize_cxs_object(SERIALIZED_CLAIM, api::issuer_claim::cxs_issuer_claim_deserialize);
+        assert!(claim_handle>0);
 }
-
-
 
 
 

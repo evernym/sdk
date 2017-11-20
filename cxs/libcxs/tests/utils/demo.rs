@@ -4,25 +4,19 @@ extern crate libc;
 extern crate mockito;
 extern crate serde_json;
 
-use cstring::CStringUtils;
+#[macro_use]
+use utils::cstring;
 use utils::timeout::TimeoutUtils;
-
+use utils::cstring::CStringUtils;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
 use self::libc::c_char;
-//use tempfile::NamedTempFileOptions;
-//use std::io::Write;
 use std::thread;
 use std::time::Duration;
 use std::ffi::CString;
 use cxs::api;
-//use std::ffi::CStr;
 use std::sync::Mutex;
 use std::sync::mpsc::channel;
-
-//#[macro_use]
-//use cstring;
-
 lazy_static! {
     static ref COMMAND_HANDLE_COUNTER: AtomicUsize = ATOMIC_USIZE_INIT;
 }

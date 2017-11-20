@@ -5,7 +5,9 @@ extern crate mockito;
 extern crate serde_json;
 
 #[macro_use]
-mod cstring;
+extern crate lazy_static;
+
+mod utils;
 
 use self::libc::c_char;
 use tempfile::NamedTempFileOptions;

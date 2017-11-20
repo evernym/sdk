@@ -1,6 +1,9 @@
-pub mod demo;
+
+#[macro_use]
+pub mod cstring;
 pub mod timeout;
-//#[macro_use]
-//use lazy_static;
+pub mod demo;
+pub mod claim_def_wallet;
+
 
 

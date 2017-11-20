@@ -1,7 +1,4 @@
 extern crate libc;
-
-
-use cstring;
 use self::libc::c_char;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
@@ -10,7 +7,8 @@ use std::sync::mpsc::channel;
 use std::ptr::null;
 use std::ffi::CString;
 use utils::timeout::TimeoutUtils;
-use cstring::CStringUtils;
+use utils::cstring::CStringUtils;
+
 extern {
     fn indy_issuer_create_and_store_claim_def(command_handle: i32,
                                               wallet_handle: i32,
@@ -36,8 +34,6 @@ pub fn create_default_schema(schema_seq_no: u32) -> String {
     String::from(schema)
 }
 pub fn put_claim_def_in_wallet(wallet_handle: i32, issuer_did: &str, schema_json_str: &str) -> i32{
-//    cstring::CStringUtils::string_to_cstring(String::from(issuer_did)).unwrap();
-//    cstring::CStringUtils::string_to_cstring(String::from(schema_json_str)).unwrap();
     fn closure_to_store_claim_def( closure: Box<FnMut(i32) + Send>) ->
         (i32, Option<extern fn(command_handle: i32, err: i32, claim_def:*const c_char)>){
         lazy_static! {
