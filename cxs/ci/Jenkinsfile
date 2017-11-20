@@ -15,8 +15,8 @@ node('ubuntu') {
         stage ('Checkout'){
             checkout scm
         }
-        createZip(app)
         app = buildDocker()
+        createZip(app)
         buildRust(app)
         testRust(app) 
         testNodeWrapper(app)
