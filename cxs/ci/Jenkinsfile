@@ -15,13 +15,14 @@ node('ubuntu') {
         stage ('Checkout'){
             checkout scm
         }
+        createZip(app)
         app = buildDocker()
         buildRust(app)
         testRust(app) 
         testNodeWrapper(app)
-        if (env.BRANCH_NAME == "master") {
-            createZip(app)
-        }
+        //if (env.BRANCH_NAME == "master") {
+        //    createZip(app)
+        //}
     } catch (Exception ex) {
         currentBuild.result = "FAILED"
         if (env.BRANCH_NAME == "master") {
