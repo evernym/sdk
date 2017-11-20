@@ -1,4 +1,4 @@
-const { stub, spy } = require('sinon')
+const { stub } = require('sinon')
 
 const cxs = require('../dist')
 
@@ -9,8 +9,10 @@ const _stubInitCXS = () => {
   const stubInitCXS = stub(cxs, 'initCxs')
   stubInitCXS.callsFake(async function (...args) {
     if (_initCXSCalled) {
+      console.log('calling a stub -> already called')
       return
     }
+    console.log('calling a stub -> calling original')
     await initCXSOriginal(...args)
     _initCXSCalled = true
   })
