@@ -1,5 +1,5 @@
 const assert = require('chai').assert
-const expect = require('chai').expect;
+const expect = require('chai').expect
 const { IssuerClaim, Connection, StateType, Error } = require('../dist/index')
 
 let config = {
