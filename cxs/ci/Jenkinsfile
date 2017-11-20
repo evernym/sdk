@@ -89,7 +89,7 @@ def testNodeWrapper(envn) {
                 sh 'npm rebuild'
                 sh 'npm run lint'
                 sh 'npm run compile'
-                //sh 'npm test'
+                sh 'npm test'
             }
         }
         stage ('Build Node Artifact'){
