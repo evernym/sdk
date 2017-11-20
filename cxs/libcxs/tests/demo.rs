@@ -110,6 +110,8 @@ fn test_demo(){
     assert_eq!(connection_state, 4);
 
     // Send Claim Offer ***************************************************************
+    println!("ABOUT TO SEND CLAIM OFFER");
+    std::thread::sleep(Duration::from_millis(10000));
     let err = send_claim_offer(claim_handle, connection_handle);
     assert_eq!(err,0);
 

@@ -9,7 +9,7 @@ let config = {
 }
 exports.issuerClaimTests = function () {
   describe('An issuerClaim', async function () {
-    this.timeout(10000)
+    this.timeout(30000)
 
     it('can be created.', async function () {
       const claim = new IssuerClaim('Bank Claim')
