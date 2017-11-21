@@ -1,7 +1,4 @@
 import * as ffi from 'ffi'
-
-import { ConnectionTimeoutError, CXSInternalError } from '../errors'
-import { rustAPI } from '../rustlib'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
 import { GCWatcher } from '../utils/memory-management-helpers'
 import { StateType } from './common'
