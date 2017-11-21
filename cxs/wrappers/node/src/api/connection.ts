@@ -40,9 +40,9 @@ export class Connection extends CXSBase {
   static async create ( recipientInfo: IRecipientInfo): Promise<Connection> {
     const connection = new Connection()
     const commandHandle = 0
-    const id = recipientInfo.id
+    connection._setSourceId(recipientInfo.id)
     try {
-      await connection._init((cb) => rustAPI().cxs_connection_create(commandHandle, id, cb))
+      await connection._init((cb) => rustAPI().cxs_connection_create(commandHandle, recipientInfo.id, cb))
       return connection
     } catch (err) {
       throw new CXSInternalError(`cxs_connection_create -> ${err}`)

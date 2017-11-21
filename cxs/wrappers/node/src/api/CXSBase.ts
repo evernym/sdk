@@ -8,11 +8,14 @@ export abstract class CXSBase extends GCWatcher {
   protected abstract _serializeFn: any
   protected abstract _deserializeFn: any
   protected _handle: string
-  private _state: StateType = StateType.None
+  private _state: StateType
+  private _sourceId: string
 
-  // constructor (stateFn, serialFn, deserialFn) {
   constructor () {
     super()
+    this._handle = null
+    this._state = StateType.None
+    this._sourceId = null
   }
 
   static async deserialize (objType, objData): Promise<any> {
@@ -73,12 +76,20 @@ export abstract class CXSBase extends GCWatcher {
     return this._handle
   }
 
+  getSourceId () {
+    return this._sourceId
+  }
+
   _setState (state) {
     this._state = state
   }
 
   _setHandle (handle) {
     this._handle = handle
+  }
+
+  _setSourceId (id) {
+    this._sourceId = id
   }
 
   async _init (createFn): Promise<void> {
@@ -114,7 +125,8 @@ export abstract class CXSBase extends GCWatcher {
           if (_rc) {
             reject(_rc)
           }
-          resolve(JSON.stringify(handle))
+          const value = JSON.stringify(handle)
+          resolve(Number(value))
         })
     )
     this._setHandle(objHandle)
