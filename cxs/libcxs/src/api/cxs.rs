@@ -28,7 +28,6 @@ pub extern fn cxs_init (command_handle: u32,
                         config_path:*const c_char,
                         cb: Option<extern fn(xcommand_handle: u32, err: u32)>) -> u32 {
 
-    //TODO: ensure routine is NOT idempotent, return error if already initialized
     ::utils::logger::LoggerUtils::init();
 
     settings::set_defaults();
