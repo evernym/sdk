@@ -37,7 +37,7 @@ impl ClaimRequest {
        }
     }
 
-    pub fn create_from_api_msg(payload:&serde_json::Value) -> Result<ClaimRequest, u32> {
+    pub fn create_from_api_msg_json(payload:&serde_json::Value) -> Result<ClaimRequest, u32> {
         let master_secret_json = &payload[BLINDED_MS];
         let prover_did = match master_secret_json[PROVER_DID].as_str() {
             Some(x) => x,
@@ -82,7 +82,7 @@ impl ClaimRequest {
                 Some(x) => x as i32,
                 None => {
                     warn!("no sequence number in claim request");
-                    return Err(error::INVALID_JSON.code_num)                },
+                    return Err(error::INVALID_CLAIM_REQUEST.code_num)                },
             }
         })
     }
@@ -215,15 +215,11 @@ mod tests {
                 "price":6
             }
             });
-<<<<<<< HEAD
-        let claim_req = match ClaimRequest::create_from_api_msg(&claim_req_str) {
+        let claim_req = match ClaimRequest::create_from_api_msg_json(&claim_req_str) {
             Ok(x) => x,
             Err(_) => panic!("Could not create claim from claim_req_str"),
-        };        let issuer_did = claim_req.issuer_did;
-=======
-        let claim_req = ClaimRequest::create_from_api_msg_json(&claim_req_str);
+        };
         let issuer_did = claim_req.issuer_did;
->>>>>>> master
         let seq_no = claim_req.schema_seq_no;
         let master_secret = claim_req.blinded_ms.unwrap();
         assert_eq!(issuer_did, "QTrbV4raAcND4DWWzBmdsh");

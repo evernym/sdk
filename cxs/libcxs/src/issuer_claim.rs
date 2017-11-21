@@ -231,7 +231,7 @@ impl IssuerClaim {
                     },
                 };
 
-                self.claim_request = match ClaimRequest::create_from_api_msg(&payload) {
+                self.claim_request = match ClaimRequest::create_from_api_msg_json(&payload) {
                     Ok(x) => Some(x),
                     Err(_) => {
                         warn!("invalid claim request for claim {}", self.handle);
@@ -300,7 +300,7 @@ impl IssuerClaim {
     fn set_claim_request(&mut self, claim_request:&ClaimRequest){
         self.claim_request = Some(claim_request.clone());
     }
-    pub fn create_standard_issuer_claim() -> IssuerClaim {
+    pub fn create_standard_issuer_claim() -> Result<IssuerClaim, u32> {
         let claim_req_value = &serde_json::from_str(CLAIM_REQ_STRING).unwrap();
         let issuer_claim = IssuerClaim {
             handle: 123,
@@ -311,9 +311,16 @@ impl IssuerClaim {
             issuer_did: "QTrbV4raAcND4DWWzBmdsh".to_owned(),
             issued_did: "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
             state: CxsStateType::CxsStateOfferSent,
-            claim_request: Some(ClaimRequest::create_from_api_msg_json(claim_req_value).clone()),
+//            claim_request: Some(ClaimRequest::create_from_api_msg_json(claim_req_value).clone()),
+            claim_request: match ClaimRequest::create_from_api_msg_json(claim_req_value) {
+                Ok(x) => Some(x.clone()),
+                Err(_) => {
+                    warn!("invalid claim request for claim {}", 123);
+                    return Err(error::INVALID_CLAIM_REQUEST.code_num)
+                }
+            },
         };
-        issuer_claim
+        Ok(issuer_claim)
     }
 }
 
@@ -610,7 +617,12 @@ mod tests {
             issuer_did: "QTrbV4raAcND4DWWzBmdsh".to_owned(),
             issued_did: "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
             state: CxsStateType::CxsStateOfferSent,
-            claim_request: Some(ClaimRequest::create_from_api_msg_json(claim_req_value).clone()),
+            claim_request: match ClaimRequest::create_from_api_msg_json(claim_req_value) {
+                Ok(x) => Some(x.clone()),
+                Err(_) => {
+                    panic!("invalid claim request for claim {}", 123);
+                }
+            },
         };
         issuer_claim
     }
@@ -699,7 +711,10 @@ mod tests {
         wallet::tests::make_wallet(test_name);
 
         let claim_req_value = &serde_json::from_str(CLAIM_REQ_STRING).unwrap();
-        let claim_req:ClaimRequest = ClaimRequest::create_from_api_msg_json(&claim_req_value);
+        let claim_req:ClaimRequest = match ClaimRequest::create_from_api_msg_json(&claim_req_value) {
+            Ok(x) => x,
+            Err(_) => panic!("error with claim request"),
+        };
         let issuer_did = claim_req.issuer_did;
         let _m = mockito::mock("POST", "/agency/route")
             .with_status(200)
@@ -760,15 +775,20 @@ mod tests {
 
         let claim_req_value = &serde_json::from_str(CLAIM_REQ_STRING).unwrap();
         let mut claim = IssuerClaim {
-        handle: 123,
-        source_id: "test_has_pending_claim_request".to_owned(),
-        schema_seq_no: 32,
-        msg_uid: "1234".to_owned(),
-        claim_attributes: "nothing".to_owned(),
-        issuer_did: "QTrbV4raAcND4DWWzBmdsh".to_owned(),
-        issued_did: "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
-        state: CxsStateType::CxsStateOfferSent,
-        claim_request: Some(ClaimRequest::create_from_api_msg_json(claim_req_value).clone()),
+            handle: 123,
+            source_id: "test_has_pending_claim_request".to_owned(),
+            schema_seq_no: 32,
+            msg_uid: "1234".to_owned(),
+            claim_attributes: "nothing".to_owned(),
+            issuer_did: "QTrbV4raAcND4DWWzBmdsh".to_owned(),
+            issued_did: "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
+            state: CxsStateType::CxsStateOfferSent,
+            claim_request: match ClaimRequest::create_from_api_msg_json(claim_req_value) {
+                Ok(x) => Some(x.clone()),
+                Err(_) => {
+                    panic!("invalid claim request for claim {}", 123);
+                }
+            },
         };
 
         claim.update_state();
