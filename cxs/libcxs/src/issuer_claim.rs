@@ -80,6 +80,8 @@ impl IssuerClaim {
         let from_did = settings::get_config_value(settings::CONFIG_ENTERPRISE_DID_AGENT).unwrap();
         let payload = format!("{{\"msg_type\":\"CLAIM_OFFER\",\"claim_name\":\"{}\",\"version\":\"0.1\",\"to_did\":\"{}\",\"from_did\":\"{}\",\"claim\":{},\"schema_seq_no\":{},\"issuer_did\":\"{}\"}}",self.claim_name,to_did,from_did,self.claim_attributes,self.schema_seq_no,self.issuer_did);
 
+        //Todo: call to message class to build payload
+        let added_data = r#""claim_name":"Profile detail","issuer_name":"Test Enterprise","optional_data":{"terms_of_service":"<Large block of text>","price":6}"#;
         match messages::send_message().to(&to_did).msg_type("claimOffer").edge_agent_payload(&payload).send() {
             Err(x) => {
                 warn!("could not send claimOffer: {}", x);
@@ -212,7 +214,7 @@ impl IssuerClaim {
 
     fn get_claim_req(&mut self, msg_uid: &str) {
         info!("Checking for outstanding claimReq for {} with uid: {}", self.handle, msg_uid);
-         let response = match messages::get_messages().to(&self.issued_did).uid(msg_uid).send() {
+        let response = match messages::get_messages().to(&self.issued_did).uid(msg_uid).send() {
             Ok(x) => x,
             Err(x) => {
                 warn!("invalid response to get_messages for claim {}", self.handle);
@@ -240,22 +242,34 @@ impl IssuerClaim {
             if msg["typ"] == String::from("claimReq") {
                 //get the followup-claim-req using refMsgId
                 self.state = CxsStateType::CxsStateRequestReceived;
-                let payload: serde_json::Value = match serde_json::from_str(&msg["edgeAgentPayload"].as_str().unwrap()){
+
+                let string_payload = match msg["edgeAgentPayload"].as_str() {
+                    Some(x) => x,
+                    None => {
+                        warn!("claim request has no edge agent payload");
+                        return
+                    }
+                };
+
+                let payload: serde_json::Value = match serde_json::from_str(string_payload) {
                     Ok(x) => x,
-                    Err(_) => {
-                        warn!("invalid json for claimReq's edgeAgentPayload");
+                    Err(x) => {
+                        warn!("invalid json for claim requests edgeAgentPayload");
                         return
                     },
                 };
-                self.claim_request = Some(ClaimRequest::create_from_api_msg_json(&payload));
+
+                self.claim_request = match ClaimRequest::create_from_api_msg_json(&payload) {
+                    Ok(x) => Some(x),
+                    Err(_) => {
+                        warn!("invalid claim request for claim {}", self.handle);
+                        return
+                    }
+                };
                 return
             }
         }
-
-        info!("no claimReqs found for claim {}", self.handle);
     }
-
-
 
     fn get_claim_offer_status(&mut self) {
         if self.state == CxsStateType::CxsStateRequestReceived {
@@ -264,7 +278,6 @@ impl IssuerClaim {
         else if self.state != CxsStateType::CxsStateOfferSent || self.msg_uid.is_empty() || self.issued_did.is_empty() {
             return;
         }
-
         // state is "OfferSent" so check to see if there is a new claimReq
         let response = match messages::get_messages().to(&self.issued_did).uid(&self.msg_uid).send() {
             Ok(x) => x,
@@ -292,7 +305,14 @@ impl IssuerClaim {
         for msg in msgs {
             if msg["statusCode"].to_string() == "\"MS-104\"" {
                 //get the followup-claim-req using refMsgId
-                self.get_claim_req(&msg["refMsgId"].as_str().unwrap());
+                let ref_msg_id = match msg["refMsgId"].as_str() {
+                    Some(x) => x,
+                    None => {
+                        warn!("invalid message reference id for claim {}", self.handle);
+                        return
+                    }
+                };
+                self.get_claim_req(ref_msg_id);
             }
         }
     }
@@ -308,7 +328,7 @@ impl IssuerClaim {
     fn set_claim_request(&mut self, claim_request:&ClaimRequest){
         self.claim_request = Some(claim_request.clone());
     }
-    pub fn create_standard_issuer_claim() -> IssuerClaim {
+    pub fn create_standard_issuer_claim() -> Result<IssuerClaim, u32> {
         let claim_req_value = &serde_json::from_str(CLAIM_REQ_STRING).unwrap();
         let issuer_claim = IssuerClaim {
             handle: 123,
@@ -319,10 +339,16 @@ impl IssuerClaim {
             issuer_did: "QTrbV4raAcND4DWWzBmdsh".to_owned(),
             issued_did: "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
             state: CxsStateType::CxsStateOfferSent,
-            claim_request: Some(ClaimRequest::create_from_api_msg_json(claim_req_value).clone()),
+            claim_request: match ClaimRequest::create_from_api_msg_json(claim_req_value) {
+                Ok(x) => Some(x.clone()),
+                Err(_) => {
+                    warn!("invalid claim request for claim {}", 123);
+                    return Err(error::INVALID_CLAIM_REQUEST.code_num)
+                }
+            },
             claim_name: "Claim".to_owned(),
         };
-        issuer_claim
+        Ok(issuer_claim)
     }
 }
 
@@ -493,8 +519,14 @@ fn get_offer_details(response: &str) -> Result<String,u32> {
     match serde_json::from_str(response) {
         Ok(json) => {
             let json: serde_json::Value = json;
-            let detail = &json["uid"];
-            Ok(String::from(detail.as_str().unwrap()))
+            let detail = match json["uid"].as_str() {
+                Some(x) => x,
+                None => {
+                    info!("response had no uid");
+                    return Err(error::INVALID_JSON.code_num)
+                },
+            };
+            Ok(String::from(detail))
         },
         Err(_) => {
             info!("Connect called without a valid response from server");
@@ -605,8 +637,13 @@ mod tests {
             issuer_did: "QTrbV4raAcND4DWWzBmdsh".to_owned(),
             issued_did: "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
             state: CxsStateType::CxsStateOfferSent,
-            claim_request: Some(ClaimRequest::create_from_api_msg_json(claim_req_value).clone()),
             claim_name: DEFAULT_CLAIM_NAME.to_owned(),
+            claim_request: match ClaimRequest::create_from_api_msg_json(claim_req_value) {
+                Ok(x) => Some(x.clone()),
+                Err(_) => {
+                    panic!("invalid claim request for claim {}", 123);
+                }
+            },
         };
         issuer_claim
     }
@@ -695,7 +732,10 @@ mod tests {
         wallet::tests::make_wallet(test_name);
 
         let claim_req_value = &serde_json::from_str(CLAIM_REQ_STRING).unwrap();
-        let claim_req: ClaimRequest = ClaimRequest::create_from_api_msg_json(&claim_req_value);
+        let claim_req:ClaimRequest = match ClaimRequest::create_from_api_msg_json(&claim_req_value) {
+            Ok(x) => x,
+            Err(_) => panic!("error with claim request"),
+        };
         let issuer_did = claim_req.issuer_did;
         let _m = mockito::mock("POST", "/agency/route")
             .with_status(200)
@@ -764,7 +804,12 @@ mod tests {
             issuer_did: "QTrbV4raAcND4DWWzBmdsh".to_owned(),
             issued_did: "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
             state: CxsStateType::CxsStateOfferSent,
-            claim_request: Some(ClaimRequest::create_from_api_msg_json(claim_req_value).clone()),
+            claim_request: match ClaimRequest::create_from_api_msg_json(claim_req_value) {
+                Ok(x) => Some(x.clone()),
+                Err(_) => {
+                    panic!("invalid claim request for claim {}", 123);
+                }
+            },
             claim_name: DEFAULT_CLAIM_NAME.to_owned(),
         };
 
@@ -892,14 +937,14 @@ mod tests {
     fn test_claim_offer_has_proper_fields_for_sending_message() {
         static CORRECT_CLAIM_OFFER_PAYLOAD: &str = r#"{"msg_type":"CLAIM_OFFER","version":"0.1","to_did":"BnRXf8yDMUwGyZVDkSENeq","from_did":"GxtnGN6ypZYgEqcftSQFnC","iid":"cCanHnpFAD","mid":"","claim":{"name":["Alice"],"date_of_birth":["2000-05-17"],"height":["175"]},"schema_seq_no":103,"issuer_did":"V4SGRU86Z58d6TV7PBUe6f","nonce":"351590","claim_name":"Profiledetail","issuer_name":"TestEnterprise","optional_data":{"terms_of_service":"<Largeblockoftext>","price":6}}"#;
         println!("{:?}", json!(&CORRECT_CLAIM_OFFER_PAYLOAD));
-        let issuer_claim = IssuerClaim::create_standard_issuer_claim();
+        let issuer_claim = IssuerClaim::create_standard_issuer_claim().unwrap();
         assert_eq!(issuer_claim.claim_name, DEFAULT_CLAIM_NAME);
     }
 
     #[ignore]
     #[test]
     fn test_claim_offer_payload_includes_claim_name_field() {
-        let mut issuer_claim = IssuerClaim::create_standard_issuer_claim();
+        let mut issuer_claim = IssuerClaim::create_standard_issuer_claim().unwrap();
         issuer_claim.claim_attributes = String::from("{\"value\":\"pair\"}");
         let to_did = "FOOBAR";
         let from_did = "BARFOO";
