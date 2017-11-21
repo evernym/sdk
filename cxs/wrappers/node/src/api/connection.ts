@@ -1,5 +1,4 @@
 import * as ffi from 'ffi'
-
 import { ConnectionTimeoutError, CXSInternalError } from '../errors'
 import { rustAPI } from '../rustlib'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
@@ -31,7 +30,9 @@ export interface IConnectOptions {
 
 export class Connection extends CXSBase {
   protected _releaseFn = rustAPI().cxs_connection_release
-  protected _handle: string
+  protected _updateStFn = rustAPI().cxs_connection_update_state
+  protected _serializeFn = rustAPI().cxs_connection_serialize
+  protected _deserializeFn = rustAPI().cxs_connection_deserialize
 
   constructor () {
     super()
@@ -39,13 +40,19 @@ export class Connection extends CXSBase {
 
   static async create ( recipientInfo: IRecipientInfo): Promise<Connection> {
     const connection = new Connection()
-    await connection.init(recipientInfo)
-    return connection
+    const commandHandle = 0
+    const id = recipientInfo.id
+    try {
+      await connection._init((cb) => rustAPI().cxs_connection_create(commandHandle, id, cb))
+      return connection
+    } catch (err) {
+      throw new CXSInternalError(`cxs_connection_create -> ${err}`)
+    }
   }
 
   static async deserialize (connectionData: IConnectionData): Promise<CXSBase> {
     try {
-      return await super.deserialize(Connection, connectionData, rustAPI().cxs_connection_deserialize)
+      return await super.deserialize(Connection, connectionData)
     } catch (err) {
       throw new CXSInternalError(`cxs_connection_deserialize -> ${err}`)
     }
@@ -58,7 +65,7 @@ export class Connection extends CXSBase {
 
   async serialize (): Promise<IConnectionData> {
     try {
-      const data: IConnectionData = JSON.parse(await super._serialize(rustAPI().cxs_connection_serialize))
+      const data: IConnectionData = JSON.parse(await super._serialize())
       return data
     } catch (err) {
       throw new CXSInternalError(`cxs_connection_serialize -> ${err}`)
@@ -67,48 +74,9 @@ export class Connection extends CXSBase {
 
   async updateState (): Promise<void> {
     try {
-      const state = await createFFICallbackPromise<number>(
-          (resolve, reject, cb) => {
-            const rc = rustAPI().cxs_connection_update_state(0, this._handle, cb)
-            if (rc) {
-              resolve(StateType.None)
-            }
-          },
-          (resolve, reject) => ffi.Callback('void', ['uint32', 'uint32', 'uint32'], (handle, err, _state) => {
-            if (err) {
-              reject(err)
-            }
-            resolve(_state)
-          })
-      )
-      super._setState(state)
+      await super.updateState()
     } catch (error) {
       throw new CXSInternalError(`cxs_connection_updateState -> ${error}`)
-    }
-  }
-
-  private async init ( recipientInfo: IRecipientInfo ): Promise<void> {
-    const id = recipientInfo.id // TODO verifiy that id is a string
-    try {
-      const connectionHandle = await createFFICallbackPromise<string>(
-          (resolve, reject, cb) => {
-            const rc = rustAPI().cxs_connection_create(0, id, cb)
-            if (rc) {
-              reject(rc)
-            }
-          },
-          (resolve, reject) => ffi.Callback('void', ['uint32', 'uint32', 'uint32'], (xHandle, err, rtnHandle) => {
-            if (err) {
-              reject(err)
-              return
-            }
-            resolve( rtnHandle )
-          })
-      )
-      super._setHandle(connectionHandle)
-      await this.updateState()
-    } catch (error) {
-      throw new CXSInternalError(`cxs_connection_create -> ${error}`)
     }
   }
 

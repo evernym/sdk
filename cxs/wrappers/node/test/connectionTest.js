@@ -180,6 +180,7 @@ describe('A Connection object with ', function () {
     }
   }
 
+  // Fix the GC issue
   it('connection and GC deletes object should return null when get_data is called ', async function () {
     this.timeout(30000)
 

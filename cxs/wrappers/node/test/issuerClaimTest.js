@@ -39,7 +39,7 @@ describe('An issuerClaim', async function () {
     const sourceId = 'Claim'
     config.sourceId = sourceId
     const claim = await IssuerClaim.create(config)
-    assert(claim.getClaimHandle() > 0)
+    assert(claim.getHandle() > 0)
     assert.equal(claim.getSourceId(), sourceId)
   })
 
@@ -70,7 +70,7 @@ describe('An issuerClaim', async function () {
     const jsonClaim = await claim.serialize()
     assert.equal(jsonClaim.state, StateType.Initialized)
     const claim2 = await IssuerClaim.deserialize(jsonClaim)
-    assert.equal(claim.getClaimHandle(), claim2.getClaimHandle())
+    assert.equal(claim.getHandle(), claim2.getHandle())
     assert.equal(claim.getState(), claim2.getState())
   })
 
@@ -92,7 +92,7 @@ describe('An issuerClaim', async function () {
     await claim2.updateState()
     assert.equal(claim.getState(), StateType.OfferSent)
     assert.equal(claim.getState(), claim2.getState())
-    assert.equal(claim.getClaimHandle(), claim2.getClaimHandle())
+    assert.equal(claim.getHandle(), claim2.getHandle())
   })
 
   it('serialize without correct handle throws error', async function () {
@@ -116,7 +116,7 @@ describe('An issuerClaim', async function () {
     config.sourceId = sourceId
     const claim = await IssuerClaim.create(config)
     const claim2 = await IssuerClaim.create(config)
-    assert.notEqual(claim.getClaimHandle(), claim2.getClaimHandle)
+    assert.notEqual(claim.getHandle(), claim2.getHandle())
   })
 
   it('deserialize is a static method', async function () {

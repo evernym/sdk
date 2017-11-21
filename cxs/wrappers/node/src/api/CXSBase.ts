@@ -7,30 +7,49 @@ import { GCWatcher } from '../utils/memory-management-helpers'
 import { StateType } from './common'
 
 export abstract class CXSBase extends GCWatcher {
-
+  protected abstract _updateStFn: any
+  protected abstract _serializeFn: any
+  protected abstract _deserializeFn: any
   protected _handle: string
   private _state: StateType = StateType.None
-  private _dataType = null
 
+  // constructor (stateFn, serialFn, deserialFn) {
   constructor () {
     super()
   }
 
-  static async deserialize (objType, objData, apiFn): Promise<any> {
+  static async deserialize (objType, objData): Promise<any> {
     const obj = new objType()
-    await obj._initFromData(objData, apiFn)
+    await obj._initFromData(objData)
     await obj.updateState()
     return obj
   }
 
-  abstract updateState (): void
+  async updateState (): Promise<void> {
+    const commandHandle = 0
+    const state = await createFFICallbackPromise<number>(
+      (resolve, reject, cb) => {
+        const rc = this._updateStFn(commandHandle, this._handle, cb)
+        if (rc) {
+          resolve(StateType.None)
+        }
+      },
+      (resolve, reject) => ffi.Callback('void', ['uint32', 'uint32', 'uint32'], (handle, err, _state) => {
+        if (err) {
+          reject(err)
+        }
+        resolve(_state)
+      })
+    )
+    this._setState(state)
+  }
 
-  async _serialize (serializeFn): Promise<string> {
+  async _serialize (): Promise<string> {
     const serializeHandle = this._handle
     let rc = null
     const data = await createFFICallbackPromise<string>(
         (resolve, reject, cb) => {
-          rc = serializeFn(0, serializeHandle, cb)
+          rc = this._serializeFn(0, serializeHandle, cb)
           if (rc) {
             // TODO: handle correct exception
             reject(rc)
@@ -65,11 +84,31 @@ export abstract class CXSBase extends GCWatcher {
     this._handle = handle
   }
 
-  private async _initFromData (objData, apiFn): Promise<void> {
+  async _init (createFn): Promise<void> {
+    const handle = await createFFICallbackPromise<string>(
+        (resolve, reject, cb) => {
+          const rc = createFn(cb)
+          if (rc) {
+            reject(rc)
+          }
+        },
+        (resolve, reject) => ffi.Callback('void', ['uint32', 'uint32', 'uint32'], (xHandle, err, rtnHandle) => {
+          if (err) {
+            reject(err)
+            return
+          }
+          resolve( rtnHandle )
+        })
+    )
+    super._setHandle(handle)
+    await this.updateState()
+  }
+
+  private async _initFromData (objData): Promise<void> {
     const commandHandle = 0
     const objHandle = await createFFICallbackPromise<string>(
         (resolve, reject, cb) => {
-          const rc = apiFn(commandHandle, JSON.stringify(objData), cb)
+          const rc = this._deserializeFn(commandHandle, JSON.stringify(objData), cb)
           if (rc) {
             reject(rc)
           }
