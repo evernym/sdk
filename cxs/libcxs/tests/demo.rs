@@ -32,7 +32,7 @@ static CLAIM_DEF_SCHEMA_SEQ_NUM: u32 = 12;
 
 
 
-//#[ignore]
+#[ignore]
 #[test]
 fn test_demo(){
     let serialize_connection_fn = api::connection::cxs_connection_serialize;
@@ -65,10 +65,11 @@ fn test_demo(){
 
     // Create Claim Offer ***************************************************************
     let source_id = "Claim For Driver's License";
+    let claim_name = "Driver's License";
     let claim_data:serde_json::Value = serde_json::from_str(CLAIM_DATA).unwrap(); // this format will make it easier to modify in the futre
     let ledger_issuer_did = "V4SGRU86Z58d6TV7PBUe6f";
     let ledger_schema_seq_num = 12;
-    let (err, claim_handle) = create_claim_offer(source_id, claim_data, ledger_issuer_did, ledger_schema_seq_num);
+    let (err, claim_handle) = create_claim_offer(claim_name, source_id, claim_data, ledger_issuer_did, ledger_schema_seq_num);
     assert_eq!(err, 0);
     assert!(claim_handle>0);
 

@@ -27,7 +27,7 @@ pub extern "C" fn generic_cb(command_handle:u32, err:u32) {
 }
 
 #[allow(dead_code)]
-pub fn create_claim_offer(source_id: &str, claim_data_value: serde_json::Value, issuer_did: &str, schema_seq_no: u32) -> (u32, u32){
+pub fn create_claim_offer(claim_name: &str, source_id: &str, claim_data_value: serde_json::Value, issuer_did: &str, schema_seq_no: u32) -> (u32, u32){
     let source_id_cstring = CString::new(source_id).unwrap();
     let (sender, receiver) = channel();
     let cb = Box::new(move|err, claim_handle|{sender.send((err, claim_handle)).unwrap();});
@@ -35,11 +35,13 @@ pub fn create_claim_offer(source_id: &str, claim_data_value: serde_json::Value, 
     let claim_data_str = serde_json::to_string(&claim_data_value).unwrap();
     let claim_data_cstring = CString::new(claim_data_str).unwrap();
     let issuer_did_cstring = CString::new(issuer_did).unwrap();
+    let claim_name_cstring = CString::new(claim_name).unwrap();
     let rc = api::issuer_claim::cxs_issuer_create_claim(command_handle,
                                                         source_id_cstring.as_ptr(),
                                                         schema_seq_no,
                                                         issuer_did_cstring.as_ptr(),
                                                         claim_data_cstring.as_ptr(),
+                                                        claim_name_cstring.as_ptr(),
                                                         cb);
     assert_eq!(rc, 0);
     receiver.recv_timeout(TimeoutUtils::long_timeout()).unwrap()
