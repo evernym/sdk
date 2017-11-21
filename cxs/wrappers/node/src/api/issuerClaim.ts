@@ -13,6 +13,7 @@ export interface IClaimConfig {
   schemaNum: number,
   issuerDid: string,
   attr: string,
+  claimName: string,
 }
 export interface IClaimData {
   source_id: string
@@ -32,6 +33,7 @@ export class IssuerClaim extends CXSBase {
   private _schemaNum: number
   private _sourceId: string
   private _issuerDID: string
+  private _claimName: string
 
   constructor (sourceId) {
     super()
@@ -40,6 +42,7 @@ export class IssuerClaim extends CXSBase {
     this._schemaNum = null
     this._attr = null
     this._issuerDID = null
+    this._claimName = 'Claim Name Here'
   }
 
   // SourceId: String for SDK User's reference
@@ -52,12 +55,14 @@ export class IssuerClaim extends CXSBase {
     claim._attr = config.attr
     claim._sourceId = config.sourceId
     claim._issuerDID = config.issuerDid
+    claim._claimName = config.claimName
     await claim._init((cb) => rustAPI().cxs_issuer_create_claim(
         0,
         claim._sourceId,
         claim._schemaNum,
         claim._issuerDID,
         claim._attr,
+        claim._claimName,
         cb
       )
     )
