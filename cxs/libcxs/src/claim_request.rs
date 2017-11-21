@@ -6,15 +6,19 @@ static ISSUER_DID: &'static str = "issuer_did";
 static SEQUENCE_NUMBER: &'static str = "schema_seq_no";
 static BLINDED_MS: &'static str ="blinded_ms";
 static PROVER_DID: &'static str = "prover_did";
+
+#[allow(non_snake_case)]
+// leave these as lower case, etc, as indy expect them in that format.
 static U: &'static str = "u";
 static UR: &'static str = "ur";
+//#[warn(non_upper_case_globals)]
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct ClaimRequest{
     pub blinded_ms: Option<BlindedMasterSecret> ,
     pub issuer_did: String,
-    pub schema_seq_no: String,
-
+    // TODO: Either change this to u32 or convert other things to i32
+    pub schema_seq_no: i32,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -25,11 +29,11 @@ pub struct BlindedMasterSecret {
 }
 
 impl ClaimRequest {
-    pub fn new(secret: Option<BlindedMasterSecret>, did: &str, seq_no: &str) -> ClaimRequest {
+    pub fn new(secret: Option<BlindedMasterSecret>, did: &str, seq_no: i32) -> ClaimRequest {
        ClaimRequest {
            blinded_ms: secret,
            issuer_did: String::from(did),
-           schema_seq_no: String::from(seq_no),
+           schema_seq_no: seq_no,
        }
     }
 
@@ -75,7 +79,7 @@ impl ClaimRequest {
             blinded_ms: Some(blinded_master_secret),
             issuer_did: String::from(issuer_did),
             schema_seq_no: match payload[SEQUENCE_NUMBER].as_u64() {
-                Some(x) => String::from(x.to_string()),
+                Some(x) => x as i32,
                 None => {
                     warn!("no sequence number in claim request");
                     return Err(error::INVALID_JSON.code_num)                },
@@ -93,7 +97,7 @@ mod tests {
     fn create_claim_req() -> ClaimRequest {
         let master_secret:Option<BlindedMasterSecret> = None;
         let issuer_did = String::from(TEMP_ISSUER_DID);
-        let seq_no = "1";
+        let seq_no = 1;
         ClaimRequest::new(master_secret, &issuer_did, seq_no)
     }
     #[test]
@@ -112,7 +116,8 @@ mod tests {
                         String::from("Err")},
         };
 
-        let output = r#"{"blinded_ms":null,"issuer_did":"4reqXeZVm7JZAffAoaNLsb","schema_seq_no":"1"}"#;
+        // changed this to an intger value, not a string value
+        let output = r#"{"blinded_ms":null,"issuer_did":"4reqXeZVm7JZAffAoaNLsb","schema_seq_no":1}"#;
 
         assert_eq!(string_serialized, output)
     }
@@ -120,10 +125,11 @@ mod tests {
     #[test]
     fn test_deserialize() {
         let issuer_did = String::from("4reqXeZVm7JZAffAoaNLsb");
-        let input = r#"{"blinded_ms":null,"issuer_did":"4reqXeZVm7JZAffAoaNLsb","schema_seq_no":"1"}"#;
+        // changed this to an intger value, not a string value
+        let input = r#"{"blinded_ms":null,"issuer_did":"4reqXeZVm7JZAffAoaNLsb","schema_seq_no":1}"#;
         let req: ClaimRequest = match serde_json::from_str(&input) {
             Ok(i) => i,
-            Err(_) => ClaimRequest::new(None, "BAD_DID", "0"),
+            Err(_) => ClaimRequest::new(None, "BAD_DID", 0),
         };
         assert_eq!(req.issuer_did, issuer_did);
 
@@ -175,18 +181,18 @@ mod tests {
         use std::clone::Clone;
         let master_secret_clone = master_secret.clone();
         let seq_no = match value[SEQUENCE_NUMBER].as_u64() {
-            Some(x) => String::from(x.to_string()),
+            Some(x) => x as i32,
             None => panic!("panic at sequence no"),
         };
         let claim_req = ClaimRequest::new(Some(master_secret_clone),
                                           &value[ISSUER_DID].as_str().unwrap(),
-                                          &seq_no);
+                                          seq_no);
         assert_eq!(serde_json::to_string(&claim_req.blinded_ms).unwrap(),
                    serde_json::to_string(&master_secret).unwrap());
         let issuer_did = claim_req.issuer_did;
         let seq_no = claim_req.schema_seq_no;
         assert_eq!(issuer_did, "QTrbV4raAcND4DWWzBmdsh");
-        assert_eq!(seq_no, "48");
+        assert_eq!(seq_no, 48);
     }
     #[test]
     fn test_create_claim_request_from_api_msg(){
@@ -209,14 +215,19 @@ mod tests {
                 "price":6
             }
             });
+<<<<<<< HEAD
         let claim_req = match ClaimRequest::create_from_api_msg(&claim_req_str) {
             Ok(x) => x,
             Err(_) => panic!("Could not create claim from claim_req_str"),
         };        let issuer_did = claim_req.issuer_did;
+=======
+        let claim_req = ClaimRequest::create_from_api_msg_json(&claim_req_str);
+        let issuer_did = claim_req.issuer_did;
+>>>>>>> master
         let seq_no = claim_req.schema_seq_no;
         let master_secret = claim_req.blinded_ms.unwrap();
         assert_eq!(issuer_did, "QTrbV4raAcND4DWWzBmdsh");
-        assert_eq!(seq_no, "48");
+        assert_eq!(seq_no, 48);
         assert_eq!(master_secret.prover_did, "FQ7wPBUgSPnDGJnS1EYjTK");
     }
 }
