@@ -191,6 +191,7 @@ mod tests {
     use std::time::Duration;
     use settings;
     use connection;
+    use utils::wallet;
     use api::CxsStateType;
     use utils::issuer_claim::tests::{ create_dummy_wallet };
     use utils::issuer_claim::create_claim_request_from_str;
@@ -303,18 +304,18 @@ mod tests {
 
     #[test]
     fn test_cxs_issuer_send_a_claim() {
-        ::utils::logger::LoggerUtils::init();
+        settings::set_defaults();
+        wallet::tests::make_wallet("test_cxs_issuer_send_a_claim");
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
+        settings::set_config_value(settings::CONFIG_AGENT_ENDPOINT, mockito::SERVER_URL);
+        settings::set_config_value(settings::CONFIG_ENTERPRISE_DID,"8XFh8yBzrpJQmNyZzgoTqB");
 
         let test_name = "test_cxs_issuer_send_a_claim";
         let schema_seq_num = 32 as u32;
 
-        let result = cxs_init(0,ptr::null(),Some(init_cb));
+        //let result = cxs_init(0,ptr::null(),Some(init_cb));
         thread::sleep(Duration::from_secs(1));
 
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
-        settings::set_config_value(settings::CONFIG_AGENT_ENDPOINT, mockito::SERVER_URL);
-        settings::set_config_value(settings::CONFIG_ENTERPRISE_DID,"8XFh8yBzrpJQmNyZzgoTqB");
 
         let original_issuer_claim_str = "{\"claim_name\":\"claim name\",\"source_id\":\"test_cxs_issuer_send_claim\",\"handle\":123,\"claim_attributes\":\"{\\\"state\\\":[\\\"UT\\\"],\\\"zip\\\":[\\\"84000\\\"],\\\"city\\\":[\\\"Draper\\\"],\\\"address2\\\":[\\\"Suite 3\\\"],\\\"address1\\\":[\\\"123 Main St\\\"]}\",\"msg_uid\":\"\",\"schema_seq_no\":32,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"issued_did\":\"\",\"state\":3}";
         let handle = issuer_claim::from_string(original_issuer_claim_str).unwrap();
@@ -352,6 +353,7 @@ mod tests {
         assert_eq!(cxs_issuer_send_claim(command_handle, handle, connection_handle, Some(send_offer_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(1000));
         _m.assert();
+        wallet::tests::delete_wallet("test_cxs_issuer_send_a_claim");
     }
     extern "C" fn deserialize_cb(command_handle: u32, err: u32, claim_handle: u32) {
         fn formatter(original: &str) -> String {
@@ -379,7 +381,6 @@ mod tests {
     /*
     #[test]
     fn test_cxs_issue_claim_fails_without_claim_def_in_wallet(){
-        ::utils::logger::LoggerUtils::init();
 
         let test_name = "test_cxs_issue_claim_fails_without_claim_def_in_wallet";
         let schema_seq_num = 32 as u32;
@@ -452,4 +453,5 @@ mod tests {
                                            CString::new(claim_name).unwrap().into_raw(),
                                            Some(create_and_serialize_cb)), error::SUCCESS.code_num);
     }
+
 }
