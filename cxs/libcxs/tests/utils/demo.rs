@@ -4,8 +4,6 @@ extern crate libc;
 extern crate mockito;
 extern crate serde_json;
 
-#[macro_use]
-use utils::cstring;
 use utils::timeout::TimeoutUtils;
 use utils::cstring::CStringUtils;
 use std::collections::HashMap;
@@ -22,10 +20,13 @@ lazy_static! {
 }
 #[allow(unused_assignments)]
 #[allow(unused_variables)]
+#[allow(dead_code)]
 pub extern "C" fn generic_cb(command_handle:u32, err:u32) {
     if err != 0 {panic!("failed connect: {}", err)}
     println!("connection established!");
 }
+
+#[allow(dead_code)]
 pub fn create_claim_offer(source_id: &str, claim_data_value: serde_json::Value, issuer_did: &str, schema_seq_no: u32) -> (u32, u32){
     let source_id_cstring = CString::new(source_id).unwrap();
     let (sender, receiver) = channel();
@@ -44,6 +45,7 @@ pub fn create_claim_offer(source_id: &str, claim_data_value: serde_json::Value, 
     receiver.recv_timeout(TimeoutUtils::long_timeout()).unwrap()
 }
 
+#[allow(dead_code)]
 pub fn send_claim_offer(claim_handle: u32, connection_handle: u32) -> u32 {
     let (sender, receiver) = channel();
     let cb = Box::new(move|err|{sender.send(err).unwrap();});
@@ -56,6 +58,7 @@ pub fn send_claim_offer(claim_handle: u32, connection_handle: u32) -> u32 {
     receiver.recv_timeout(TimeoutUtils::long_timeout()).unwrap()
 }
 
+#[allow(dead_code)]
 pub fn send_claim(claim_handle: u32, connection_handle: u32) -> u32 {
     let (sender, receiver) = channel();
     let cb = Box::new(move|err|{sender.send(err).unwrap();});
@@ -65,6 +68,7 @@ pub fn send_claim(claim_handle: u32, connection_handle: u32) -> u32 {
     receiver.recv_timeout(TimeoutUtils::long_timeout()).unwrap()
 
 }
+#[allow(dead_code)]
 pub fn deserialize_cxs_object(serialized_connection: &str,f:extern fn(u32, *const c_char, Option<extern fn(u32, u32, u32)>) ->u32 ) -> u32{
     fn closure_to_deserialize_connection(closure: Box<FnMut(u32, u32) + Send>) ->
     (u32,  Option<extern fn( command_handle: u32,
@@ -97,6 +101,8 @@ pub fn deserialize_cxs_object(serialized_connection: &str,f:extern fn(u32, *cons
     connection_handle
 
 }
+
+#[allow(dead_code)]
 pub fn serialize_cxs_object(connection_handle: u32, f:extern fn(u32, u32, Option<extern fn(u32, u32, *const c_char)> ) ->u32) -> u32{
     fn closure_to_serialize_connection(closure: Box<FnMut(u32) + Send>) ->
     (u32, Option<extern fn( command_handle: u32, err: u32 , claim_string: *const c_char)>) {
@@ -132,6 +138,7 @@ pub fn serialize_cxs_object(connection_handle: u32, f:extern fn(u32, u32, Option
     receiver.recv_timeout(TimeoutUtils::long_timeout()).unwrap()
 }
 
+#[allow(dead_code)]
 pub fn wait_for_updated_state(handle: u32, target_state:u32, f: extern fn(u32, u32, Option<extern fn(u32, u32, u32)>)->u32)->u32{
     //  Update State, wait for connection *********************************************
     let mut state = 0;
@@ -145,6 +152,8 @@ pub fn wait_for_updated_state(handle: u32, target_state:u32, f: extern fn(u32, u
     }
     state
 }
+
+#[allow(dead_code)]
 pub fn closure_to_create_connection_cb(closure: Box<FnMut(u32, u32) + Send>) ->
 (u32,
  Option<extern fn(
@@ -167,6 +176,8 @@ pub fn closure_to_create_connection_cb(closure: Box<FnMut(u32, u32) + Send>) ->
 
     (command_handle, Some(callback))
 }
+
+#[allow(dead_code)]
 pub fn closure_to_connect_cb(closure: Box<FnMut(u32) + Send>) -> (u32,
                                                                   Option<extern fn(
                                                                       command_handle: u32,
@@ -187,6 +198,8 @@ pub fn closure_to_connect_cb(closure: Box<FnMut(u32) + Send>) -> (u32,
 
     (command_handle, Some(callback))
 }
+
+#[allow(dead_code)]
 pub fn closure_to_update_state(closure: Box<FnMut(u32) + Send>) ->
 (u32,
  Option<extern fn(
@@ -209,6 +222,7 @@ pub fn closure_to_update_state(closure: Box<FnMut(u32) + Send>) ->
     (command_handle, Some(callback))
 }
 
+#[allow(dead_code)]
 pub fn closure_to_create_claim(closure: Box<FnMut(u32, u32) + Send>) ->
 (u32, Option<extern fn( command_handle: u32, err: u32, claim_handle: u32)>) {
     lazy_static! { static ref CALLBACKS_CREATE_CLAIM: Mutex<HashMap<u32, Box<FnMut(u32, u32) + Send>>> = Default::default(); }
@@ -225,6 +239,8 @@ pub fn closure_to_create_claim(closure: Box<FnMut(u32, u32) + Send>) ->
 
     (command_handle, Some(callback))
 }
+
+#[allow(dead_code)]
 pub fn closure_to_send_claim_object(closure: Box<FnMut(u32) + Send>) -> (u32, Option<extern fn(command_handle: u32, err: u32 )>) {
     lazy_static! { static ref CALLBACKS_SEND_CLAIM: Mutex<HashMap<u32, Box<FnMut(u32) + Send>>> = Default::default(); }
 
