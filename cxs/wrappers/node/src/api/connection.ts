@@ -5,6 +5,7 @@ import { rustAPI } from '../rustlib'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
 import { GCWatcher } from '../utils/memory-management-helpers'
 import { StateType } from './common'
+import { CXSBase } from './CXSBase'
 
 export interface IConnectionData {
   source_id: string
@@ -28,10 +29,13 @@ export interface IConnectOptions {
   timeout?: number
 }
 
-export class Connection extends GCWatcher {
+export class Connection extends CXSBase {
   protected _releaseFn = rustAPI().cxs_connection_release
   protected _handle: string
-  private _state: StateType = StateType.None
+
+  constructor () {
+    super()
+  }
 
   static async create ( recipientInfo: IRecipientInfo): Promise<Connection> {
     const connection = new Connection()
@@ -39,10 +43,12 @@ export class Connection extends GCWatcher {
     return connection
   }
 
-  static async deserialize (connectionData: IConnectionData): Promise<Connection> {
-    const connection = new Connection()
-    await connection._initFromConnectionData(connectionData)
-    return connection
+  static async deserialize (connectionData: IConnectionData): Promise<CXSBase> {
+    try {
+      return await super.deserialize(Connection, connectionData, rustAPI().cxs_connection_deserialize)
+    } catch (err) {
+      throw new CXSInternalError(`cxs_connection_deserialize -> ${err}`)
+    }
   }
 
   async connect ( options: IConnectOptions = {} ): Promise<void> {
@@ -51,28 +57,11 @@ export class Connection extends GCWatcher {
   }
 
   async serialize (): Promise<IConnectionData> {
-    let rc = null
     try {
-      const data = await createFFICallbackPromise<string>(
-            (resolve, reject, cb) => {
-              rc = rustAPI().cxs_connection_serialize(0, this._handle, cb)
-              if (rc) {
-                reject(rc)
-              }
-            },
-            (resolve, reject) => ffi.Callback('void', ['uint32', 'uint32', 'string'], (handle, err, _data) => {
-              if (err) {
-                reject(err)
-                return
-              } else if (_data == null) {
-                reject('no connection to serialize')
-              }
-              resolve(_data)
-            })
-        )
-      return JSON.parse(data)
+      const data: IConnectionData = JSON.parse(await super._serialize(rustAPI().cxs_connection_serialize))
+      return data
     } catch (err) {
-      throw new CXSInternalError(`cxs_connection_serialize -> ${rc}`)
+      throw new CXSInternalError(`cxs_connection_serialize -> ${err}`)
     }
   }
 
@@ -92,22 +81,10 @@ export class Connection extends GCWatcher {
             resolve(_state)
           })
       )
-      this._setState(state)
+      super._setState(state)
     } catch (error) {
       throw new CXSInternalError(`cxs_connection_updateState -> ${error}`)
     }
-  }
-
-  getState (): number {
-    return this._state
-  }
-
-  getHandle () {
-    return this._handle
-  }
-
-  private _setState (state) {
-    this._state = state
   }
 
   private async init ( recipientInfo: IRecipientInfo ): Promise<void> {
@@ -128,34 +105,10 @@ export class Connection extends GCWatcher {
             resolve( rtnHandle )
           })
       )
-      this._setHandle(connectionHandle)
+      super._setHandle(connectionHandle)
       await this.updateState()
     } catch (error) {
       throw new CXSInternalError(`cxs_connection_create -> ${error}`)
-    }
-  }
-
-  private async _initFromConnectionData (connectionData: IConnectionData): Promise<void> {
-    const commandHandle = 0
-    try {
-      const connectionHandle = await createFFICallbackPromise<string>(
-          (resolve, reject, cb) => {
-            const rc = rustAPI().cxs_connection_deserialize(commandHandle, JSON.stringify(connectionData), cb)
-            if (rc) {
-              reject(rc)
-            }
-          },
-          (resolve, reject) => ffi.Callback('void', ['uint32', 'uint32', 'uint32'], (xHandle, _rc, handle) => {
-            if (_rc) {
-              reject(_rc)
-            }
-            resolve(JSON.stringify(handle))
-          })
-      )
-      this._setHandle(connectionHandle)
-      await this.updateState()
-    } catch (error) {
-      throw new CXSInternalError(`cxs_connection_deserialize -> ${error}`)
     }
   }
 

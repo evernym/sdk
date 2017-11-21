@@ -6,6 +6,9 @@ import { createFFICallbackPromise } from '../utils/ffi-helpers'
 import { GCWatcher } from '../utils/memory-management-helpers'
 import { StateType } from './common'
 import { Connection } from './connection'
+import { CXSBase } from './CXSBase'
+import { print } from 'util';
+import { start } from 'repl';
 
 export interface IClaimConfig {
   sourceId: string,
@@ -22,20 +25,17 @@ export interface IClaimData {
   state: StateType
 }
 
-export class IssuerClaim extends GCWatcher {
+export class IssuerClaim extends CXSBase {
   protected _releaseFn = rustAPI().cxs_connection_release // TODO: Fix me
-  protected _handle: string
   private _attr: string
   private _schemaNum: number
   private _sourceId: string
-  private _state: number
   private _issuerDID: string
 
   constructor (sourceId) {
     super()
     this._sourceId = sourceId
-    this._handle = null
-    this._state = StateType.None
+    this._setHandle(null)
     this._schemaNum = null
     this._attr = null
     this._issuerDID = null
@@ -53,15 +53,17 @@ export class IssuerClaim extends GCWatcher {
 
   // Deserializes a JSON representing a issuer claim object
   static async deserialize (claimData: IClaimData): Promise<IssuerClaim> {
-    const claim = new IssuerClaim(claimData.source_id)
-    await claim._initFromClaimData(claimData)
-    return claim
+    try {
+      return await super.deserialize(IssuerClaim, claimData, rustAPI().cxs_issuer_claim_deserialize)
+    } catch (err) {
+      throw new CXSInternalError(`cxs_issuer_claim_deserialize -> ${err}`)
+    }
   }
 
   // Calls the cxs update state.  Used for polling the state of the issuer claim.
   // For example, when waiting for a request to send a claim offer.
   async updateState (): Promise<void> {
-    const claimHandle = this._handle
+    const claimHandle = this.getHandle()
     const state = await createFFICallbackPromise<string>(
       (resolve, reject, callback) => {
         const commandHandle = 1
@@ -82,59 +84,17 @@ export class IssuerClaim extends GCWatcher {
     this._setState(Number(state))
   }
 
-  getIssuedDid () {
-    return this._issuerDID
-  }
-  getSourceId () {
-    return this._sourceId
-  }
-
-  getClaimHandle () {
-    return this._handle
-  }
-
-  getSchemaNum () {
-    return this._schemaNum
-  }
-
-  getAttr () {
-    return this._attr
-  }
-
-  getState (): StateType {
-    return this._state
-  }
-
   async serialize (): Promise<IClaimData> {
-    const claimHandle = this._handle
-    let rc = null
     try {
-      const data = await createFFICallbackPromise<string>(
-          (resolve, reject, cb) => {
-            rc = rustAPI().cxs_issuer_claim_serialize(0, claimHandle, cb)
-            if (rc) {
-              // TODO: handle correct exception
-              reject(rc)
-            }
-          },
-          (resolve, reject) => Callback('void', ['uint32', 'uint32', 'string'], (handle, err, serializedClaim) => {
-            if (err) {
-              reject(err)
-              return
-            } else if (serializedClaim == null) {
-              reject('no claim to serialize')
-            }
-            resolve(serializedClaim)
-          })
-      )
-      return JSON.parse(data)
+      return JSON.parse(await super._serialize(rustAPI().cxs_issuer_claim_serialize))
     } catch (err) {
-      throw new CXSInternalError(`cxs_issuer_claim_serialize -> ${rc}`)
+      throw new CXSInternalError(`cxs_issuer_claim_serialize -> ${err}`)
     }
   }
+
   // send a claim offer to the connection
   async sendOffer (connection: Connection): Promise<void> {
-    const claimHandle = this._handle
+    const claimHandle = this.getHandle()
     try {
       await createFFICallbackPromise<void>(
           (resolve, reject, cb) => {
@@ -163,7 +123,7 @@ export class IssuerClaim extends GCWatcher {
     try {
       await createFFICallbackPromise<void>(
         (resolve, reject, cb) => {
-          const rc = rustAPI().cxs_issuer_send_claim(0, this._handle, connection.getHandle(), cb)
+          const rc = rustAPI().cxs_issuer_send_claim(0, this.getHandle(), connection.getHandle(), cb)
           if (rc) {
             reject(rc)
           }
@@ -182,8 +142,19 @@ export class IssuerClaim extends GCWatcher {
     }
   }
 
-  private _setState (state: StateType) {
-    this._state = state
+  getIssuedDid () {
+    return this._issuerDID
+  }
+  getSourceId () {
+    return this._sourceId
+  }
+
+  getSchemaNum () {
+    return this._schemaNum
+  }
+
+  getAttr () {
+    return this._attr
   }
 
   private async init (sourceId: string, schemaNumber: number, issuerDid: string, attr: string): Promise<void> {
@@ -210,27 +181,6 @@ export class IssuerClaim extends GCWatcher {
       await this.updateState()
     } catch (err) {
       throw new CXSInternalError(`cxs_issuer_create_claim -> ${err}`)
-    }
-  }
-
-  private async _initFromClaimData (claimData: IClaimData): Promise<void> {
-    try {
-      const xclaimHandle = await createFFICallbackPromise<string>(
-          (resolve, reject, cb) => {
-            rustAPI().cxs_issuer_claim_deserialize(0, JSON.stringify(claimData), cb)
-          },
-          (resolve, reject) => Callback('void', ['uint32', 'uint32', 'uint32'], (commandHandle, err, claimHandle) => {
-            if (err) {
-              reject(err)
-              return
-            }
-            resolve(claimHandle)
-          })
-      )
-      this._setHandle(xclaimHandle)
-      await this.updateState()
-    } catch (err) {
-      throw new CXSInternalError(`cxs_issuer_claim_deserialize -> ${err}`)
     }
   }
 }
