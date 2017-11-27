@@ -23,7 +23,7 @@ export class Proof extends CXSBase {
 
   constructor (sourceId) {
     super()
-    this._setSourceId(sourceId)
+    this._sourceId = sourceId
     this._proofRequesterDid = null
     this._attr = null
   }
@@ -32,7 +32,7 @@ export class Proof extends CXSBase {
     const proof = new Proof(sourceId)
     const commandHandle = 0
     try {
-      await proof._init((cb) => rustAPI().cxs_proof_create(commandHandle, sourceId, did, attributes, cb))
+      await proof._create((cb) => rustAPI().cxs_proof_create(commandHandle, sourceId, did, attributes, cb))
       return proof
     } catch (err) {
       throw new CXSInternalError(`cxs_proof_create -> ${err}`)

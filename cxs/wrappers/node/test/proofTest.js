@@ -21,12 +21,12 @@ describe('A Proof', async () => {
 
   it('can have a source Id.', async () => {
     const proof = new Proof('Proof ID')
-    assert.equal(proof.getSourceId(), 'Proof ID')
+    assert.equal(proof.sourceId, 'Proof ID')
   })
 
   it('has a state of 0 after instanstiated', async () => {
     const proof = new Proof('Proof ID')
-    const state = await proof.getState()
+    const state = await proof.state
     assert.equal(state, 0)
   })
   // Todo: These tests can be uncommented out once proof_update_state is
@@ -34,7 +34,7 @@ describe('A Proof', async () => {
   //   const sourceId = 'Proof ID'
   //   const proof = await Proof.create(sourceId, DID, ATTR)
   //   assert(proof.getProofHandle())
-  //   assert.equal(proof.getSourceId(), sourceId)
+  //   assert.equal(proof.sourceId, sourceId)
   // })
 
   // it('has state of Initialized after creating', async () => {

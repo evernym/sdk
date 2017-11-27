@@ -35,8 +35,8 @@ export class IssuerClaim extends CXSBase {
 
   constructor (sourceId) {
     super()
-    this._setSourceId(sourceId)
-    this._setHandle(null)
+    this._sourceId = sourceId
+    this._handle = null
     this._schemaNum = null
     this._attr = null
     this._issuerDID = null
@@ -53,7 +53,7 @@ export class IssuerClaim extends CXSBase {
     claim._attr = config.attr
     claim._issuerDID = config.issuerDid
     claim._claimName = config.claimName
-    await claim._init((cb) => rustAPI().cxs_issuer_create_claim(
+    await claim._create((cb) => rustAPI().cxs_issuer_create_claim(
         0,
         config.sourceId,
         config.schemaNum,
@@ -79,7 +79,7 @@ export class IssuerClaim extends CXSBase {
   // For example, when waiting for a request to send a claim offer.
   async updateState (): Promise<void> {
     try {
-      await super.updateState()
+      await this._updateState()
     } catch (error) {
       throw new CXSInternalError(`cxs_issuer_claim_updateState -> ${error}`)
     }
@@ -95,15 +95,15 @@ export class IssuerClaim extends CXSBase {
 
   // send a claim offer to the connection
   async sendOffer (connection: Connection): Promise<void> {
-    const claimHandle = this.getHandle()
+    const claimHandle = this.handle
     try {
       await createFFICallbackPromise<void>(
           (resolve, reject, cb) => {
-            const rc = rustAPI().cxs_issuer_send_claim_offer(0, claimHandle, connection.getHandle(), cb)
+            const rc = rustAPI().cxs_issuer_send_claim_offer(0, claimHandle, connection.handle, cb)
             if (rc) {
               reject(rc)
             }
-            this._setState(StateType.OfferSent)
+            this._state = StateType.OfferSent
           },
           (resolve, reject) => Callback('void', ['uint32', 'uint32'], (xcommandHandle, err) => {
             if (err) {
@@ -124,7 +124,7 @@ export class IssuerClaim extends CXSBase {
     try {
       await createFFICallbackPromise<void>(
         (resolve, reject, cb) => {
-          const rc = rustAPI().cxs_issuer_send_claim(0, this.getHandle(), connection.getHandle(), cb)
+          const rc = rustAPI().cxs_issuer_send_claim(0, this.handle, connection.handle, cb)
           if (rc) {
             reject(rc)
           }
@@ -137,7 +137,7 @@ export class IssuerClaim extends CXSBase {
           resolve(xcommandHandle)
         })
       )
-      await this.updateState()
+      await this._updateState()
     } catch (err) {
       throw new CXSInternalError(`cxs_issuer_send_claim -> ${err}`)
     }

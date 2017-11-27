@@ -8,8 +8,8 @@ export abstract class CXSBase extends GCWatcher {
   protected abstract _serializeFn: any
   protected abstract _deserializeFn: any
   protected _handle: string
-  private _state: StateType
-  private _sourceId: string
+  protected _sourceId: string
+  protected _state: StateType
 
   constructor () {
     super()
@@ -21,11 +21,27 @@ export abstract class CXSBase extends GCWatcher {
   static async deserialize (objType, objData): Promise<any> {
     const obj = new objType()
     await obj._initFromData(objData)
-    await obj.updateState()
+    await obj._updateState()
     return obj
   }
 
-  async updateState (): Promise<void> {
+  async _create (createFn): Promise<void> {
+    await this._init(createFn)
+  }
+
+  get state (): number {
+    return this._state
+  }
+
+  get handle () {
+    return this._handle
+  }
+
+  get sourceId () {
+    return this._sourceId
+  }
+
+  protected async _updateState (): Promise<void> {
     const commandHandle = 0
     const state = await createFFICallbackPromise<number>(
       (resolve, reject, cb) => {
@@ -41,10 +57,10 @@ export abstract class CXSBase extends GCWatcher {
         resolve(_state)
       })
     )
-    this._setState(state)
+    this._state = state
   }
 
-  async _serialize (): Promise<string> {
+  protected async _serialize (): Promise<string> {
     const serializeHandle = this._handle
     let rc = null
     const data = await createFFICallbackPromise<string>(
@@ -68,31 +84,7 @@ export abstract class CXSBase extends GCWatcher {
     return data
   }
 
-  getState (): number {
-    return this._state
-  }
-
-  getHandle () {
-    return this._handle
-  }
-
-  getSourceId () {
-    return this._sourceId
-  }
-
-  _setState (state) {
-    this._state = state
-  }
-
-  _setHandle (handle) {
-    this._handle = handle
-  }
-
-  _setSourceId (id) {
-    this._sourceId = id
-  }
-
-  async _init (createFn): Promise<void> {
+  private async _init (createFn): Promise<void> {
     const handle = await createFFICallbackPromise<string>(
         (resolve, reject, cb) => {
           const rc = createFn(cb)
@@ -109,7 +101,7 @@ export abstract class CXSBase extends GCWatcher {
         })
     )
     super._setHandle(handle)
-    await this.updateState()
+    await this._updateState()
   }
 
   private async _initFromData (objData): Promise<void> {
@@ -129,7 +121,7 @@ export abstract class CXSBase extends GCWatcher {
           resolve(Number(value))
         })
     )
-    this._setHandle(objHandle)
+    super._setHandle(objHandle)
   }
 
 }
