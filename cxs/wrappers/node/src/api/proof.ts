@@ -56,6 +56,10 @@ export class Proof extends CXSBase {
     }
   }
 
+  updateState () {
+    this._state = null
+  }
+
   getProofRequesterDid () {
     return this._proofRequesterDid
   }

@@ -25,6 +25,10 @@ export abstract class CXSBase extends GCWatcher {
     return obj
   }
 
+  async abstract updateState ()
+
+  async abstract serialize ()
+
   async _create (createFn): Promise<void> {
     await this._init(createFn)
   }
