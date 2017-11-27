@@ -28,7 +28,6 @@ export class IssuerClaim extends CXSBase {
   protected _updateStFn = rustAPI().cxs_issuer_claim_update_state
   protected _serializeFn = rustAPI().cxs_issuer_claim_serialize
   protected _deserializeFn = rustAPI().cxs_issuer_claim_deserialize
-  private _attr: string
   private _schemaNum: number
   private _issuerDID: string
   private _claimName: string
@@ -38,7 +37,6 @@ export class IssuerClaim extends CXSBase {
     this._sourceId = sourceId
     this._handle = null
     this._schemaNum = null
-    this._attr = null
     this._issuerDID = null
     this._claimName = 'Claim Name Here'
   }
@@ -50,8 +48,8 @@ export class IssuerClaim extends CXSBase {
   static async create (config: IClaimConfig): Promise<IssuerClaim> {
     const claim = new IssuerClaim(config.sourceId)
     claim._schemaNum = config.schemaNum
-    claim._attr = config.attr
     claim._issuerDID = config.issuerDid
+    claim._attr = config.attr
     claim._claimName = config.claimName
     await claim._create((cb) => rustAPI().cxs_issuer_create_claim(
         0,
@@ -143,15 +141,11 @@ export class IssuerClaim extends CXSBase {
     }
   }
 
-  getIssuedDid () {
+  get issuerDid () {
     return this._issuerDID
   }
 
-  getSchemaNum () {
+  get schemaNum () {
     return this._schemaNum
-  }
-
-  getAttr () {
-    return this._attr
   }
 }

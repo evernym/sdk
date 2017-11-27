@@ -18,14 +18,12 @@ export class Proof extends CXSBase {
   protected _updateStFn = null
   protected _serializeFn = rustAPI().cxs_proof_serialize
   protected _deserializeFn = rustAPI().cxs_proof_deserialize
-  private _attr: string
   private _proofRequesterDid: string
 
   constructor (sourceId) {
     super()
     this._sourceId = sourceId
     this._proofRequesterDid = null
-    this._attr = null
   }
 
   static async create (sourceId: string, did: string, attributes: string): Promise<Proof> {
@@ -60,16 +58,7 @@ export class Proof extends CXSBase {
     this._state = null
   }
 
-  getProofRequesterDid () {
+  get proofRequesterDid () {
     return this._proofRequesterDid
   }
-
-  getProofHandle () {
-    return this._handle
-  }
-
-  getAttr () {
-    return this._attr
-  }
-
 }

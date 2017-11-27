@@ -135,8 +135,8 @@ describe('An issuerClaim', async function () {
     config.sourceId = sourceId
     const claim = await IssuerClaim.create(config)
     assert.equal(claim.sourceId, config.sourceId)
-    assert.equal(claim.getSchemaNum(), config.schemaNum)
-    assert.equal(claim.getAttr(), config.attr)
+    assert.equal(claim.schemaNum, config.schemaNum)
+    assert.equal(claim.attr, config.attr)
   })
 
   it('accepts a claim offer DID as part of create', async function () {
@@ -144,7 +144,7 @@ describe('An issuerClaim', async function () {
     config.sourceId = sourceId
     const claim = await IssuerClaim.create(config)
     assert.equal(claim.sourceId, config.sourceId)
-    assert.equal(claim.getIssuedDid(), config.issuerDid)
+    assert.equal(claim.issuerDid, config.issuerDid)
   })
 
   it('throws exception for sending claim with invalid claim handle', async function () {

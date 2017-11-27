@@ -33,14 +33,14 @@ describe('A Proof', async () => {
   // it('has a proofHandle and a sourceId after it is created', async () => {
   //   const sourceId = 'Proof ID'
   //   const proof = await Proof.create(sourceId, DID, ATTR)
-  //   assert(proof.getProofHandle())
+  //   assert(proof.handle)
   //   assert.equal(proof.sourceId, sourceId)
   // })
 
   // it('has state of Initialized after creating', async () => {
   //   const sourceId = 'Proof ID'
   //   const proof = await Proof.create(sourceId, DID, ATTR)
-  //   assert.equal(proof.getState(), StateType.Initialized)
+  //   assert.equal(proof.state, StateType.Initialized)
   // })
 
   // it('can be created, then serialized, then deserialized and have the same sourceId, state, and claimHandle', async () => {
@@ -49,15 +49,15 @@ describe('A Proof', async () => {
   //   const jsonProof = await proof.serialize()
   //   assert.equal(jsonProof.state, StateType.Initialized)
   //   const proof2 = await Proof.deserialize(jsonProof)
-  //   assert.equal(proof.getProofHandle(), proof2.getProofHandle())
-  //   // assert.equal(proof.getState(), proof2.getState())
+  //   assert.equal(proof.handle, proof2.handle)
+  //   // assert.equal(proof.state, proof2.state)
   // })
 
   // it('will throw error on serialize when proof has been released', async () => {
   //   const sourceId = 'SerializeDeserialize'
   //   const proof = await Proof.create(sourceId, DID, ATTR)
   //   const jsonProof = await proof.serialize()
-  //   assert.equal(await proof.getState(), StateType.Initialized)
+  //   assert.equal(await proof.state, StateType.Initialized)
   //   let data = await proof.serialize()
   //   assert(data)
   //   assert.equal(data.handle, jsonProof.handle)
