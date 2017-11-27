@@ -8,6 +8,8 @@ use rand::Rng;
 use api::CxsStateType;
 use utils::error;
 use settings;
+use messages;
+use messages::GeneralMessage;
 
 lazy_static! {
     static ref PROOF_MAP: Mutex<HashMap<u32, Box<Proof>>> = Default::default();
@@ -30,8 +32,63 @@ impl Proof {
         Ok(error::SUCCESS.code_num)
     }
 
-    fn get_proof_request_state(&mut self) {
+    fn get_proof_offer(&mut self, msg_uid: &str) {
         return
+    }
+
+    fn get_proof_request_status(&mut self) {
+        // If proof received Todo: fix states to make sense for proofs
+        if self.state == CxsStateType::CxsStateRequestReceived {
+            return;
+        }
+        //If proof request not sent
+        else if self.state != CxsStateType::CxsStateOfferSent || self.msg_uid.is_empty() || self.prover_did.is_empty() {
+            return;
+        }
+
+        // State is proof request sent
+        let response = match messages::get_messages().to(&self.prover_did).uid(&self.msg_uid).send() {
+            Ok(x) => x,
+            Err(x) => {
+                warn!("invalid response to get_messages for proof {}", self.handle);
+                return
+            },
+        };
+        let json: serde_json::Value = match serde_json::from_str(&response) {
+            Ok(json) => json,
+            Err(_) => {
+                warn!("invalid json in get_messages for proof {}", self.handle);
+                return
+            },
+        };
+
+        let msgs = match json["msgs"].as_array() {
+            Some(array) => array,
+            None => {
+                warn!("invalid msgs array returned for proof {}", self.handle);
+                return
+            },
+        };
+
+        for msg in msgs {
+            //Todo: Find out what message will look like for proof offer??
+            if msg["statusCode"].to_string() == "\"Don't hit yet\"" {
+                let ref_msg_id = match msg["refMsgId"].as_str() {
+                    Some(x) => x,
+                    None => {
+                        warn!("invalid message reference id for proof {}", self.handle);
+                        return
+                    }
+                };
+                self.get_proof_offer(ref_msg_id);
+            }
+        }
+
+
+    }
+
+    fn update_state(&mut self) {
+        self.get_proof_request_status();
     }
 
     fn get_state(&self) -> u32 {let state = self.state as u32; state}
@@ -86,6 +143,13 @@ pub fn is_valid_handle(handle: u32) -> bool {
         Some(_) => true,
         None => false,
     }
+}
+
+pub fn update_state(handle: u32) {
+    match PROOF_MAP.lock().unwrap().get_mut(&handle) {
+        Some(t) => t.update_state(),
+        None => {}
+    };
 }
 
 pub fn get_state(handle: u32) -> u32 {
@@ -155,6 +219,7 @@ mod tests {
         assert!(connection_handle > 0);
         println!("successfully called create_cb")
     }
+
 
     fn set_default_and_enable_test_mode(){
         settings::set_defaults();

@@ -49,7 +49,21 @@ pub extern fn cxs_proof_set_connection(command_handle: u32,
 #[no_mangle]
 pub extern fn cxs_proof_update_state(command_handle: u32,
                                      proof_handle: u32,
-                                     cb: Option<extern fn(xcommand_handle: u32, err: u32, state: u32)>) -> u32 { error::SUCCESS.code_num }
+                                     cb: Option<extern fn(xcommand_handle: u32, err: u32, state: u32)>) -> u32 {
+    check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
+
+    if !proof::is_valid_handle(proof_handle) {
+        return error::INVALID_PROOF_HANDLE.code_num;
+    }
+
+    thread::spawn(move|| {
+        proof::update_state(proof_handle);
+
+        cb(command_handle, error::SUCCESS.code_num, proof::get_state(proof_handle));
+    });
+
+    error::SUCCESS.code_num
+}
 
 #[no_mangle]
 pub extern fn cxs_proof_serialize(command_handle: u32,
@@ -128,8 +142,11 @@ mod tests {
     use super::*;
     use std::ffi::CString;
     use std::ptr;
+    use std::thread;
     use std::time::Duration;
     use settings;
+    use proof::{ create_proof };
+    use api::CxsStateType;
 
     extern "C" fn create_cb(command_handle: u32, err: u32, proof_handle: u32) {
         assert_eq!(err, 0);
@@ -161,6 +178,12 @@ mod tests {
         let original = "{\"source_id\":\"test_proof_serialize\",\"handle\":2035188318,\"proof_attributes\":\"{\\\"attr\\\":\\\"value\\\"}\",\"msg_uid\":\"\",\"proof_requester_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"prover_did\":\"7XFh8yBzrpJQmNyZzgoTqB\",\"state\":1}";
         let new = proof::to_string(proof_handle).unwrap();
         assert_eq!(original,new);
+    }
+
+    extern "C" fn update_state_cb(command_handle: u32, err: u32, state: u32) {
+        assert_eq!(err, 0);
+        println!("successfully called update_state_cb");
+        assert_eq!(state, CxsStateType::CxsStateInitialized as u32);
     }
 
     fn set_default_and_enable_test_mode(){
@@ -209,4 +232,21 @@ mod tests {
         cxs_proof_deserialize(0,CString::new(original).unwrap().into_raw(), Some(deserialize_cb));
         thread::sleep(Duration::from_millis(200));
     }
+    #[test]
+    fn test_proof_update_state() {
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
+        let handle = match create_proof(None,
+                                        "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
+                                        "{\"attr\":\"value\"}".to_owned()) {
+            Ok(x) => x,
+            Err(_) => panic!("Proof creation failed"),
+        };
+        assert!(handle > 0);
+        thread::sleep(Duration::from_millis(300));
+        let rc = cxs_proof_update_state(0, handle, Some(update_state_cb));
+        assert_eq!(rc, error::SUCCESS.code_num);
+        thread::sleep(Duration::from_millis(300));
+    }
+
 }
