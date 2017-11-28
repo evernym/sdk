@@ -59,13 +59,8 @@ impl Proof {
             return Err(error::NOT_READY.code_num);
         }
 
-        let to_did = match connection::get_pw_did(connection_handle) {
-            Ok(x) => x,
-            Err(x) => {
-                warn!("invalid connection handle ({}) in send_proof_request", connection_handle);
-                return Err(error::INVALID_CONNECTION_HANDLE.code_num);
-            }
-        };
+        let to_did = connection::get_pw_did(connection_handle)?;
+
         let from_did = match settings::get_config_value(settings::CONFIG_ENTERPRISE_DID_AGENT) {
             Ok(x) => x,
             Err(x) => {
@@ -77,10 +72,7 @@ impl Proof {
         let payload = format!("{{\"msg_type\":\"PROOF_REQUEST\",\"proof_request_name\":\"{}\",\"version\":\"0.1\",\"to_did\":\"{}\",\"from_did\":\"{}\",\"requested_attrs\":{},\"expires\":\"2018-05-22T03:25:17Z\",\"nonce\":\"351590\",\"requester_did\":\"{}\",\"intended_use\":\"Verify Home Address\",\"requested_predicates\":\"['age']\",\"{}\"}}",self.proof_request_name,to_did,from_did,self.proof_attributes,self.proof_requester_did, added_data);
         match messages::send_message().to(&to_did).msg_type("proofReq").edge_agent_payload(&payload).send() {
             Ok(response) => {
-                self.msg_uid = match get_offer_details(&response) {
-                    Ok(x) => x,
-                    Err(x) => return Err(x),
-                };
+                self.msg_uid = get_offer_details(&response)?;
                 self.prover_did = to_did;
                 self.state = CxsStateType::CxsStateOfferSent;
                 return Ok(error::SUCCESS.code_num)
