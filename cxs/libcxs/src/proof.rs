@@ -60,14 +60,8 @@ impl Proof {
         }
 
         let to_did = connection::get_pw_did(connection_handle)?;
+        let from_did = settings::get_config_value(settings::CONFIG_ENTERPRISE_DID_AGENT).unwrap();
 
-        let from_did = match settings::get_config_value(settings::CONFIG_ENTERPRISE_DID_AGENT) {
-            Ok(x) => x,
-            Err(x) => {
-                warn!("invalid configuration for agent's did");
-                return Err(error::INVALID_CONFIGURATION.code_num);
-            }
-        };
         let added_data = r#""tid":"cCanHnpFAD","mid":"dDidFLweU","optional_data":{"terms_and_conditions":"<Large block of text>"}"#;
         let payload = format!("{{\"msg_type\":\"PROOF_REQUEST\",\"proof_request_name\":\"{}\",\"version\":\"0.1\",\"to_did\":\"{}\",\"from_did\":\"{}\",\"requested_attrs\":{},\"expires\":\"2018-05-22T03:25:17Z\",\"nonce\":\"351590\",\"requester_did\":\"{}\",\"intended_use\":\"Verify Home Address\",\"requested_predicates\":\"['age']\",\"{}\"}}",self.proof_request_name,to_did,from_did,self.proof_attributes,self.proof_requester_did, added_data);
         match messages::send_message().to(&to_did).msg_type("proofReq").edge_agent_payload(&payload).send() {
