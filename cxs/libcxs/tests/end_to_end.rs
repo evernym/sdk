@@ -144,7 +144,6 @@ fn claim_offer_ete() {
     let claim_data = CString::new("{\"claim\":\"attributes\"}").unwrap();
     let issuer_did = CString::new("UJGjM6Cea2YVixjWwHN9wq").unwrap();
     let claim_name = CString::new("claim name").unwrap();
-    let claim_id = CString::new("claim id default").unwrap();
     let rc = api::issuer_claim::cxs_issuer_create_claim(0,
                                                         id.as_ptr(),
                                                         32,
