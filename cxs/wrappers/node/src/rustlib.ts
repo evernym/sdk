@@ -53,11 +53,12 @@ export interface IFFIEntryPoint {
   cxs_issuer_send_claim: (commandId: number, claimHandle: string, connectionHandle: string, cb: any) => number,
   cxs_issuer_send_claim_offer: (commandId: number, claimHandle: string, connectionHandle: string, cb: any) => number,
   // proof
-  cxs_proof_create: any,
-  cxs_proof_deserialize: any,
-  cxs_proof_release: any,
-  cxs_proof_serialize: any,
-  // cxs_proof_update_state: any,
+  cxs_proof_create: (commandId: number, sourceId: string, requesterDid: string, data: string, cb: any) => number,
+  cxs_proof_deserialize: (commandId: number, data: string, cb: any) => number,
+  cxs_proof_release: (handle: string) => number,
+  cxs_proof_send_request: (commandId: number, proofHandle: string, connectionHandle: string, cb: any) => number,
+  cxs_proof_serialize: (commandId: number, handle: string, cb: any) => number,
+  cxs_proof_update_state: (commandId: number, handle: string, cb: any) => number,
 
   free: any
 }
@@ -89,8 +90,10 @@ export const FFIConfiguration: { [ Key in keyof IFFIEntryPoint ]: any } = {
     FFI_CALLBACK_PTR]],
   cxs_proof_deserialize: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_STRING_DATA, FFI_CALLBACK_PTR]],
   cxs_proof_release: [FFI_ERROR_CODE, [FFI_PROOF_HANDLE]],
+  cxs_proof_send_request: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_PROOF_HANDLE, FFI_CONNECTION_HANDLE,
+    FFI_CALLBACK_PTR]],
   cxs_proof_serialize: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_PROOF_HANDLE, FFI_CALLBACK_PTR]],
-  // cxs_proof_update_state: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CLAIM_HANDLE, FFI_CALLBACK_PTR]],
+  cxs_proof_update_state: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_PROOF_HANDLE, FFI_CALLBACK_PTR]],
 
   free: [FFI_VOID, ['void*']]
 }

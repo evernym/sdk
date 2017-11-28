@@ -4,6 +4,7 @@ use self::libc::c_char;
 use utils::cstring::CStringUtils;
 use utils::error;
 use proof;
+use connection;
 use std::thread;
 use std::ptr;
 use api::CxsStatus;
@@ -108,7 +109,6 @@ pub extern fn cxs_proof_deserialize(command_handle: u32,
             Ok(x) => (error::SUCCESS.code_num, x),
             Err(x) => (x, 0),
         };
-
         cb(command_handle, rc, handle);
     });
 
@@ -120,12 +120,51 @@ pub extern fn cxs_proof_release(proof_handle: u32) -> u32 {
     proof::release(proof_handle)
 }
 
+//Proposed proof_request
+//{
+//msg_type: 'PROOF_REQUEST',
+//version: '0.1',
+//expires: '2018-05-22T03:25:17Z',
+//nonce: '351590',
+//to_did: 'BnRXf8yDMUwGyZVDkSENeq',
+//from_did: 'GxtnGN6ypZYgEqcftSQFnC',
+//requester_did: 'V4SGRU86Z58d6TV7PBUe6f',
+//intended_use: 'Verify Home Address',
+//proof_request_name: 'Home Address',
+//requested_attrs: ['address_1', 'address_2', 'city', 'state', 'zip'],
+//requested_predicates: ['age'],
+//tid: 'cCanHnpFAD',
+//mid: 'dDidFLweU',
+//optional_data: { terms_and_conditions: '<Large block of text> or <Url>' },
+//}
 
-#[allow(unused_variables, unused_mut)]
+#[no_mangle]
 pub extern fn cxs_proof_send_request(command_handle: u32,
                                      proof_handle: u32,
                                      connection_handle: u32,
-                                     cb: Option<extern fn(xcommand_handle: u32, err: u32)>) -> u32 { error::SUCCESS.code_num }
+                                     cb: Option<extern fn(xcommand_handle: u32, err: u32)>) -> u32 {
+
+    check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
+
+    if !proof::is_valid_handle(proof_handle) {
+        return error::INVALID_PROOF_HANDLE.code_num;
+    }
+
+    if !connection::is_valid_handle(connection_handle) {
+        return error::INVALID_CONNECTION_HANDLE.code_num;
+    }
+
+    thread::spawn(move|| {
+        let err = match proof::send_proof_request(proof_handle, connection_handle) {
+            Ok(x) => x,
+            Err(x) => x,
+        };
+
+        cb(command_handle,err);
+    });
+
+    error::SUCCESS.code_num
+}
 
 #[allow(unused_variables, unused_mut)]
 pub extern fn cxs_proof_get_proof_offer(proof_handle: u32, response_data: *mut c_char) -> u32 { error::SUCCESS.code_num }
@@ -146,7 +185,9 @@ mod tests {
     use std::time::Duration;
     use settings;
     use proof::{ create_proof };
+    use proof;
     use api::CxsStateType;
+    use connection;
 
     extern "C" fn create_cb(command_handle: u32, err: u32, proof_handle: u32) {
         assert_eq!(err, 0);
@@ -184,6 +225,11 @@ mod tests {
         assert_eq!(err, 0);
         println!("successfully called update_state_cb");
         assert_eq!(state, CxsStateType::CxsStateInitialized as u32);
+    }
+
+
+    extern "C" fn send_offer_cb(command_handle: u32, err: u32) {
+        if err != 0 {panic!("failed to send claim(offer) {}",err)}
     }
 
     fn set_default_and_enable_test_mode(){
@@ -247,6 +293,30 @@ mod tests {
         let rc = cxs_proof_update_state(0, handle, Some(update_state_cb));
         assert_eq!(rc, error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(300));
+    }
+
+    #[test]
+    fn test_cxs_proof_send_request() {
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
+        settings::set_config_value(settings::CONFIG_AGENT_ENDPOINT, mockito::SERVER_URL);
+        let _m = mockito::mock("POST", "/agency/route")
+            .with_status(200)
+            .with_body("{\"uid\":\"6a9u7Jt\",\"typ\":\"proofRequest\",\"statusCode\":\"MS-101\"}")
+            .expect(1)
+            .create();
+
+        let original = r#"{"handle":2345,"source_id":"test_cxs_send_proof_request","msg_uid":"6a9u7Jt","proof_attributes":"[]","proof_requester_did":"8XFh8yBzrpJQmNyZzgoTBB","prover_did":"8XFh8yBzrpJQmNyZzgoTqB","state":1,"proof_request_name":"Proof"}"#;
+
+        let handle = proof::from_string(original).unwrap();
+        assert_eq!(proof::get_state(handle),CxsStateType::CxsStateInitialized as u32);
+
+        let connection_handle = connection::create_connection("test_send_proof_request".to_owned());
+        connection::set_pw_did(connection_handle, "8XFh8yBzrpJQmNyZzgoTqB");
+
+        assert_eq!(cxs_proof_send_request(0,handle,connection_handle,Some(send_offer_cb)), error::SUCCESS.code_num);
+        thread::sleep(Duration::from_millis(1000));
+        _m.assert();
     }
 
 }

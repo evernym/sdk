@@ -76,6 +76,7 @@ impl IssuerClaim {
         }
 
         //TODO: call to libindy to encrypt payload
+        //TODO: need to take out all unwraps!
         let to_did = connection::get_pw_did(connection_handle).unwrap();
         let from_did = settings::get_config_value(settings::CONFIG_ENTERPRISE_DID_AGENT).unwrap();
         let payload = format!("{{\"msg_type\":\"CLAIM_OFFER\",\"claim_name\":\"{}\",\"version\":\"0.1\",\"to_did\":\"{}\",\"from_did\":\"{}\",\"claim\":{},\"schema_seq_no\":{},\"issuer_did\":\"{}\"}}",self.claim_name,to_did,from_did,self.claim_attributes,self.schema_seq_no,self.issuer_did);
