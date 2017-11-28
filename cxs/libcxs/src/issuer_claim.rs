@@ -87,7 +87,6 @@ impl IssuerClaim {
         let payload = format!("{{\"msg_type\":\"CLAIM_OFFER\",\"claim_name\":\"{}\",\"version\":\"0.1\",\"to_did\":\"{}\",\"from_did\":\"{}\",\"claim\":{},\"schema_seq_no\":{},\"issuer_did\":\"{}\",\"claim_offer_id\":\"{}\"}}", self.claim_name, to_did, from_did, self.claim_attributes, self.schema_seq_no, self.issuer_did, self.claim_id);
 
         //Todo: call to message class to build payload
-        let added_data = r#""claim_name":"Profile detail","issuer_name":"Test Enterprise","optional_data":{"terms_of_service":"<Large block of text>","price":6}"#;
         match messages::send_message().to(&to_did).msg_type("claimOffer").edge_agent_payload(&payload).send() {
             Err(x) => {
                 warn!("could not send claimOffer: {}", x);

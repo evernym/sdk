@@ -59,11 +59,12 @@ impl Proof {
             return Err(error::NOT_READY.code_num);
         }
 
+        //TODO: call to libindy to encrypt payload
         let to_did = connection::get_pw_did(connection_handle)?;
         let from_did = settings::get_config_value(settings::CONFIG_ENTERPRISE_DID_AGENT).unwrap();
 
         let added_data = r#""tid":"cCanHnpFAD","mid":"dDidFLweU","optional_data":{"terms_and_conditions":"<Large block of text>"}"#;
-        let payload = format!("{{\"msg_type\":\"PROOF_REQUEST\",\"proof_request_name\":\"{}\",\"version\":\"0.1\",\"to_did\":\"{}\",\"from_did\":\"{}\",\"requested_attrs\":{},\"expires\":\"2018-05-22T03:25:17Z\",\"nonce\":\"351590\",\"requester_did\":\"{}\",\"intended_use\":\"Verify Home Address\",\"requested_predicates\":\"['age']\",\"{}\"}}",self.proof_request_name,to_did,from_did,self.proof_attributes,self.proof_requester_did, added_data);
+        let payload = format!("{{\"msg_type\":\"PROOF_REQUEST\",\"proof_request_name\":\"{}\",\"version\":\"0.1\",\"to_did\":\"{}\",\"from_did\":\"{}\",\"requested_attrs\":\"{}\",\"expires\":\"2018-05-22T03:25:17Z\",\"nonce\":\"351590\",\"requester_did\":\"{}\",\"intended_use\":\"Verify Home Address\",\"requested_predicates\":\"['age']\",\"tid\":\"cCanHnpFAD\",\"mid\":\"dDidFLweU\",\"optional_data\":{\\\"terms_and_conditions\\\":\\\"<Large block of text>\\\"}}}",self.proof_request_name,to_did,from_did,self.proof_attributes,self.proof_requester_did);
         match messages::send_message().to(&to_did).msg_type("proofReq").edge_agent_payload(&payload).send() {
             Ok(response) => {
                 self.msg_uid = get_offer_details(&response)?;
@@ -118,6 +119,7 @@ impl Proof {
 
         for msg in msgs {
             //Todo: Find out what message will look like for proof offer??
+            //Todo: This will see if there is a proof offer from user
             if msg["statusCode"].to_string() == "\"Don't hit yet\"" {
                 let ref_msg_id = match msg["refMsgId"].as_str() {
                     Some(x) => x,
@@ -140,16 +142,6 @@ impl Proof {
     fn get_state(&self) -> u32 {let state = self.state as u32; state}
 
     fn get_offer_uid(&self) -> String { self.msg_uid.clone() }
-}
-
-fn find_proof(source_id: &str) -> Result<u32,u32> {
-    for (handle, proof) in PROOF_MAP.lock().unwrap().iter() { //TODO this could be very slow with lots of objects
-        if proof.source_id == source_id {
-            return Ok(*handle);
-        }
-    };
-
-    Err(0)
 }
 
 pub fn create_proof(source_id: Option<String>,
