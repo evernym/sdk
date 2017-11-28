@@ -1,7 +1,7 @@
 const assert = require('chai').assert
 const cxs = require('../dist/index')
 const { stubInitCXS } = require('./helpers')
-const { Connection, Proof, StateType, Error } = cxs 
+const { Connection, Proof, StateType, Error } = cxs
 
 const ATTR = '{"attr":"value"}'
 const DID = '8XFh8yBzrpJQmNyZzgoTqB'
@@ -31,21 +31,21 @@ describe.only('A Proof', function () {
   })
 
   it('has a proofHandle and a sourceId after it is created', async () => {
-    const sourceId = 'Proof ID'
-    const proof = await Proof.create(sourceId, DID, ATTR)
+    const sourceId = '1'
+    const proof = await Proof.create({ sourceId, proof_requester_did: DID, attr: ATTR })
     assert(proof.handle)
     assert.equal(proof.sourceId, sourceId)
   })
 
   it('has state of Initialized after creating', async () => {
     const sourceId = 'Proof ID'
-    const proof = await Proof.create(sourceId, DID, ATTR)
+    const proof = await Proof.create({ sourceId, proof_requester_did: DID, attr: ATTR })
     assert.equal(proof.state, StateType.Initialized)
   })
 
   it('can be created, then serialized, then deserialized and have the same sourceId, state, and claimHandle', async () => {
     const sourceId = 'SerializeDeserialize'
-    const proof = await Proof.create(sourceId, DID, ATTR)
+    const proof = await Proof.create({ sourceId, proof_requester_did: DID, attr: ATTR })
     const jsonProof = await proof.serialize()
     assert.equal(jsonProof.state, StateType.Initialized)
     const proof2 = await Proof.deserialize(jsonProof)
@@ -55,7 +55,7 @@ describe.only('A Proof', function () {
 
   it('will throw error on serialize when proof has been released', async () => {
     const sourceId = 'SerializeDeserialize'
-    const proof = await Proof.create(sourceId, DID, ATTR)
+    const proof = await Proof.create({ sourceId, proof_requester_did: DID, attr: ATTR })
     const jsonProof = await proof.serialize()
     assert.equal(await proof.state, StateType.Initialized)
     let data = await proof.serialize()
@@ -71,17 +71,17 @@ describe.only('A Proof', function () {
 
   it('has correct state after deserializing', async () => {
     const sourceId = 'SerializeDeserialize'
-    const proof = await Proof.create(sourceId, DID, ATTR)
+    const proof = await Proof.create({ sourceId, proof_requester_did: DID, attr: ATTR })
     const jsonProof = await proof.serialize()
     const proof2 = await Proof.deserialize(jsonProof)
-    assert.equal(proof2.state, StateType.Initialized)    
+    assert.equal(proof2.state, StateType.Initialized)
   })
 
   it('has state of OfferSent after sending proof request', async () => {
     let connection = await Connection.create({ id: '234' })
     await connection.connect()
     const sourceId = 'SerializeDeserialize'
-    const proof = await Proof.create(sourceId, DID, ATTR)
+    const proof = await Proof.create({ sourceId, proof_requester_did: DID, attr: ATTR })
     await proof.requestProof(connection)
     assert.equal(proof.state, StateType.OfferSent)
   })
@@ -91,9 +91,9 @@ describe.only('A Proof', function () {
     await connection.connect()
     await connection.release()
     const sourceId = 'SerializeDeserialize'
-    const proof = await Proof.create(sourceId, DID, ATTR)
+    const proof = await Proof.create({ sourceId, proof_requester_did: DID, attr: ATTR })
     try {
-      await proof.requestProof(connection)      
+      await proof.requestProof(connection)
     } catch (err) {
       assert.equal(err.toString(), 'Error: cxs_proof_send_request -> 1003')
     }
@@ -104,12 +104,11 @@ describe.only('A Proof', function () {
     await connection.connect()
     await connection.release()
     const sourceId = 'SerializeDeserialize'
-    const proof = await Proof.create(sourceId, DID, ATTR)
+    const proof = await Proof.create({ sourceId, proof_requester_did: DID, attr: ATTR })
     await proof.release()
     try {
-      await proof.requestProof(connection)      
+      await proof.requestProof(connection)
     } catch (err) {
-      console.log("\n\nIN ERROR\n\n")
       assert.equal(err.toString(), 'Error: cxs_proof_send_request -> 1017')
     }
   })

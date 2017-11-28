@@ -6,18 +6,24 @@ import { StateType } from './common'
 import { Connection } from './connection'
 import { CXSBase } from './CXSBase'
 
+export interface IProofConfig {
+  sourceId: string,
+  proof_requester_did: string,
+  attr: string,
+}
+
 export interface IProofData {
   source_id: string
   handle: number
   proof_attributes: string
   proof_requester_did: string
-  proover_did: string
+  prover_did: string
   state: StateType
+  proof_request_name: string
 }
 
 export class Proof extends CXSBase {
   protected _releaseFn = rustAPI().cxs_proof_release
-  // protected _updateStFn = rustAPI().cxs_proof_update_state
   protected _updateStFn = rustAPI().cxs_proof_update_state
   protected _serializeFn = rustAPI().cxs_proof_serialize
   protected _deserializeFn = rustAPI().cxs_proof_deserialize
@@ -26,14 +32,21 @@ export class Proof extends CXSBase {
   constructor (sourceId) {
     super()
     this._sourceId = sourceId
-    this._proofRequesterDid = null
   }
 
-  static async create (sourceId: string, did: string, attributes: string): Promise<Proof> {
-    const proof = new Proof(sourceId)
+  static async create (data: IProofConfig): Promise<Proof> {
+    const proof = new Proof(data.sourceId)
+    proof._proofRequesterDid = data.proof_requester_did
+    proof._attr = data.attr
     const commandHandle = 0
     try {
-      await proof._create((cb) => rustAPI().cxs_proof_create(commandHandle, sourceId, did, attributes, cb))
+      await proof._create((cb) => rustAPI().cxs_proof_create(
+        commandHandle,
+        proof.sourceId,
+        proof.proofRequesterDid,
+        proof.attr,
+        cb
+      ))
       return proof
     } catch (err) {
       throw new CXSInternalError(`cxs_proof_create -> ${err}`)

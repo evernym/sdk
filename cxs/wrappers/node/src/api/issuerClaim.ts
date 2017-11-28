@@ -51,7 +51,8 @@ export class IssuerClaim extends CXSBase {
     claim._issuerDID = config.issuerDid
     claim._attr = config.attr
     claim._claimName = config.claimName
-    await claim._create((cb) => rustAPI().cxs_issuer_create_claim(
+    try {
+      await claim._create((cb) => rustAPI().cxs_issuer_create_claim(
         0,
         config.sourceId,
         config.schemaNum,
@@ -59,9 +60,12 @@ export class IssuerClaim extends CXSBase {
         config.attr,
         config.claimName,
         cb
+        )
       )
-    )
-    return claim
+      return claim
+    } catch (err) {
+      throw new CXSInternalError(`cxs_issuer_create_claim -> ${err}`)
+    }
   }
 
   // Deserializes a JSON representing a issuer claim object
