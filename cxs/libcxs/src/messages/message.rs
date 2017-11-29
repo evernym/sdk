@@ -130,6 +130,8 @@ pub struct SendMessage {
     payload: SendMessagePayload,
     #[serde(skip_serializing, default)]
     validate_rc: u32,
+    #[serde(rename = "refMsgId")]
+    ref_msg_id: String,
 }
 
 impl SendMessage{
@@ -146,6 +148,7 @@ impl SendMessage{
             },
             agent_payload: String::new(),
             validate_rc: error::SUCCESS.code_num,
+            ref_msg_id: String::new(),
         }
     }
 
@@ -171,6 +174,11 @@ impl SendMessage{
     pub fn edge_agent_payload(&mut self, payload: &str) -> &mut Self {
         //todo: is this a json value, String??
         self.payload.edge_agent_payload = payload.to_string();
+        self
+    }
+
+    pub fn ref_msg_id(&mut self, id: &str) -> &mut Self {
+        self.ref_msg_id = String::from(id);
         self
     }
 
@@ -269,12 +277,14 @@ mod tests {
         let status_code = "0";
         let payload = "Some Data";
         let msg_type = "message";
+        let ref_msg_id = "alpha123";
         let msg = match send_message()
             .to(&to_did)
             .msg_type(&msg_type)
             .uid(&uid)
             .status_code(&status_code)
             .edge_agent_payload(&payload)
+            .ref_msg_id(&ref_msg_id)
             .serialize_message(){
             Ok(x) => x.to_string(),
             Err(y) => {
@@ -288,6 +298,7 @@ mod tests {
             \\\"statusCode\\\":\\\"0\\\",\
             \\\"type\\\":\\\"SEND_MSG\\\",\
             \\\"uid\\\":\\\"123\\\"}\",\
+            \"refMsgId\":\"alpha123\",\
         \"to\":\"8XFh8yBzrpJQmNyZzgoTqB\"}");
     }
 }
