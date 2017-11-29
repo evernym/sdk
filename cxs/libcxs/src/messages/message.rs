@@ -137,10 +137,13 @@ impl GeneralMessage for GetMessages{
 
         match httpclient::post_u8(&data, &url) {
             Err(_) => Err(error::POST_MSG_FAILURE.code_num),
-            Ok(response) => Ok(response),
+            Ok(response) => parse_get_messages_response(&response),
         }
     }
+}
 
+fn parse_get_messages_response(response: &Vec<u8>) -> Result<String, u32> {
+    Ok(String::new().to_owned())
 }
 
 #[derive(Clone, Serialize, Debug, PartialEq, PartialOrd)]
@@ -270,10 +273,13 @@ impl GeneralMessage for SendMessage{
 
         match httpclient::post_u8(&data, &url) {
             Err(_) => Err(error::POST_MSG_FAILURE.code_num),
-            Ok(response) => Ok(response),
+            Ok(response) => parse_send_message_response(&response),
         }
     }
+}
 
+fn parse_send_message_response(response: &Vec<u8>) -> Result<String, u32> {
+    Ok(String::new().to_owned())
 }
 
 #[cfg(test)]

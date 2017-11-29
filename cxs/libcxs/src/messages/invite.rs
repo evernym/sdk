@@ -154,10 +154,13 @@ impl GeneralMessage for SendInvite{
 
         match httpclient::post_u8(&data, &url) {
             Err(_) => Err(error::POST_MSG_FAILURE.code_num),
-            Ok(response) => Ok(response),
+            Ok(response) => parse_send_invite_response(&response),
         }
     }
+}
 
+fn parse_send_invite_response(response: &Vec<u8>) -> Result<String, u32> {
+    Ok(String::new().to_owned())
 }
 
 impl UpdateProfileData{
@@ -253,11 +256,14 @@ impl GeneralMessage for UpdateProfileData{
 
         match httpclient::post_u8(&data, &url) {
             Err(_) => Err(error::POST_MSG_FAILURE.code_num),
-            Ok(response) => Ok(response),
+            Ok(response) => parse_update_profile_response(&response),
         }
     }
 }
 
+fn parse_update_profile_response(response: &Vec<u8>) -> Result<String, u32> {
+    Ok(String::new().to_owned())
+}
 
 #[cfg(test)]
 mod tests {
