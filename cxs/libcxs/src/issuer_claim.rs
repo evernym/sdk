@@ -30,6 +30,13 @@ static CLAIM_OFFER_ID_KEY: &str = "claim_offer_id";
 static MESSAGE_TYPE_KEY: &str = "msg_type";
 static MESSAGE_TYPE_CLAIM: &str = "claim";
 static MESSAGES_KEY: &str = "msgs";
+static CLAIM_DATA: &str =
+    r#"{"address2":["101 Wilson Lane"],
+        "zip":["87121"],
+        "state":["UT"],
+        "city":["SLC"],
+        "address1":["101 Tela Lane"]
+        }"#;
 extern {
     fn indy_issuer_create_and_store_claim_def(command_handle: i32,
                                               wallet_handle: i32,
@@ -71,7 +78,7 @@ pub struct ClaimOffer {
     version: String,
     to_did: String,
     from_did: String,
-    claim: serde_json::Value,
+    claim: serde_json::Map<String, serde_json::Value>,
     schema_seq_no: u32,
     issuer_did: String,
     claim_name: String,
@@ -99,12 +106,12 @@ impl IssuerClaim {
         //TODO: call to libindy to encrypt payload
         let to_did = connection::get_pw_did(connection_handle)?;
         let from_did = settings::get_config_value(settings::CONFIG_ENTERPRISE_DID_AGENT).unwrap();
-//        let payload = format!("{{\"msg_type\":\"CLAIM_OFFER\",\"claim_name\":\"{}\",\"version\":\"0.1\",\"to_did\":\"{}\",\"from_did\":\"{}\",\"claim\":{},\"schema_seq_no\":{},\"issuer_did\":\"{}\",\"claim_offer_id\":\"{}\"}}", self.claim_name, to_did, from_did, self.claim_attributes, self.schema_seq_no, self.issuer_did, self.claim_id);
-        let claim_offer = self.generate_claim_offer(&to_did)?;
-        let payload = match serde_json::to_string(&claim_offer) {
-            Ok(p) => p,
-            Err(_) => return Err(error::INVALID_JSON.code_num)
-        };
+        let payload = format!("{{\"msg_type\":\"CLAIM_OFFER\",\"claim_name\":\"{}\",\"version\":\"0.1\",\"to_did\":\"{}\",\"from_did\":\"{}\",\"claim\":{},\"schema_seq_no\":{},\"issuer_did\":\"{}\",\"claim_offer_id\":\"{}\"}}", self.claim_name, to_did, from_did, self.claim_attributes, self.schema_seq_no, self.issuer_did, self.claim_id);
+//        let claim_offer = self.generate_claim_offer(&to_did)?;
+//        let payload = match serde_json::to_string(&claim_offer) {
+//            Ok(p) => p,
+//            Err(_) => return Err(error::INVALID_JSON.code_num)
+//        };
         //Todo: call to message class to build payload
         let added_data = r#""claim_name":"Profile detail","issuer_name":"Test Enterprise","optional_data":{"terms_of_service":"<Large block of text>","price":6}"#;
         match messages::send_message().to(&to_did).msg_type("claimOffer").edge_agent_payload(&payload).send() {
@@ -121,26 +128,26 @@ impl IssuerClaim {
         }
 
     }
-    fn create_send_claim_offer_payload(&self, to_did: &str, from_did: &str ) -> Result<String, u32> {
-        #[derive(Serialize, Deserialize)]
-
-        let claim_offer = ClaimOffer{
-            msg_type: String::from("CLAIM_OFFER"),
-            version: String::from("0.1"),
-            to_did: String::from(to_did),
-            from_did:String::from(from_did),
-            claim: serde_json::to_value(self.claim_attributes.to_owned()).unwrap(),
-            schema_seq_no: self.schema_seq_no.to_owned(),
-            issuer_did: String::from(self.issuer_did.to_owned()),
-            claim_name: String::from(self.claim_name.to_owned()),
-            claim_id: String::from(self.claim_id.to_owned()),
-        };
-        match serde_json::to_string(&claim_offer)  {
-            Ok(s) => Ok(s),
-            Err(_) => Err(error::INVALID_JSON.code_num),
-        }
-
-    }
+//    fn create_send_claim_offer_payload(&self, to_did: &str, from_did: &str ) -> Result<String, u32> {
+//        #[derive(Serialize, Deserialize)]
+//
+//        let claim_offer = ClaimOffer{
+//            msg_type: String::from("CLAIM_OFFER"),
+//            version: String::from("0.1"),
+//            to_did: String::from(to_did),
+//            from_did:String::from(from_did),
+//            claim: serde_json::to_value(self.claim_attributes.to_owned()).unwrap(),
+//            schema_seq_no: self.schema_seq_no.to_owned(),
+//            issuer_did: String::from(self.issuer_did.to_owned()),
+//            claim_name: String::from(self.claim_name.to_owned()),
+//            claim_id: String::from(self.claim_id.to_owned()),
+//        };
+//        match serde_json::to_string(&claim_offer)  {
+//            Ok(s) => Ok(s),
+//            Err(_) => Err(error::INVALID_JSON.code_num),
+//        }
+//
+//    }
 
     fn send_claim(&mut self, connection_handle: u32) -> Result<u32, u32> {
         if self.state != CxsStateType::CxsStateRequestReceived {
@@ -355,7 +362,7 @@ impl IssuerClaim {
             source_id: "standard_claim".to_owned(),
             schema_seq_no: 32,
             msg_uid: "1234".to_owned(),
-            claim_attributes: "nothing".to_owned(),
+            claim_attributes: CLAIM_DATA.to_owned(),
             issuer_did: "QTrbV4raAcND4DWWzBmdsh".to_owned(),
             issued_did: "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
             state: CxsStateType::CxsStateOfferSent,
@@ -374,16 +381,14 @@ impl IssuerClaim {
     }
 
     fn generate_claim_offer(&self, to_did: &str) -> Result<ClaimOffer, u32> {
-        let claim_as_value:serde_json::Value = match serde_json::to_value(&self.claim_attributes.to_owned()) {
-            Ok(c) => c,
-            Err(_) => return Err(error::INVALID_JSON.code_num),
-        };
+        let attr_map = convert_to_map(&self.claim_attributes)?;
+
         Ok(ClaimOffer {
             msg_type: String::from("CLAIM_OFFER"),
             version: String::from("0.1"),
             to_did: to_did.to_owned(),
             from_did: self.issued_did.to_owned(),
-            claim: claim_as_value.to_owned(),
+            claim: attr_map,
             schema_seq_no: self.schema_seq_no.to_owned(),
             issuer_did: String::from(self.issuer_did.to_owned()),
             claim_name: String::from(self.claim_name.to_owned()),
@@ -608,7 +613,15 @@ pub fn append_value(original_payload: &str,key: &str,  value: &str) -> Result<St
     }
 }
 
-
+pub fn convert_to_map(s:&str) -> Result<serde_json::Map<String, serde_json::Value>, u32>{
+    println!("{}", s);
+    let v:serde_json::Map<String, serde_json::Value> = match serde_json::from_str(s) {
+        Ok(m) => m,
+        Err(_) => { println!("{}", error::INVALID_ATTRIBUTES_STRUCTURE.message);
+            return Err(error::INVALID_ATTRIBUTES_STRUCTURE.code_num)},
+    };
+    Ok(v)
+}
 
 #[cfg(test)]
 mod tests {
@@ -886,9 +899,13 @@ mod tests {
         claim.update_state();
         _m.assert();
         assert_eq!(claim.get_state(), CxsStateType::CxsStateRequestReceived as u32);
-        let claim_request = claim.claim_request.unwrap();
+        let claim_request = claim.claim_request.clone().unwrap();
         assert_eq!(claim_request.issuer_did, "QTrbV4raAcND4DWWzBmdsh");
         assert_eq!(claim_request.schema_seq_no, 48);
+        claim.claim_attributes = CLAIM_DATA.to_owned();
+        println!("{}", &claim.claim_attributes);
+        println!("{:?}", &claim.generate_claim_offer(&claim_request.issuer_did).unwrap());
+        println!("{:?}", serde_json::to_string(&claim.generate_claim_offer("QTrbV4raAcND4DWWzBmdsh").unwrap()).unwrap());
     }
 
     #[test]
@@ -1027,7 +1044,7 @@ mod tests {
         assert_eq!(claim_offer_payload.from_did, issuer_claim.issued_did);
         assert_eq!(claim_offer_payload.issuer_did, issuer_claim.issuer_did);
         assert_eq!(claim_offer_payload.msg_type, "CLAIM_OFFER");
-        assert_eq!(claim_offer_payload.claim, issuer_claim.claim_attributes);
+        assert_eq!(claim_offer_payload.claim, convert_to_map(&issuer_claim.claim_attributes).unwrap());
         println!("before: {:?}", claim_offer_payload);
         let mut layered = serde_json::to_string(&claim_offer_payload).unwrap();
         println!("after 1: {}", layered);
@@ -1036,19 +1053,19 @@ mod tests {
     }
 
 //    #[ignore]
-    #[test]
-    fn test_claim_offer_payload_includes_correct_fields() {
-        let claim_id = "TEST CLAIM ID";
-        let claim_attr = String::from("{\"value\":\"pair\"}");
-        let mut issuer_claim = IssuerClaim::create_standard_issuer_claim().unwrap();
-        issuer_claim.claim_attributes = claim_attr.clone();
-        issuer_claim.claim_id = String::from(claim_id);
-        let to_did = "FOOBAR";
-        let from_did = "BARFOO";
-        let payload = issuer_claim.create_send_claim_offer_payload(&to_did, &from_did).unwrap();
-        assert!(payload.contains(claim_id));
-
-    }
+//    #[test]
+//    fn test_claim_offer_payload_includes_correct_fields() {
+//        let claim_id = "TEST CLAIM ID";
+//        let claim_attr = String::from("{\"value\":\"pair\"}");
+//        let mut issuer_claim = IssuerClaim::create_standard_issuer_claim().unwrap();
+//        issuer_claim.claim_attributes = claim_attr.clone();
+//        issuer_claim.claim_id = String::from(claim_id);
+//        let to_did = "FOOBAR";
+//        let from_did = "BARFOO";
+//        let payload = issuer_claim.create_send_claim_offer_payload(&to_did, &from_did).unwrap();
+//        assert!(payload.contains(claim_id));
+//
+//    }
 
     #[test]
     fn test_that_test_mode_enabled_bypasses_libindy_create_claim(){
@@ -1079,6 +1096,19 @@ mod tests {
         };
         assert_eq!(claim.state, CxsStateType::CxsStateAccepted);
 
+    }
+
+    #[test]
+    fn test_map(){
+        use serde_json::Value;
+        use serde_json::Map;
+
+
+
+        let map = convert_to_map(CLAIM_DATA).unwrap();
+        println!("{:?}",map);
+
+        assert_eq!(map["address2"][0], "101 Wilson Lane");
     }
 
 }
