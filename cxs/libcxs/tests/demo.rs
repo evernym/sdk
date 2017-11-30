@@ -32,7 +32,7 @@ static CLAIM_DEF_SCHEMA_SEQ_NUM: u32 = 103;
 
 
 
-//#[ignore]
+#[ignore]
 #[test]
 fn test_demo(){
     let serialize_connection_fn = api::connection::cxs_connection_serialize;
@@ -95,9 +95,11 @@ fn test_demo(){
     // Connect ************************************************************************
     let (sender, receiver) = channel();
     let (command_handle, cb) = closure_to_connect_cb(Box::new(move|err|{sender.send(err).unwrap();}));
+//    let pphone_number = "3852322527";
+//    let lphone_number = "8017900625";
     let rc = api::connection::cxs_connection_connect(command_handle,
                                                      connection_handle,
-                                                     CString::new("{\"phone\":\"8017900625\"}").unwrap().into_raw(),cb);
+                                                     CString::new("{\"phone\":\"3852322527\"}").unwrap().into_raw(),cb);
     assert_eq!(rc, 0);
     let err = receiver.recv_timeout(utils::timeout::TimeoutUtils::long_timeout()).unwrap();
     assert_eq!(err,0);
