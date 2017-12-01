@@ -53,7 +53,8 @@ export interface IFFIEntryPoint {
   cxs_issuer_send_claim: (commandId: number, claimHandle: string, connectionHandle: string, cb: any) => number,
   cxs_issuer_send_claim_offer: (commandId: number, claimHandle: string, connectionHandle: string, cb: any) => number,
   // proof
-  cxs_proof_create: (commandId: number, sourceId: string, requesterDid: string, attrs: string, predicates: string, name: string, cb: any) => number,
+  cxs_proof_create: (commandId: number, sourceId: string, requesterDid: string, attrs: string, predicates: string,
+                     name: string, cb: any) => number,
   cxs_proof_deserialize: (commandId: number, data: string, cb: any) => number,
   cxs_proof_release: (handle: string) => number,
   cxs_proof_send_request: (commandId: number, proofHandle: string, connectionHandle: string, cb: any) => number,
