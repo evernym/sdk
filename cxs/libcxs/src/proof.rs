@@ -245,7 +245,7 @@ pub fn send_proof_request(handle: u32, connection_handle: u32) -> Result<u32,u32
 }
 
 fn get_offer_details(response: &str) -> Result<String, u32> {
-    if settings::test_mode_enabled() {return Ok("test_mode_response".to_owned());}
+    if settings::test_agency_mode_enabled() {return Ok("test_mode_response".to_owned());}
     match serde_json::from_str(response) {
         Ok(json) => {
             let json: serde_json::Value = json;

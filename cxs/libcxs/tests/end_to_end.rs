@@ -16,6 +16,8 @@ use std::thread;
 use std::time::Duration;
 use std::ffi::CString;
 use cxs::api;
+use cxs::utils::wallet;
+use cxs::utils::signus::SignusUtils;
 use std::ffi::CStr;
 
 
@@ -119,15 +121,35 @@ extern "C" fn create_and_send_offer_cb(command_handle: u32, err: u32, claim_hand
 
 #[test]
 fn claim_offer_ete() {
+    let agency_wallet = wallet::init_wallet("claim_offer_ete_agency").unwrap();
+    let agent_wallet = wallet::init_wallet("claim_offer_ete_agent").unwrap();
+    let my_wallet = wallet::init_wallet("claim_offer_ete_mine").unwrap();
+
+    let (my_did, my_vk) = SignusUtils::create_and_store_my_did(my_wallet, Some("00000000000000000000000000000My1")).unwrap();
+    let (agent_did, agent_vk) = SignusUtils::create_and_store_my_did(agent_wallet, Some("00000000000000000000000000000My2")).unwrap();
+    let (agency_did, agency_vk) = SignusUtils::create_and_store_my_did(agency_wallet, Some("00000000000000000000000000000My3")).unwrap();
+
+    SignusUtils::store_their_did_from_parts(my_wallet, agent_did.as_ref(), agent_vk.as_ref()).unwrap();
+    SignusUtils::store_their_did_from_parts(my_wallet, agency_did.as_ref(), agency_vk.as_ref()).unwrap();
+
+    wallet::close_wallet(agent_wallet).unwrap();
+    wallet::close_wallet(agency_wallet).unwrap();
+    wallet::close_wallet(my_wallet).unwrap();
+    println!("mydid:  {} vk: {}", my_did, my_vk);
+    println!("agent:  {} vk: {}", agent_did, agent_vk);
+    println!("agency: {} vk: {}", agency_did, agency_vk);
+
     let config_string = format!("{{\"agent_endpoint\":\"{}\",\
-    \"agency_pairwise_did\":\"72x8p4HubxzUK1dwxcc5FU\",\
-    \"agent_pairwise_did\":\"UJGjM6Cea2YVixjWwHN9wq\",\
+    \"agency_pairwise_did\":\"{}\",\
+    \"agent_pairwise_did\":\"{}\",\
     \"enterprise_did_agency\":\"RF3JM851T4EQmhh8CdagSP\",\
-    \"enterprise_did_agent\":\"JmvnKLYj7b7e5ywLxkRMjM\",\
+    \"enterprise_did_agent\":\"{}\",\
     \"enterprise_name\":\"enterprise\",\
+    \"agent_enterprise_verkey\":\"{}\",\
+    \"wallet_name\":\"claim_offer_ete_mine\",\
     \"logo_url\":\"https://s19.postimg.org/ykyz4x8jn/evernym.png\",\
-    \"agency_pairwise_verkey\":\"7118p4HubxzUK1dwxcc5FU\",\
-    \"agent_pairwise_verkey\":\"U22jM6Cea2YVixjWwHN9wq\"}}", mockito::SERVER_URL);
+    \"agency_pairwise_verkey\":\"{}\",\
+    \"agent_pairwise_verkey\":\"{}\"}}", mockito::SERVER_URL, agency_did, agent_did, my_did, my_vk, agency_vk, agent_vk);
 
     let mut file = NamedTempFileOptions::new()
         .suffix(".json")
@@ -155,6 +177,9 @@ fn claim_offer_ete() {
     assert_eq!(rc,0);
     thread::sleep(Duration::from_secs(4));
     unsafe {assert_eq!(CLAIM_SENT,true);}
+    wallet::delete_wallet("claim_offer_ete_mine").unwrap();
+    wallet::delete_wallet("claim_offer_ete_agent").unwrap();
+    wallet::delete_wallet("claim_offer_ete_agency").unwrap();
 }
 
 #[test]

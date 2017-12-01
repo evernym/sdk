@@ -47,8 +47,8 @@ export class Proof extends CXSBase {
   private _name: string
 
   constructor (sourceId) {
-    super()
-    this._sourceId = sourceId
+    super(sourceId)
+    this._proofRequesterDid = null
   }
 
   static async create (data: IProofConfig): Promise<Proof> {
@@ -73,9 +73,9 @@ export class Proof extends CXSBase {
     }
   }
 
-  static async deserialize (proofData: IProofData): Promise<Proof> {
+  static async deserialize (proofData: IProofData) {
     try {
-      return await super.deserialize(Proof, proofData)
+      return await super._deserialize(Proof, proofData)
     } catch (err) {
       throw new CXSInternalError(`cxs_proof_deserialize -> ${err}`)
     }

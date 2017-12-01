@@ -193,20 +193,18 @@ mod tests {
     use connection;
     use utils::wallet;
     use api::CxsStateType;
-    use utils::issuer_claim::tests::{ create_dummy_wallet };
-    use utils::issuer_claim::create_claim_request_from_str;
     use utils::issuer_claim::CLAIM_REQ_STRING;
     use utils::issuer_claim::tests::put_claim_def_in_issuer_wallet;
     use utils::issuer_claim::tests::create_default_schema;
     use utils::wallet::get_wallet_handle;
     use api::cxs::cxs_init;
 
-    static DEFAULT_SERIALIZED_ISSUER_CLAIM: &str = "{\"claim_id\":\"some claim id testing\",\"claim_name\":\"claim name\",\"source_id\":\"test_claim_serialize\",\"handle\":261385873,\"claim_attributes\":\"{\\\"attr\\\":\\\"value\\\"}\",\"msg_uid\":\"\",\"schema_seq_no\":32,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"issued_did\":\"\",\"state\":1,\"claim_request\":null}";
+    static DEFAULT_SERIALIZED_ISSUER_CLAIM: &str = "{\"claim_id\":\"some claim id testing\",\"claim_name\":\"claim name\",\"source_id\":\"test_claim_serialize\",\"handle\":261385873,\"claim_attributes\":\"{\\\"attr\\\":\\\"value\\\"}\",\"msg_uid\":\"\",\"schema_seq_no\":32,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"issued_did\":\"\",\"state\":1,\"claim_request\":null,\"ref_msg_id\":\"abc123\"}";
     static DEFAULT_CLAIM_NAME: &str = "Claim Name Default";
     static DEFAULT_DID: &str = "8XFh8yBzrpJQmNyZzgoTqB";
     static DEFAULT_ATTR: &str = "{\"attr\":\"value\"}";
     static DEFAULT_SCHEMA_SEQ_NO: u32 = 32;
-    static ISSUER_CLAIM_STATE_ACCEPTED: &str = "{\"claim_id\":\"a claim id\",\"claim_name\":\"claim name\",\"source_id\":\"test_cxs_issuer_send_claim\",\"handle\":123,\"claim_attributes\":\"{\\\"state\\\":[\\\"UT\\\"],\\\"zip\\\":[\\\"84000\\\"],\\\"city\\\":[\\\"Draper\\\"],\\\"address2\\\":[\\\"Suite 3\\\"],\\\"address1\\\":[\\\"123 Main St\\\"]}\",\"msg_uid\":\"\",\"schema_seq_no\":32,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"issued_did\":\"\",\"state\":3}";
+    static ISSUER_CLAIM_STATE_ACCEPTED: &str = "{\"claim_id\":\"a claim id\",\"claim_name\":\"claim name\",\"source_id\":\"test_cxs_issuer_send_claim\",\"handle\":123,\"claim_attributes\":\"{\\\"state\\\":[\\\"UT\\\"],\\\"zip\\\":[\\\"84000\\\"],\\\"city\\\":[\\\"Draper\\\"],\\\"address2\\\":[\\\"Suite 3\\\"],\\\"address1\\\":[\\\"123 Main St\\\"]}\",\"msg_uid\":\"\",\"schema_seq_no\":32,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"issued_did\":\"\",\"state\":3,\"ref_msg_id\":\"abc123\"}";
     extern "C" fn create_cb(command_handle: u32, err: u32, claim_handle: u32) {
         assert_eq!(err, 0);
         assert!(claim_handle > 0);
@@ -280,7 +278,7 @@ mod tests {
     #[test]
     fn test_cxs_issuer_send_claim_offer() {
         settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"indy");
         settings::set_config_value(settings::CONFIG_AGENT_ENDPOINT, mockito::SERVER_URL);
         let _m = mockito::mock("POST", "/agency/route")
             .with_status(200)
@@ -307,10 +305,11 @@ mod tests {
     #[test]
     fn test_cxs_issuer_send_a_claim() {
         settings::set_defaults();
-        wallet::tests::make_wallet("test_cxs_issuer_send_a_claim");
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
+        wallet::init_wallet("test_cxs_issuer_send_a_claim").unwrap();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"indy");
         settings::set_config_value(settings::CONFIG_AGENT_ENDPOINT, mockito::SERVER_URL);
         settings::set_config_value(settings::CONFIG_ENTERPRISE_DID, DEFAULT_DID);
+        use claim_request::ClaimRequest;
 
         let test_name = "test_cxs_issuer_send_a_claim";
         let schema_seq_num = 32 as u32;
@@ -321,7 +320,7 @@ mod tests {
         let handle = issuer_claim::from_string(ISSUER_CLAIM_STATE_ACCEPTED).unwrap();
 
         /* align claim request and claim def ***********************************/
-        let mut claim_request = match create_claim_request_from_str(CLAIM_REQ_STRING) {
+        let mut claim_request = match ClaimRequest::from_str(CLAIM_REQ_STRING) {
             Ok(x) => x,
             Err(_) => panic!("error with claim request"),
         };
@@ -333,7 +332,7 @@ mod tests {
         issuer_claim::set_claim_request(handle, &claim_request).unwrap();
         assert_eq!(issuer_claim::get_state(handle),CxsStateType::CxsStateRequestReceived as u32);
         let schema = create_default_schema(schema_seq_num);
-        let wallet_name = create_dummy_wallet("dummy_wallet");
+        assert!(wallet::init_wallet("test_cxs_issuer_send_a_claim").unwrap() > 0);
         put_claim_def_in_issuer_wallet(&settings::get_config_value(
             settings::CONFIG_ENTERPRISE_DID).unwrap(), &schema, get_wallet_handle());
         /**********************************************************************/
@@ -353,7 +352,7 @@ mod tests {
         assert_eq!(cxs_issuer_send_claim(command_handle, handle, connection_handle, Some(send_offer_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(1000));
         _m.assert();
-        wallet::tests::delete_wallet("test_cxs_issuer_send_a_claim");
+        wallet::delete_wallet("test_cxs_issuer_send_a_claim").unwrap();
     }
     extern "C" fn deserialize_cb(command_handle: u32, err: u32, claim_handle: u32) {
         fn formatter(original: &str) -> String {

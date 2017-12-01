@@ -1,5 +1,7 @@
 extern crate rust_base58;
 extern crate serde_json;
+extern crate serde;
+extern crate rmp_serde;
 
 use settings;
 use utils::httpclient;
@@ -27,6 +29,8 @@ pub struct GetMessages {
     #[serde(skip_serializing, default)]
     payload: GetMessagesPayload,
     #[serde(skip_serializing, default)]
+    to_vk: String,
+    #[serde(skip_serializing, default)]
     validate_rc: u32,
 }
 
@@ -35,6 +39,7 @@ impl GetMessages{
     pub fn create() -> GetMessages {
         GetMessages {
             to_did: String::new(),
+            to_vk: String::new(),
             payload: GetMessagesPayload{
                 msg_type: "GET_MSGS".to_string(),
                 message: String::new(),
@@ -103,6 +108,33 @@ impl GeneralMessage for GetMessages{
             Ok(response) => Ok(response),
         }
     }
+
+    fn set_to_vk(&mut self, to_vk: String){ self.to_vk = to_vk; }
+
+    fn to_post(&self) -> Result<Vec<u8>,u32> {
+        if self.validate_rc != error::SUCCESS.code_num {
+            return Err(self.validate_rc)
+        }
+        Ok(Vec::new().to_owned())
+    }
+
+    fn send_enc(&mut self) -> Result<String, u32> {
+        let url = format!("{}/agency/route", settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
+
+        let data = match self.to_post() {
+            Ok(x) => x,
+            Err(x) => return Err(x),
+        };
+
+        match httpclient::post_u8(&data, &url) {
+            Err(_) => Err(error::POST_MSG_FAILURE.code_num),
+            Ok(response) => parse_get_messages_response(&response),
+        }
+    }
+}
+
+fn parse_get_messages_response(response: &Vec<u8>) -> Result<String, u32> {
+    Ok(String::new().to_owned())
 }
 
 #[derive(Clone, Serialize, Debug, PartialEq, PartialOrd)]
@@ -126,7 +158,11 @@ pub struct SendMessage {
     #[serde(skip_serializing, default)]
     payload: SendMessagePayload,
     #[serde(skip_serializing, default)]
+    to_vk: String,
+    #[serde(skip_serializing, default)]
     validate_rc: u32,
+    #[serde(rename = "refMsgId")]
+    ref_msg_id: String,
 }
 
 impl SendMessage{
@@ -134,6 +170,7 @@ impl SendMessage{
     pub fn create() -> SendMessage {
         SendMessage {
             to_did: String::new(),
+            to_vk: String::new(),
             payload: SendMessagePayload{
                 msg_type: "SEND_MSG".to_string(),
                 message: String::new(),
@@ -143,6 +180,7 @@ impl SendMessage{
             },
             agent_payload: String::new(),
             validate_rc: error::SUCCESS.code_num,
+            ref_msg_id: String::new(),
         }
     }
 
@@ -168,6 +206,11 @@ impl SendMessage{
     pub fn edge_agent_payload(&mut self, payload: &str) -> &mut Self {
         //todo: is this a json value, String??
         self.payload.edge_agent_payload = payload.to_string();
+        self
+    }
+
+    pub fn ref_msg_id(&mut self, id: &str) -> &mut Self {
+        self.ref_msg_id = String::from(id);
         self
     }
 
@@ -201,6 +244,34 @@ impl GeneralMessage for SendMessage{
             Ok(response) => Ok(response),
         }
     }
+
+    fn set_to_vk(&mut self, to_vk: String){ self.to_vk = to_vk; }
+
+    fn to_post(&self) -> Result<Vec<u8>, u32> {
+        if self.validate_rc != error::SUCCESS.code_num {
+            return Err(self.validate_rc)
+        }
+
+        Ok(Vec::new().to_owned())
+    }
+
+    fn send_enc(&mut self) -> Result<String, u32> {
+        let url = format!("{}/agency/route", settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
+
+        let data = match self.to_post() {
+            Ok(x) => x,
+            Err(x) => return Err(x),
+        };
+
+        match httpclient::post_u8(&data, &url) {
+            Err(_) => Err(error::POST_MSG_FAILURE.code_num),
+            Ok(response) => parse_send_message_response(&response),
+        }
+    }
+}
+
+fn parse_send_message_response(response: &Vec<u8>) -> Result<String, u32> {
+    Ok(String::new().to_owned())
 }
 
 #[cfg(test)]
@@ -263,12 +334,14 @@ mod tests {
         let status_code = "0";
         let payload = "Some Data";
         let msg_type = "message";
+        let ref_msg_id = "alpha123";
         let msg = match send_message()
             .to(&to_did)
             .msg_type(&msg_type)
             .uid(&uid)
             .status_code(&status_code)
             .edge_agent_payload(&payload)
+            .ref_msg_id(&ref_msg_id)
             .serialize_message(){
             Ok(x) => x.to_string(),
             Err(y) => {
@@ -282,6 +355,7 @@ mod tests {
             \\\"statusCode\\\":\\\"0\\\",\
             \\\"type\\\":\\\"SEND_MSG\\\",\
             \\\"uid\\\":\\\"123\\\"}\",\
+            \"refMsgId\":\"alpha123\",\
         \"to\":\"8XFh8yBzrpJQmNyZzgoTqB\"}");
     }
 }

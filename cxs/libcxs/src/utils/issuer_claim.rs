@@ -1,8 +1,5 @@
 extern crate libc;
 use self::libc::c_char;
-use claim_request::ClaimRequest;
-use serde_json;
-use utils::error;
 
 extern {
     fn indy_issuer_create_and_store_claim_def(command_handle: i32,
@@ -22,7 +19,7 @@ pub static CLAIM_REQ_STRING: &str =
            "version":"0.1",
            "to_did":"BnRXf8yDMUwGyZVDkSENeq",
            "from_did":"GxtnGN6ypZYgEqcftSQFnC",
-           "iid":"cCanHnpFAD",
+           "tid":"cCanHnpFAD",
            "mid":"",
            "blinded_ms":{
               "prover_did":"FQ7wPBUgSPnDGJnS1EYjTK",
@@ -37,39 +34,14 @@ pub static CLAIM_REQ_STRING: &str =
            }
         }"#;
 
-pub fn create_claim_request_from_str(s: &str) -> Result<ClaimRequest, u32>{
-    let claim_request_json: serde_json::Value = match serde_json::from_str(s) {
-        Ok(x) => x,
-        Err(x) => {
-            warn!("invalid json for claim requests edgeAgentPayload");
-            return Err(error::INVALID_JSON.code_num)
-        },
-    };
-
-    match ClaimRequest::create_from_api_msg_json(&claim_request_json) {
-        Ok(x) => Ok(x),
-        Err(_) => {
-            warn!("invalid claim request");
-            Err(error::INVALID_CLAIM_REQUEST.code_num)
-        }
-    }
-}
-
-
 #[cfg(test)]
 pub mod tests{
     use super::*;
-    use utils::wallet::tests::make_wallet;
     use std::sync::mpsc::channel;
     use utils::callback::CallbackUtils;
     use utils::timeout::TimeoutUtils;
     use std::ffi::CString;
     use std::ptr::null;
-
-    pub fn create_dummy_wallet(wallet_name: &str) -> Result<u32,u32>{
-        make_wallet(wallet_name);
-        Ok(0)
-    }
 
     pub fn create_default_schema(schema_seq_no: u32) -> String {
         let schema = format!(r#"{{
@@ -77,7 +49,7 @@ pub mod tests{
                             "data":{{
                                 "name":"gvt",
                                 "version":"1.0",
-                                "keys":["address1","address2","zip","state", "city"]
+                                "attr_names":["address1","address2","zip","state", "city"]
                             }}
                          }}"#, schema_seq_no);
         String::from(schema)

@@ -1,11 +1,13 @@
 use settings;
 use std::io::Read;
 use reqwest;
+use reqwest::header::{ContentType};
+
 
 pub fn post(body_content: &str, url: &str) -> Result<String,String> {
     let client = reqwest::Client::new();
     info!("Posting \"{}\" to: \"{}\"", body_content, url);
-    if settings::test_mode_enabled() {return Ok("test_mode_response".to_owned());}
+    if settings::test_agency_mode_enabled() {return Ok("test_mode_response".to_owned());}
     let mut response = match  client.post(url).body(body_content.to_owned()).send() {
         Ok(result) => result,
         Err(err) => return Err("could not connect".to_string()),
@@ -21,6 +23,25 @@ pub fn post(body_content: &str, url: &str) -> Result<String,String> {
     }
 }
 
+/* TODO: remove and use generics */
+pub fn post_u8(body_content: &Vec<u8>, url: &str) -> Result<Vec<u8>,String> {
+    let client = reqwest::Client::new();
+    info!("Posting \"{:?}\" to: \"{}\"", body_content, url);
+    if settings::test_agency_mode_enabled() {return Ok(Vec::new().to_owned());}
+    let mut response = match  client.post(url).body(body_content.to_owned()).header(ContentType::octet_stream()).send() {
+        Ok(result) => result,
+        Err(err) => return Err("could not connect".to_string()),
+    };
+
+    info!("Response Header: {:?}", response);
+    if !response.status().is_success() {return Err("POST failed".to_string());}
+
+    let mut content = Vec::new();
+    match response.read_to_end(&mut content) {
+        Ok(x) => {info!("Response: {:?}", content); Ok(content.to_owned())},
+        Err(_) => Err("could not read response".to_string()),
+    }
+}
 
 
 #[cfg(test)]
