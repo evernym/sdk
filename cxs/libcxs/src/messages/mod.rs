@@ -1,9 +1,11 @@
 pub mod invite;
 pub mod validation;
 pub mod message;
+pub mod proof_messages;
 
 use self::invite::{CreateKeyMsg, SendInvite, AcceptInvitation, UpdateProfileData};
 use self::message::{GetMessages, SendMessage};
+use self::proof_messages::{ProofRequest};
 
 #[derive(Clone, Serialize, Debug, PartialEq, PartialOrd)]
 pub enum MessageType {
@@ -13,6 +15,7 @@ pub enum MessageType {
     AcceptInviteMsg(AcceptInvitation),
     UpdateInfoMsg(UpdateProfileData),
     GetMessagesMsg(GetMessages),
+    ProofRequestMsg(ProofRequest)
 }
 
 pub trait GeneralMessage{
@@ -62,3 +65,5 @@ pub fn accept_invitation() -> AcceptInvitation{
 pub fn get_messages() -> GetMessages { GetMessages::create() }
 
 pub fn send_message() -> SendMessage { SendMessage::create() }
+
+pub fn proof_request() -> ProofRequest { ProofRequest::create() }

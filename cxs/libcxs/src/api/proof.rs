@@ -12,13 +12,17 @@ use api::CxsStatus;
 #[no_mangle]
 pub extern fn cxs_proof_create(command_handle: u32,
                                source_id: *const c_char,
-                               proof_requester_did: *const c_char,
-                               proof_request_data: *const c_char,
+                               requester_did: *const c_char,
+                               requested_attrs: *const c_char,
+                               requested_predicates: *const c_char,
+                               name: *const c_char,
                                cb: Option<extern fn(xcommand_handle: u32, err: u32, proof_handle: u32)>) -> u32 {
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
-    check_useful_c_str!(proof_requester_did, error::INVALID_OPTION.code_num);
-    check_useful_c_str!(proof_request_data, error::INVALID_OPTION.code_num);
+    check_useful_c_str!(requester_did, error::INVALID_OPTION.code_num);
+    check_useful_c_str!(requested_attrs, error::INVALID_OPTION.code_num);
+    check_useful_c_str!(requested_predicates, error::INVALID_OPTION.code_num);
+    check_useful_c_str!(name, error::INVALID_OPTION.code_num);
 
     let source_id_opt = if !source_id.is_null() {
         check_useful_c_str!(source_id, error::INVALID_OPTION.code_num);
@@ -27,9 +31,8 @@ pub extern fn cxs_proof_create(command_handle: u32,
     } else { None };
 
     thread::spawn( move|| {
-        let (rc, handle) = match proof::create_proof(source_id_opt,
-                                                     proof_requester_did,
-                                                     proof_request_data) {
+        let ( rc, handle) = match proof::create_proof(
+            source_id_opt, requester_did, requested_attrs, requested_predicates, name) {
             Ok(x) => (error::SUCCESS.code_num, x),
             Err(_) => (error::UNKNOWN_ERROR.code_num, 0),
         };
@@ -120,24 +123,6 @@ pub extern fn cxs_proof_release(proof_handle: u32) -> u32 {
     proof::release(proof_handle)
 }
 
-//Proposed proof_request
-//{
-//msg_type: 'PROOF_REQUEST',
-//version: '0.1',
-//expires: '2018-05-22T03:25:17Z',
-//nonce: '351590',
-//to_did: 'BnRXf8yDMUwGyZVDkSENeq',
-//from_did: 'GxtnGN6ypZYgEqcftSQFnC',
-//requester_did: 'V4SGRU86Z58d6TV7PBUe6f',
-//intended_use: 'Verify Home Address',
-//proof_request_name: 'Home Address',
-//requested_attrs: ['address_1', 'address_2', 'city', 'state', 'zip'],
-//requested_predicates: ['age'],
-//tid: 'cCanHnpFAD',
-//mid: 'dDidFLweU',
-//optional_data: { terms_and_conditions: '<Large block of text> or <Url>' },
-//}
-
 #[no_mangle]
 pub extern fn cxs_proof_send_request(command_handle: u32,
                                      proof_handle: u32,
@@ -181,6 +166,7 @@ mod tests {
     use super::*;
     use std::ffi::CString;
     use std::ptr;
+    use std::str;
     use std::thread;
     use std::time::Duration;
     use settings;
@@ -188,6 +174,11 @@ mod tests {
     use proof;
     use api::CxsStateType;
     use connection;
+
+
+    static REQUESTED_ATTRS: &'static str = "[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]";
+    static EXPECTED_ATTRS: &'static str = "{\"Test0\":{\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_1\",\"schema_seq_no\":1},\"Test1\":{\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\",\"schema_seq_no\":1},\"Test2\":{\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"city\",\"schema_seq_no\":1},\"Test3\":{\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"state\",\"schema_seq_no\":1},\"Test4\":{\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"zip\",\"schema_seq_no\":1}";
+    static REQUESTED_PREDICATES: &'static str = "[{\"attr_name\":\"age\",\"p_type\":\"GE\",\"value\":18,\"schema_seq_no\":1,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\"}]";
 
     extern "C" fn create_cb(command_handle: u32, err: u32, proof_handle: u32) {
         assert_eq!(err, 0);
@@ -216,7 +207,7 @@ mod tests {
         assert_eq!(err, 0);
         assert!(proof_handle > 0);
         println!("successfully called deserialize_cb");
-        let original = "{\"source_id\":\"test_proof_serialize\",\"handle\":2035188318,\"proof_attributes\":\"{\\\"attr\\\":\\\"value\\\"}\",\"msg_uid\":\"\",\"proof_requester_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"prover_did\":\"7XFh8yBzrpJQmNyZzgoTqB\",\"state\":1}";
+        let original = "{\"source_id\":\"source id\",\"handle\":1,\"requested_attrs\":\"{\\\"attrs\\\":[{\\\"name\\\":\\\"person name\\\"},{\\\"schema_seq_no\\\":1,\\\"name\\\":\\\"address_1\\\"},{\\\"schema_seq_no\\\":2,\\\"issuer_did\\\":\\\"ISSUER_DID2\\\",\\\"name\\\":\\\"address_2\\\"},{\\\"schema_seq_no\\\":1,\\\"name\\\":\\\"city\\\"},{\\\"schema_seq_no\\\":1,\\\"name\\\":\\\"state\\\"},{\\\"schema_seq_no\\\":1,\\\"name\\\":\\\"zip\\\"}]}\",\"requested_predicates\":\"{\\\"attr_name\\\":\\\"age\\\",\\\"p_type\\\":\\\"GE\\\",\\\"value\\\":18,\\\"schema_seq_no\\\":1,\\\"issuer_did\\\":\\\"DID1\\\"}\",\"msg_uid\":\"\",\"requester_did\":\"234\",\"prover_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"state\":1,\"tid\":33,\"mid\":22,\"name\":\"Name Data\"}";
         let new = proof::to_string(proof_handle).unwrap();
         assert_eq!(original,new);
     }
@@ -229,7 +220,7 @@ mod tests {
 
 
     extern "C" fn send_offer_cb(command_handle: u32, err: u32) {
-        if err != 0 {panic!("failed to send claim(offer) {}",err)}
+        if err != 0 {panic!("failed to send proof(offer) {}",err)}
     }
 
     fn set_default_and_enable_test_mode(){
@@ -243,7 +234,9 @@ mod tests {
         assert_eq!(cxs_proof_create(0,
                                     ptr::null(),
                                     CString::new("8XFh8yBzrpJQmNyZzgoTqB").unwrap().into_raw(),
-                                    CString::new("{\"attr\":\"value\"}").unwrap().into_raw(),
+                                    CString::new(REQUESTED_ATTRS).unwrap().into_raw(),
+                                    CString::new(REQUESTED_PREDICATES).unwrap().into_raw(),
+                                    CString::new("optional").unwrap().into_raw(),
                                     Some(create_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
@@ -253,6 +246,8 @@ mod tests {
         set_default_and_enable_test_mode();
         assert_eq!(cxs_proof_create(
             0,
+            ptr::null(),
+            ptr::null(),
             ptr::null(),
             ptr::null(),
             ptr::null(),
@@ -266,7 +261,9 @@ mod tests {
         assert_eq!(cxs_proof_create(0,
                                     ptr::null(),
                                     CString::new("8XFh8yBzrpJQmNyZzgoTqB").unwrap().into_raw(),
-                                    CString::new("{\"attr\":\"value\"}").unwrap().into_raw(),
+                                    CString::new(REQUESTED_ATTRS).unwrap().into_raw(),
+                                    CString::new(REQUESTED_PREDICATES).unwrap().into_raw(),
+                                    CString::new("optional data").unwrap().into_raw(),
                                     Some(create_and_serialize_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
@@ -274,17 +271,20 @@ mod tests {
     #[test]
     fn test_cxs_proof_deserialize_succeeds() {
         set_default_and_enable_test_mode();
-        let original = "{\"source_id\":\"test_proof_serialize\",\"handle\":2035188318,\"proof_attributes\":\"{\\\"attr\\\":\\\"value\\\"}\",\"msg_uid\":\"\",\"proof_requester_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"prover_did\":\"7XFh8yBzrpJQmNyZzgoTqB\",\"state\":1}";
+        let original = "{\"handle\":1,\"mid\":22,\"msg_uid\":\"\",\"name\":\"Name Data\",\"prover_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"requested_attrs\":\"{\\\"attrs\\\":[{\\\"name\\\":\\\"person name\\\"},{\\\"schema_seq_no\\\":1,\\\"name\\\":\\\"address_1\\\"},{\\\"schema_seq_no\\\":2,\\\"issuer_did\\\":\\\"ISSUER_DID2\\\",\\\"name\\\":\\\"address_2\\\"},{\\\"schema_seq_no\\\":1,\\\"name\\\":\\\"city\\\"},{\\\"schema_seq_no\\\":1,\\\"name\\\":\\\"state\\\"},{\\\"schema_seq_no\\\":1,\\\"name\\\":\\\"zip\\\"}]}\",\"requested_predicates\":\"{\\\"attr_name\\\":\\\"age\\\",\\\"p_type\\\":\\\"GE\\\",\\\"value\\\":18,\\\"schema_seq_no\\\":1,\\\"issuer_did\\\":\\\"DID1\\\"}\",\"requester_did\":\"234\",\"source_id\":\"source id\",\"state\":1,\"tid\":33}";
         cxs_proof_deserialize(0,CString::new(original).unwrap().into_raw(), Some(deserialize_cb));
         thread::sleep(Duration::from_millis(200));
     }
+
     #[test]
     fn test_proof_update_state() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
         let handle = match create_proof(None,
                                         "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
-                                        "{\"attr\":\"value\"}".to_owned()) {
+                                        REQUESTED_ATTRS.to_owned(),
+                                        REQUESTED_PREDICATES.to_owned(),
+                                        "Name".to_owned()) {
             Ok(x) => x,
             Err(_) => panic!("Proof creation failed"),
         };
@@ -306,16 +306,21 @@ mod tests {
             .expect(1)
             .create();
 
-        let original = r#"{"handle":2345,"source_id":"test_cxs_send_proof_request","msg_uid":"6a9u7Jt","proof_attributes":"[]","proof_requester_did":"8XFh8yBzrpJQmNyZzgoTBB","prover_did":"8XFh8yBzrpJQmNyZzgoTqB","state":1,"proof_request_name":"Proof"}"#;
-
-        let handle = proof::from_string(original).unwrap();
+        let handle = match create_proof(None,
+                                        "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
+                                        REQUESTED_ATTRS.to_owned(),
+                                        REQUESTED_PREDICATES.to_owned(),
+                                        "Name".to_owned()) {
+            Ok(x) => x,
+            Err(_) => panic!("Proof creation failed"),
+        };
         assert_eq!(proof::get_state(handle),CxsStateType::CxsStateInitialized as u32);
 
         let connection_handle = connection::create_connection("test_send_proof_request".to_owned());
-        connection::set_pw_did(connection_handle, "8XFh8yBzrpJQmNyZzgoTqB");
-
+        connection::set_pw_did(connection_handle, "XXFh7yBzrpJQmNyZzgoTqB");
         assert_eq!(cxs_proof_send_request(0,handle,connection_handle,Some(send_offer_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(1000));
+        assert_eq!(proof::get_state(handle),CxsStateType::CxsStateOfferSent as u32);
         _m.assert();
     }
 

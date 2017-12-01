@@ -22,12 +22,15 @@ static DEFAULT_PROOF_NAME: &str = "Proof";
 struct Proof {
     source_id: String,
     handle: u32,
-    proof_attributes: String,
+    requested_attrs: String,
+    requested_predicates: String,
     msg_uid: String,
-    proof_requester_did: String,
+    requester_did: String,
     prover_did: String,
     state: CxsStateType,
-    proof_request_name: String,
+    tid: u32,
+    mid: u32,
+    name: String,
 }
 
 impl Proof {
@@ -36,39 +39,31 @@ impl Proof {
         Ok(error::SUCCESS.code_num)
     }
 
-    //Proposed proof_request
-    //{
-    //msg_type: 'PROOF_REQUEST',
-    //version: '0.1',
-    //expires: '2018-05-22T03:25:17Z',
-    //nonce: '351590',
-    //to_did: 'BnRXf8yDMUwGyZVDkSENeq',
-    //from_did: 'GxtnGN6ypZYgEqcftSQFnC',
-    //requester_did: 'V4SGRU86Z58d6TV7PBUe6f',
-    //intended_use: 'Verify Home Address',
-    //proof_request_name: 'Home Address',
-    //requested_attrs: ['address_1', 'address_2', 'city', 'state', 'zip'],
-    //requested_predicates: ['age'],
-    //tid: 'cCanHnpFAD',
-    //mid: 'dDidFLweU',
-    //optional_data: { terms_and_conditions: '<Large block of text> or <Url>' },
-    //}
     fn send_proof_request(&mut self, connection_handle: u32) -> Result<u32, u32> {
         if self.state != CxsStateType::CxsStateInitialized {
             warn!("proof {} has invalid state {} for sending proofRequest", self.handle, self.state as u32);
             return Err(error::NOT_READY.code_num);
         }
-
-        //TODO: call to libindy to encrypt payload
-        let to_did = connection::get_pw_did(connection_handle)?;
+        self.prover_did = connection::get_pw_did(connection_handle)?;
         let from_did = settings::get_config_value(settings::CONFIG_ENTERPRISE_DID_AGENT).unwrap();
+        //TODO: call to libindy to encrypt payload
+        //TODO: Set expiration date
+        let proof_request = messages::proof_request()
+            .type_version("1.0")
+            .prover_did(&self.prover_did)
+            .requester_did(&self.requester_did)
+            .tid(1)
+            .mid(9)
+            .nonce("123432421212")
+            .proof_name(&self.name)
+            .proof_data_version(".1")
+            .requested_attrs(&self.requested_attrs)
+//            .requested_predicates(&self.requested_predicates)
+            .serialize_message()?;
 
-        let added_data = r#""tid":"cCanHnpFAD","mid":"dDidFLweU","optional_data":{"terms_and_conditions":"<Large block of text>"}"#;
-        let payload = format!("{{\"msg_type\":\"PROOF_REQUEST\",\"proof_request_name\":\"{}\",\"version\":\"0.1\",\"to_did\":\"{}\",\"from_did\":\"{}\",\"requested_attrs\":\"{}\",\"expires\":\"2018-05-22T03:25:17Z\",\"nonce\":\"351590\",\"requester_did\":\"{}\",\"intended_use\":\"Verify Home Address\",\"requested_predicates\":\"['age']\",\"tid\":\"cCanHnpFAD\",\"mid\":\"dDidFLweU\",\"optional_data\":{\\\"terms_and_conditions\\\":\\\"<Large block of text>\\\"}}}",self.proof_request_name,to_did,from_did,self.proof_attributes,self.proof_requester_did);
-        match messages::send_message().to(&to_did).msg_type("proofReq").edge_agent_payload(&payload).send() {
+        match messages::send_message().to(&self.prover_did).msg_type("proofReq").edge_agent_payload(&proof_request).send() {
             Ok(response) => {
                 self.msg_uid = get_offer_details(&response)?;
-                self.prover_did = to_did;
                 self.state = CxsStateType::CxsStateOfferSent;
                 return Ok(error::SUCCESS.code_num)
             },
@@ -146,7 +141,9 @@ impl Proof {
 
 pub fn create_proof(source_id: Option<String>,
                     requester_did: String,
-                    proof_data: String) -> Result<u32, String> {
+                    requested_attrs: String,
+                    requested_predicates: String,
+                    name: String) -> Result<u32, String> {
 
     let new_handle = rand::thread_rng().gen::<u32>();
 
@@ -156,11 +153,14 @@ pub fn create_proof(source_id: Option<String>,
         handle: new_handle,
         source_id: source_id_unwrap,
         msg_uid: String::new(),
-        proof_attributes: proof_data,
-        proof_requester_did: requester_did,
+        requested_attrs,
+        requested_predicates,
+        requester_did,
         prover_did: String::new(),
         state: CxsStateType::CxsStateNone,
-        proof_request_name: DEFAULT_PROOF_NAME.to_owned(),
+        tid: 0,
+        mid: 0,
+        name,
     });
 
     match new_proof.validate_proof_request() {
@@ -215,6 +215,7 @@ pub fn to_string(handle: u32) -> Result<String, u32> {
 }
 
 pub fn from_string(proof_data: &str) -> Result<u32, u32> {
+
     let derived_proof: Proof = match serde_json::from_str(proof_data) {
         Ok(x) => x,
         Err(_) => return Err(error::UNKNOWN_ERROR.code_num),
@@ -280,35 +281,10 @@ mod tests {
     use std::time::Duration;
     use connection::create_connection;
 
-    static SCHEMA: &str = r#"{{
-                            "seqNo":32,
-                            "data":{{
-                                "name":"gvt",
-                                "version":"1.0",
-                                "keys":["address1","address2","city","state", "zip"]
-                            }}
-                         }}"#;
+    static REQUESTED_ATTRS: &'static str = "[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]";
+    static EXPECTED_ATTRS: &'static str = "{\"Test0\":{\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_1\",\"schema_seq_no\":1},\"Test1\":{\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\",\"schema_seq_no\":1},\"Test2\":{\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"city\",\"schema_seq_no\":1},\"Test3\":{\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"state\",\"schema_seq_no\":1},\"Test4\":{\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"zip\",\"schema_seq_no\":1}";
+    static REQUESTED_PREDICATES: &'static str = "[{\"attr_name\":\"age\",\"p_type\":\"GE\",\"value\":18,\"schema_seq_no\":1,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\"}]";
 
-    static CLAIM_REQ_STRING: &str =
-        r#"{
-           "msg_type":"CLAIM_REQUEST",
-           "version":"0.1",
-           "to_did":"BnRXf8yDMUwGyZVDkSENeq",
-           "from_did":"GxtnGN6ypZYgEqcftSQFnC",
-           "iid":"cCanHnpFAD",
-           "mid":"",
-           "blinded_ms":{
-              "prover_did":"FQ7wPBUgSPnDGJnS1EYjTK",
-              "u":"923...607",
-              "ur":null
-           },
-           "issuer_did":"QTrbV4raAcND4DWWzBmdsh",
-           "schema_seq_no":48,
-           "optional_data":{
-              "terms_of_service":"<Large block of text>",
-              "price":6
-           }
-        }"#;
 
     extern "C" fn create_cb(command_handle: u32, err: u32, connection_handle: u32) {
         assert_eq!(err, 0);
@@ -328,7 +304,9 @@ mod tests {
 
         match create_proof(None,
                            "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
-                           "{\"attr\":\"value\"}".to_owned()) {
+                           REQUESTED_ATTRS.to_owned(),
+                           REQUESTED_PREDICATES.to_owned(),
+                            "Optional".to_owned()) {
             Ok(x) => assert!(x > 0),
             Err(_) => assert_eq!(0, 1),
         }
@@ -340,7 +318,9 @@ mod tests {
 
         let handle = match create_proof(None,
                            "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
-                           "{\"attr\":\"value\"}".to_owned()) {
+                                        REQUESTED_ATTRS.to_owned(),
+                                        REQUESTED_PREDICATES.to_owned(),
+                                        "Optional".to_owned()) {
             Ok(x) => x,
             Err(_) => panic!("Proof creation failed"),
         };
@@ -353,7 +333,9 @@ mod tests {
         set_default_and_enable_test_mode();
         let handle = match create_proof(None,
                                         "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
-                                        "{\"attr\":\"value\"}".to_owned()) {
+                                        REQUESTED_ATTRS.to_owned(),
+                                        REQUESTED_PREDICATES.to_owned(),
+                                        "Optional".to_owned()) {
             Ok(x) => x,
             Err(_) => panic!("Proof creation failed"),
         };
@@ -371,7 +353,9 @@ mod tests {
         set_default_and_enable_test_mode();
         let handle = match create_proof(Some("1".to_string()),
                                         "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
-                                        "{\"attr\":\"value\"}".to_owned()) {
+                                        REQUESTED_ATTRS.to_owned(),
+                                        REQUESTED_PREDICATES.to_owned(),
+                                        "Optional".to_owned()) {
             Ok(x) => x,
             Err(_) => panic!("Proof creation failed"),
         };
@@ -396,7 +380,9 @@ mod tests {
 
         let handle = match create_proof(Some("1".to_string()),
                                         "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
-                                        "[\"address_1\", \"address_2\", \"city\", \"state\", \"zip\"]".to_owned()) {
+                                        REQUESTED_ATTRS.to_owned(),
+                                        REQUESTED_PREDICATES.to_owned(),
+                                        "Optional".to_owned()) {
             Ok(x) => x,
             Err(_) => panic!("Proof creation failed"),
         };
@@ -407,4 +393,5 @@ mod tests {
         assert_eq!(get_offer_uid(handle).unwrap(), "6a9u7Jt");
         _m.assert();
     }
+
 }
