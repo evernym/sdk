@@ -168,6 +168,8 @@ mod tests {
     #[test]
     fn test_claim_request_incorrect_json_format_error(){
         assert_eq!(error_message(&INVALID_CLAIM_REQUEST.code_num), INVALID_CLAIM_REQUEST.message);
+    }
+    
     fn test_big_number(){
         assert_eq!(error_message(&BIG_NUMBER_ERROR.code_num), BIG_NUMBER_ERROR.message);
     }
