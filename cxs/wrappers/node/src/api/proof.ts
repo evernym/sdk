@@ -15,10 +15,10 @@ export interface IProofConfig {
 export interface IProofData {
   source_id: string
   handle: number
-  proofAttributes: string
-  proverDid: string
+  requested_attrs: string
+  prover_did: string
   state: StateType
-  proofRequestName: string
+  name: string
 }
 
 export interface IProofAttr {
