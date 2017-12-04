@@ -16,8 +16,6 @@ lazy_static! {
     static ref PROOF_MAP: Mutex<HashMap<u32, Box<Proof>>> = Default::default();
 }
 
-static DEFAULT_PROOF_NAME: &str = "Proof";
-
 #[derive(Serialize, Deserialize, Debug)]
 struct Proof {
     source_id: String,
@@ -31,6 +29,7 @@ struct Proof {
     tid: u32,
     mid: u32,
     name: String,
+    version: String,
 }
 
 impl Proof {
@@ -49,7 +48,7 @@ impl Proof {
         //TODO: call to libindy to encrypt payload
         //TODO: Set expiration date
         let proof_request = messages::proof_request()
-            .type_version("1.0")
+            .type_version(&self.version)
             .prover_did(&self.prover_did)
             .requester_did(&self.requester_did)
             .tid(1)
@@ -79,11 +78,9 @@ impl Proof {
     }
 
     fn get_proof_request_status(&mut self) {
-        // If proof received Todo: fix states to make sense for proofs
         if self.state == CxsStateType::CxsStateRequestReceived {
             return;
         }
-        //If proof request not sent
         else if self.state != CxsStateType::CxsStateOfferSent || self.msg_uid.is_empty() || self.prover_did.is_empty() {
             return;
         }
@@ -160,6 +157,7 @@ pub fn create_proof(source_id: Option<String>,
         tid: 0,
         mid: 0,
         name,
+        version: String::from("1.0"),
     });
 
     match new_proof.validate_proof_request() {
@@ -281,7 +279,6 @@ mod tests {
     use connection::create_connection;
 
     static REQUESTED_ATTRS: &'static str = "[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]";
-    static EXPECTED_ATTRS: &'static str = "{\"Test0\":{\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_1\",\"schema_seq_no\":1},\"Test1\":{\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\",\"schema_seq_no\":1},\"Test2\":{\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"city\",\"schema_seq_no\":1},\"Test3\":{\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"state\",\"schema_seq_no\":1},\"Test4\":{\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"zip\",\"schema_seq_no\":1}";
     static REQUESTED_PREDICATES: &'static str = "[{\"attr_name\":\"age\",\"p_type\":\"GE\",\"value\":18,\"schema_seq_no\":1,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\"}]";
 
 

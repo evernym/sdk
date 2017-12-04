@@ -53,6 +53,8 @@ lazy_static! {
         insert_message(&mut m, &INVALID_MESSAGES);
         insert_message(&mut m, &INVALID_MSGPACK);
         insert_message(&mut m, &INVALID_ATTRIBUTES_STRUCTURE);
+        insert_message(&mut m, &INVALID_PROOF_HANDLE);
+        insert_message(&mut m, &INVALID_CLAIM_REQUEST);
         m
     };
 }
@@ -154,5 +156,15 @@ mod tests {
     #[test]
     fn test_malformed_attributes_for_claim_offer(){
         assert_eq!(error_message(&INVALID_ATTRIBUTES_STRUCTURE.code_num), INVALID_ATTRIBUTES_STRUCTURE.message);
+    }
+
+    #[test]
+    fn test_invalid_proof_handle_error(){
+        assert_eq!(error_message(&INVALID_PROOF_HANDLE.code_num), INVALID_PROOF_HANDLE.message);
+    }
+
+    #[test]
+    fn test_claim_request_incorrect_json_format_error(){
+        assert_eq!(error_message(&INVALID_CLAIM_REQUEST.code_num), INVALID_CLAIM_REQUEST.message);
     }
 }
