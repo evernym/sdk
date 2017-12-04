@@ -11,6 +11,15 @@ use connection::{build_connection, connect, to_string, get_state, release, is_va
  * connection object
  */
 
+/// Create a Connection object that provides a pairwise connection for an enterprise's user
+///
+/// #Params
+/// command_handle: command handle to map callback to user context.
+/// source_id: Enterprise's personal identification for the user
+/// cb: Callback that provides connection handle and error status of request
+///
+/// #Returns
+/// Error code as a u32
 #[no_mangle]
 #[allow(unused_assignments)]
 pub extern fn cxs_connection_create(command_handle: u32,
@@ -30,6 +39,16 @@ pub extern fn cxs_connection_create(command_handle: u32,
     error::SUCCESS.code_num
 }
 
+/// Establishes connection between Enterprise and its user
+///
+/// #Params
+/// command_handle: command handle to map callback to user context.
+/// connection_handle: Connection handle that identifies connection object
+/// connection_options: Provides details indicating if the connection will be established by text or QR Code
+/// cb: Callback that provides error status of request
+///
+/// #Returns
+/// Error code as a u32
 #[no_mangle]
 pub extern fn cxs_connection_connect(command_handle:u32,
                                      connection_handle: u32,
@@ -59,6 +78,15 @@ pub extern fn cxs_connection_connect(command_handle:u32,
     error::SUCCESS.code_num
 }
 
+/// Takes the Connection object and returns a json string of all its attributes
+///
+/// #Params
+/// command_handle: command handle to map callback to user context.
+/// connection_handle: Connection handle that identifies pairwise connection
+/// cb: Callback that provides json string of the connection's attributes and provides error status
+///
+/// #Returns
+/// Error code as a u32
 #[no_mangle]
 pub extern fn cxs_connection_serialize(command_handle: u32,
                                        connection_handle: u32,
@@ -87,6 +115,15 @@ pub extern fn cxs_connection_serialize(command_handle: u32,
     error::SUCCESS.code_num
 }
 
+/// Takes a json string representing a connection object and recreates an object matching the json
+///
+/// #Params
+/// command_handle: command handle to map callback to user context.
+/// connection_data: json string representing a connection object
+/// cb: Callback that provides claim handle and provides error status
+///
+/// #Returns
+/// Error code as a u32
 #[no_mangle]
 pub extern fn cxs_connection_deserialize(command_handle: u32,
                                       connection_data: *const c_char,
@@ -107,6 +144,16 @@ pub extern fn cxs_connection_deserialize(command_handle: u32,
     error::SUCCESS.code_num
 }
 
+
+/// Checks for any state change in the connection and updates the the state attribute
+///
+/// #Params
+/// command_handle: command handle to map callback to user context.
+/// connection_handle: was provided during creation. Used to identify connection object
+/// cb: Callback that provides most current state of the claim and error status of request
+///
+/// #Returns
+/// Error code as a u32
 #[no_mangle]
 pub extern fn cxs_connection_update_state(command_handle: u32,
                                           connection_handle: u32,
@@ -127,6 +174,13 @@ pub extern fn cxs_connection_update_state(command_handle: u32,
     error::SUCCESS.code_num
 }
 
+/// Releases the connection object by deallocating memory
+///
+/// #Params
+/// connection_handle: was provided during creation. Used to identify connection object
+///
+/// #Returns
+/// Error code as a u32
 #[no_mangle]
 pub extern fn cxs_connection_release(connection_handle: u32) -> u32 {
     release(connection_handle)
