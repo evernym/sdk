@@ -30,6 +30,7 @@ struct Proof {
     mid: u32,
     name: String,
     version: String,
+    nonce: String,
 }
 
 impl Proof {
@@ -47,15 +48,16 @@ impl Proof {
         self.requester_did = settings::get_config_value(settings::CONFIG_ENTERPRISE_DID_AGENT).unwrap();
         //TODO: call to libindy to encrypt payload
         //TODO: Set expiration date
+        let data_version = ".1";
         let proof_request = messages::proof_request()
             .type_version(&self.version)
             .prover_did(&self.prover_did)
             .requester_did(&self.requester_did)
             .tid(1)
             .mid(9)
-            .nonce("123432421212")
+            .nonce(&self.nonce)
             .proof_name(&self.name)
-            .proof_data_version(".1")
+            .proof_data_version(data_version)
             .requested_attrs(&self.requested_attrs)
 //            .requested_predicates(&self.requested_predicates)
             .serialize_message()?;
@@ -158,6 +160,7 @@ pub fn create_proof(source_id: Option<String>,
         mid: 0,
         name,
         version: String::from("1.0"),
+        nonce: generate_nonce().to_string(),
     });
 
     match new_proof.validate_proof_request() {
@@ -267,6 +270,10 @@ pub fn get_offer_uid(handle: u32) -> Result<String,u32> {
         Some(proof) => Ok(proof.get_offer_uid()),
         None => Err(error::INVALID_PROOF_HANDLE.code_num),
     }
+}
+
+pub fn generate_nonce() -> u32 {
+    rand::random()
 }
 
 #[cfg(test)]
@@ -384,5 +391,4 @@ mod tests {
         assert_eq!(get_offer_uid(handle).unwrap(), "6a9u7Jt");
         _m.assert();
     }
-
 }
