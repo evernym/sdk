@@ -14,8 +14,13 @@ use api::CxsStatus;
 /// #Params
 /// command_handle: command handle to map callback to user context.
 /// source_id: Enterprise's personal identification for the user
-/// requested_attrs: attributes prover is expected to include in proof offer
+/// requested_attrs: attributes in json format prover is expected to include in proof offer
+/// Example: -> issuer_did and schema_seq_no are optional
+/// r"[{"name":"attrName","issuer_did":"did","schema_seq_no":1}]"#
+///
 /// requested_predicates: specific requirements regarding the prover's attributes
+/// Example:
+/// r#"[{"attr_name":"age","p_type":"GE","value":18,"schema_seq_no":1,"issuer_did":"DID"}]"#
 /// name: Name of the proof request - ex. Drivers Licence
 /// cb: Callback that provides proof handle and error status of request
 ///
@@ -131,6 +136,11 @@ pub extern fn cxs_proof_serialize(command_handle: u32,
 /// #Params
 /// command_handle: command handle to map callback to user context.
 /// proof_data: json string representing a proof object
+///
+/// Example:
+/// {"source_id":"id","handle":1,"requested_attrs":"[{\"issuerDid\":\"did\",\"schemaSeqNo\":1,\"name\":\"\"}]","requested_predicates":"[]",
+/// "msg_uid":"","requester_did":"","prover_did":"","state":1,"tid":0,"mid":0,"name":"Proof Name"}
+///
 /// cb: Callback that provides proof handle and provides error status
 ///
 /// #Returns
@@ -155,7 +165,7 @@ pub extern fn cxs_proof_deserialize(command_handle: u32,
     error::SUCCESS.code_num
 }
 
-/// Releases the proof object by deallocating memory
+/// Releases the proof object by de-allocating memory
 ///
 /// #Params
 /// proof_handle: Proof handle that was provided during creation. Used to access proof object

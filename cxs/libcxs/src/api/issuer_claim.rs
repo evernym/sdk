@@ -20,6 +20,8 @@ use std::ptr;
 /// schema_seq_no: integer number corresponding to claim's scheam number on the ledger
 /// issuer_did: did corresponding to entity issuing a claim
 /// claim_data: data attributes offered to person in the claim
+/// Example:
+/// r#"{"state":["UT"]}"#
 /// claim_name: Name of the claim - ex. Drivers Licence
 /// cb: Callback that provides claim handle and error status of request
 ///
@@ -213,6 +215,9 @@ pub extern fn cxs_issuer_claim_serialize(command_handle: u32,
 /// #Params
 /// command_handle: command handle to map callback to user context.
 /// claim_data: json string representing a claim object
+/// Example:
+/// {"source_id":"1","handle":2,"claim_attributes":"{\"state\":[\"UT\"]}","msg_uid":"","schema_seq_no":1234,"issuer_did":"DID","issued_did":"","state":1,"claim_request":"","claim_name":"Claim","claim_id":"123","ref_msg_id":""}
+
 /// cb: Callback that provides claim handle and provides error status
 ///
 /// #Returns

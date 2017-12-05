@@ -45,6 +45,9 @@ pub extern fn cxs_connection_create(command_handle: u32,
 /// command_handle: command handle to map callback to user context.
 /// connection_handle: Connection handle that identifies connection object
 /// connection_options: Provides details indicating if the connection will be established by text or QR Code
+/// Examples:
+///     r#"{"connection_type":"SMS","phone":"123"}"#
+/// OR: r#"{"connection_type":"QR","phone":""}"#
 /// cb: Callback that provides error status of request
 ///
 /// #Returns
@@ -120,6 +123,10 @@ pub extern fn cxs_connection_serialize(command_handle: u32,
 /// #Params
 /// command_handle: command handle to map callback to user context.
 /// connection_data: json string representing a connection object
+/// Example: ->
+///  {"source_id":"1","handle":2,"pw_did":"did","pw_verkey":"verkey","did_endpoint":"","state":2,"uuid":"","endpoint":"",
+/// "invite_detail":{"e":"","rid":"","sakdp":"","sn":"","sD":"","lu":"","sVk":"","tn":""}}
+///
 /// cb: Callback that provides claim handle and provides error status
 ///
 /// #Returns
