@@ -16,13 +16,19 @@ use std::ptr;
 ///
 /// #Params
 /// command_handle: command handle to map callback to user context.
-/// source_id: Enterprise's personal identification for the user
-/// schema_seq_no: integer number corresponding to claim's scheam number on the ledger
+///
+/// source_id: Enterprise's personal identification for the user.
+///
+/// schema_seq_no: integer number corresponding to claim's schema number on the ledger
+///
 /// issuer_did: did corresponding to entity issuing a claim
+///
 /// claim_data: data attributes offered to person in the claim
-/// Example:
-/// r#"{"state":["UT"]}"#
+///
+/// # Example claim_data -> "{"state":["UT"]}"
+///
 /// claim_name: Name of the claim - ex. Drivers Licence
+///
 /// cb: Callback that provides claim handle and error status of request
 ///
 /// #Returns
@@ -63,8 +69,11 @@ pub extern fn cxs_issuer_create_claim(command_handle: u32,
 ///
 /// #Params
 /// command_handle: command handle to map callback to user context.
+///
 /// claim_handle: Claim handle that was provided during creation. Used to identify claim object
+///
 /// connection_handle: Connection handle that identifies pairwise connection
+///
 /// cb: Callback that provides error status of claim offer
 ///
 /// #Returns
@@ -102,7 +111,9 @@ pub extern fn cxs_issuer_send_claim_offer(command_handle: u32,
 ///
 /// #Params
 /// command_handle: command handle to map callback to user context.
+///
 /// claim_handle: Claim handle that was provided during creation. Used to identify claim object
+///
 /// cb: Callback that provides most current state of the claim and error status of request
 ///
 /// #Returns
@@ -136,8 +147,11 @@ pub extern fn cxs_issuer_accept_claim(claim_handle: u32) -> u32 { error::SUCCESS
 ///
 /// #Params
 /// command_handle: command handle to map callback to user context.
+///
 /// claim_handle: Claim handle that was provided during creation. Used to identify claim object
+///
 /// connection_handle: Connection handle that identifies pairwise connection
+///
 /// cb: Callback that provides error status of sending the claim
 ///
 /// #Returns
@@ -177,7 +191,9 @@ pub extern fn cxs_issuer_terminate_claim(claim_handle: u32, termination_type: u3
 ///
 /// #Params
 /// command_handle: command handle to map callback to user context.
+///
 /// claim_handle: Claim handle that was provided during creation. Used to identify claim object
+///
 /// cb: Callback that provides json string of the claim's attributes and provides error status
 ///
 /// #Returns
@@ -214,10 +230,11 @@ pub extern fn cxs_issuer_claim_serialize(command_handle: u32,
 ///
 /// #Params
 /// command_handle: command handle to map callback to user context.
+///
 /// claim_data: json string representing a claim object
-/// Example:
-/// {"source_id":"1","handle":2,"claim_attributes":"{\"state\":[\"UT\"]}","msg_uid":"","schema_seq_no":1234,"issuer_did":"DID","issued_did":"","state":1,"claim_request":"","claim_name":"Claim","claim_id":"123","ref_msg_id":""}
-
+///
+/// # Examples claim_data -> {"source_id":"1","handle":2,"claim_attributes":"{\"state\":[\"UT\"]}","msg_uid":"","schema_seq_no":1234,"issuer_did":"DID","issued_did":"","state":1,"claim_request":"","claim_name":"Claim","claim_id":"123","ref_msg_id":""}
+///
 /// cb: Callback that provides claim handle and provides error status
 ///
 /// #Returns

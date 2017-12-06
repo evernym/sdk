@@ -11,11 +11,13 @@ use connection::{build_connection, connect, to_string, get_state, release, is_va
  * connection object
  */
 
-/// Create a Connection object that provides a pairwise connection for an enterprise's user
+/// -> Create a Connection object that provides a pairwise connection for an enterprise's user
 ///
 /// #Params
 /// command_handle: command handle to map callback to user context.
+///
 /// source_id: Enterprise's personal identification for the user
+///
 /// cb: Callback that provides connection handle and error status of request
 ///
 /// #Returns
@@ -43,11 +45,13 @@ pub extern fn cxs_connection_create(command_handle: u32,
 ///
 /// #Params
 /// command_handle: command handle to map callback to user context.
+///
 /// connection_handle: Connection handle that identifies connection object
+///
 /// connection_options: Provides details indicating if the connection will be established by text or QR Code
-/// Examples:
-///     r#"{"connection_type":"SMS","phone":"123"}"#
-/// OR: r#"{"connection_type":"QR","phone":""}"#
+///
+/// # Examples connection_options -> "{"connection_type":"SMS","phone":"123"}" OR: "{"connection_type":"QR","phone":""}"
+///
 /// cb: Callback that provides error status of request
 ///
 /// #Returns
@@ -85,7 +89,9 @@ pub extern fn cxs_connection_connect(command_handle:u32,
 ///
 /// #Params
 /// command_handle: command handle to map callback to user context.
+///
 /// connection_handle: Connection handle that identifies pairwise connection
+///
 /// cb: Callback that provides json string of the connection's attributes and provides error status
 ///
 /// #Returns
@@ -122,10 +128,9 @@ pub extern fn cxs_connection_serialize(command_handle: u32,
 ///
 /// #Params
 /// command_handle: command handle to map callback to user context.
+///
 /// connection_data: json string representing a connection object
-/// Example: ->
-///  {"source_id":"1","handle":2,"pw_did":"did","pw_verkey":"verkey","did_endpoint":"","state":2,"uuid":"","endpoint":"",
-/// "invite_detail":{"e":"","rid":"","sakdp":"","sn":"","sD":"","lu":"","sVk":"","tn":""}}
+/// # Examples connection_data -> {"source_id":"1","handle":2,"pw_did":"did","pw_verkey":"verkey","did_endpoint":"","state":2,"uuid":"","endpoint":"","invite_detail":{"e":"","rid":"","sakdp":"","sn":"","sD":"","lu":"","sVk":"","tn":""}}
 ///
 /// cb: Callback that provides claim handle and provides error status
 ///
@@ -156,7 +161,9 @@ pub extern fn cxs_connection_deserialize(command_handle: u32,
 ///
 /// #Params
 /// command_handle: command handle to map callback to user context.
+///
 /// connection_handle: was provided during creation. Used to identify connection object
+///
 /// cb: Callback that provides most current state of the claim and error status of request
 ///
 /// #Returns
@@ -181,7 +188,7 @@ pub extern fn cxs_connection_update_state(command_handle: u32,
     error::SUCCESS.code_num
 }
 
-/// Releases the connection object by deallocating memory
+/// Releases the connection object by de-allocating memory
 ///
 /// #Params
 /// connection_handle: was provided during creation. Used to identify connection object

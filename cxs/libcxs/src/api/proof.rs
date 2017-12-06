@@ -13,16 +13,20 @@ use api::CxsStatus;
 ///
 /// #Params
 /// command_handle: command handle to map callback to user context.
-/// source_id: Enterprise's personal identification for the user
-/// requested_attrs: attributes in json format prover is expected to include in proof offer
-/// Example: -> issuer_did and schema_seq_no are optional
-/// r"[{"name":"attrName","issuer_did":"did","schema_seq_no":1}]"#
 ///
-/// requested_predicates: specific requirements regarding the prover's attributes
-/// Example:
-/// r#"[{"attr_name":"age","p_type":"GE","value":18,"schema_seq_no":1,"issuer_did":"DID"}]"#
-/// name: Name of the proof request - ex. Drivers Licence
-/// cb: Callback that provides proof handle and error status of request
+/// source_id: Enterprise's personal identification for the user.
+///
+/// requested_attrs: attributes in json format prover is expected to include in proof offer.
+///
+/// # Example requested_attrs -> "[{"name":"attrName","issuer_did":"did","schema_seq_no":1}]"
+///
+/// requested_predicates: specific requirements regarding the prover's attributes.
+///
+/// # Example requested_predicates -> "[{"attr_name":"age","p_type":"GE","value":18,"schema_seq_no":1,"issuer_did":"DID"}]"
+///
+/// name: Name of the proof request - ex. Drivers Licence.
+///
+/// cb: Callback that provides proof handle and error status of request.
 ///
 /// #Returns
 /// Error code as a u32
@@ -68,7 +72,9 @@ pub extern fn cxs_proof_set_connection(command_handle: u32,
 ///
 /// #Params
 /// command_handle: command handle to map callback to user context.
+///
 /// proof_handle: Proof handle that was provided during creation. Used to access proof object
+///
 /// cb: Callback that provides most current state of the proof and error status of request
 ///
 /// #Returns
@@ -97,7 +103,9 @@ pub extern fn cxs_proof_update_state(command_handle: u32,
 ///
 /// #Params
 /// command_handle: command handle to map callback to user context.
+///
 /// proof_handle: Proof handle that was provided during creation. Used to access proof object
+///
 /// cb: Callback that provides json string of the proof's attributes and provides error status
 ///
 /// #Returns
@@ -135,11 +143,10 @@ pub extern fn cxs_proof_serialize(command_handle: u32,
 ///
 /// #Params
 /// command_handle: command handle to map callback to user context.
+///
 /// proof_data: json string representing a proof object
 ///
-/// Example:
-/// {"source_id":"id","handle":1,"requested_attrs":"[{\"issuerDid\":\"did\",\"schemaSeqNo\":1,\"name\":\"\"}]","requested_predicates":"[]",
-/// "msg_uid":"","requester_did":"","prover_did":"","state":1,"tid":0,"mid":0,"name":"Proof Name"}
+/// # Examples proof_data -> {"source_id":"id","handle":1,"requested_attrs":"[{\"issuerDid\":\"did\",\"schemaSeqNo\":1,\"name\":\"\"}]","requested_predicates":"[]","msg_uid":"","requester_did":"","prover_did":"","state":1,"tid":0,"mid":0,"name":"Proof Name"}
 ///
 /// cb: Callback that provides proof handle and provides error status
 ///
@@ -181,8 +188,11 @@ pub extern fn cxs_proof_release(proof_handle: u32) -> u32 {
 ///
 /// #Params
 /// command_handle: command handle to map callback to user context.
+///
 /// proof_handle: Proof handle that was provided during creation. Used to access proof object
+///
 /// connection_handle: Connection handle that identifies pairwise connection
+///
 /// cb: provides any error status of the proof_request
 ///
 /// #Returns
