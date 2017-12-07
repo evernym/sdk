@@ -6,21 +6,13 @@ extern crate rmp_serde;
 use settings;
 use utils::httpclient;
 use utils::error;
-use messages::{validation, GeneralMessage, Bundled, MsgResponse, bundle_for_agency, unbundle_from_agency};
+use messages::*;
 use serde::Deserialize;
 use self::rmp_serde::Deserializer;
 
 
-#[derive(Clone, Deserialize, Serialize, Debug, PartialEq, PartialOrd)]
-#[serde(rename_all = "camelCase")]
-struct UpdateProfileDataPayload{
-    #[serde(rename = "type")]
-    msg_type: String,
-    name: String,
-    logo_url: String,
-}
 
-#[derive(Serialize, Debug, PartialEq, PartialOrd, Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateProfileData {
     #[serde(rename = "to")]
@@ -32,17 +24,7 @@ pub struct UpdateProfileData {
     validate_rc: u32,
 }
 
-#[derive(Clone, Deserialize, Serialize, Debug, PartialEq, PartialOrd)]
-#[serde(rename_all = "camelCase")]
-struct SendInvitePayload{
-    #[serde(rename = "type")]
-    msg_type: String,
-    #[serde(rename = "keyDlgProof")]
-    key_delegate: String,
-    phone_number: String,
-}
-
-#[derive(Serialize, Debug, PartialEq, PartialOrd, Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SendInvite {
     #[serde(rename = "to")]
@@ -54,24 +36,6 @@ pub struct SendInvite {
     validate_rc: u32,
 }
 
-#[derive(Deserialize, Serialize)]
-pub struct UpdateProfileResponse {
-    code: String,
-}
-
-#[derive(Deserialize, Serialize)]
-pub struct InviteDetails {
-    msg_type: String,
-    invite_details: String,
-    invite_url: String,
-}
-
-#[derive(Deserialize, Serialize)]
-pub struct SendInviteResponse {
-    create_response: MsgResponse,
-    invite_details: InviteDetails,
-    send_response: MsgResponse,
-}
 
 impl SendInvite{
 
@@ -152,7 +116,7 @@ impl GeneralMessage for SendInvite{
             return Err(self.validate_rc)
         }
 
-        let msg = Bundled::create(self.payload.clone()).encode()?;
+        let msg = Bundled::create(PayloadType::SendInvitePayload(self.payload.clone())).encode()?;
 
         bundle_for_agency(msg, self.to_did.as_ref())
     }
@@ -176,7 +140,7 @@ fn parse_send_invite_response(response: Vec<u8>) -> Result<String, u32> {
     let data = unbundle_from_agency(response)?;
 
     let mut de = Deserializer::new(&data[..]);
-    let bundle: Bundled<SendInviteResponse> = match Deserialize::deserialize(&mut de) {
+    let bundle: Bundled = match Deserialize::deserialize(&mut de) {
         Ok(x) => x,
         Err(x) => {
             error!("Could not parse messagepack: {}", x);
@@ -184,9 +148,11 @@ fn parse_send_invite_response(response: Vec<u8>) -> Result<String, u32> {
         },
     };
 
+    /*
     let invite_details = &bundle.bundled[0].invite_details.invite_details;
+    */
 
-    match serde_json::to_string(invite_details) {
+    match serde_json::to_string(&bundle) {
         Ok(x) => Ok(x),
         Err(_) => Err(error::INVALID_JSON.code_num),
     }
@@ -262,7 +228,7 @@ impl GeneralMessage for UpdateProfileData{
         if self.validate_rc != error::SUCCESS.code_num {
             return Err(self.validate_rc)
         }
-        let msg = Bundled::create(self.payload.clone()).encode()?;
+        let msg = Bundled::create(PayloadType::UpdateProfileDataPayload(self.payload.clone())).encode()?;
 
         bundle_for_agency(msg, self.to_did.as_ref())
     }
@@ -286,7 +252,7 @@ fn parse_update_profile_response(response: Vec<u8>) -> Result<String, u32> {
     let data = unbundle_from_agency(response)?;
 
     let mut de = Deserializer::new(&data[..]);
-    let bundle: Bundled<UpdateProfileResponse> = match Deserialize::deserialize(&mut de) {
+    let bundle: Bundled = match Deserialize::deserialize(&mut de) {
         Ok(x) => x,
         Err(x) => {
             error!("Could not parse messagepack: {}", x);
@@ -415,18 +381,14 @@ mod tests {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "indy");
 
-        let payload = SendInviteResponse {
-            create_response: MsgResponse { msg_type: "MSG_CREATED".to_string(), msg_id: "id1".to_string(), },
-            invite_details: InviteDetails { msg_type: "MSG_DETAIL".to_string(), invite_details: "{\"attr\":\"value\"}".to_string(), invite_url: "url".to_string(), },
-            send_response: MsgResponse { msg_type: "MSG_SENT".to_string(), msg_id: "id2".to_string(), },
-        };
+        let field = InviteDetails { msg_type: "MSG_DETAIL".to_string(), invite_details: "{\"attr\":\"value\"}".to_string(), invite_url: "url".to_string(), };
 
-        let bundle = Bundled::create(payload);
+        let bundle = Bundled::create(PayloadType::InviteDetails(field));
         let data = encode::to_vec_named(&bundle).unwrap();
+        println!("data: {:?}", data);
         let result = parse_send_invite_response(data).unwrap();
 
         println!("result: {}", result);
-
         assert!(result.len() > 0);
     }
 
@@ -439,7 +401,7 @@ mod tests {
             code: "MS-103".to_string(),
         };
 
-        let bundle = Bundled::create(payload);
+        let bundle = Bundled::create(PayloadType::UpdateProfileResponse(payload));
         let data = encode::to_vec_named(&bundle).unwrap();
         let result = parse_update_profile_response(data).unwrap();
 

@@ -6,21 +6,9 @@ extern crate rmp_serde;
 use settings;
 use utils::httpclient;
 use utils::error;
-use messages::{MsgType, GeneralMessage, Bundled, bundle_for_agency};
+use messages::*;
 
-#[derive(Clone, Serialize, Debug, PartialEq, PartialOrd)]
-#[serde(rename_all = "camelCase")]
-struct GetMessagesPayload{
-    #[serde(rename = "@type")]
-    msg_type: MsgType,
-    #[serde(rename = "excludePayload")]
-    exclude_payload: String,
-    uids: String,
-    #[serde(rename = "statusCodes")]
-    status_code: String,
-}
-
-#[derive(Serialize, Debug, PartialEq, PartialOrd, Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct GetMessages {
     #[serde(rename = "to")]
@@ -41,10 +29,11 @@ impl GetMessages{
             to_did: String::new(),
             to_vk: String::new(),
             payload: GetMessagesPayload{
-                msg_type: MsgType { name: "GET_MSGS".to_string(), ver: "1.0".to_string(), },
-                uids: String::new(),
+                msg_type: "GET_MSGS".to_string(),
+                message: String::new(),
+                uid: String::new(),
                 status_code: String::new(),
-                exclude_payload: "Y".to_string(),
+                include_edge_payload: "Y".to_string(),
             },
             agent_payload: String::new(),
             validate_rc: error::SUCCESS.code_num,
@@ -53,13 +42,13 @@ impl GetMessages{
 
     pub fn msg_type(&mut self, msg: &str) -> &mut Self{
         //Todo: validate msg??
-        self.payload.msg_type.name = msg.to_string();
+        self.payload.msg_type = msg.to_string();
         self
     }
 
     pub fn uid(&mut self, uid: &str) -> &mut Self{
         //Todo: validate msg_uid??
-        self.payload.uids = uid.to_string();
+        self.payload.uid = uid.to_string();
         self
     }
 
@@ -72,7 +61,7 @@ impl GetMessages{
 
     pub fn include_edge_payload(&mut self, payload: &str) -> &mut Self {
         //todo: is this a json value, String??
-        self.payload.exclude_payload = payload.to_string();
+        self.payload.include_edge_payload = payload.to_string();
         self
     }
 
@@ -115,7 +104,7 @@ impl GeneralMessage for GetMessages{
             return Err(self.validate_rc)
         }
 
-        let msg = Bundled::create(self.payload.clone()).encode()?;
+        let msg = Bundled::create(PayloadType::GetMessagesPayload(self.payload.clone())).encode()?;
 
         bundle_for_agency(msg, self.to_did.as_ref())
     }
@@ -139,20 +128,8 @@ fn parse_get_messages_response(response: &Vec<u8>) -> Result<String, u32> {
     Ok(String::new().to_owned())
 }
 
-#[derive(Clone, Serialize, Debug, PartialEq, PartialOrd)]
-#[serde(rename_all = "camelCase")]
-struct SendMessagePayload{
-    #[serde(rename = "type")]
-    msg_type: String,
-    #[serde(rename = "msgType")]
-    message: String,
-    uid: String,
-    status_code: String,
-    edge_agent_payload: String,
-    ref_msg_id: String,
-}
 
-#[derive(Serialize, Debug, PartialEq, PartialOrd, Clone)]
+#[derive(Default, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SendMessage {
     #[serde(rename = "to")]
@@ -258,7 +235,7 @@ impl GeneralMessage for SendMessage{
             return Err(self.validate_rc)
         }
 
-        let msg = Bundled::create(self.payload.clone()).encode()?;
+        let msg = Bundled::create(PayloadType::SendMessagePayload(self.payload.clone())).encode()?;
 
         bundle_for_agency(msg, self.to_did.as_ref())
     }
@@ -306,14 +283,7 @@ mod tests {
                 String::from("error")
             }
         };
-        assert_eq!(msg, "{\"agentPayload\":\"\
-        {\\\"@type\\\":\
-        {\\\"name\\\":\\\"GET_MSGS\\\",\
-        \\\"ver\\\":\\\"1.0\\\"},\
-        \\\"excludePayload\\\":\\\"Y\\\",\
-        \\\"statusCodes\\\":\\\"0\\\",\
-        \\\"uids\\\":\\\"123\\\"}\",\
-        \"to\":\"8XFh8yBzrpJQmNyZzgoTqB\"}");
+        assert_eq!(msg,"{\"agentPayload\":\"{\\\"includeEdgePayload\\\":\\\"Y\\\",\\\"msgType\\\":\\\"\\\",\\\"statusCode\\\":\\\"0\\\",\\\"type\\\":\\\"GET_MSGS\\\",\\\"uid\\\":\\\"123\\\"}\",\"to\":\"8XFh8yBzrpJQmNyZzgoTqB\"}");
     }
 
     #[test]

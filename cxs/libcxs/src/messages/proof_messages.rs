@@ -11,20 +11,20 @@ static REQUESTED_ATTRS: &str = "requested_attrs";
 static REQUESTED_PREDICATES: &str = "requested_predicates";
 static DEFAULT_ATTR: &str = "ATTR";
 
-#[derive(Clone, Serialize, Debug, PartialEq, PartialOrd)]
+#[derive(Default, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
 struct ProofType {
     name: String,
     #[serde(rename = "version")]
     type_version: String,
 }
 
-#[derive(Clone, Serialize, Debug, PartialEq, PartialOrd)]
+#[derive(Default, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
 struct ProofTopic {
     mid: u32,
     tid: u32,
 }
 
-#[derive(Clone, Serialize, Debug, PartialEq, PartialOrd)]
+#[derive(Default, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
 struct ProofRequestData{
     nonce: String,
     name: String,
@@ -35,7 +35,7 @@ struct ProofRequestData{
     requested_predicates: String,
 }
 
-#[derive(Clone, Serialize, Debug, PartialEq, PartialOrd)]
+#[derive(Default, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
 pub struct ProofRequest{
     prover_did: String,
     requester_did: String,

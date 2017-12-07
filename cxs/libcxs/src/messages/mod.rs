@@ -17,7 +17,126 @@ use self::invite::{SendInvite, UpdateProfileData};
 use self::message::{GetMessages, SendMessage};
 use self::proof_messages::{ProofRequest};
 
-#[derive(Clone, Serialize, Debug, PartialEq, PartialOrd)]
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
+pub enum PayloadType {
+    MsgType(MsgType),
+    MsgResponse(MsgResponse),
+    Forward(Forward),
+    UpdateProfileResponse(UpdateProfileResponse),
+    InviteDetails(InviteDetails),
+    SendInviteResponse(SendInviteResponse),
+    UpdateProfileDataPayload(UpdateProfileDataPayload),
+    SendInvitePayload(SendInvitePayload),
+    CreateKeyPayload(CreateKeyPayload),
+    CreateKeyResponse(CreateKeyResponse),
+    SendMessagePayload(SendMessagePayload),
+    GetMessagesPayload(GetMessagesPayload),
+    ConnectMsg(ConnectMsg),
+    GenericMsg(GenericMsg),
+    RegisterResponse(RegisterResponse),
+}
+
+#[derive(Default, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
+pub struct ConnectMsg {
+    msg_type: MsgType,
+    from_did: String,
+    from_vk: String,
+}
+
+#[derive(Default, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
+pub struct GenericMsg {
+    msg_type: MsgType,
+}
+
+#[derive(Default, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
+pub struct RegisterResponse {
+    msg_type: MsgType,
+}
+
+#[derive(Default, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct GetMessagesPayload{
+    #[serde(rename = "type")]
+    msg_type: String,
+    #[serde(rename = "msgType")]
+    message: String,
+    uid: String,
+    status_code: String,
+    include_edge_payload: String,
+}
+
+#[derive(Default, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SendMessagePayload{
+    #[serde(rename = "type")]
+    msg_type: String,
+    #[serde(rename = "msgType")]
+    message: String,
+    uid: String,
+    status_code: String,
+    edge_agent_payload: String,
+    ref_msg_id: String,
+}
+
+#[derive(Default, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
+pub struct CreateKeyResponse {
+    msg_type: MsgType,
+    for_did: String,
+    for_verkey: String,
+}
+
+#[derive(Default, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateKeyPayload{
+    #[serde(rename = "type")]
+    msg_type: String,
+    #[serde(rename = "forDID")]
+    for_did: String,
+    #[serde(rename = "forDIDVerKey")]
+    for_verkey: String,
+    nonce: String,
+}
+
+#[derive(Default, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SendInvitePayload{
+    #[serde(rename = "type")]
+    msg_type: String,
+    #[serde(rename = "keyDlgProof")]
+    key_delegate: String,
+    phone_number: String,
+}
+
+#[derive(Default, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct UpdateProfileDataPayload{
+    #[serde(rename = "type")]
+    msg_type: String,
+    name: String,
+    logo_url: String,
+}
+
+#[derive(Default, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
+pub struct UpdateProfileResponse {
+    code: String,
+}
+
+#[derive(Default, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
+pub struct InviteDetails {
+    msg_type: String,
+    invite_details: String,
+    invite_url: String,
+}
+
+#[derive(Default, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
+pub struct SendInviteResponse {
+    create_response: MsgResponse,
+    invite_details: InviteDetails,
+    send_response: MsgResponse,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
 pub enum MessageType {
     EmptyPayload{},
     CreateKeyMsg(CreateKeyMsg),
@@ -27,26 +146,26 @@ pub enum MessageType {
     ProofRequestMsg(ProofRequest)
 }
 
-#[derive(Clone, Deserialize, Serialize, Debug, PartialEq, PartialOrd)]
+#[derive(Default, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
 pub struct MsgType {
     name: String,
     ver: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Default, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
 pub struct MsgResponse {
     #[serde(rename = "@type")]
     msg_type: String,
     msg_id: String,
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, PartialOrd)]
-pub struct Bundled<T> {
-    bundled: Vec<T>,
+#[derive(Default, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
+pub struct Bundled {
+    bundled: Vec<PayloadType>,
 }
 
-impl<T> Bundled<T> {
-    pub fn create(bundled: T) -> Bundled<T> {
+impl Bundled {
+    pub fn create(bundled: PayloadType) -> Bundled {
         let mut vec = Vec::new();
         vec.push(bundled);
         Bundled {
@@ -54,8 +173,7 @@ impl<T> Bundled<T> {
         }
     }
 
-    pub fn encode(&self) -> Result<Vec<u8>, u32>
-        where T: serde::Serialize {
+    pub fn encode(&self) -> Result<Vec<u8>, u32> {
         match encode::to_vec_named(self) {
             Ok(x) => Ok(x),
             Err(x) => {
@@ -80,7 +198,7 @@ pub fn bundle_for_agency(message: Vec<u8>, did: &str) -> Result<Vec<u8>, u32> {
         msg,
     };
 
-    let msg = Bundled::create(outer).encode()?;
+    let msg = Bundled::create(PayloadType::Forward(outer)).encode()?;
     info!("pre encryption bundle: {:?}", msg);
     crypto::prep_anonymous_msg(&agency_vk, &msg[..])
 }
@@ -92,8 +210,8 @@ pub fn unbundle_from_agency(message: Vec<u8>) -> Result<Vec<u8>, u32> {
     crypto::parse_msg(wallet::get_wallet_handle(), &my_vk, &message[..])
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug, PartialEq, PartialOrd)]
-struct Forward {
+#[derive(Default, Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
+pub struct Forward {
     #[serde(rename = "@type")]
     msg_type: MsgType,
     #[serde(rename = "@fwd")]
@@ -160,29 +278,13 @@ pub mod tests {
     use serde::Deserialize;
     use self::rmp_serde::Deserializer;
 
-    #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, PartialOrd)]
-    struct ConnectMsg {
-        msg_type: MsgType,
-        from_did: String,
-        from_vk: String,
-    }
-
-    #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, PartialOrd)]
-    struct GenericMsg {
-        msg_type: MsgType,
-    }
-
-    #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, PartialOrd)]
-    struct RegisterResponse {
-        msg_type: MsgType,
-    }
 
     pub fn parse_register_response(response: Vec<u8>) -> Result<String, u32> {
 
         let data = unbundle_from_agency(response)?;
 
         let mut de = Deserializer::new(&data[..]);
-        let bundle: Bundled<RegisterResponse> = match Deserialize::deserialize(&mut de) {
+        let bundle: Bundled = match Deserialize::deserialize(&mut de) {
             Ok(x) => x,
             Err(x) => {
                 error!("Could not parse messagepack: {}", x);
@@ -222,20 +324,22 @@ pub mod tests {
             from_vk: my_vk.to_string(),
         };
 
-        let data = bundle_for_agency(Bundled::create(payload).encode().unwrap(), their_did).unwrap();
+        let data = bundle_for_agency(Bundled::create(PayloadType::ConnectMsg(payload)).encode().unwrap(), their_did).unwrap();
         let data = unbundle_from_agency(httpclient::post_u8(&data,&url).unwrap()).unwrap();
 
         let mut de = Deserializer::new(&data[..]);
-        let bundle: Bundled<ConnectMsg> = Deserialize::deserialize(&mut de).unwrap();
+        let bundle: Bundled = Deserialize::deserialize(&mut de).unwrap();
 
+        /*
         println!("new did: {} new vk: {}",bundle.bundled[0].from_did, bundle.bundled[0].from_vk);
+        */
 
         /* step 2: SIGNUP */
         let payload = GenericMsg {
             msg_type: MsgType { name: "SIGNUP".to_string(), ver: "1.0".to_string(), },
         };
 
-        let data = bundle_for_agency(Bundled::create(payload).encode().unwrap(), their_did).unwrap();
+        let data = bundle_for_agency(Bundled::create(PayloadType::GenericMsg(payload)).encode().unwrap(), their_did).unwrap();
         let response = parse_register_response(httpclient::post_u8(&data,&url).unwrap()).unwrap();
         println!("response: {}", response);
 
@@ -244,7 +348,7 @@ pub mod tests {
             msg_type: MsgType { name: "CREATE_AGENT".to_string(), ver: "1.0".to_string(), },
         };
 
-        let data = bundle_for_agency(Bundled::create(payload).encode().unwrap(), their_did).unwrap();
+        let data = bundle_for_agency(Bundled::create(PayloadType::GenericMsg(payload)).encode().unwrap(), their_did).unwrap();
         let response = create_key::parse_create_keys_response(httpclient::post_u8(&data,&url).unwrap()).unwrap();
         println!("response: {}", response);
     }
