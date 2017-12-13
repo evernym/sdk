@@ -8,6 +8,7 @@ use rand::Rng;
 use api::CxsStateType;
 use utils::error;
 use settings;
+use utils::httpclient;
 use messages;
 use messages::GeneralMessage;
 use connection;
@@ -62,6 +63,8 @@ impl Proof {
 //            .requested_predicates(&self.requested_predicates)
             .serialize_message()?;
 
+        if settings::test_agency_mode_enabled() { httpclient::set_next_str_response("{\"uid\":\"6a9u7Jt\",\"typ\":\"proofRequest\",\"statusCode\":\"MS-101\"}".to_string()) }
+
         match messages::send_message().to(&self.prover_did).msg_type("proofReq").edge_agent_payload(&proof_request).send() {
             Ok(response) => {
                 self.msg_uid = get_offer_details(&response)?;
@@ -85,6 +88,13 @@ impl Proof {
         }
         else if self.state != CxsStateType::CxsStateOfferSent || self.msg_uid.is_empty() || self.prover_did.is_empty() {
             return;
+        }
+
+        if settings::test_agency_mode_enabled() {
+            let response = "{\"msgs\":[{\"uid\":\"6gmsuWZ\",\"typ\":\"conReq\",\"statusCode\":\"MS-102\",\"statusMsg\":\"message sent\"},\
+            {\"statusCode\":\"MS-104\",\"edgeAgentPayload\":\"{\\\"attr\\\":\\\"value\\\"}\",\"sendStatusCode\":\"MSS-101\",\"typ\":\"claimOffer\",\"statusMsg\":\"message accepted\",\"uid\":\"6a9u7Jt\",\"refMsgId\":\"CKrG14Z\"},\
+            {\"msg_type\":\"CLAIM_REQUEST\",\"typ\":\"claimReq\",\"edgeAgentPayload\":\"{\\\"blinded_ms\\\":{\\\"prover_did\\\":\\\"FQ7wPBUgSPnDGJnS1EYjTK\\\",\\\"u\\\":\\\"923...607\\\",\\\"ur\\\":\\\"null\\\"},\\\"version\\\":\\\"0.1\\\",\\\"mid\\\":\\\"\\\",\\\"to_did\\\":\\\"BnRXf8yDMUwGyZVDkSENeq\\\",\\\"from_did\\\":\\\"GxtnGN6ypZYgEqcftSQFnC\\\",\\\"iid\\\":\\\"cCanHnpFAD\\\",\\\"issuer_did\\\":\\\"QTrbV4raAcND4DWWzBmdsh\\\",\\\"schema_seq_no\\\":48,\\\"optional_data\\\":{\\\"terms_of_service\\\":\\\"<Large block of text>\\\",\\\"price\\\":6}}\"}]}";
+            httpclient::set_next_str_response(response.to_string());
         }
 
         // State is proof request sent
@@ -245,7 +255,6 @@ pub fn send_proof_request(handle: u32, connection_handle: u32) -> Result<u32,u32
 }
 
 fn get_offer_details(response: &str) -> Result<String, u32> {
-    if settings::test_agency_mode_enabled() {return Ok("test_mode_response".to_owned());}
     match serde_json::from_str(response) {
         Ok(json) => {
             let json: serde_json::Value = json;
@@ -280,7 +289,6 @@ pub fn generate_nonce() -> u32 {
 mod tests {
 
     use super::*;
-    extern crate mockito;
     use std::thread;
     use std::time::Duration;
     use connection::create_connection;
@@ -365,17 +373,10 @@ mod tests {
     #[test]
     fn test_send_proof_request() {
         settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "indy");
-        settings::set_config_value(settings::CONFIG_AGENT_ENDPOINT, mockito::SERVER_URL);
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
 
         let connection_handle = create_connection("test_send_proof_request".to_owned());
         connection::set_pw_did(connection_handle, "8XFh8yBzrpJQmNyZzgoTqB");
-
-        let _m = mockito::mock("POST", "/agency/route")
-            .with_status(200)
-            .with_body("{\"uid\":\"6a9u7Jt\",\"typ\":\"proofRequest\",\"statusCode\":\"MS-101\"}")
-            .expect(1)
-            .create();
 
         let handle = match create_proof(Some("1".to_string()),
                                         REQUESTED_ATTRS.to_owned(),
@@ -389,6 +390,5 @@ mod tests {
         thread::sleep(Duration::from_millis(500));
         assert_eq!(get_state(handle), CxsStateType::CxsStateOfferSent as u32);
         assert_eq!(get_offer_uid(handle).unwrap(), "6a9u7Jt");
-        _m.assert();
     }
 }

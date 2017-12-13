@@ -30,6 +30,7 @@ pub static INVALID_MSGPACK: Error = Error{code_num:1019, message:"Invalid Messag
 pub static INVALID_MESSAGES: Error = Error{code_num:1020, message:"Error Retrieving messages from API"};
 pub static INVALID_ATTRIBUTES_STRUCTURE: Error = Error{code_num:1021, message: "Attributes provided to Claim Offer are not correct, possibly malformed"};
 pub static BIG_NUMBER_ERROR: Error = Error{code_num: 1022, message: "Could not encode string to a big integer."};
+pub static INVALID_HTTP_RESPONSE: Error = Error{code_num: 1023, message: "Invalid HTTP response."};
 
 lazy_static! {
     static ref ERROR_MESSAGES: HashMap<u32, &'static str> = {
@@ -57,6 +58,7 @@ lazy_static! {
         insert_message(&mut m, &INVALID_PROOF_HANDLE);
         insert_message(&mut m, &INVALID_CLAIM_REQUEST);
         insert_message(&mut m, &BIG_NUMBER_ERROR);
+        insert_message(&mut m, &INVALID_HTTP_RESPONSE);
         m
     };
 }

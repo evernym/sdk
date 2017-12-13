@@ -13,36 +13,12 @@ use std::collections::HashMap;
 use settings;
 use messages::GeneralMessage;
 use messages;
+use messages::invite::InviteDetail;
 
 lazy_static! {
     static ref CONNECTION_MAP: Mutex<HashMap<u32, Box<Connection>>> = Default::default();
 }
-#[allow(non_snake_case)]
-#[derive(Serialize, Deserialize)]
-pub struct InviteDetail {
-    e: String,
-    rid: String,
-    sakdp: String,
-    sn: String,
-    sD: String,
-    lu: String,
-    sVk: String,
-    tn: String,
-}
-impl InviteDetail {
-    fn new() -> InviteDetail {
-        InviteDetail {
-            e: String::new(),
-            rid: String::new(),
-            sakdp: String::new(),
-            sn: String::new(),
-            sD: String::new(),
-            lu: String::new(),
-            sVk: String::new(),
-            tn: String::new(),
-        }
-    }
-}
+
 #[derive(Serialize, Deserialize)]
 struct ConnectionOptions {
     #[serde(default)]
@@ -63,44 +39,58 @@ struct Connection {
     endpoint: String,
     // For QR code invitation
     invite_detail: InviteDetail,
+    agent_did: String,
+    agent_vk: String,
 }
 
 impl Connection {
-    fn connect(&mut self, options: String) -> u32 {
+    fn connect(&mut self, options: String) -> Result<u32,u32> {
         info!("handle {} called connect", self.handle);
         if self.state != CxsStateType::CxsStateInitialized {
             info!("connection {} in state {} not ready to connect",self.handle,self.state as u32);
-            return error::NOT_READY.code_num;
+            return Err(error::NOT_READY.code_num);
         }
 
         let options_obj: ConnectionOptions = match serde_json::from_str(options.trim()) {
             Ok(val) => val,
-            Err(_) => return error::INVALID_OPTION.code_num
+            Err(_) => return Err(error::INVALID_OPTION.code_num),
         };
 
         match messages::send_invite()
             .to(&self.pw_did)
-            .key_delegate("key")
+            .to_vk(&self.pw_verkey)
             .phone_number(&options_obj.phone)
-            .send() {
+            .agent_did(&self.agent_did)
+            .agent_vk(&self.agent_vk)
+            .send_enc() {
             Err(_) => {
-                error::POST_MSG_FAILURE.code_num
+                return Err(error::POST_MSG_FAILURE.code_num)
             },
             Ok(response) => {
                 self.state = CxsStateType::CxsStateOfferSent;
-                self.invite_detail = get_invite_detail(&response);
-                error::SUCCESS.code_num
+                self.invite_detail = match get_invite_detail(&response[0]) {
+                    Ok(x) => x,
+                    Err(x) => {
+                        error!("error when sending invite: {}", x);
+                        return Err(x);
+                    },
+                };
+                Ok(error::SUCCESS.code_num)
             }
         }
     }
 
     fn get_state(&self) -> u32 { self.state as u32 }
     fn set_pw_did(&mut self, did: &str) { self.pw_did = did.to_string(); }
+    fn set_agent_did(&mut self, did: &str) { self.agent_did = did.to_string(); }
+    fn get_agent_did(&self) -> String { self.agent_did.clone() }
     fn set_state(&mut self, state: CxsStateType) { self.state = state; }
     fn get_pw_did(&self) -> String { self.pw_did.clone() }
     fn get_pw_verkey(&self) -> String { self.pw_verkey.clone() }
     fn set_pw_verkey(&mut self, verkey: &str) { self.pw_verkey = verkey.to_string(); }
-    fn get_their_pw_verkey(&self) -> String {self.invite_detail.sVk.clone() }
+    fn set_agent_verkey(&mut self, verkey: &str) { self.agent_vk = verkey.to_string(); }
+    fn get_agent_verkey(&self) -> String { self.agent_vk.clone() }
+    fn get_their_pw_verkey(&self) -> String {self.invite_detail.sender_detail.verkey.clone() }
     fn get_uuid(&self) -> String { self.uuid.clone() }
     fn get_endpoint(&self) -> String { self.endpoint.clone() }
     fn set_uuid(&mut self, uuid: &str) { self.uuid = uuid.to_string(); }
@@ -112,6 +102,13 @@ pub fn is_valid_handle(handle: u32) -> bool {
         Some(_) => true,
         None => false,
     }
+}
+
+pub fn set_agent_did(handle: u32, did: &str) {
+    match CONNECTION_MAP.lock().unwrap().get_mut(&handle) {
+        Some(cxn) => cxn.set_agent_did(did),
+        None => {}
+    };
 }
 
 pub fn set_pw_did(handle: u32, did: &str) {
@@ -135,6 +132,13 @@ pub fn get_pw_did(handle: u32) -> Result<String, u32> {
     }
 }
 
+pub fn get_agent_did(handle: u32) -> Result<String, u32> {
+    match CONNECTION_MAP.lock().unwrap().get(&handle) {
+        Some(cxn) => Ok(cxn.get_agent_did()),
+        None => Err(error::INVALID_CONNECTION_HANDLE.code_num),
+    }
+}
+
 pub fn get_uuid(handle: u32) -> Result<String, u32> {
     match CONNECTION_MAP.lock().unwrap().get(&handle) {
         Some(cxn) => Ok(cxn.get_uuid()),
@@ -154,6 +158,20 @@ pub fn set_endpoint(handle: u32, endpoint: &str) {
         Some(cxn) => cxn.set_endpoint(endpoint),
         None => {}
     };
+}
+
+pub fn set_agent_verkey(handle: u32, verkey: &str) {
+    match CONNECTION_MAP.lock().unwrap().get_mut(&handle) {
+        Some(cxn) => cxn.set_agent_verkey(verkey),
+        None => {}
+    };
+}
+
+pub fn get_agent_verkey(handle: u32) -> Result<String, u32> {
+    match CONNECTION_MAP.lock().unwrap().get(&handle) {
+        Some(cxn) => Ok(cxn.get_agent_verkey()),
+        None => Err(error::INVALID_CONNECTION_HANDLE.code_num),
+    }
 }
 
 pub fn set_pw_verkey(handle: u32, verkey: &str) {
@@ -196,15 +214,18 @@ pub fn create_agent_pairwise(handle: u32) -> Result<u32, u32> {
     let pw_did = get_pw_did(handle)?;
     let pw_verkey = get_pw_verkey(handle)?;
 
-    match messages::create_keys()
+    let result = match messages::create_keys()
         .for_did(&pw_did)
         .to(&enterprise_did)
         .for_verkey(&pw_verkey)
-        .nonce("anything")
-        .send() {
-        Ok(_) => Ok(error::SUCCESS.code_num),
-        Err(x) => Err(x),
-    }
+        .send_enc() {
+        Ok(x) => x,
+        Err(x) => return Err(x),
+    };
+    info!("create key for handle: {} with did/vk: {:?}",  handle,  result);
+    set_agent_did(handle,&result[0]);
+    set_agent_verkey(handle,&result[1]);
+    Ok(error::SUCCESS.code_num)
 }
 
 pub fn update_agent_profile(handle: u32) -> Result<u32, u32> {
@@ -214,7 +235,7 @@ pub fn update_agent_profile(handle: u32) -> Result<u32, u32> {
         .to(&pw_did)
         .name(&settings::get_config_value(settings::CONFIG_ENTERPRISE_NAME).unwrap())
         .logo_url(&settings::get_config_value(settings::CONFIG_LOGO_URL).unwrap())
-        .send() {
+        .send_enc() {
         Ok(_) => Ok(error::SUCCESS.code_num),
         Err(x) => Err(x),
     }
@@ -241,7 +262,9 @@ pub fn create_connection(source_id: String) -> u32 {
         state: CxsStateType::CxsStateNone,
         uuid: String::new(),
         endpoint: String::new(),
-        invite_detail: InviteDetail::new()
+        invite_detail: InviteDetail::new(),
+        agent_did: String::new(),
+        agent_vk: String::new(),
     });
 
     CONNECTION_MAP.lock().unwrap().insert(new_handle, c);;
@@ -290,30 +313,34 @@ pub fn build_connection(source_id: String) -> Result<u32,u32> {
     Ok(new_handle)
 }
 
-pub fn update_state(handle: u32) -> u32{
-    let pw_did = match get_pw_did(handle) {
-        Ok(did) => did,
-        Err(x) => return x,
-    };
+pub fn update_state(handle: u32) -> Result<u32, u32> {
+    let pw_did = get_pw_did(handle)?;
+    let pw_vk = get_pw_verkey(handle)?;
+    let agent_did = get_agent_did(handle)?;
+    let agent_vk = get_agent_verkey(handle)?;
 
     let url = format!("{}/agency/route", settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
 
     match messages::get_messages()
         .to(&pw_did)
-        .send() {
-        Err(_) => {error::POST_MSG_FAILURE.code_num}
+        .to_vk(&pw_vk)
+        .agent_did(&agent_did)
+        .agent_vk(&agent_vk)
+        .send_enc() {
+        Err(_) => {Err(error::POST_MSG_FAILURE.code_num)}
         Ok(response) => {
-            if response.contains("message accepted") { set_state(handle, CxsStateType::CxsStateAccepted); }
-            error::SUCCESS.code_num
+            info!("update state response: {}", response[0]);
+            if response[0].contains("MS-104") { set_state(handle, CxsStateType::CxsStateAccepted); }
+            Ok(error::SUCCESS.code_num)
             //TODO: add expiration handling
-        }
+        },
     }
 }
 
-pub fn connect(handle: u32, options: String) -> u32 {
+pub fn connect(handle: u32, options: String) -> Result<u32,u32> {
     match CONNECTION_MAP.lock().unwrap().get_mut(&handle) {
         Some(t) => t.connect(options),
-        None => error::INVALID_CONNECTION_HANDLE.code_num,
+        None => Err(error::INVALID_CONNECTION_HANDLE.code_num),
     }
 }
 
@@ -350,43 +377,17 @@ pub fn release(handle: u32) -> u32 {
     }
 }
 
-fn get_invite_detail(response: &str) -> InviteDetail {
+pub fn get_invite_detail(response: &str) -> Result<InviteDetail, u32> {
 
-    match serde_json::from_str(response) {
-        Ok(json) => {
-            let json: serde_json::Value = json;
-            convert_invite_details(&json["inviteDetail"])
-        }
-        Err(_) => {
-            info!("Connect called without a valid response from server");
-            InviteDetail::new()
-        }
-    }
-}
-/* mappings
-`senderEndpoint` -> `e`
-`connReqId` -> `rid`
-`senderAgentKeyDlgProof` -> `sakdp`
-`senderName` -> `sn`
-`senderDID` -> `sD`
-`senderLogoUrl` -> `lu`
-`senderDIDVerKey` -> `sVk`
-`targetName` -> `tn`
-*/
-pub fn convert_invite_details(json: &serde_json::Value) -> InviteDetail {
-    println!("{}",json["senderEndpoint"]);
-    let json_converted = InviteDetail {
-        e: String::from(json["senderEndpoint"].as_str().unwrap()),
-        rid: String::from(json["connReqId"].as_str().unwrap()),
-        sakdp: String::from(json["senderAgentKeyDlgProof"].as_str().unwrap()),
-        sn: String::from(json["senderName"].as_str().unwrap()),
-        sD: String::from(json["senderDID"].as_str().unwrap()),
-        lu: String::from(json["senderLogoUrl"].as_str().unwrap()),
-        sVk: String::from(json["senderDIDVerKey"].as_str().unwrap()),
-        tn: String::from(json["targetName"].as_str().unwrap()),
+    let details: InviteDetail = match serde_json::from_str(response) {
+        Ok(x) => x,
+        Err(x) => {
+            info!("Connect called without a valid response from server: {}", x);
+            return Err(error::INVALID_HTTP_RESPONSE.code_num);
+        },
     };
-    println!("{}", serde_json::to_string(&json_converted).unwrap());
-    json_converted
+
+    Ok(details)
 }
 
 pub fn encrypt_payload(handle: u32, payload: &str) -> Result<Vec<u8>, u32> {
@@ -398,45 +399,22 @@ pub fn encrypt_payload(handle: u32, payload: &str) -> Result<Vec<u8>, u32> {
 
 #[cfg(test)]
 mod tests {
-    extern crate mockito;
+    use std::thread;
+    use std::time::Duration;
+    use utils::constants::*;
+    use utils::httpclient;
     use super::*;
-
-    extern "C" fn create_cb(command_handle: u32, err: u32, connection_handle: u32) {
-        assert_eq!(err, 0);
-        assert!(connection_handle > 0);
-        println!("successfully called create_cb")
-    }
 
     #[test]
     fn test_create_connection() {
         settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"indy");
-        let _m = mockito::mock("POST", "/agency/route")
-            .with_status(202)
-            .with_header("content-type", "text/plain")
-            .with_body("nice!")
-            .expect(3)
-            .create();
-
-        settings::set_config_value(settings::CONFIG_AGENT_ENDPOINT, mockito::SERVER_URL);
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
         let handle = build_connection("test_create_connection".to_owned()).unwrap();
         assert!(handle > 0);
         assert!(!get_pw_did(handle).unwrap().is_empty());
         assert!(!get_pw_verkey(handle).unwrap().is_empty());
         assert_eq!(get_state(handle), CxsStateType::CxsStateInitialized as u32);
-        connect(handle, "{}".to_string());
-        _m.assert();
-
-        let _m = mockito::mock("POST", "/agency/route")
-            .with_status(202)
-            .with_header("content-type", "text/plain")
-            .with_body("message accepted")
-            .expect(1)
-            .create();
-
-        assert_eq!(update_state(handle),error::SUCCESS.code_num);
-        assert_eq!(get_state(handle), CxsStateType::CxsStateAccepted as u32);
-        _m.assert();
+        connect(handle, "{}".to_string()).unwrap();
         release(handle);
     }
 
@@ -452,26 +430,6 @@ mod tests {
         let did2 = get_pw_did(handle2).unwrap();
         assert_eq!(did1, did2);
         release(handle2);
-    }
-
-    #[test]
-    fn test_connection_release() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
-        let handle = build_connection("test_cxn_release".to_owned()).unwrap();
-        assert!(handle > 0);
-        let rc = release(handle);
-        assert_eq!(rc, error::SUCCESS.code_num);
-    }
-
-    #[test]
-    fn test_state_not_connected() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
-        let handle = build_connection("test_state_not_connected".to_owned()).unwrap();
-        let state = get_state(handle);
-        assert_eq!(state, CxsStateType::CxsStateInitialized as u32);
-        release(handle);
     }
 
     #[test]
@@ -495,195 +453,38 @@ mod tests {
     }
 
     #[test]
-    fn test_set_get_pw_verkey() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
-        let handle = build_connection("test_set_get_pw_verkey".to_owned()).unwrap();
-        assert!(!get_pw_did(handle).unwrap().is_empty());
-        assert!(!get_pw_verkey(handle).unwrap().is_empty());
-        set_pw_verkey(handle, &"HELLODOLLY");
-        assert!(!get_pw_did(handle).unwrap().is_empty());
-        release(handle);
-    }
-
-    #[test]
-    fn test_create_agent_pairwise() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
-
-        let handle = rand::thread_rng().gen::<u32>();
-
-        let c = Box::new(Connection {
-            source_id: "1".to_string(),
-            handle,
-            pw_did: "8XFh8yBzrpJQmNyZzgoTqB".to_string(),
-            pw_verkey: "EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A".to_string(),
-            did_endpoint: String::new(),
-            state: CxsStateType::CxsStateNone,
-            uuid: String::new(),
-            endpoint: String::new(),
-            invite_detail: InviteDetail::new()
-        });
-
-        {
-            let mut m = CONNECTION_MAP.lock().unwrap();
-            m.insert(handle, c);
-        }
-
-        match create_agent_pairwise(handle) {
-            Ok(x) => assert_eq!(x, error::SUCCESS.code_num),
-            Err(x) => assert_eq!(x, error::SUCCESS.code_num), //fail if we get here
-        };
-    }
-
-    #[test]
-    fn test_create_agent_profile() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
-        let handle = rand::thread_rng().gen::<u32>();
-
-        let c = Box::new(Connection {
-            source_id: "1".to_string(),
-            handle: handle,
-            pw_did: "8XFh8yBzrpJQmNyZzgoTqB".to_string(),
-            pw_verkey: "EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A".to_string(),
-            did_endpoint: String::new(),
-            state: CxsStateType::CxsStateNone,
-            uuid: String::new(),
-            endpoint: String::new(),
-            invite_detail: InviteDetail::new()
-        });
-
-        CONNECTION_MAP.lock().unwrap().insert(handle, c);
-
-        match update_agent_profile(handle) {
-            Ok(x) => assert_eq!(x, error::SUCCESS.code_num),
-            Err(x) => assert_eq!(x, error::SUCCESS.code_num), //fail if we get here
-        };
-        release(handle);
-    }
-
-    #[test]
-    fn test_get_set_uuid_and_endpoint() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
-        let uuid = "THISISA!UUID";
-        let endpoint = "hello";
-        let test_name = "test_get_set_uuid_and_endpoint";
-        let wallet_name = test_name;
-        let handle = build_connection(test_name.to_owned()).unwrap();
-        assert_eq!(get_endpoint(handle).unwrap(), "");
-        set_uuid(handle, uuid);
-        set_endpoint(handle, endpoint);
-        assert_eq!(get_uuid(handle).unwrap(), uuid);
-        assert_eq!(get_endpoint(handle).unwrap(), endpoint);
-        release(handle);
+    fn test_parse_invite_details() {
+        let invite = get_invite_detail(INVITE_DETAIL_STRING).unwrap();
+        assert_eq!(invite.sender_detail.verkey,"ESE6MnqAyjRigduPG454vfLvKhMbmaZjy9vqxCnSKQnp");
     }
 
     #[test]
     fn test_get_qr_code_data() {
         settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"indy");
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
         let test_name = "test_get_qr_code_data";
-        let _m = mockito::mock("POST", "/agency/route")
-            .with_status(202)
-            .with_header("content-type", "text/plain")
-            .with_body("nice!")
-            .expect(2)
-            .create();
+        let handle = rand::thread_rng().gen::<u32>();
 
-        settings::set_config_value(settings::CONFIG_AGENT_ENDPOINT, mockito::SERVER_URL);
-        let handle = build_connection(test_name.to_owned()).unwrap();
-        assert!(handle > 0);
-        assert!(!get_pw_did(handle).unwrap().is_empty());
-        assert!(!get_pw_verkey(handle).unwrap().is_empty());
-        assert_eq!(get_state(handle), CxsStateType::CxsStateInitialized as u32);
-        _m.assert();
+        let c = Box::new(Connection {
+            source_id: test_name.to_string(),
+            handle,
+            pw_did: "8XFh8yBzrpJQmNyZzgoTqB".to_string(),
+            pw_verkey: "EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A".to_string(),
+            did_endpoint: String::new(),
+            state: CxsStateType::CxsStateOfferSent,
+            uuid: String::new(),
+            endpoint: String::new(),
+            invite_detail: InviteDetail::new(),
+            agent_did: "8XFh8yBzrpJQmNyZzgoTqB".to_string(),
+            agent_vk: "EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A".to_string(),
+        });
 
-        let response = "{ \"inviteDetail\": {
-                \"senderEndpoint\": \"34.210.228.152:80\",
-                \"connReqId\": \"CXqcDCE\",
-                \"senderAgentKeyDlgProof\": \"sdfsdf\",
-                \"senderName\": \"Evernym\",
-                \"senderDID\": \"JiLBHundRhwYaMbPWno8Vg\",
-                \"senderLogoUrl\": \"https://postimg.org/image/do2r09ain/\",
-                \"senderDIDVerKey\": \"AevwvcQBLv5CERRJShzUncV7ubapSgbDZxus42zS8fk1\",
-                \"targetName\": \"there\"
-            }}";
+        CONNECTION_MAP.lock().unwrap().insert(handle, c);
 
-        let _m = mockito::mock("POST", "/agency/route")
-            .with_status(202)
-            .with_header("content-type", "text/plain")
-            .with_body(response)
-            .expect(1)
-            .create();
-
-        connect(handle, "{}".to_string());
-        let data = to_string(handle).unwrap();
-        info!("Data from to_string(i.e. 'get_data()'{}", data);
-        assert!(data.contains("there"));
-
-        _m.assert();
-
-        let _m = mockito::mock("POST", "/agency/route")
-            .with_status(202)
-            .with_header("content-type", "text/plain")
-            .with_body("message accepted")
-            .expect(1)
-            .create();
-
-        assert_eq!(update_state(handle),error::SUCCESS.code_num);
+        println!("updating state");
+        httpclient::set_next_u8_response(CXN_ACCEPTED_MESSAGE.to_vec());
+        update_state(handle).unwrap();
         assert_eq!(get_state(handle), CxsStateType::CxsStateAccepted as u32);
-        _m.assert();
-        release(handle);
-    }
-
-    #[test]
-    fn test_jsonfying_invite_details() {
-        /*
-        `senderEndpoint` -> `e`
-        `connReqId` -> `rid`
-        `senderAgentKeyDlgProof` -> `sakdp`
-        `senderName` -> `sn`
-        `senderDID` -> `sD`
-        `senderLogoUrl` -> `lu`
-        `senderDIDVerKey` -> `sVk`
-        `targetName` -> `tn`
-        */
-        let response = "{ \"inviteDetail\": {
-                \"senderEndpoint\": \"34.210.228.152:80\",
-                \"connReqId\": \"CXqcDCE\",
-                \"senderAgentKeyDlgProof\": \"sdfsdf\",
-                \"senderName\": \"Evernym\",
-                \"senderDID\": \"JiLBHundRhwYaMbPWno8Vg\",
-                \"senderLogoUrl\": \"https://postimg.org/image/do2r09ain/\",
-                \"senderDIDVerKey\": \"AevwvcQBLv5CERRJShzUncV7ubapSgbDZxus42zS8fk1\",
-                \"targetName\": \"there\"
-            }}";
-
-        let invite_detail = get_invite_detail(response);
-        let stringifyied = serde_json::to_string(&invite_detail).unwrap();
-        info!("Invite Detail Test: {}", stringifyied);
-        assert!(stringifyied.contains("sdfsdf"));
-        assert_eq!(invite_detail.sakdp, "sdfsdf");
-    }
-
-    #[test]
-    fn test_convert_invite_details(){
-        let response = r#"{ "inviteDetail": {"senderEndpoint": "34.210.228.152:80",
-                "connReqId": "CXqcDCE",
-                "senderAgentKeyDlgProof": "sdfsdf",
-                "senderName": "Evernym",
-                "senderDID": "JiLBHundRhwYaMbPWno8Vg",
-                "senderLogoUrl": "https://postimg.org/image/do2r09ain/",
-                "senderDIDVerKey": "AevwvcQBLv5CERRJShzUncV7ubapSgbDZxus42zS8fk1",
-                "targetName": "there"
-            }}"#;
-        use serde_json::Value;
-        let original_json:Value = serde_json::from_str(&response).unwrap();
-        let invite_detail:&Value = &original_json["inviteDetail"];
-        let converted_json = convert_invite_details(invite_detail);
-        assert_eq!(converted_json.e, original_json["inviteDetail"]["senderEndpoint"])
     }
 
     #[test]
@@ -721,5 +522,41 @@ mod tests {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
         assert_eq!(build_connection("test_bad_wallet_connection_fails".to_owned()).unwrap_err(),error::UNKNOWN_ERROR.code_num);
+    }
+
+    #[ignore]
+    #[test]
+    fn test_cxs_connection_create_real() {
+        ::utils::logger::LoggerUtils::init();
+        settings::set_defaults();
+        let agency_did = "BDSmVkzxRYGE4HKyMKxd1H";
+        let agency_vk = "8ZicsPGTh4Uo3YDWGmx2zpXyzwAfGTUYYfL82zfvGFRH";
+        let agency_pw_did = "GrN3pQ1N4WUZ2Fy1rf5DKu";
+        let agency_pw_vk = "9e5sgmioobhy4djk2UT6F1A1y6hJmRHaNyQgNQvH8t5w";
+        let my_did = "4fUDR9R7fjwELRvH9JT6HH";
+        let my_vk = "2zoa6G7aMfX8GnUEpDxxunFHE7fZktRiiHk1vgMRH2tm";
+        let agent_did = "2jcGTtJC9UqfWZmaD6Ez7i";
+        let agent_vk = "wqRHJuzSFDYPjvYGNTGbqCXvXTyozBnANKJN376qXcX";
+        let host = "https://enym-eagency.pdev.evernym.com";
+
+        settings::set_config_value(settings::CONFIG_ENTERPRISE_DID,my_did);
+        settings::set_config_value(settings::CONFIG_ENTERPRISE_VERKEY,my_vk);
+        settings::set_config_value(settings::CONFIG_AGENT_ENDPOINT,host);
+        settings::set_config_value(settings::CONFIG_WALLET_NAME,"my_real_wallet");
+        settings::set_config_value(settings::CONFIG_AGENT_PAIRWISE_VERKEY,agent_vk);
+        settings::set_config_value(settings::CONFIG_AGENT_PAIRWISE_DID,agent_did);
+        settings::set_config_value(settings::CONFIG_AGENCY_PAIRWISE_DID, agency_did);
+        settings::set_config_value(settings::CONFIG_AGENCY_PAIRWISE_VERKEY, agency_vk);
+
+        let url = format!("{}/agency/msg", settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
+        wallet::init_wallet("my_real_wallet").unwrap();
+
+        let handle = build_connection("test_real_connection_create".to_owned()).unwrap();
+        connect(handle,"{ \"phone\": \"8012100201\" }".to_string()).unwrap();
+
+        thread::sleep(Duration::from_millis(900));
+        let string = to_string(handle).unwrap();
+        println!("my connection: {}", string);
+        update_state(handle).unwrap();
     }
 }

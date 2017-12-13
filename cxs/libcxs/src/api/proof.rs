@@ -235,8 +235,6 @@ pub extern fn cxs_proof_list_state(status_array: *mut CxsStatus) -> u32 { error:
 
 #[cfg(test)]
 mod tests {
-    extern crate mockito;
-
     use super::*;
     use std::ffi::CString;
     use std::ptr;
@@ -367,13 +365,7 @@ mod tests {
     #[test]
     fn test_cxs_proof_send_request() {
         settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"indy");
-        settings::set_config_value(settings::CONFIG_AGENT_ENDPOINT, mockito::SERVER_URL);
-        let _m = mockito::mock("POST", "/agency/route")
-            .with_status(200)
-            .with_body("{\"uid\":\"6a9u7Jt\",\"typ\":\"proofRequest\",\"statusCode\":\"MS-101\"}")
-            .expect(1)
-            .create();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
 
         let handle = match create_proof(None,
                                         REQUESTED_ATTRS.to_owned(),
@@ -389,7 +381,6 @@ mod tests {
         assert_eq!(cxs_proof_send_request(0,handle,connection_handle,Some(send_offer_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(1000));
         assert_eq!(proof::get_state(handle),CxsStateType::CxsStateOfferSent as u32);
-        _m.assert();
     }
 
 }

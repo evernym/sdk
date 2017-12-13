@@ -20,6 +20,8 @@ use std::ffi::CString;
 use utils::timeout::TimeoutUtils;
 use utils::wallet;
 use utils::openssl::encode;
+use utils::httpclient;
+use utils::constants::*;
 
 lazy_static! {
     static ref ISSUER_CLAIM_MAP: Mutex<HashMap<u32, Box<IssuerClaim>>> = Default::default();
@@ -111,6 +113,7 @@ impl IssuerClaim {
             Err(_) => return Err(error::INVALID_JSON.code_num)
         };
 
+        if settings::test_agency_mode_enabled() { httpclient::set_next_str_response(SEND_CLAIM_OFFER_RESPONSE.to_string()); }
         /* let data = connection::encrypt_payload(connection_handle, data)?; */
         match messages::send_message().to(&to_did).msg_type("claimOffer")
             .edge_agent_payload(&payload)
@@ -166,6 +169,8 @@ impl IssuerClaim {
             data = append_value(&data, "msg_type", "CLAIM")?;
 
         }
+
+        if settings::test_agency_mode_enabled() { httpclient::set_next_str_response("{\"uid\":\"6a9u7Jt\",\"typ\":\"claim\",\"statusCode\":\"MS-101\"}".to_string()) }
 
         /* let data = connection::encrypt_payload(connection_handle, data)?; */
         match messages::send_message().to(&to)
@@ -297,6 +302,14 @@ impl IssuerClaim {
         else if self.state != CxsStateType::CxsStateOfferSent || self.msg_uid.is_empty() || self.issued_did.is_empty() {
             return;
         }
+
+        if settings::test_agency_mode_enabled() {
+            let response = "{\"msgs\":[{\"uid\":\"6gmsuWZ\",\"typ\":\"conReq\",\"statusCode\":\"MS-102\",\"statusMsg\":\"message sent\"},\
+            {\"statusCode\":\"MS-104\",\"edgeAgentPayload\":\"{\\\"attr\\\":\\\"value\\\"}\",\"sendStatusCode\":\"MSS-101\",\"typ\":\"claimOffer\",\"statusMsg\":\"message accepted\",\"uid\":\"6a9u7Jt\",\"refMsgId\":\"CKrG14Z\"},\
+            {\"msg_type\":\"CLAIM_REQUEST\",\"typ\":\"claimReq\",\"edgeAgentPayload\":\"{\\\"blinded_ms\\\":{\\\"prover_did\\\":\\\"FQ7wPBUgSPnDGJnS1EYjTK\\\",\\\"u\\\":\\\"923...607\\\",\\\"ur\\\":\\\"null\\\"},\\\"version\\\":\\\"0.1\\\",\\\"mid\\\":\\\"\\\",\\\"to_did\\\":\\\"BnRXf8yDMUwGyZVDkSENeq\\\",\\\"from_did\\\":\\\"GxtnGN6ypZYgEqcftSQFnC\\\",\\\"iid\\\":\\\"cCanHnpFAD\\\",\\\"issuer_did\\\":\\\"QTrbV4raAcND4DWWzBmdsh\\\",\\\"schema_seq_no\\\":48,\\\"optional_data\\\":{\\\"terms_of_service\\\":\\\"<Large block of text>\\\",\\\"price\\\":6}}\"}]}";
+            httpclient::set_next_str_response(response.to_string());
+        }
+
         // state is "OfferSent" so check to see if there is a new claimReq
         let response = match messages::get_messages().to(&self.issued_did).uid(&self.msg_uid).send() {
             Ok(x) => x,
@@ -559,7 +572,6 @@ pub fn send_claim(handle: u32, connection_handle: u32) -> Result<u32,u32> {
 }
 
 fn get_offer_details(response: &str) -> Result<String,u32> {
-    if settings::test_agency_mode_enabled() {return Ok("test_mode_response".to_owned());}
     match serde_json::from_str(response) {
         Ok(json) => {
             let json: serde_json::Value = json;
@@ -611,8 +623,6 @@ pub fn convert_to_map(s:&str) -> Result<serde_json::Map<String, serde_json::Valu
 
 #[cfg(test)]
 mod tests {
-    extern crate mockito;
-
     use settings;
     use connection::create_connection;
     use std::thread;
@@ -689,7 +699,6 @@ mod tests {
 
     fn print_error_message(e: &u32) -> () {
         use utils::error::error_message;
-        ::utils::logger::LoggerUtils::init();
         info!("error message: {}", error_message(e));
     }
 
@@ -735,19 +744,12 @@ mod tests {
     #[test]
     fn test_send_claim_offer() {
         settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "indy");
-        settings::set_config_value(settings::CONFIG_AGENT_ENDPOINT, mockito::SERVER_URL);
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
 
         let connection_handle = create_connection("test_send_claim_offer".to_owned());
         connection::set_pw_did(connection_handle, "8XFh8yBzrpJQmNyZzgoTqB");
 
         let claim_id = DEFAULT_CLAIM_ID;
-
-        let _m = mockito::mock("POST", "/agency/route")
-            .with_status(200)
-            .with_body("{\"uid\":\"6a9u7Jt\",\"typ\":\"claimOffer\",\"statusCode\":\"MS-101\"}")
-            .expect(1)
-            .create();
 
         let handle = issuer_claim_create(0,
                                          None,
@@ -758,15 +760,13 @@ mod tests {
         thread::sleep(Duration::from_millis(500));
         assert_eq!(get_state(handle), CxsStateType::CxsStateOfferSent as u32);
         assert_eq!(get_offer_uid(handle).unwrap(), "6a9u7Jt");
-        _m.assert();
     }
 
     #[test]
     fn test_send_a_claim() {
         let test_name = "test_send_a_claim";
         settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "indy");
-        settings::set_config_value(settings::CONFIG_AGENT_ENDPOINT, mockito::SERVER_URL);
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
         settings::set_config_value(settings::CONFIG_ENTERPRISE_DID, "QTrbV4raAcND4DWWzBmdsh");
 
         let claim_req:ClaimRequest = match ClaimRequest::from_str(&CLAIM_REQ_STRING) {
@@ -774,11 +774,6 @@ mod tests {
             Err(_) => panic!("error with claim request"),
         };
         let issuer_did = claim_req.issuer_did;
-        let _m = mockito::mock("POST", "/agency/route")
-            .with_status(200)
-            .with_body("{\"uid\":\"6a9u7Jt\",\"typ\":\"claim\",\"statusCode\":\"MS-101\"}")
-            .expect(1)
-            .create();
 
         let mut claim = create_standard_issuer_claim();
         claim.state = CxsStateType::CxsStateRequestReceived;
@@ -794,7 +789,6 @@ mod tests {
                 assert_eq!(x, 0)
             },
         };
-        _m.assert();
         assert_eq!(claim.msg_uid, "6a9u7Jt");
         assert_eq!(claim.state, CxsStateType::CxsStateAccepted);
     }
@@ -818,17 +812,7 @@ mod tests {
     #[test]
     fn test_update_state_with_pending_claim_request() {
         settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-        settings::set_config_value(settings::CONFIG_AGENT_ENDPOINT, mockito::SERVER_URL);
-
-        let response = "{\"msgs\":[{\"uid\":\"6gmsuWZ\",\"typ\":\"conReq\",\"statusCode\":\"MS-102\",\"statusMsg\":\"message sent\"},\
-        {\"statusCode\":\"MS-104\",\"edgeAgentPayload\":\"{\\\"attr\\\":\\\"value\\\"}\",\"sendStatusCode\":\"MSS-101\",\"typ\":\"claimOffer\",\"statusMsg\":\"message accepted\",\"uid\":\"6a9u7Jt\",\"refMsgId\":\"CKrG14Z\"},\
-        {\"msg_type\":\"CLAIM_REQUEST\",\"typ\":\"claimReq\",\"edgeAgentPayload\":\"{\\\"blinded_ms\\\":{\\\"prover_did\\\":\\\"FQ7wPBUgSPnDGJnS1EYjTK\\\",\\\"u\\\":\\\"923...607\\\",\\\"ur\\\":\\\"null\\\"},\\\"version\\\":\\\"0.1\\\",\\\"mid\\\":\\\"\\\",\\\"to_did\\\":\\\"BnRXf8yDMUwGyZVDkSENeq\\\",\\\"from_did\\\":\\\"GxtnGN6ypZYgEqcftSQFnC\\\",\\\"iid\\\":\\\"cCanHnpFAD\\\",\\\"issuer_did\\\":\\\"QTrbV4raAcND4DWWzBmdsh\\\",\\\"schema_seq_no\\\":48,\\\"optional_data\\\":{\\\"terms_of_service\\\":\\\"<Large block of text>\\\",\\\"price\\\":6}}\"}]}";
-        let _m = mockito::mock("POST", "/agency/route")
-            .with_status(200)
-            .with_body(response)
-            .expect(2)
-            .create();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "agency");
 
         let claim_req:ClaimRequest = ClaimRequest::from_str(CLAIM_REQ_STRING).unwrap();
         let mut claim = IssuerClaim {
@@ -846,8 +830,12 @@ mod tests {
             ref_msg_id: String::new(),
         };
 
+        let response = "{\"msgs\":[{\"uid\":\"6gmsuWZ\",\"typ\":\"conReq\",\"statusCode\":\"MS-102\",\"statusMsg\":\"message sent\"},\
+            {\"statusCode\":\"MS-104\",\"edgeAgentPayload\":\"{\\\"attr\\\":\\\"value\\\"}\",\"sendStatusCode\":\"MSS-101\",\"typ\":\"claimOffer\",\"statusMsg\":\"message accepted\",\"uid\":\"6a9u7Jt\",\"refMsgId\":\"CKrG14Z\"},\
+            {\"msg_type\":\"CLAIM_REQUEST\",\"typ\":\"claimReq\",\"edgeAgentPayload\":\"{\\\"blinded_ms\\\":{\\\"prover_did\\\":\\\"FQ7wPBUgSPnDGJnS1EYjTK\\\",\\\"u\\\":\\\"923...607\\\",\\\"ur\\\":\\\"null\\\"},\\\"version\\\":\\\"0.1\\\",\\\"mid\\\":\\\"\\\",\\\"to_did\\\":\\\"BnRXf8yDMUwGyZVDkSENeq\\\",\\\"from_did\\\":\\\"GxtnGN6ypZYgEqcftSQFnC\\\",\\\"iid\\\":\\\"cCanHnpFAD\\\",\\\"issuer_did\\\":\\\"QTrbV4raAcND4DWWzBmdsh\\\",\\\"schema_seq_no\\\":48,\\\"optional_data\\\":{\\\"terms_of_service\\\":\\\"<Large block of text>\\\",\\\"price\\\":6}}\"}]}";
+        httpclient::set_next_str_response(response.to_string());
+
         claim.update_state();
-        _m.assert();
         assert_eq!(claim.get_state(), CxsStateType::CxsStateRequestReceived as u32);
         let claim_request = claim.claim_request.clone().unwrap();
         assert_eq!(claim_request.issuer_did, "QTrbV4raAcND4DWWzBmdsh");
@@ -879,14 +867,12 @@ mod tests {
     #[test]
     fn test_issuer_claim_can_build_claim_from_correct_parts() {
         let test_name = "test_issuer_claim_can_build_from_correct_parts";
-        ::utils::logger::LoggerUtils::init();
         let schema_str = SCHEMA;
         let mut issuer_claim = create_standard_issuer_claim();
         let issuer_did = "NcYxiDXkpYi6ov5FcYDi1e".to_owned();
         issuer_claim.claim_id = String::from(DEFAULT_CLAIM_ID);
         assert_eq!(issuer_claim.claim_id, DEFAULT_CLAIM_ID);
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-        settings::set_config_value(settings::CONFIG_AGENT_ENDPOINT, mockito::SERVER_URL);
         settings::set_config_value(settings::CONFIG_ENTERPRISE_DID, &issuer_did);
         wallet::init_wallet(test_name).unwrap();
         let wallet_handle = wallet::get_wallet_handle();
@@ -918,7 +904,6 @@ mod tests {
     #[test]
     fn test_issuer_claim_request_changes_reflect_in_claim_payload() {
         // TODO: Is this duplicate of the above test?
-        ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         settings::set_config_value(settings::CONFIG_ENTERPRISE_DID, "NcYxiDXkpYi6ov5FcYDi1e");
@@ -952,7 +937,6 @@ mod tests {
 
     #[test]
     fn basic_add_attribute_encoding() {
-        ::utils::logger::LoggerUtils::init();
         // FIXME Make this a real test and add additional test for create_attributes_encodings
         let issuer_claim = create_standard_issuer_claim();
         match issuer_claim.create_attributes_encodings() {
@@ -998,7 +982,6 @@ mod tests {
 
     #[test]
     fn test_that_test_mode_enabled_bypasses_libindy_create_claim(){
-        ::utils::logger::LoggerUtils::init();
         let test_name = "test_that_TEST_MODE_ENABLED_bypasses_libindy_create_claim";
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
