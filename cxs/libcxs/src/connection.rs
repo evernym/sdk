@@ -247,7 +247,7 @@ pub fn update_agent_profile(handle: u32) -> Result<u32, u32> {
 //       mock the agency during the connection phase
 //
 // TODO: This should take a ref?
-pub fn create_connection(source_id: String) -> u32 {
+fn create_connection(source_id: String) -> u32 {
     let new_handle = rand::thread_rng().gen::<u32>();
 
     info!("creating connection with handle {} and id {}", new_handle, source_id);
@@ -327,7 +327,10 @@ pub fn update_state(handle: u32) -> Result<u32, u32> {
         .agent_did(&agent_did)
         .agent_vk(&agent_vk)
         .send_enc() {
-        Err(_) => {Err(error::POST_MSG_FAILURE.code_num)}
+        Err(x) => {
+            error!("could not update state for handle {}: {}",  handle, x);
+            Err(error::POST_MSG_FAILURE.code_num)
+        }
         Ok(response) => {
             info!("update state response: {}", response[0]);
             if response[0].contains("MS-104") { set_state(handle, CxsStateType::CxsStateAccepted); }

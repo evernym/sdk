@@ -238,41 +238,18 @@ impl GeneralMessage for SendInvite{
         let signature = crypto::sign(wallet::get_wallet_handle(), &self.to_did, signature.as_bytes())?;
         let signature = base64::encode(&signature);
         self.payload.msg_detail_payload.key_proof.signature = signature.to_string();
-        match serde_json::to_string(&self.payload.msg_detail_payload) {
-            Ok(x) => info!("message details: {}", x),
-            Err(_) => (),
-        }
+
         let create = encode::to_vec_named(&self.payload.create_payload).unwrap();
         let details = encode::to_vec_named(&self.payload.msg_detail_payload).unwrap();
         let send = encode::to_vec_named(&self.payload.send_payload).unwrap();
 
-        info!("create msg: {:?}", create);
-        info!("detail msg: {:?}", details);
-        info!("send msg: {:?}", send);
         let mut bundle = Bundled::create(create);
         bundle.bundled.push(details);
         bundle.bundled.push(send);
 
         let msg = bundle.encode()?;
 
-        info!("pre encryption msg: {:?}", msg);
-        let my_vk = settings::get_config_value(settings::CONFIG_ENTERPRISE_VERKEY).unwrap();
-        let msg = crypto::prep_msg(wallet::get_wallet_handle(), &my_vk, &self.agent_vk, &msg[..])?;
-
-        /* forward to other agent */
-        let inner = Forward {
-            msg_type: MsgType { name: "FWD".to_string(), ver: "1.0".to_string(), },
-            fwd: self.payload.msg_detail_payload.key_proof.agent_did.to_string(),
-            msg,
-        };
-
-        let inner = encode::to_vec_named(&inner).unwrap();
-        info!("inner forward: {:?}", inner);
-
-        let msg = Bundled::create(inner).encode()?;
-
-        let to_did = settings::get_config_value(settings::CONFIG_AGENT_PAIRWISE_DID).unwrap();
-        bundle_for_agency(msg, &to_did)
+        bundle_for_agent(msg, &self.payload.msg_detail_payload.key_proof.agent_did, &self.agent_vk)
     }
 
     fn send_enc(&mut self) -> Result<Vec<String>, u32> {

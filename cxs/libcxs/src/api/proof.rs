@@ -376,8 +376,7 @@ mod tests {
         };
         assert_eq!(proof::get_state(handle),CxsStateType::CxsStateInitialized as u32);
 
-        let connection_handle = connection::create_connection("test_send_proof_request".to_owned());
-        connection::set_pw_did(connection_handle, "XXFh7yBzrpJQmNyZzgoTqB");
+        let connection_handle = connection::build_connection("test_send_proof_request".to_owned()).unwrap();
         assert_eq!(cxs_proof_send_request(0,handle,connection_handle,Some(send_offer_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(1000));
         assert_eq!(proof::get_state(handle),CxsStateType::CxsStateOfferSent as u32);

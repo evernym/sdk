@@ -7,7 +7,6 @@ use settings;
 use utils::httpclient;
 use utils::error;
 use messages::*;
-use utils::constants::*;
 
 #[derive(Clone, Serialize, Debug, PartialEq, PartialOrd)]
 #[serde(rename_all = "camelCase")]
@@ -119,24 +118,7 @@ impl GeneralMessage for GetMessages{
 
         let msg = Bundled::create(data).encode()?;
 
-        info!("pre encryption msg: {:?}", msg);
-        let my_vk = settings::get_config_value(settings::CONFIG_ENTERPRISE_VERKEY).unwrap();
-        let msg = crypto::prep_msg(wallet::get_wallet_handle(), &my_vk, &self.agent_vk, &msg[..])?;
-
-        /* forward to other agent */
-        let inner = Forward {
-            msg_type: MsgType { name: "FWD".to_string(), ver: "1.0".to_string(), },
-            fwd: self.agent_did.to_string(),
-            msg,
-        };
-
-        let inner = encode::to_vec_named(&inner).unwrap();
-        info!("inner forward: {:?}", inner);
-
-        let msg = Bundled::create(inner).encode()?;
-
-        let to_did = settings::get_config_value(settings::CONFIG_AGENT_PAIRWISE_DID).unwrap();
-        bundle_for_agency(msg, &to_did)
+        bundle_for_agent(msg, &self.agent_did, &self.agent_vk)
     }
 
     fn send_enc(&mut self) -> Result<Vec<String>, u32> {
@@ -146,10 +128,6 @@ impl GeneralMessage for GetMessages{
             Ok(x) => x,
             Err(x) => return Err(x),
         };
-
-        /*
-        if settings::test_agency_mode_enabled() { httpclient::set_next_u8_response(CXN_ACCEPTED_MESSAGE.to_vec()); }
-        */
 
         let mut result = Vec::new();
         match httpclient::post_u8(&data, &url) {

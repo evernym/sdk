@@ -63,9 +63,10 @@ impl Proof {
 //            .requested_predicates(&self.requested_predicates)
             .serialize_message()?;
 
+        let data = connection::encrypt_payload(connection_handle, &proof_request)?;
         if settings::test_agency_mode_enabled() { httpclient::set_next_str_response("{\"uid\":\"6a9u7Jt\",\"typ\":\"proofRequest\",\"statusCode\":\"MS-101\"}".to_string()) }
 
-        match messages::send_message().to(&self.prover_did).msg_type("proofReq").edge_agent_payload(&proof_request).send() {
+        match messages::send_message().to(&self.prover_did).msg_type("proofReq").edge_agent_payload(&data).send() {
             Ok(response) => {
                 self.msg_uid = get_offer_details(&response)?;
                 self.state = CxsStateType::CxsStateOfferSent;
@@ -291,7 +292,7 @@ mod tests {
     use super::*;
     use std::thread;
     use std::time::Duration;
-    use connection::create_connection;
+    use connection::build_connection;
 
     static REQUESTED_ATTRS: &'static str = "[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]";
     static REQUESTED_PREDICATES: &'static str = "[{\"attr_name\":\"age\",\"p_type\":\"GE\",\"value\":18,\"schema_seq_no\":1,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\"}]";
@@ -375,8 +376,7 @@ mod tests {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
 
-        let connection_handle = create_connection("test_send_proof_request".to_owned());
-        connection::set_pw_did(connection_handle, "8XFh8yBzrpJQmNyZzgoTqB");
+        let connection_handle = build_connection("test_send_proof_request".to_owned()).unwrap();
 
         let handle = match create_proof(Some("1".to_string()),
                                         REQUESTED_ATTRS.to_owned(),
