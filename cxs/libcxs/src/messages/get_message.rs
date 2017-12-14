@@ -158,8 +158,11 @@ pub struct DeliveryDetails {
 #[serde(rename_all = "camelCase")]
 pub struct Message {
     status_code: String,
+    payload: Vec<u8>,
+    #[serde(rename = "senderDID")]
     sender_did: String,
     uid: String,
+    #[serde(rename = "type")]
     msg_type: String,
     ref_msg_id: Option<String>,
     delivery_details: Vec<DeliveryDetails>,
@@ -168,6 +171,7 @@ pub struct Message {
 #[derive(Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct GetMessagesResponse {
+    #[serde(rename = "@type")]
     msg_type: MsgType,
     msgs: Vec<Message>,
 }
@@ -175,6 +179,7 @@ pub struct GetMessagesResponse {
 fn parse_get_messages_response(response: Vec<u8>) -> Result<String, u32> {
     let data = unbundle_from_agency(response)?;
 
+    info!("get_message response: {:?}", data[0]);
     let mut de = Deserializer::new(&data[0][..]);
     let response: GetMessagesResponse = match Deserialize::deserialize(&mut de) {
         Ok(x) => x,
@@ -195,6 +200,7 @@ fn parse_get_messages_response(response: Vec<u8>) -> Result<String, u32> {
 mod tests {
     use super::*;
     use messages::get_messages;
+    use utils::constants::{GET_MESSAGES_RESPONSE, GET_MESSAGES_RESPONSE_STR};
 
     #[test]
     fn test_get_messages_set_values_and_serialize(){
@@ -237,12 +243,58 @@ mod tests {
     #[test]
     fn test_parse_get_messages_response() {
         settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "indy");
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
 
-        let data = vec![129, 167, 98, 117, 110, 100, 108, 101, 100, 145, 220, 1, 169, 204, 130, 204, 167, 109, 115, 103, 84, 121, 112, 101, 204, 130, 204, 164, 110, 97, 109, 101, 204, 164, 77, 83, 71, 83, 204, 163, 118, 101, 114, 204, 163, 49, 46, 48, 204, 164, 109, 115, 103, 115, 204, 146, 204, 134, 204, 170, 115, 116, 97, 116, 117, 115, 67, 111, 100, 101, 204, 167, 77, 68, 83, 45, 49, 48, 50, 204, 169, 115, 101, 110, 100, 101, 114, 68, 105, 100, 204, 182, 71, 77, 90, 118, 90, 55, 112, 116, 50, 121, 105, 90, 101, 57, 83, 112, 68, 69, 88, 120, 116, 77, 204, 163, 117, 105, 100, 204, 167, 122, 109, 106, 105, 122, 109, 106, 204, 167, 109, 115, 103, 84, 121, 112, 101, 204, 167, 99, 111, 110, 110, 82, 101, 113, 204, 168, 114, 101, 102, 77, 115, 103, 73, 100, 204, 192, 204, 175, 100, 101, 108, 105, 118, 101, 114, 121, 68, 101, 116, 97, 105, 108, 115, 204, 145, 204, 131, 204, 162, 116, 111, 204, 170, 52, 48, 52, 53, 57, 52, 51, 54, 57, 54, 204, 170, 115, 116, 97, 116, 117, 115, 67, 111, 100, 101, 204, 167, 77, 68, 83, 45, 49, 48, 50, 204, 179, 108, 97, 115, 116, 85, 112, 100, 97, 116, 101, 100, 68, 97, 116, 101, 84, 105, 109, 101, 204, 189, 50, 48, 49, 55, 45, 49, 50, 45, 49, 50, 84, 48, 52, 58, 52, 57, 58, 48, 57, 46, 51, 53, 51, 90, 91, 85, 84, 67, 93, 204, 134, 204, 170, 115, 116, 97, 116, 117, 115, 67, 111, 100, 101, 204, 167, 77, 68, 83, 45, 49, 48, 52, 204, 169, 115, 101, 110, 100, 101, 114, 68, 105, 100, 204, 182, 71, 77, 90, 118, 90, 55, 112, 116, 50, 121, 105, 90, 101, 57, 83, 112, 68, 69, 88, 120, 116, 77, 204, 163, 117, 105, 100, 204, 167, 121, 122, 106, 107, 121, 106, 114, 204, 167, 109, 115, 103, 84, 121, 112, 101, 204, 167, 99, 111, 110, 110, 82, 101, 113, 204, 168, 114, 101, 102, 77, 115, 103, 73, 100, 204, 167, 110, 122, 102, 107, 111, 100, 101, 204, 175, 100, 101, 108, 105, 118, 101, 114, 121, 68, 101, 116, 97, 105, 108, 115, 204, 145, 204, 131, 204, 162, 116, 111, 204, 170, 52, 48, 52, 53, 57, 52, 51, 54, 57, 54, 204, 170, 115, 116, 97, 116, 117, 115, 67, 111, 100, 101, 204, 167, 77, 68, 83, 45, 49, 48, 50, 204, 179, 108, 97, 115, 116, 85, 112, 100, 97, 116, 101, 100, 68, 97, 116, 101, 84, 105, 109, 101, 204, 189, 50, 48, 49, 55, 45, 49, 50, 45, 49, 50, 84, 48, 52, 58, 52, 57, 58, 48, 57, 46, 56, 49, 57, 90, 91, 85, 84, 67, 93];
+        let result = parse_get_messages_response(GET_MESSAGES_RESPONSE.to_vec()).unwrap();
+        assert_eq!(result, GET_MESSAGES_RESPONSE_STR);
+    }
 
-        let result = parse_get_messages_response(data).unwrap();
-        let expected_result = "{\"msgType\":{\"name\":\"MSGS\",\"ver\":\"1.0\"},\"msgs\":[{\"statusCode\":\"MDS-102\",\"senderDid\":\"GMZvZ7pt2yiZe9SpDEXxtM\",\"uid\":\"zmjizmj\",\"msgType\":\"connReq\",\"refMsgId\":null,\"deliveryDetails\":[{\"to\":\"4045943696\",\"statusCode\":\"MDS-102\",\"lastUpdatedDateTime\":\"2017-12-12T04:49:09.353Z[UTC]\"}]},{\"statusCode\":\"MDS-104\",\"senderDid\":\"GMZvZ7pt2yiZe9SpDEXxtM\",\"uid\":\"yzjkyjr\",\"msgType\":\"connReq\",\"refMsgId\":\"nzfkode\",\"deliveryDetails\":[{\"to\":\"4045943696\",\"statusCode\":\"MDS-102\",\"lastUpdatedDateTime\":\"2017-12-12T04:49:09.819Z[UTC]\"}]}]}";
-        assert_eq!(result, expected_result);
+    #[test]
+    fn test_build_response() {
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
+        let delivery_details1 = DeliveryDetails {
+            to: "3Xk9vxK9jeiqVaCPrEQ8bg".to_string(),
+            status_code: "MDS-101".to_string(),
+            last_updated_date_time: "2017-12-14T03:35:20.444Z[UTC]".to_string(),
+        };
+
+        let delivery_details2 = DeliveryDetails {
+            to: "3Xk9vxK9jeiqVaCPrEQ8bg".to_string(),
+            status_code: "MDS-101".to_string(),
+            last_updated_date_time: "2017-12-14T03:35:20.500Z[UTC]".to_string(),
+        };
+
+        let msg1 = Message {
+            status_code: "MS-104".to_string(),
+            payload: vec![99, 108, 97, 105, 109, 45, 100, 97, 116, 97],
+            sender_did: "WVsWVh8nL96BE3T3qwaCd5".to_string(),
+            uid: "mmi3yze".to_string(),
+            msg_type: "connReq".to_string(),
+            ref_msg_id: None,
+            delivery_details: vec![delivery_details1],
+        };
+        let msg2 = Message {
+            status_code: "MS-101".to_string(),
+            payload: vec![99, 108, 97, 105, 109, 45, 100, 97, 116, 97],
+            sender_did: "WVsWVh8nL96BE3T3qwaCd5".to_string(),
+            uid: "zjcynmq".to_string(),
+            msg_type: "claimOffer".to_string(),
+            ref_msg_id: None,
+            delivery_details: vec![delivery_details2],
+        };
+        let response = GetMessagesResponse {
+            msg_type: MsgType { name: "MSGS".to_string(), ver: "1.0".to_string(), },
+            msgs: vec![msg1, msg2],
+        };
+
+        let data = encode::to_vec_named(&response).unwrap();
+
+        println!("generated response: {:?}", data);
+        let bundle = Bundled::create(data).encode().unwrap();
+        println!("bundle: {:?}", bundle);
+        let result = parse_get_messages_response(bundle).unwrap();
+        println!("response: {}", result);
+
     }
 }
