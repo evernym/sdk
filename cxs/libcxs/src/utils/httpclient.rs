@@ -14,7 +14,7 @@ lazy_static!{
 
 pub fn post(body_content: &str, url: &str) -> Result<String,String> {
     let client = reqwest::Client::new();
-    info!("Posting \"{}\" to: \"{}\"", body_content, url);
+    debug!("Posting \"{}\" to: \"{}\"", body_content, url);
     if settings::test_agency_mode_enabled() {return Ok(NEXT_STR_RESPONSE.lock().unwrap().pop().unwrap_or("test_mode_response".to_owned()));}
     let mut response = match  client.post(url).body(body_content.to_owned()).send() {
         Ok(result) => result,
@@ -26,7 +26,7 @@ pub fn post(body_content: &str, url: &str) -> Result<String,String> {
 
     let mut content = String::new();
     match response.read_to_string(&mut content) {
-        Ok(_) => {info!("Response: {}", content); Ok(content.to_owned())},
+        Ok(_) => Ok(content.to_owned()),
         Err(_) => Err("could not read response".to_string()),
     }
 }
@@ -49,7 +49,7 @@ pub fn post_u8(body_content: &Vec<u8>, url: &str) -> Result<Vec<u8>,String> {
 
     let mut content = Vec::new();
     match response.read_to_end(&mut content) {
-        Ok(x) => {info!("Response: {:?}", content); Ok(content.to_owned())},
+        Ok(x) => Ok(content.to_owned()),
         Err(_) => Err("could not read response".to_string()),
     }
 }

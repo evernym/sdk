@@ -45,7 +45,7 @@ struct Connection {
 
 impl Connection {
     fn connect(&mut self, options: String) -> Result<u32,u32> {
-        info!("handle {} called connect", self.handle);
+        info!("\"cxs_connection_connect\" for handle {}", self.handle);
         if self.state != CxsStateType::CxsStateInitialized {
             info!("connection {} in state {} not ready to connect",self.handle,self.state as u32);
             return Err(error::NOT_READY.code_num);
@@ -210,6 +210,7 @@ pub fn get_state(handle: u32) -> u32 {
 }
 
 pub fn create_agent_pairwise(handle: u32) -> Result<u32, u32> {
+    info!("creating pairwise keys on agent for connection handle {}", handle);
     let enterprise_did = settings::get_config_value(settings::CONFIG_ENTERPRISE_DID_AGENCY).unwrap();
     let pw_did = get_pw_did(handle)?;
     let pw_verkey = get_pw_verkey(handle)?;
@@ -229,6 +230,7 @@ pub fn create_agent_pairwise(handle: u32) -> Result<u32, u32> {
 }
 
 pub fn update_agent_profile(handle: u32) -> Result<u32, u32> {
+    info!("updating agent config for connection handle {}", handle);
     let pw_did = get_pw_did(handle)?;
 
     match messages::update_data()
@@ -314,6 +316,7 @@ pub fn build_connection(source_id: String) -> Result<u32,u32> {
 }
 
 pub fn update_state(handle: u32) -> Result<u32, u32> {
+    info!("updating state for connection handle {}", handle);
     let pw_did = get_pw_did(handle)?;
     let pw_vk = get_pw_verkey(handle)?;
     let agent_did = get_agent_did(handle)?;
@@ -402,10 +405,9 @@ pub fn encrypt_payload(handle: u32, payload: &str) -> Result<Vec<u8>, u32> {
 
 #[cfg(test)]
 mod tests {
-    use std::thread;
-    use std::time::Duration;
     use utils::constants::*;
     use utils::httpclient;
+    use issuer_claim;
     use super::*;
 
     #[test]
@@ -557,9 +559,12 @@ mod tests {
         let handle = build_connection("test_real_connection_create".to_owned()).unwrap();
         connect(handle,"{ \"phone\": \"8012100201\" }".to_string()).unwrap();
 
-        thread::sleep(Duration::from_millis(900));
         let string = to_string(handle).unwrap();
         println!("my connection: {}", string);
         update_state(handle).unwrap();
+
+        let issuer_handle = issuer_claim::from_string(DEFAULT_SERIALIZED_ISSUER_CLAIM).unwrap();
+        assert_eq!(issuer_claim::get_state(issuer_handle),CxsStateType::CxsStateInitialized as u32);
+        assert_eq!(issuer_claim::send_claim_offer(issuer_handle,handle).unwrap(), error::SUCCESS.code_num);
     }
 }

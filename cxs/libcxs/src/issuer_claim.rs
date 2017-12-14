@@ -96,6 +96,7 @@ impl IssuerClaim {
     }
 
     fn send_claim_offer(&mut self, connection_handle: u32) -> Result<u32, u32> {
+        info!("sending claim offer for issuer_claim handle {} to connection handle {}", self.handle, connection_handle);
         if self.state != CxsStateType::CxsStateInitialized {
             warn!("claim {} has invalid state {} for sending claimOffer", self.handle, self.state as u32);
             return Err(error::NOT_READY.code_num);
@@ -140,6 +141,7 @@ impl IssuerClaim {
     }
 
     fn send_claim(&mut self, connection_handle: u32) -> Result<u32, u32> {
+        info!("sending claim for issuer_claim handle {} to connection handle {}", self.handle, connection_handle);
         if self.state != CxsStateType::CxsStateRequestReceived {
             warn!("claim {} has invalid state {} for sending claim", self.handle, self.state as u32);
             return Err(error::NOT_READY.code_num);
@@ -306,6 +308,7 @@ impl IssuerClaim {
     }
 
     fn get_claim_offer_status(&mut self) {
+        info!("getting outstanding claim messages issuer_claim handle {}", self.handle);
         if self.state == CxsStateType::CxsStateRequestReceived {
             return;
         }
@@ -456,7 +459,7 @@ pub fn create_claim_payload_using_wallet<'a>(claim_id: &str, claim_req: &ClaimRe
         return Err(error::UNKNOWN_ERROR.code_num);
     };
 
-    info!("xclaim_json: {}", xclaim_json);
+    debug!("xclaim_json: {}", xclaim_json);
     // add required fields for Consumer API
 
     Ok(xclaim_json)
@@ -635,8 +638,6 @@ pub fn convert_to_map(s:&str) -> Result<serde_json::Map<String, serde_json::Valu
 mod tests {
     use settings;
     use connection::build_connection;
-    use std::thread;
-    use std::time::Duration;
     use utils::signus::SignusUtils;
     use utils::wallet::init_wallet;
     use utils::issuer_claim::tests::{put_claim_def_in_issuer_wallet, create_default_schema};
@@ -766,9 +767,7 @@ mod tests {
                                          "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
                                          "{\"attr\":\"value\"}".to_owned()).unwrap();
 
-        thread::sleep(Duration::from_millis(500));
         assert_eq!(send_claim_offer(handle, connection_handle).unwrap(), error::SUCCESS.code_num);
-        thread::sleep(Duration::from_millis(500));
         assert_eq!(get_state(handle), CxsStateType::CxsStateOfferSent as u32);
         assert_eq!(get_offer_uid(handle).unwrap(), "ntc2ytb");
     }
@@ -938,10 +937,10 @@ mod tests {
         };
 
         let (n1, n2) = normalize_claims(&claim_payload, &X_CLAIM_JSON);
-        info!("claim_payload: {}", claim_payload);
+        debug!("claim_payload: {}", claim_payload);
         assert_eq!(n1, n2);
         let claim_payload_with_from_did = append_value(&claim_payload, "from_did", &settings::CONFIG_ENTERPRISE_DID);
-        info!("claim_payload_with_from_did: {:?}",claim_payload_with_from_did.unwrap());
+        debug!("claim_payload_with_from_did: {:?}",claim_payload_with_from_did.unwrap());
 
         wallet::delete_wallet("test_issuer_claim_request_changes_reflect_in_claim").unwrap();
     }

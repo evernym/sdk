@@ -285,9 +285,9 @@ mod tests {
     use utils::issuer_claim::tests::put_claim_def_in_issuer_wallet;
     use utils::issuer_claim::tests::create_default_schema;
     use utils::wallet::get_wallet_handle;
+    use utils::constants::DEFAULT_SERIALIZED_ISSUER_CLAIM;
     use api::cxs::cxs_init;
 
-    static DEFAULT_SERIALIZED_ISSUER_CLAIM: &str = "{\"claim_id\":\"some claim id testing\",\"claim_name\":\"claim name\",\"source_id\":\"test_claim_serialize\",\"handle\":261385873,\"claim_attributes\":\"{\\\"attr\\\":\\\"value\\\"}\",\"msg_uid\":\"\",\"schema_seq_no\":32,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"issued_did\":\"\",\"state\":1,\"claim_request\":null,\"ref_msg_id\":\"abc123\"}";
     static DEFAULT_CLAIM_NAME: &str = "Claim Name Default";
     static DEFAULT_DID: &str = "8XFh8yBzrpJQmNyZzgoTqB";
     static DEFAULT_ATTR: &str = "{\"attr\":\"value\"}";

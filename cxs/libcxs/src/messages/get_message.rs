@@ -179,7 +179,7 @@ pub struct GetMessagesResponse {
 fn parse_get_messages_response(response: Vec<u8>) -> Result<String, u32> {
     let data = unbundle_from_agency(response)?;
 
-    info!("get_message response: {:?}", data[0]);
+    debug!("get_message response: {:?}", data[0]);
     let mut de = Deserializer::new(&data[0][..]);
     let response: GetMessagesResponse = match Deserialize::deserialize(&mut de) {
         Ok(x) => x,

@@ -135,7 +135,7 @@ impl GeneralMessage for CreateKeyMsg  {
                 return Err(error::INVALID_MSGPACK.code_num);
             },
         };
-        info!("create_keys inner bundle: {:?}", data);
+        debug!("create_keys inner bundle: {:?}", data);
         let msg = Bundled::create(data).encode()?;
 
         let to_did = settings::get_config_value(settings::CONFIG_AGENT_PAIRWISE_DID).unwrap();
@@ -169,7 +169,7 @@ impl GeneralMessage for CreateKeyMsg  {
 pub fn parse_create_keys_response(response: Vec<u8>) -> Result<(String, String), u32> {
     let data = unbundle_from_agency(response)?;
 
-    info!("create keys response inner bundle: {:?}", data[0]);
+    debug!("create keys response inner bundle: {:?}", data[0]);
     let mut de = Deserializer::new(&data[0][..]);
     let response: CreateKeyResponse = Deserialize::deserialize(&mut de).unwrap();
 

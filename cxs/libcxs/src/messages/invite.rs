@@ -239,6 +239,7 @@ impl GeneralMessage for SendInvite{
         let signature = base64::encode(&signature);
         self.payload.msg_detail_payload.key_proof.signature = signature.to_string();
 
+        info!("connection invitation details: {}", serde_json::to_string(&self.payload.msg_detail_payload).unwrap_or("failure".to_string()));
         let create = encode::to_vec_named(&self.payload.create_payload).unwrap();
         let details = encode::to_vec_named(&self.payload.msg_detail_payload).unwrap();
         let send = encode::to_vec_named(&self.payload.send_payload).unwrap();
@@ -282,9 +283,7 @@ fn parse_send_invite_response(response: Vec<u8>) -> Result<String, u32> {
         error!("expected 3 messages (got {})", data.len());
         return Err(error::INVALID_MSGPACK.code_num);
     }
-    info!("1st message: {:?}", data[0]);
-    info!("2nd message: {:?}", data[1]);
-    info!("3rd message: {:?}", data[2]);
+    debug!("invite details response: {:?}", data[1]);
     let mut de = Deserializer::new(&data[1][..]);
     let response: MsgDetailResponse = match Deserialize::deserialize(&mut de) {
         Ok(x) => x,

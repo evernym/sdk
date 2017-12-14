@@ -137,6 +137,7 @@ impl GeneralMessage for SendMessage{
         let detail = encode::to_vec_named(&detail).unwrap();
         let send = encode::to_vec_named(&send).unwrap();
 
+        debug!("SendMessage details: {:?}", detail);
         let mut bundle = Bundled::create(create);
         bundle.bundled.push(detail);
         bundle.bundled.push(send);

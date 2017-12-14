@@ -120,7 +120,7 @@ impl GeneralMessage for UpdateProfileData{
             return Err(self.validate_rc)
         }
         let data = encode::to_vec_named(&self.payload).unwrap();
-        info!("update profile inner bundle: {:?}", data);
+        debug!("update profile inner bundle: {:?}", data);
         let msg = Bundled::create(data).encode()?;
 
         let to_did = settings::get_config_value(settings::CONFIG_AGENT_PAIRWISE_DID).unwrap();
