@@ -190,6 +190,14 @@ impl SendInvite{
             }
         }
     }
+
+    pub fn generate_signature(&mut self) -> Result<u32, u32> {
+        let signature = format!("{}{}", self.payload.msg_detail_payload.key_proof.agent_did, self.payload.msg_detail_payload.key_proof.agent_delegated_key);
+        let signature = crypto::sign(wallet::get_wallet_handle(), &self.to_did, signature.as_bytes())?;
+        let signature = base64::encode(&signature);
+        self.payload.msg_detail_payload.key_proof.signature = signature.to_string();
+        Ok(error::SUCCESS.code_num)
+    }
 }
 
 //Todo: Every GeneralMessage extension, duplicates code
@@ -234,10 +242,7 @@ impl GeneralMessage for SendInvite{
             return Err(self.validate_rc)
         }
 
-        let signature = format!("{}{}", self.payload.msg_detail_payload.key_proof.agent_did, self.payload.msg_detail_payload.key_proof.agent_delegated_key);
-        let signature = crypto::sign(wallet::get_wallet_handle(), &self.to_did, signature.as_bytes())?;
-        let signature = base64::encode(&signature);
-        self.payload.msg_detail_payload.key_proof.signature = signature.to_string();
+        self.generate_signature()?;
 
         info!("connection invitation details: {}", serde_json::to_string(&self.payload.msg_detail_payload).unwrap_or("failure".to_string()));
         let create = encode::to_vec_named(&self.payload.create_payload).unwrap();
@@ -250,7 +255,7 @@ impl GeneralMessage for SendInvite{
 
         let msg = bundle.encode()?;
 
-        bundle_for_agent(msg, &self.payload.msg_detail_payload.key_proof.agent_did, &self.agent_vk)
+        bundle_for_agent(msg, &self.agent_did, &self.agent_vk)
     }
 
     fn send_enc(&mut self) -> Result<Vec<String>, u32> {

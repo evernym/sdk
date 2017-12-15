@@ -116,6 +116,8 @@ impl IssuerClaim {
             Err(_) => return Err(error::INVALID_JSON.code_num)
         };
 
+        debug!("claim offer data: {}", payload);
+
         if settings::test_agency_mode_enabled() { httpclient::set_next_u8_response(SEND_CLAIM_OFFER_RESPONSE.to_vec()); }
 
         let data = connection::encrypt_payload(connection_handle, &payload)?;
@@ -178,6 +180,8 @@ impl IssuerClaim {
             data = append_value(&data, "msg_type", "CLAIM")?;
 
         }
+
+        debug!("claim data: {}", data);
 
         let data = connection::encrypt_payload(connection_handle, &data)?;
 

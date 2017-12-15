@@ -143,7 +143,7 @@ impl GeneralMessage for SendMessage{
         bundle.bundled.push(send);
 
         let msg = bundle.encode()?;
-        bundle_for_agent(msg, &self.to_did, &self.agent_vk)
+        bundle_for_agent(msg, &self.agent_did, &self.agent_vk)
     }
 
     fn send_enc(&mut self) -> Result<Vec<String>, u32> {
