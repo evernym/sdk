@@ -38,7 +38,6 @@ extern {
                                                       valid: bool)>) -> i32;
 }
 
-//Todo: 1. Change all names of proof to proof
 //Todo: 2. Refactor the proof class to handle the json better
 //Todo: 3. Accept the Proof when Consumer Team sends it
 //Todo: 4. Write more Unit tests in CXS and Wrapper for Accepting the Proof
@@ -54,8 +53,6 @@ struct ProofRequester {
     prover_did: String,
     state: CxsStateType,
     proof_state: ProofStateType,
-    tid: u32,
-    mid: u32,
     name: String,
     version: String,
     nonce: String,
@@ -316,8 +313,6 @@ pub fn create_proof(source_id: Option<String>,
         prover_did: String::new(),
         state: CxsStateType::CxsStateNone,
         proof_state: ProofStateType::ProofUndefined,
-        tid: 0,
-        mid: 0,
         name,
         version: String::from("1.0"),
         nonce: generate_nonce().to_string(),
@@ -473,7 +468,7 @@ mod tests {
     use std::time::Duration;
     use proof_offer::tests::create_default_proof;
     use connection::create_connection;
-    static DEFAULT_PROOF_STR: &str = r#"{"source_id":"","handle":486356518,"requested_attrs":"[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]","requested_predicates":"[{\"attr_name\":\"age\",\"p_type\":\"GE\",\"value\":18,\"schema_seq_no\":1,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\"}]","msg_uid":"","ref_msg_id":"","requester_did":"","prover_did":"","state":1,"proof_state":0,"tid":0,"mid":0,"name":"Optional","version":"1.0","nonce":"1067639606","proof":null}"#;
+    static DEFAULT_PROOF_STR: &str = r#"{"source_id":"","handle":486356518,"requested_attrs":"[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]","requested_predicates":"[{\"attr_name\":\"age\",\"p_type\":\"GE\",\"value\":18,\"schema_seq_no\":1,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\"}]","msg_uid":"","ref_msg_id":"","requester_did":"","prover_did":"","state":1,"proof_state":0,"name":"Optional","version":"1.0","nonce":"1067639606","proof":null}"#;
     static REQUESTED_ATTRS: &'static str = "[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]";
     static REQUESTED_PREDICATES: &'static str = "[{\"attr_name\":\"age\",\"p_type\":\"GE\",\"value\":18,\"schema_seq_no\":1,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\"}]";
     use utils::constants::{ PROOF_REQ_JSON, PROOF_JSON, SCHEMAS_JSON, CLAIM_DEFS_JSON, REVOC_REGS_JSON};
@@ -660,8 +655,6 @@ mod tests {
             prover_did: String::from("GxtnGN6ypZYgEqcftSQFnC"),
             state: CxsStateType::CxsStateOfferSent,
             proof_state: ProofStateType::ProofUndefined,
-            tid: 0,
-            mid: 0,
             name:String::new(),
             version: String::from("1.0"),
             nonce: generate_nonce().to_string(),
@@ -730,8 +723,6 @@ mod tests {
 //            prover_did: String::from("GxtnGN6ypZYgEqcftSQFnC"),
 //            state: CxsStateType::CxsStateOfferSent,
 //            proof_state: ProofStateType::ProofUndefined,
-//            tid: 0,
-//            mid: 0,
 //            name:String::new(),
 //            version: String::from("1.0"),
 //            nonce: generate_nonce().to_string(),
