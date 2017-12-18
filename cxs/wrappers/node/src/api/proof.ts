@@ -189,7 +189,7 @@ export class Proof extends CXSBase {
     try {
       const proof = await createFFICallbackPromise<string>(
           (resolve, reject, cb) => {
-            const rc = rustAPI().cxs_proof_get_proof_offer(0, this.handle, connection.handle, cb)
+            const rc = rustAPI().cxs_get_proof(0, this.handle, connection.handle, cb)
             if (rc) {
               reject(rc)
             }

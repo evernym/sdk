@@ -240,7 +240,7 @@ pub extern fn cxs_proof_send_request(command_handle: u32,
 /// #Returns
 /// Error code as a u32
 #[no_mangle]
-pub extern fn cxs_proof_get_proof_offer(command_handle: u32,
+pub extern fn cxs_get_proof(command_handle: u32,
                                         proof_handle: u32,
                                         connection_handle: u32,
                                         cb: Option<extern fn(xcommand_handle: u32, err: u32, response_data: *const c_char)>) -> u32 {
@@ -469,7 +469,7 @@ mod tests {
         connection::set_pw_did(connection_handle, "XXFh7yBzrpJQmNyZzgoTqB");
 
         thread::sleep(Duration::from_millis(300));
-        let rc = cxs_proof_get_proof_offer(0, handle, connection_handle, Some(get_proof_cb));
+        let rc = cxs_get_proof(0, handle, connection_handle, Some(get_proof_cb));
         assert_eq!(rc, error::NOT_READY.code_num);
         thread::sleep(Duration::from_millis(300));
     }

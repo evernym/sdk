@@ -8,7 +8,7 @@ static SEQUENCE_NUMBER: &'static str = "schema_seq_no";
 static PROVER_DID: &'static str = "prover_did";
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-pub struct ProofOffer{
+pub struct Proof{
     version: String,
     to_did: String,
     from_did: String,
@@ -127,9 +127,9 @@ impl ClaimData {
     }
 }
 
-impl ProofOffer {
-    pub fn new(did: &str) -> ProofOffer {
-        ProofOffer {
+impl Proof {
+    pub fn new(did: &str) -> Proof {
+        Proof {
             version: String::new(),
             to_did: String::new(),
             from_did: String::from(did),
@@ -150,7 +150,7 @@ impl ProofOffer {
         }
     }
 
-    pub fn from_string(s: &str) -> Result<ProofOffer, u32> {
+    pub fn from_string(s: &str) -> Result<Proof, u32> {
         match serde_json::from_str(s){
             Ok(po) => Ok(po),
             Err(_) => {
@@ -158,7 +158,7 @@ impl ProofOffer {
                 Err(error::INVALID_PROOF_OFFER.code_num)},
         }
     }
-    pub fn from_str(payload:&str) -> Result<ProofOffer, u32> {
+    pub fn from_str(payload:&str) -> Result<Proof, u32> {
         match serde_json::from_str(payload) {
             Ok(p) => Ok(p),
             Err(_) => {
@@ -255,7 +255,7 @@ impl ProofOffer {
     }
 }
 
-fn create_from_message(s: &str) -> Result<ProofOffer, u32>{
+fn create_from_message(s: &str) -> Result<Proof, u32>{
    match serde_json::from_str(s) {
        Ok(p) => Ok(p),
        Err(_) => {
@@ -273,23 +273,23 @@ pub mod tests {
     static TEMP_REQUESTER_DID: &'static str = "4reqXeZVm7JZAffAoaNLsb";
     static EXAMPLE_PROOF: &'static str = "{\"msg_type\":\"proof\",\"version\":\"0.1\",\"to_did\":\"BnRXf8yDMUwGyZVDkSENeq\",\"from_did\":\"GxtnGN6ypZYgEqcftSQFnC\",\"proof_request_id\":\"cCanHnpFAD\",\"proofs\":{\"claim::f22cc7c8-924f-4541-aeff-29a9aed9c46b\":{\"proof\":{\"primary_proof\":{\"eq_proof\":{\"revealed_attrs\":{\"state\":\"96473275571522321025213415717206189191162\"},\"a_prime\":\"921....546\",\"e\":\"158....756\",\"v\":\"114....069\",\"m\":{\"address1\":\"111...738\",\"zip\":\"149....066\",\"city\":\"209....294\",\"address2\":\"140....691\"},\"m1\":\"777....518\",\"m2\":\"515....229\"},\"ge_proofs\":[]},\"non_revoc_proof\":null},\"schema_seq_no\":15,\"issuer_did\":\"4fUDR9R7fjwELRvH9JT6HH\"}},\"aggregated_proof\":{\"c_hash\":\"25105671496406009212798488318112715144459298495509265715919744143493847046467\",\"c_list\":[[72,245,38,\"....\",46,195,18]]},\"requested_proof\":{\"revealed_attrs\":{\"attr_key_id\":[\"claim::f22cc7c8-924f-4541-aeff-29a9aed9c46b\",\"UT\",\"96473275571522321025213415717206189191162\"]},\"unrevealed_attrs\":{},\"self_attested_attrs\":{},\"predicates\":{}}}";
     static MSG_FROM_API: &str = r#"{"msg_type":"proof","version":"0.1","to_did":"BnRXf8yDMUwGyZVDkSENeq","from_did":"GxtnGN6ypZYgEqcftSQFnC","proof_request_id":"cCanHnpFAD","proofs":{"claim::f33cc7c8-924f-4541-aeff-29a9aed9c46b":{"proof":{"primary_proof":{"eq_proof":{"revealed_attrs":{"state":"96473275571522321025213415717206189191162"},"a_prime":"921....546","e":"158....756","v":"114....069","m":{"address1":"111...738","zip":"149....066","city":"209....294","address2":"140....691"},"m1":"777....518","m2":"515....229"},"ge_proofs":[]},"non_revoc_proof":null},"schema_seq_no":14,"issuer_did":"33UDR9R7fjwELRvH9JT6HH"},"claim::f22cc7c8-924f-4541-aeff-29a9aed9c46b":{"proof":{"primary_proof":{"eq_proof":{"revealed_attrs":{"state":"96473275571522321025213415717206189191162"},"a_prime":"921....546","e":"158....756","v":"114....069","m":{"address1":"111...738","zip":"149....066","city":"209....294","address2":"140....691"},"m1":"777....518","m2":"515....229"},"ge_proofs":[]},"non_revoc_proof":null},"schema_seq_no":15,"issuer_did":"4fUDR9R7fjwELRvH9JT6HH"}},"aggregated_proof":{"c_hash":"25105671496406009212798488318112715144459298495509265715919744143493847046467","c_list":[[72,245,38,"....",46,195,18]]},"requested_proof":{"revealed_attrs":{"attr_key_id":["claim::f22cc7c8-924f-4541-aeff-29a9aed9c46b","UT","96473275571522321025213415717206189191162"]},"unrevealed_attrs":{},"self_attested_attrs":{},"predicates":{}}}"#;
-    pub fn create_default_proof_offer()-> ProofOffer {
-        ProofOffer::from_string(DEFAULT_SERIALIZED_PROOF_OFFER).unwrap()
+    pub fn create_default_proof()-> Proof {
+        Proof::from_string(DEFAULT_SERIALIZED_PROOF_OFFER).unwrap()
     }
 
-    fn create_proof_offer() -> ProofOffer {
+    fn create_proof() -> Proof {
         let requester_did = String::from(TEMP_REQUESTER_DID);
-        ProofOffer::new(&requester_did)
+        Proof::new(&requester_did)
     }
     #[test]
-    fn test_proof_offer_struct(){
-        let offer = create_proof_offer();
+    fn test_proof_struct(){
+        let offer = create_proof();
         assert_eq!(offer.from_did, TEMP_REQUESTER_DID);
     }
 
     #[test]
     fn test_serialize(){
-        let offer = create_proof_offer();
+        let offer = create_proof();
         let serialized = serde_json::to_string(&offer);
         let string_serialized = match serialized {
             Ok(i) => i,
@@ -305,9 +305,9 @@ pub mod tests {
     #[test]
     fn test_deserialize() {
         let requester_did = String::from("GxtnGN6ypZYgEqcftSQFnC");
-        let offer: ProofOffer = match serde_json::from_str(EXAMPLE_PROOF) {
+        let offer: Proof = match serde_json::from_str(EXAMPLE_PROOF) {
             Ok(i) => i,
-            Err(_) => ProofOffer::new("BAD_DID"),
+            Err(_) => Proof::new("BAD_DID"),
         };
         let issuer_did = serde_json::to_value("4fUDR9R7fjwELRvH9JT6HH").unwrap();
         assert_eq!(offer.from_did, requester_did);
@@ -317,19 +317,19 @@ pub mod tests {
     }
 
     #[test]
-    fn test_proof_offer_is_parsed_correctly(){
+    fn test_proof_is_parsed_correctly(){
         let response = r#"{"version":"","to_did":"","from_did":"V4SGRU86Z58d6TV7PBUe6f","proof_request_id":"","proofs":null,"aggregated_proof":null,"requested_proof":null,"unrevealed_attrs":null,"self_attested_attrs":null,"predicates":null}"#;
         let v = String::from(response).replace("\\\"", "\"");
-        let proof_offer:ProofOffer = ProofOffer::from_str(&v).unwrap();
-        assert_eq!(proof_offer.from_did,"V4SGRU86Z58d6TV7PBUe6f");
-        let proof_offer: ProofOffer = create_from_message(MSG_FROM_API).unwrap();
-        assert!(proof_offer.get_aggregated_proof().is_ok());
-        assert_eq!(proof_offer.from_did,"GxtnGN6ypZYgEqcftSQFnC");
-        let serialized = proof_offer.to_string().unwrap();
-        let new_proof_offer:ProofOffer = ProofOffer::from_string(&serialized).unwrap();
-        assert_eq!(proof_offer.from_did, new_proof_offer.from_did);
-        assert!(proof_offer.get_proof_as_json().is_ok());
-        let proof_json = proof_offer.get_proof_as_json();
+        let proof:Proof = Proof::from_str(&v).unwrap();
+        assert_eq!(proof.from_did,"V4SGRU86Z58d6TV7PBUe6f");
+        let proof: Proof = create_from_message(MSG_FROM_API).unwrap();
+        assert!(proof.get_aggregated_proof().is_ok());
+        assert_eq!(proof.from_did,"GxtnGN6ypZYgEqcftSQFnC");
+        let serialized = proof.to_string().unwrap();
+        let new_proof:Proof = Proof::from_string(&serialized).unwrap();
+        assert_eq!(proof.from_did, new_proof.from_did);
+        assert!(proof.get_proof_as_json().is_ok());
+        let proof_json = proof.get_proof_as_json();
         let stuff =  r#"{
             "proof":{
                 "primary_proof":{
@@ -361,12 +361,12 @@ pub mod tests {
             revealed_attrs: Vec::new(),
         };
         assert_eq!(claim_data.issuer_did, "4fUDR9R7fjwELRvH9JT6HH");
-        assert_eq!(proof_offer.get_claim_schema_info().unwrap()[0].issuer_did, "4fUDR9R7fjwELRvH9JT6HH");
-        assert_eq!(proof_offer.get_claim_schema_info().unwrap()[1].issuer_did, "33UDR9R7fjwELRvH9JT6HH");
-        proof_offer.get_proof_attributes().unwrap();
-        let mut proof_offer_bad: ProofOffer = create_from_message(MSG_FROM_API).unwrap();
-        proof_offer_bad.proofs = None;
-        assert!(proof_offer_bad.get_claim_schema_info().is_err());
+        assert_eq!(proof.get_claim_schema_info().unwrap()[0].issuer_did, "4fUDR9R7fjwELRvH9JT6HH");
+        assert_eq!(proof.get_claim_schema_info().unwrap()[1].issuer_did, "33UDR9R7fjwELRvH9JT6HH");
+        proof.get_proof_attributes().unwrap();
+        let mut proof_bad: Proof = create_from_message(MSG_FROM_API).unwrap();
+        proof_bad.proofs = None;
+        assert!(proof_bad.get_claim_schema_info().is_err());
 
     }
 

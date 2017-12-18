@@ -8,7 +8,7 @@ use rand::Rng;
 use api::{ CxsStateType, ProofStateType };
 use utils::error;
 use settings;
-use proof_offer::{ ProofOffer, ClaimData };
+use proof_offer::{ Proof, ClaimData };
 use messages;
 use messages::proof_messages::{ ProofRequest };
 use messages::GeneralMessage;
@@ -24,7 +24,7 @@ use utils::constants::{ PROOF_REQ_JSON, PROOF_JSON, SCHEMAS_JSON, CLAIM_DEFS_JSO
 use schema::LedgerSchema;
 
 lazy_static! {
-    static ref PROOF_MAP: Mutex<HashMap<u32, Box<Proof>>> = Default::default();
+    static ref PROOF_MAP: Mutex<HashMap<u32, Box<ProofRequester>>> = Default::default();
 }
 
 extern {
@@ -38,8 +38,12 @@ extern {
                                                       valid: bool)>) -> i32;
 }
 
+//Todo: 1. Change all names of proof to proof
+//Todo: 2. Refactor the proof class to handle the json better
+//Todo: 3. Accept the Proof when Consumer Team sends it
+//Todo: 4. Write more Unit tests in CXS and Wrapper for Accepting the Proof
 #[derive(Serialize, Deserialize, Debug, Clone)]
-struct Proof {
+struct ProofRequester {
     source_id: String,
     handle: u32,
     requested_attrs: String,
@@ -55,18 +59,18 @@ struct Proof {
     name: String,
     version: String,
     nonce: String,
-    proof_offer: Option<ProofOffer>,
+    proof: Option<Proof>,
     proof_request: Option<ProofRequest>,
 }
 
-impl Proof {
+impl ProofRequester {
     fn validate_proof_request(&self) -> Result<u32, u32> {
         //TODO: validate proof request
         info!("successfully validated proof {}", self.handle);
         Ok(error::SUCCESS.code_num)
     }
     
-    fn validate_proof_against_request(&self, offer: &ProofOffer) -> Result<u32, u32> {
+    fn validate_proof_against_request(&self, proof: &Proof) -> Result<u32, u32> {
         Ok(error::SUCCESS.code_num)
     }
     
@@ -139,7 +143,7 @@ impl Proof {
     }
 
     fn proof_validation(&mut self) -> Result<u32, u32> {
-        let claim_data = match self.proof_offer {
+        let claim_data = match self.proof {
             Some(ref x) => x.get_claim_schema_info()?,
             None => return Err(error::INVALID_PROOF_OFFER.code_num),
         };
@@ -197,14 +201,14 @@ impl Proof {
     }
 
     fn get_proof(&self) -> Result<String, u32> {
-        let proof_offer = match self.proof_offer {
+        let proof = match self.proof {
             Some(ref x) => x,
             None => return Err(error::INVALID_PROOF_OFFER.code_num),
         };
-        proof_offer.get_proof_attributes()
+        proof.get_proof_attributes()
     }
 
-    fn check_for_proof_offer(&mut self, msg_uid: &str) {
+    fn check_for_proof(&mut self, msg_uid: &str) {
         info!("Checking for outstanding proofOffer for {} with uid: {}", self.handle, msg_uid);
         let msgs = match get_matching_messages(msg_uid, &self.prover_did) {
             Ok(x) => x,
@@ -225,7 +229,7 @@ impl Proof {
                     }
                 };
 
-                self.proof_offer = match ProofOffer::from_str(&payload) {
+                self.proof = match Proof::from_str(&payload) {
                     Ok(x) => Some(x),
                     Err(_) => {
                         warn!("invalid claim request for proof {}", self.handle);
@@ -274,7 +278,7 @@ impl Proof {
                     }
                 };
                 self.ref_msg_id = ref_msg_id.to_owned();
-                self.check_for_proof_offer(ref_msg_id);
+                self.check_for_proof(ref_msg_id);
                 return
             }
         }
@@ -301,7 +305,7 @@ pub fn create_proof(source_id: Option<String>,
 
     let source_id_unwrap = source_id.unwrap_or("".to_string());
 
-    let mut new_proof = Box::new(Proof {
+    let mut new_proof = Box::new(ProofRequester {
         handle: new_handle,
         source_id: source_id_unwrap,
         msg_uid: String::new(),
@@ -317,7 +321,7 @@ pub fn create_proof(source_id: Option<String>,
         name,
         version: String::from("1.0"),
         nonce: generate_nonce().to_string(),
-        proof_offer: None,
+        proof: None,
         proof_request: None,
     });
 
@@ -371,7 +375,7 @@ pub fn to_string(handle: u32) -> Result<String, u32> {
 
 pub fn from_string(proof_data: &str) -> Result<u32, u32> {
 
-    let derived_proof: Proof = match serde_json::from_str(proof_data) {
+    let derived_proof: ProofRequester = match serde_json::from_str(proof_data) {
         Ok(x) => x,
         Err(_) => return Err(error::UNKNOWN_ERROR.code_num),
     };
@@ -467,9 +471,9 @@ mod tests {
     extern crate mockito;
     use std::thread;
     use std::time::Duration;
-    use proof_offer::tests::create_default_proof_offer;
+    use proof_offer::tests::create_default_proof;
     use connection::create_connection;
-    static DEFAULT_PROOF_STR: &str = r#"{"source_id":"","handle":486356518,"requested_attrs":"[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]","requested_predicates":"[{\"attr_name\":\"age\",\"p_type\":\"GE\",\"value\":18,\"schema_seq_no\":1,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\"}]","msg_uid":"","ref_msg_id":"","requester_did":"","prover_did":"","state":1,"proof_state":0,"tid":0,"mid":0,"name":"Optional","version":"1.0","nonce":"1067639606","proof_offer":null}"#;
+    static DEFAULT_PROOF_STR: &str = r#"{"source_id":"","handle":486356518,"requested_attrs":"[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]","requested_predicates":"[{\"attr_name\":\"age\",\"p_type\":\"GE\",\"value\":18,\"schema_seq_no\":1,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\"}]","msg_uid":"","ref_msg_id":"","requester_did":"","prover_did":"","state":1,"proof_state":0,"tid":0,"mid":0,"name":"Optional","version":"1.0","nonce":"1067639606","proof":null}"#;
     static REQUESTED_ATTRS: &'static str = "[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]";
     static REQUESTED_PREDICATES: &'static str = "[{\"attr_name\":\"age\",\"p_type\":\"GE\",\"value\":18,\"schema_seq_no\":1,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\"}]";
     use utils::constants::{ PROOF_REQ_JSON, PROOF_JSON, SCHEMAS_JSON, CLAIM_DEFS_JSON, REVOC_REGS_JSON};
@@ -481,7 +485,7 @@ mod tests {
         println!("successfully called create_cb")
     }
 
-    fn create_default_proof() -> Proof {
+    fn create_default_proof_requester() -> ProofRequester {
         serde_json::from_str(DEFAULT_PROOF_STR).unwrap()
     }
 
@@ -608,7 +612,7 @@ mod tests {
     }
 
     #[test]
-    fn test_get_proof_offer_fails_with_no_proof_offer() {
+    fn test_get_proof_fails_with_no_proof() {
         set_default_and_enable_test_mode();
         let handle = match create_proof(Some("1".to_string()),
                                         REQUESTED_ATTRS.to_owned(),
@@ -630,7 +634,7 @@ mod tests {
     }
 
     #[test]
-    fn test_update_state_with_pending_proof_offer() {
+    fn test_update_state_with_pending_proof() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         settings::set_config_value(settings::CONFIG_AGENT_ENDPOINT, mockito::SERVER_URL);
@@ -645,7 +649,7 @@ mod tests {
             .create();
 
         let new_handle = 1;
-        let mut proof = Box::new(Proof {
+        let mut proof = Box::new(ProofRequester {
             handle: new_handle,
             source_id: "12".to_string(),
             msg_uid: String::from("1234"),
@@ -661,7 +665,7 @@ mod tests {
             name:String::new(),
             version: String::from("1.0"),
             nonce: generate_nonce().to_string(),
-            proof_offer: None,
+            proof: None,
             proof_request: None,
         });
 
@@ -673,7 +677,7 @@ mod tests {
     }
 
 //    #[test]
-//    fn test_proof_offer_is_valid() {
+//    fn test_proof_is_valid() {
 //        ::utils::logger::LoggerUtils::init();
 //        settings::set_defaults();
 //        ::utils::claim_def::tests::open_sandbox_pool();
@@ -690,8 +694,8 @@ mod tests {
 //        let json_claim_def: serde_json::Value = serde_json::from_str(&claim_defs_json).unwrap();
 //        claim_defs_json = json!({"claim::e5fec91f-d03d-4513-813c-ab6db5715d55":json_claim_def}).to_string();
 //        let revoc_regs_json = REVOC_REGS_JSON;
-//        let mut proof: Proof = create_default_proof();
-//        let offer: ProofOffer = create_default_proof_offer();
+//        let mut proof: ProofRequester = create_default_proof_requester();
+//        let offer: Proof = create_default_proof();
 //        assert!(proof.validate_proof_against_request(&offer).is_ok());
 ////        assert_eq!(proof.validate_proof_indy(proof_req_json, proof_json, schemas_json, claim_defs_json, revoc_regs_json).unwrap(), error::SUCCESS.code_num);
 //        assert_eq!(proof.validate_proof_indy(proof_req_json, proof_json, schemas_json, &claim_defs_json, revoc_regs_json).unwrap(), error::SUCCESS.code_num);
@@ -715,7 +719,7 @@ mod tests {
 //            .proof_data_version(".01")
 //            .requested_attrs(REQUESTED_ATTRS).clone();
 //
-//        let mut proof = Box::new(Proof {
+//        let mut proof = Box::new(ProofRequester {
 //            handle: new_handle,
 //            source_id: "12".to_string(),
 //            msg_uid: String::from("1234"),
@@ -731,7 +735,7 @@ mod tests {
 //            name:String::new(),
 //            version: String::from("1.0"),
 //            nonce: generate_nonce().to_string(),
-//            proof_offer: Some(ProofOffer::from_str(&proof_msg).unwrap()),
+//            proof: Some(Proof::from_str(&proof_msg).unwrap()),
 //            proof_request: Some(proof_req.clone()),
 //        });
 //
