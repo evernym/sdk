@@ -151,12 +151,12 @@ impl SendInvite{
             to_did: String::new(),
             to_vk: String::new(),
             payload: SendInvitePayload {
-                create_payload: CreateMsgPayload { msg_type: MsgType { name: "CREATE_MSG".to_string(), ver: "1.0".to_string(), } , mtype: "connReq".to_string(), } ,
+                create_payload: CreateMsgPayload { msg_type: MsgType { name: "CREATE_MSG".to_string(), ver: "1.0".to_string(), fmt: None, } , mtype: "connReq".to_string(), } ,
                 msg_detail_payload: MsgDetailPayload {
-                    msg_type: MsgType { name: "MSG_DETAIL".to_string(), ver: "1.0".to_string(), } ,
+                    msg_type: MsgType { name: "MSG_DETAIL".to_string(), ver: "1.0".to_string(), fmt: None, } ,
                     key_proof: KeyDlgProofPayload { agent_did: String::new(), agent_delegated_key: String::new(), signature: String::new() , } ,
                     phone: String::new(), } ,
-                send_payload: SendMsgPayload { msg_type: MsgType { name: "SEND_MSG".to_string(), ver: "1.0".to_string(), }, } ,
+                send_payload: SendMsgPayload { msg_type: MsgType { name: "SEND_MSG".to_string(), ver: "1.0".to_string(), fmt: None, }, } ,
             },
             agent_payload: String::new(),
             validate_rc: error::SUCCESS.code_num,
@@ -324,11 +324,11 @@ mod tests {
             .serialize_message().unwrap();
 
         assert_eq!(msg, "{\"agentDid\":\"\",\"agentPayload\":\"{\\\"createPayload\\\":{\\\"@type\\\":\
-        {\\\"name\\\":\\\"CREATE_MSG\\\",\\\"ver\\\":\\\"1.0\\\"},\\\"mtype\\\":\\\"connReq\\\"},\
-        \\\"msgDetailPayload\\\":{\\\"@type\\\":{\\\"name\\\":\\\"MSG_DETAIL\\\",\\\"ver\\\":\\\"1.0\\\"},\
+        {\\\"fmt\\\":null,\\\"name\\\":\\\"CREATE_MSG\\\",\\\"ver\\\":\\\"1.0\\\"},\\\"mtype\\\":\\\"connReq\\\"},\
+        \\\"msgDetailPayload\\\":{\\\"@type\\\":{\\\"fmt\\\":null,\\\"name\\\":\\\"MSG_DETAIL\\\",\\\"ver\\\":\\\"1.0\\\"},\
         \\\"keyDlgProof\\\":{\\\"agentDID\\\":\\\"\\\",\\\"agentDelegatedKey\\\":\\\"key\\\",\
         \\\"signature\\\":\\\"\\\"},\\\"phoneNo\\\":\\\"phone\\\"},\\\"sendPayload\\\":\
-        {\\\"@type\\\":{\\\"name\\\":\\\"SEND_MSG\\\",\\\"ver\\\":\\\"1.0\\\"}}}\",\"agentVk\":\"\",\
+        {\\\"@type\\\":{\\\"fmt\\\":null,\\\"name\\\":\\\"SEND_MSG\\\",\\\"ver\\\":\\\"1.0\\\"}}}\",\"agentVk\":\"\",\
         \"to\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"toVk\":\"\"}");
     }
 

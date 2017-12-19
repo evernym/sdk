@@ -52,7 +52,7 @@ impl UpdateProfileData{
         UpdateProfileData {
             to_did: String::new(),
             payload: UpdateProfileDataPayload{
-                msg_type: MsgType { name: "UPDATE_CONFIGS".to_string(), ver: "1.0".to_string(), } ,
+                msg_type: MsgType { name: "UPDATE_CONFIGS".to_string(), ver: "1.0".to_string(), fmt: None, } ,
                 configs: Vec::new(),
             },
             agent_payload: String::new(),
