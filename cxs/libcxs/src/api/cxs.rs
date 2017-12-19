@@ -145,7 +145,10 @@ pub extern fn cxs_init (command_handle: u32,
 
     thread::spawn(move|| {
         /* TODO: handle pool config */
-        pool::create_pool_ledger_config();
+        let prc = match pool::create_pool_ledger_config(&pool_name, None) {
+            Ok(_) => error::SUCCESS.code_num,
+            Err(x) => x,
+        };
         let wrc = match wallet::init_wallet(&wallet_name) {
             Ok(_) => error::SUCCESS.code_num,
             Err(x) => x,
