@@ -306,14 +306,6 @@ impl IssuerClaim {
             return;
         }
 
-        if settings::test_agency_mode_enabled() {
-            let response = "{\"msgs\":[{\"uid\":\"6gmsuWZ\",\"typ\":\"conReq\",\"statusCode\":\"MS-102\",\"statusMsg\":\"message sent\"},\
-            {\"statusCode\":\"MS-104\",\"edgeAgentPayload\":\"{\\\"attr\\\":\\\"value\\\"}\",\"sendStatusCode\":\"MSS-101\",\"typ\":\"claimOffer\",\"statusMsg\":\"message accepted\",\"uid\":\"6a9u7Jt\",\"refMsgId\":\"CKrG14Z\"},\
-            {\"msg_type\":\"CLAIM_REQUEST\",\"typ\":\"claimReq\",\"edgeAgentPayload\":\"{\\\"blinded_ms\\\":{\\\"prover_did\\\":\\\"FQ7wPBUgSPnDGJnS1EYjTK\\\",\\\"u\\\":\\\"923...607\\\",\\\"ur\\\":\\\"null\\\"},\\\"version\\\":\\\"0.1\\\",\\\"mid\\\":\\\"\\\",\\\"to_did\\\":\\\"BnRXf8yDMUwGyZVDkSENeq\\\",\\\"from_did\\\":\\\"GxtnGN6ypZYgEqcftSQFnC\\\",\\\"iid\\\":\\\"cCanHnpFAD\\\",\\\"issuer_did\\\":\\\"QTrbV4raAcND4DWWzBmdsh\\\",\\\"schema_seq_no\\\":48,\\\"optional_data\\\":{\\\"terms_of_service\\\":\\\"<Large block of text>\\\",\\\"price\\\":6}}\"}]}";
-            httpclient::set_next_str_response(response.to_string());
-        }
-
-
         let msgs = match get_matching_messages(&self.msg_uid, &self.issued_did) {
             Ok(x) => x,
             Err(err) => {

@@ -8,6 +8,7 @@ use utils::callback::CallbackUtils;
 use utils::pool;
 use utils::error;
 use utils::timeout::TimeoutUtils;
+use settings;
 
 extern {
 
@@ -131,6 +132,7 @@ impl ClaimDef {
     }
 
     pub fn send_request(&self, request: &str) ->  Result<String, u32> {
+        if settings::test_indy_mode_enabled() { return Ok("{}".to_string()); }
         let pool_handle = pool::get_pool_handle()?;
 
         let (sender, receiver) = channel();
