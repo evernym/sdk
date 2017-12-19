@@ -76,7 +76,7 @@ struct EqAndGeProof{
 //{"revealed_attrs":{"state":"96473275571522321025213415717206189191162"},"a_prime":"921....546","e":"158....756","v":"114....069","m":{"address1":"111...738","zip":"149....066","city":"209....294","address2":"140....691"},"m1":"777....518","m2":"515....229"}
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 struct EqProof{
-    revealed_attrs: HashMap<String, String>,
+    revealed_attrs: HashMap<String, Value>,
     a_prime: String,
     e: String,
     v: String,
@@ -90,12 +90,13 @@ pub struct ClaimData{
     pub schema_seq_no: u32,
     pub issuer_did: String,
     pub claim_uuid: String,
+    pub proof_attrs: Vec<Attr>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct Attr {
     name: String,
-    value: String,
+    value: Value,
     revealed: bool,
 }
 
@@ -130,56 +131,30 @@ impl Proof {
     }
 
     pub fn get_proof_attributes(&self) -> Result<String, u32> {
-//        let mut all_attrs = self.get_claim_schema_info()?;
-//        self.get_req_attrs(&mut all_attrs)?;
-//        match serde_json::to_string(&all_attrs) {
-//            Ok(x) => Ok(x),
-//            Err(_) => Err(error::INVALID_JSON.code_num),
-//        }
-        Err(3)
+        let mut all_attrs = self.get_claim_schema_info()?;
+        self.set_revealed_attrs(&mut all_attrs);
+        match serde_json::to_string(&all_attrs) {
+            Ok(x) => Ok(x),
+            Err(_) => Err(error::INVALID_JSON.code_num),
+        }
     }
-//
-//    pub fn get_req_attrs(&self, mut claim_info: &mut Vec<ClaimData>) -> Result<(), u32> {
-//        let req_proofs = match self.requested_proof {
-//            Some(ref x) => {
-//                match x.get("revealed_attrs") {
-//                    Some(x) => {
-//                        match x.as_object() {
-//                            Some(x) => x,
-//                            None => return Err(error::INVALID_PROOF_OFFER.code_num),
-//                        }
-//                    },
-//                    None => return Err(error::INVALID_PROOF_OFFER.code_num),
-//                }
-//
-//            },
-//            None => return Err(error::INVALID_PROOF_OFFER.code_num)
-//        };
-//
-//        self.set_attr_value(req_proofs, &mut claim_info);
-//        Ok(())
-//    }
-//
-//    pub fn set_attr_value(&self,
-//                          req_proofs: &serde_json::Map<String, Value>,
-//                          mut claim_info: &mut Vec<ClaimData>) -> Result<(), u32> {
-//        for claim_data in claim_info.iter_mut() {
-//            for attr in claim_data.revealed_attrs.iter_mut() {
-//                for (attr_key, mut val) in req_proofs.iter() {
-//                    if serde_json::to_string(&val[2]).unwrap() == attr.value {
-//                        attr.value = match serde_json::from_value(val[1].clone()) {
-//                            Ok(x) => x,
-//                            Err(_) => return Err(error::INVALID_JSON.code_num),
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        Ok(())
-//
-//    }
-//
-//    //    claim_data.
+
+    fn set_revealed_attrs(&self, mut claim_attrs: &mut Vec<ClaimData>) {
+        for claim in claim_attrs.iter_mut() {
+            for mut un_rev_attr in claim.proof_attrs.iter_mut() {
+                self.compare_and_update_attr_value(&mut un_rev_attr);
+            }
+        }
+    }
+
+    fn compare_and_update_attr_value(&self, mut un_rev_attr: &mut Attr) {
+        for (_, rev_attr) in self.requested_proof.revealed_attrs.iter() {
+            if un_rev_attr.value == rev_attr[2] {
+                un_rev_attr.value = rev_attr[1].clone();
+            }
+        }
+    }
+
 //    pub fn get_proof(&self) -> Option<serde_json::Map<String, Value>>{
 //        self.proofs.to_owned()
 //    }
@@ -205,16 +180,28 @@ impl Proof {
 //    }
     pub fn get_claim_schema_info (&self) -> Result<Vec<ClaimData>, u32> {
         let mut claims: Vec<ClaimData> = Vec::new();
-        for (claim_uuid, claim) in self.proofs.iter() {
-            claims.push(ClaimData{
-                issuer_did: claim.issuer_did,
-                schema_seq_no: claim.schema_seq_no,
-                claim_uuid: claim_uuid,
-            })
-//            claim_data.set_values(&claim_uuid, claim.clone())?;
-//            claims.push(claim_data);
+        for (claim_uuid, proof_data) in self.proofs.iter() {
+            let ref revealed_attrs = proof_data
+                .proof
+                .primary_proof
+                .eq_proof
+                .revealed_attrs;
+            claims.push( ClaimData {
+                issuer_did: proof_data.issuer_did.clone(),
+                schema_seq_no: proof_data.schema_seq_no,
+                claim_uuid: claim_uuid.to_string(),
+                proof_attrs: self.get_revealed_attrs(&revealed_attrs),
+            });
         }
         Ok(claims)
+    }
+
+    fn get_revealed_attrs(&self, attrs: &HashMap<String, Value>) -> Vec<Attr> {
+        attrs.iter().map(|(name, value)| Attr{
+            name: name.to_string(),
+            value: value.clone(),
+            revealed: true
+        }).collect()
     }
 }
 
@@ -289,7 +276,7 @@ impl Attr {
     pub fn new() -> Attr {
         Attr{
             name: String::new(),
-            value: String::new(),
+            value: serde_json::Value::Null,
             revealed: false,
         }
     }
@@ -301,76 +288,8 @@ impl ClaimData {
             schema_seq_no: 0,
             issuer_did: String::new(),
             claim_uuid: String::new(),
+            proof_attrs: Vec::new(),
         }
-    }
-
-    pub fn set_values(&mut self, claim_uuid:&str, claim_data:serde_json::Value) -> Result<(), u32> {
-        self.issuer_did = self.get_issuer_did(&claim_data)?;
-        self.schema_seq_no = self.get_schema_no(&claim_data)?;
-        self.revealed_attrs = self.get_revealed_attrs(&claim_data)?;
-        self.claim_uuid = String::from(claim_uuid);
-        Ok(())
-    }
-
-    pub fn get_issuer_did(&mut self, claim_data:&serde_json::Value) -> Result<String, u32> {
-        match claim_data.get("issuer_did") {
-            Some(d) => {
-                match d.as_str() {
-                    Some(n) => Ok(n.to_string()),
-                    None => return Err(error::INVALID_PROOF_CLAIM_DATA.code_num)
-                }
-            }
-            None => return Err(error::INVALID_PROOF_CLAIM_DATA.code_num)
-        }
-    }
-
-    pub fn get_schema_no(&mut self, claim_data:&serde_json::Value) -> Result<u32, u32> {
-        match claim_data.get("schema_seq_no") {
-            Some(x) => {
-                match x.as_u64() {
-                    Some(x) => Ok(x as u32),
-                    None => return Err(error::INVALID_PROOF_CLAIM_DATA.code_num)
-                }
-            }
-            None => return Err(error::INVALID_PROOF_CLAIM_DATA.code_num)
-        }
-    }
-
-    pub fn get_revealed_attrs(&mut self, claim_data:&serde_json::Value) -> Result<Vec<Attr>, u32> {
-        let revealed_attrs = match claim_data.get("proof") {
-            Some(x) => {
-                match x.get("primary_proof") {
-                    Some(x) => {
-                        match x.get("eq_proof") {
-                            Some(x) => {
-                                match x.get("revealed_attrs") {
-                                    Some(x) => x.to_owned(),
-                                    None => return Err(error::INVALID_PROOF_CLAIM_DATA.code_num),
-                                }
-                            },
-                            None => return Err(error::INVALID_PROOF_CLAIM_DATA.code_num),
-                        }
-                    }
-                    None => return Err(error::INVALID_PROOF_CLAIM_DATA.code_num),
-                }
-            },
-            None => return Err(error::INVALID_PROOF_CLAIM_DATA.code_num)
-        };
-        let attrs_obj = match revealed_attrs.as_object() {
-            Some(x) => x,
-            None => return Err(error::INVALID_PROOF_CLAIM_DATA.code_num)
-        };
-        let mut attrs: Vec<Attr> = Vec::new();
-        for (key, value) in attrs_obj.iter() {
-            attrs.push(
-                Attr{
-                    name: key.to_string(),
-                    value: value.to_string(),
-                    revealed: true,
-                }
-            )
-        }
-        Ok(attrs)
     }
 }
 
@@ -388,13 +307,9 @@ pub mod tests {
     use super::*;
     static TEMP_REQUESTER_DID: &'static str = "GxtnGN6ypZYgEqcftSQFnC";
     static MSG_FROM_API: &str = r#"{"msg_type":"proof","version":"0.1","to_did":"BnRXf8yDMUwGyZVDkSENeq","from_did":"GxtnGN6ypZYgEqcftSQFnC","proof_request_id":"cCanHnpFAD","proofs":{"claim::f33cc7c8-924f-4541-aeff-29a9aed9c46b":{"proof":{"primary_proof":{"eq_proof":{"revealed_attrs":{"state":"96473275571522321025213415717206189191162"},"a_prime":"921....546","e":"158....756","v":"114....069","m":{"address1":"111...738","zip":"149....066","city":"209....294","address2":"140....691"},"m1":"777....518","m2":"515....229"},"ge_proofs":[]},"non_revoc_proof":null},"schema_seq_no":14,"issuer_did":"33UDR9R7fjwELRvH9JT6HH"},"claim::f22cc7c8-924f-4541-aeff-29a9aed9c46b":{"proof":{"primary_proof":{"eq_proof":{"revealed_attrs":{"state":"96473275571522321025213415717206189191162"},"a_prime":"921....546","e":"158....756","v":"114....069","m":{"address1":"111...738","zip":"149....066","city":"209....294","address2":"140....691"},"m1":"777....518","m2":"515....229"},"ge_proofs":[]},"non_revoc_proof":null},"schema_seq_no":15,"issuer_did":"4fUDR9R7fjwELRvH9JT6HH"}},"aggregated_proof":{"c_hash":"25105671496406009212798488318112715144459298495509265715919744143493847046467","c_list":[[72,245,38,"....",46,195,18]]},"requested_proof":{"revealed_attrs":{"attr_key_id":["claim::f22cc7c8-924f-4541-aeff-29a9aed9c46b","UT","96473275571522321025213415717206189191162"]},"unrevealed_attrs":{},"self_attested_attrs":{},"predicates":{}}}"#;
+    static TEST_ATTRS: &str = r#"[{"schema_seq_no":14,"issuer_did":"33UDR9R7fjwELRvH9JT6HH","claim_uuid":"claim::f33cc7c8-924f-4541-aeff-29a9aed9c46b","proof_attrs":[{"name":"state","value":"UT","revealed":true}]},{"schema_seq_no":15,"issuer_did":"4fUDR9R7fjwELRvH9JT6HH","claim_uuid":"claim::f22cc7c8-924f-4541-aeff-29a9aed9c46b","proof_attrs":[{"name":"state","value":"UT","revealed":true}]}]"#;
     pub fn create_default_proof()-> Proof {
         Proof::from_str(MSG_FROM_API).unwrap()
-    }
-
-    fn create_proof() -> Proof {
-        let requester_did = String::from(TEMP_REQUESTER_DID);
-        Proof::new(&requester_did)
     }
 
     #[test]
@@ -467,58 +382,23 @@ pub mod tests {
         assert_eq!(proof,proof2);
     }
 
-//    #[test]
-//    fn test_proof_is_parsed_correctly(){
-//        let response = r#"{"version":"","to_did":"","from_did":"V4SGRU86Z58d6TV7PBUe6f","proof_request_id":"","proofs":null,"aggregated_proof":null,"requested_proof":null,"unrevealed_attrs":null,"self_attested_attrs":null,"predicates":null}"#;
-//        let v = String::from(response).replace("\\\"", "\"");
-//        let proof:Proof = Proof::from_str(&v).unwrap();
-//        assert_eq!(proof.from_did,"V4SGRU86Z58d6TV7PBUe6f");
-//        let proof: Proof = create_from_message(MSG_FROM_API).unwrap();
-//        assert!(proof.get_aggregated_proof().is_ok());
-//        assert_eq!(proof.from_did,"GxtnGN6ypZYgEqcftSQFnC");
-//        let serialized = proof.to_string().unwrap();
-//        let new_proof:Proof = Proof::from_string(&serialized).unwrap();
-//        assert_eq!(proof.from_did, new_proof.from_did);
-//        assert!(proof.get_proof_as_json().is_ok());
-//        let proof_json = proof.get_proof_as_json();
-//        let stuff =  r#"{
-//            "proof":{
-//                "primary_proof":{
-//                    "eq_proof":{
-//                        "revealed_attrs":{"state":"96473275571522321025213415717206189191162"},
-//                        "a_prime":"921....546",
-//                        "e":"158....756",
-//                        "v":"114....069",
-//                        "m":{
-//                            "address1":"111...738",
-//                            "zip":"149....066",
-//                            "city":"209....294",
-//                            "address2":"140....691"
-//                        },
-//                        "m1":"777....518",
-//                        "m2":"515....229"
-//                    },
-//                    "ge_proofs":[]
-//                },
-//                "non_revoc_proof":null
-//            },
-//            "schema_seq_no":15,
-//            "issuer_did":"4fUDR9R7fjwELRvH9JT6HH"
-//        }"#;
-//        let claim_data: ClaimData = ClaimData {
-//            issuer_did: "4fUDR9R7fjwELRvH9JT6HH".to_string(),
-//            schema_seq_no: 15,
-//            claim_uuid: "claim::f22cc7c8-924f-4541-aeff-29a9aed9c46b".to_string(),
-//            revealed_attrs: Vec::new(),
-//        };
-//        assert_eq!(claim_data.issuer_did, "4fUDR9R7fjwELRvH9JT6HH");
-//        assert_eq!(proof.get_claim_schema_info().unwrap()[0].issuer_did, "4fUDR9R7fjwELRvH9JT6HH");
-//        assert_eq!(proof.get_claim_schema_info().unwrap()[1].issuer_did, "33UDR9R7fjwELRvH9JT6HH");
-//        proof.get_proof_attributes().unwrap();
-//        let mut proof_bad: Proof = create_from_message(MSG_FROM_API).unwrap();
-//        proof_bad.proofs = None;
-//        assert!(proof_bad.get_claim_schema_info().is_err());
-//
-//    }
+    #[test]
+    fn test_get_claim_data() {
+        let proof = create_default_proof();
+        let claim_data = proof.get_claim_schema_info().unwrap();
+        if claim_data[0].claim_uuid == "claim::f22cc7c8-924f-4541-aeff-29a9aed9c46b" {
+            assert_eq!(claim_data[0].issuer_did, "4fUDR9R7fjwELRvH9JT6HH".to_string());
+            assert_eq!(claim_data[0].schema_seq_no, 15);
+        } else {
+            assert_eq!(claim_data[0].issuer_did, "33UDR9R7fjwELRvH9JT6HH".to_string());
+            assert_eq!(claim_data[0].schema_seq_no, 14);
+        }
+    }
 
+    #[test]
+    fn test_get_proof_attrs() {
+        let proof = create_default_proof();
+        let attrs_str = proof.get_proof_attributes().unwrap();
+        assert!(attrs_str.contains(r#"{"schema_seq_no":14,"issuer_did":"33UDR9R7fjwELRvH9JT6HH","claim_uuid":"claim::f33cc7c8-924f-4541-aeff-29a9aed9c46b","proof_attrs":[{"name":"state","value":"UT","revealed":true}]}"#));
+    }
 }
