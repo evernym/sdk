@@ -186,7 +186,7 @@ impl ProofRequester {
         self.proof_request = Some(proof_obj);
         match messages::send_message().to(&self.prover_did).msg_type("proofReq").edge_agent_payload(&proof_request).send() {
             Ok(response) => {
-                self.msg_uid = get_offer_details(&response)?;
+                self.msg_uid = get_proof_details(&response)?;
                 self.state = CxsStateType::CxsStateOfferSent;
                 return Ok(error::SUCCESS.code_num)
             },
@@ -221,7 +221,7 @@ impl ProofRequester {
                 let payload = match msg["edgeAgentPayload"].as_str() {
                     Some(x) => x,
                     None => {
-                        warn!("proof offer has no edge agent payload");
+                        warn!("proof has no edge agent payload");
                         return
                     }
                 };
@@ -289,7 +289,7 @@ impl ProofRequester {
 
     fn get_state(&self) -> u32 {let state = self.state as u32; state}
 
-    fn get_offer_uid(&self) -> String { self.msg_uid.clone() }
+    fn get_proof_uuid(&self) -> String { self.msg_uid.clone() }
 
 }
 
@@ -395,7 +395,7 @@ pub fn send_proof_request(handle: u32, connection_handle: u32) -> Result<u32,u32
     }
 }
 
-fn get_offer_details(response: &str) -> Result<String, u32> {
+fn get_proof_details(response: &str) -> Result<String, u32> {
     if settings::test_agency_mode_enabled() {return Ok("test_mode_response".to_owned());}
     match serde_json::from_str(response) {
         Ok(json) => {
@@ -416,9 +416,9 @@ fn get_offer_details(response: &str) -> Result<String, u32> {
     }
 }
 
-pub fn get_offer_uid(handle: u32) -> Result<String,u32> {
+pub fn get_proof_uuid(handle: u32) -> Result<String,u32> {
     match PROOF_MAP.lock().unwrap().get(&handle) {
-        Some(proof) => Ok(proof.get_offer_uid()),
+        Some(proof) => Ok(proof.get_proof_uuid()),
         None => Err(error::INVALID_PROOF_HANDLE.code_num),
     }
 }
@@ -576,7 +576,7 @@ mod tests {
         assert_eq!(send_proof_request(handle, connection_handle).unwrap(), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(500));
         assert_eq!(get_state(handle), CxsStateType::CxsStateOfferSent as u32);
-        assert_eq!(get_offer_uid(handle).unwrap(), "6a9u7Jt");
+        assert_eq!(get_proof_uuid(handle).unwrap(), "6a9u7Jt");
         _m.assert();
     }
 
