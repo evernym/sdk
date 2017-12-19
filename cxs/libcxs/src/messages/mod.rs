@@ -267,7 +267,7 @@ pub trait GeneralMessage{
     fn set_validate_rc(&mut self, rc: u32);
     fn send(&mut self) -> Result<String, u32>;
     fn msgpack(&mut self) -> Result<Vec<u8>, u32>;
-    fn send_enc(&mut self) -> Result<Vec<String>, u32>;
+    fn send_secure(&mut self) -> Result<Vec<String>, u32>;
 }
 
 pub fn create_keys() -> CreateKeyMsg { CreateKeyMsg::create() }

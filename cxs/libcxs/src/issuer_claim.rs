@@ -129,7 +129,7 @@ impl IssuerClaim {
             .agent_vk(&agent_vk)
             .ref_msg_id(&self.ref_msg_id)
             .status_code(MessageAccepted.as_str())
-            .send_enc() {
+            .send_secure() {
             Err(x) => {
                 warn!("could not send claimOffer: {}", x);
                 return Err(x);
@@ -196,7 +196,7 @@ impl IssuerClaim {
             .edge_agent_payload(&data)
             .agent_did(&agent_did)
             .agent_vk(&agent_vk)
-            .send_enc() {
+            .send_secure() {
             Err(x) => {
                 warn!("could not send claim: {}", x);
                 return Err(x);

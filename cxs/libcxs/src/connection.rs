@@ -62,7 +62,7 @@ impl Connection {
             .phone_number(&options_obj.phone)
             .agent_did(&self.agent_did)
             .agent_vk(&self.agent_vk)
-            .send_enc() {
+            .send_secure() {
             Err(_) => {
                 return Err(error::POST_MSG_FAILURE.code_num)
             },
@@ -219,7 +219,7 @@ pub fn create_agent_pairwise(handle: u32) -> Result<u32, u32> {
         .for_did(&pw_did)
         .to(&enterprise_did)
         .for_verkey(&pw_verkey)
-        .send_enc() {
+        .send_secure() {
         Ok(x) => x,
         Err(x) => return Err(x),
     };
@@ -237,7 +237,7 @@ pub fn update_agent_profile(handle: u32) -> Result<u32, u32> {
         .to(&pw_did)
         .name(&settings::get_config_value(settings::CONFIG_ENTERPRISE_NAME).unwrap())
         .logo_url(&settings::get_config_value(settings::CONFIG_LOGO_URL).unwrap())
-        .send_enc() {
+        .send_secure() {
         Ok(_) => Ok(error::SUCCESS.code_num),
         Err(x) => Err(x),
     }
@@ -329,7 +329,7 @@ pub fn update_state(handle: u32) -> Result<u32, u32> {
         .to_vk(&pw_vk)
         .agent_did(&agent_did)
         .agent_vk(&agent_vk)
-        .send_enc() {
+        .send_secure() {
         Err(x) => {
             error!("could not update state for handle {}: {}",  handle, x);
             Err(error::POST_MSG_FAILURE.code_num)

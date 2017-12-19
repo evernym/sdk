@@ -142,7 +142,7 @@ impl GeneralMessage for CreateKeyMsg  {
         bundle_for_agency(msg, &to_did)
     }
 
-    fn send_enc(&mut self) -> Result<Vec<String>, u32> {
+    fn send_secure(&mut self) -> Result<Vec<String>, u32> {
         let url = format!("{}/agency/msg", settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
 
         let data = match self.msgpack() {
