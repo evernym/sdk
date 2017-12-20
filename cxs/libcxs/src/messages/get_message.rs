@@ -86,7 +86,11 @@ impl GetMessages{
 
         match httpclient::post_u8(&data, &url) {
             Err(_) => return Err(error::POST_MSG_FAILURE.code_num),
-            Ok(response) => parse_get_messages_response(response)
+            Ok(response) => if settings::test_agency_mode_enabled() && response.len() == 0 {
+                return Ok(Vec::new());
+            } else {
+                parse_get_messages_response(response)
+            },
         }
     }
 }
