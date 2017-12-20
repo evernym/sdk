@@ -30,52 +30,52 @@ pub struct Proof{
     to_did: String,
     from_did: String,
     proof_request_id: String,
-    proofs: HashMap<String, Proofs>,
-    aggregated_proof: AggregatedProof,
-    requested_proof: RequestedProof,
+    pub proofs: HashMap<String, Proofs>,
+    pub aggregated_proof: AggregatedProof,
+    pub requested_proof: RequestedProof,
 }
 
 //"aggregated_proof":{"c_hash":"25105671496406009212798488318112715144459298495509265715919744143493847046467","c_list":[[72,245,38,"....",46,195,18]]},
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-struct AggregatedProof {
+pub struct AggregatedProof {
     c_hash: String,
     c_list: Vec<Value>,
 }
 
 //"requested_proof":{"revealed_attrs":{"attr_key_id":["claim::f22cc7c8-924f-4541-aeff-29a9aed9c46b","UT","96473275571522321025213415717206189191162"]}
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-struct RequestedProof {
-    revealed_attrs: HashMap<String, Vec<Value>>,
-    unrevealed_attrs: HashMap<String, Value>,
-    self_attested_attrs: HashMap<String, Value>,
-    predicates: HashMap<String, Value>,
+pub struct RequestedProof {
+    pub revealed_attrs: HashMap<String, Vec<Value>>,
+    pub unrevealed_attrs: HashMap<String, Value>,
+    pub self_attested_attrs: HashMap<String, Value>,
+    pub predicates: HashMap<String, Value>,
 }
 
 //{"proof":{"primary_proof":{"eq_proof":{"revealed_attrs":{"state":"96473275571522321025213415717206189191162"},"a_prime":"921....546","e":"158....756","v":"114....069","m":{"address1":"111...738","zip":"149....066","city":"209....294","address2":"140....691"},"m1":"777....518","m2":"515....229"},"ge_proofs":[]}
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-struct Proofs{
-    proof: ProofOptions,
-    schema_seq_no: u32,
-    issuer_did: String,
+pub struct Proofs{
+    pub proof: ProofOptions,
+    pub schema_seq_no: u32,
+    pub issuer_did: String,
 }
 
 //{"primary_proof":{"eq_proof":{"revealed_attrs":{"state":"96473275571522321025213415717206189191162"},"a_prime":"921....546","e":"158....756","v":"114....069","m":{"address1":"111...738","zip":"149....066","city":"209....294","address2":"140....691"},"m1":"777....518","m2":"515....229"},"ge_proofs":[]},"non_revoc_proof":null}
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-struct ProofOptions{
+pub struct ProofOptions{
     primary_proof: EqAndGeProof,
     non_revoc_proof: serde_json::Value,
 }
 
 //{"eq_proof":{"revealed_attrs":{"state":"96473275571522321025213415717206189191162"},"a_prime":"921....546","e":"158....756","v":"114....069","m":{"address1":"111...738","zip":"149....066","city":"209....294","address2":"140....691"},"m1":"777....518","m2":"515....229"},"ge_proofs":[]}
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-struct EqAndGeProof{
+pub struct EqAndGeProof{
     eq_proof: EqProof,
     ge_proofs: serde_json::Value,
 }
 
 //{"revealed_attrs":{"state":"96473275571522321025213415717206189191162"},"a_prime":"921....546","e":"158....756","v":"114....069","m":{"address1":"111...738","zip":"149....066","city":"209....294","address2":"140....691"},"m1":"777....518","m2":"515....229"}
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-struct EqProof{
+pub struct EqProof{
     revealed_attrs: HashMap<String, Value>,
     a_prime: String,
     e: String,
