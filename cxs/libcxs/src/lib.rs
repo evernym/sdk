@@ -31,7 +31,6 @@ pub mod api;
 pub mod connection;
 pub mod issuer_claim;
 pub mod claim_request;
-pub mod proof_offer;
 pub mod proof;
 pub mod schema;
 

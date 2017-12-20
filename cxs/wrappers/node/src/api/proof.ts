@@ -26,11 +26,17 @@ export interface IProofData {
   name: string
 }
 
-export interface IProofResponse {
-  issuerDid: string,
-  schemaSeqNo: number,
+export interface IProofResponses {
+  proofAttrs: IProofResponseAttr[],
+}
+
+export interface IProofResponseAttr {
+  schema_seq_no: number,
+  issuer_did: string,
   claim_uuid: string,
-  revealed_attrs: [{name: string, value: string, revealed: boolean}]
+  name: string,
+  value: string,
+  attr_type: string,
 }
 
 /**
@@ -185,7 +191,7 @@ export class Proof extends CXSBase {
     }
   }
 
-  async getProof (connection: Connection): Promise<IProofResponse> {
+  async getProof (connection: Connection): Promise<IProofResponses> {
     try {
       const proof = await createFFICallbackPromise<string>(
           (resolve, reject, cb) => {

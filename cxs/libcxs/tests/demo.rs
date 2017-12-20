@@ -24,8 +24,8 @@ use cxs::utils::wallet::get_wallet_handle;
 static SERIALIZED_CONNECTION: &str = r#"{"source_id":"test_cxs_connection_connect","handle":2608616713,"pw_did":"62LeFLkN9ZeCr32j73PUyD","pw_verkey":"3jnnnL65mTW786LaTJSwEKENEMwmMowuJTYmVho23qNU","did_endpoint":"","state":4,"uuid":"","endpoint":"","invite_detail":{"e":"34.210.228.152:80","rid":"6oHwpBN","sakdp":"key","sn":"enterprise","sD":"62LeFLkN9ZeCr32j73PUyD","lu":"https://s19.postimg.org/ykyz4x8jn/evernym.png","sVk":"3jnnnL65mTW786LaTJSwEKENEMwmMowuJTYmVho23qNU","tn":"there"}}"#;
 #[allow(dead_code)]
 static SERIALIZED_CLAIM: &str = r#"{"source_id":"Claim For Driver's License","handle":3664805180,"claim_attributes":"{\"age\":[\"28\",\"28\"],\"height\":[\"175\",\"175\"],\"name\":[\"Alex\",\"1139481716457488690172217916278103335\"],\"sex\":[\"male\",\"5944657099558967239210949258394887428692050081607692519917050011144233115103\"]}","msg_uid":"7TKyPLr","schema_seq_no":12,"issuer_did":"V4SGRU86Z58d6TV7PBUe6f","issued_did":"62LeFLkN9ZeCr32j73PUyD","state":2,"claim_request":null}"#;
-static CLAIM_DATA: &str = r#"{"sex":["male","5944657099558967239210949258394887428692050081607692519917050011144233115103"], "name":["Alex","1139481716457488690172217916278103335"], "height":["175","175"], "age":["28","28"] }"#;
-
+//static CLAIM_DATA: &str = r#"{"sex":["male","5944657099558967239210949258394887428692050081607692519917050011144233115103"], "name":["Alex","1139481716457488690172217916278103335"], "height":["175","175"], "age":["28","28"] }"#;
+static CLAIM_DATA: &str = r#"{"name":["Alex","1139481716457488690172217916278103335"],"sex":["male","5944657099558967239210949258394887428692050081607692519917050011144233115103"]}"#;
 static CLAIM_DEF_ISSUER_DID: &str = "V4SGRU86Z58d6TV7PBUe6f";
 static CLAIM_DEF_SCHEMA_SEQ_NUM: u32 = 103;
 
@@ -193,6 +193,5 @@ fn init_sdk(){
         let claim_handle = deserialize_cxs_object(SERIALIZED_CLAIM, api::issuer_claim::cxs_issuer_claim_deserialize);
         assert!(claim_handle>0);
 }
-
 
 
