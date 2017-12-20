@@ -1,10 +1,10 @@
-use proof_offer::Proof;
+use messages::proofs::proof_message::ProofMessage;
 use serde_json;
 use serde_json::Value;
 use utils::error;
 
 
-pub fn proof_compliance(request: &String, proof: &Proof) -> Result<(), u32> {
+pub fn proof_compliance(request: &String, proof: &ProofMessage) -> Result<(), u32> {
     let proof_revealed_attrs = &proof.requested_proof.revealed_attrs;
     let proofs = &proof.proofs;
 
@@ -100,7 +100,7 @@ fn check_value(control: Option<&Value>, val: Option<&Value>) -> bool {
 #[cfg(test)]
 mod tests {
     use ::proof_compliance::proof_compliance;
-    use ::proof_offer::Proof;
+    use ::messages::proofs::proof_message::ProofMessage;
     use serde_json::Value;
     use ::proof_compliance::check_value;
 
@@ -215,7 +215,7 @@ mod tests {
 
   }
 }"#;
-        let proof_obj = Proof::from_str(proof).unwrap();
+        let proof_obj = ProofMessage::from_str(proof).unwrap();
         proof_compliance(&request.to_string(), &proof_obj).unwrap();
     }
 

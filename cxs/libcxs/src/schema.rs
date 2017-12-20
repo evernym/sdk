@@ -30,7 +30,7 @@ extern {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct SchemaTransaction {
+pub struct SchemaTransaction {
     #[serde(rename = "seqNo")]
     sequence_num: Option<usize>,
     #[serde(rename = "identifier")]
@@ -50,10 +50,10 @@ struct SchemaData {
     attr_names: Vec<String>
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct LedgerSchema {
     sequence_num: i32,
-    data: Option<SchemaTransaction>
+    pub data: Option<SchemaTransaction>
 }
 
 pub trait Schema: ToString {

@@ -15,7 +15,7 @@ use self::rmp_serde::encode;
 use self::create_key::CreateKeyMsg;
 use self::invite::{SendInvite, UpdateProfileData};
 use self::message::{GetMessages, SendMessage};
-use self::proofs::proof_messages::{ProofRequest};
+use self::proofs::proof_request::{ProofRequest};
 
 #[derive(Clone, Serialize, Debug, PartialEq, PartialOrd)]
 pub enum MessageType {

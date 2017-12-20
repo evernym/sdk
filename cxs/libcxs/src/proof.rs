@@ -8,9 +8,9 @@ use rand::Rng;
 use api::{ CxsStateType, ProofStateType };
 use utils::error;
 use settings;
-use messages::proofs::proof_offer::{ ProofMessage, ClaimData };
+use messages::proofs::proof_message::{ProofMessage, ClaimData };
 use messages;
-use messages::proofs::proof_messages::{ ProofRequest };
+use messages::proofs::proof_request::{ ProofRequest };
 use messages::GeneralMessage;
 use messages::MessageResponseCode::{ MessageAccepted };
 use connection;
@@ -20,7 +20,7 @@ use self::libc::c_char;
 use std::ffi::CString;
 use utils::timeout::TimeoutUtils;
 use utils::claim_def::{ClaimDef};
-use utils::constants::{ PROOF_REQ_JSON, PROOF_JSON, SCHEMAS_JSON, CLAIM_DEFS_JSON, REVOC_REGS_JSON};
+use utils::constants::{REVOC_REGS_JSON};
 use schema::LedgerSchema;
 
 lazy_static! {
@@ -38,9 +38,6 @@ extern {
                                                       valid: bool)>) -> i32;
 }
 
-//Todo: 2. Refactor the proof class to handle the json better
-//Todo: 3. Accept the Proof when Consumer Team sends it
-//Todo: 4. Write more Unit tests in CXS and Wrapper for Accepting the Proof
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct Proof {
     source_id: String,
@@ -97,9 +94,11 @@ impl Proof {
 
         let (err, valid) = receiver.recv_timeout(TimeoutUtils::long_timeout()).unwrap();
 
-        if err != 0 || !valid {
-            println!("\n\nVALID: {:?}", valid);
+        if err != 0 {
             return Err(self.set_invalid_proof_state(err))
+        } else if !valid {
+            warn!("indy returned false when validating proof");
+            return Err(error::INVALID_PROOF_OFFER.code_num)
         }
         info!("Indy validated Proof: {:?}", self.handle);
         self.proof_state = ProofStateType::ProofValidated;
@@ -121,13 +120,21 @@ impl Proof {
     }
 
     fn build_proof_json(&mut self, claim_data:&Vec<ClaimData>) -> Result<String, u32> {
-        Ok(PROOF_JSON.to_string())
+        match self.proof {
+            Some(ref x) => x.to_string(),
+            None => Err(error::INVALID_PROOF_OFFER.code_num),
+        }
     }
 
     fn build_schemas_json(&mut self, claim_data:&Vec<ClaimData>) -> Result<String, u32> {
         //get schema #
-        let schema_obj = LedgerSchema::new_from_ledger(15)?;
-        Ok(schema_obj.to_string())
+        let schema_obj = LedgerSchema::new_from_ledger(claim_data[0].schema_seq_no as i32)?;
+//        Ok(schema_obj.to_string())
+        let data = match schema_obj.data {
+            Some(x) => x,
+            None => return Err(error::INVALID_PROOF_OFFER.code_num)
+        };
+        Ok(json!({claim_data[0].claim_uuid.clone():data}).to_string())
     }
 
     fn build_proof_req_json(&mut self) -> Result<String, u32> {
@@ -168,7 +175,7 @@ impl Proof {
         }
         self.prover_did = connection::get_pw_did(connection_handle)?;
         self.requester_did = settings::get_config_value(settings::CONFIG_ENTERPRISE_DID_AGENT).unwrap();
-        let data_version = ".1";
+        let data_version = "0.1";
         let mut proof_obj = messages::proof_request();
         let proof_request = proof_obj
             .type_version(&self.version)
@@ -217,7 +224,7 @@ impl Proof {
 
         for msg in msgs {
             if msg["typ"] == String::from("proof") {
-                self.state = CxsStateType::CxsStateRequestReceived;
+                self.state = CxsStateType::CxsStateAccepted;
                 let payload = match msg["edgeAgentPayload"].as_str() {
                     Some(x) => x,
                     None => {
@@ -466,7 +473,7 @@ mod tests {
     extern crate mockito;
     use std::thread;
     use std::time::Duration;
-    use messages::proofs::proof_offer::tests::create_default_proof;
+    use messages::proofs::proof_message::tests::create_default_proof;
     use connection::create_connection;
     static DEFAULT_PROOF_STR: &str = r#"{"source_id":"","handle":486356518,"requested_attrs":"[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]","requested_predicates":"[{\"attr_name\":\"age\",\"p_type\":\"GE\",\"value\":18,\"schema_seq_no\":1,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\"}]","msg_uid":"","ref_msg_id":"","requester_did":"","prover_did":"","state":1,"proof_state":0,"name":"Optional","version":"1.0","nonce":"1067639606","proof":null}"#;
     static REQUESTED_ATTRS: &'static str = "[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]";
@@ -665,7 +672,7 @@ mod tests {
 
         proof.update_state();
         _m.assert();
-        assert_eq!(proof.get_state(), CxsStateType::CxsStateRequestReceived as u32);
+        assert_eq!(proof.get_state(), CxsStateType::CxsStateAccepted as u32);
         thread::sleep(Duration::from_millis(500));
     }
 

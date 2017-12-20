@@ -1,2 +1,2 @@
-pub mod proof_messages;
-pub mod proof_offer;
+pub mod proof_request;
+pub mod proof_message;
