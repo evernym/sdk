@@ -536,12 +536,12 @@ mod tests {
         settings::set_defaults();
         let agency_did = "BDSmVkzxRYGE4HKyMKxd1H";
         let agency_vk = "BpCWP9SrbYrkWAWK7n7rmp8nZ2a7rTYaUyk2kuuddqcr";
-        let agency_pw_did = "TaYxxdwxamZ3JJmwSpeZwa";
-        let agency_pw_vk = "FVCUFTzBrM89ViA5YEFRRpekQ1Aqq2CsyEKCvPFvrxHN";
-        let my_did = "4fUDR9R7fjwELRvH9JT6HH";
-        let my_vk = "2zoa6G7aMfX8GnUEpDxxunFHE7fZktRiiHk1vgMRH2tm";
-        let agent_did = "EBivP8Ta9uEQwDN3n6ePYd";
-        let agent_vk = "8BoPrycRZ9owUZbnYrvy762u4KvZ1rmaUcMMvDc7QjpM";
+        let agency_pw_did = "NaJA7NSDs8eQnXaswAACoC";
+        let agency_pw_vk = "CkzvnjfBrs9T4a3PEuVPhXpvGbCFehvFRqTamjAzYb9a";
+        let my_did = "2Yc17wdT4RHYCPkEWHhvET";
+        let my_vk = "qqYUsW8MAD3yKgky4DmPha58YM2nsRBsMR3wNzfDwBX";
+        let agent_did = "kgbuaQmUMxsbfvXVQHqr1";
+        let agent_vk = "Qou9dNMuwU27QrYyWMgHPZDU3J5arTLTXPzi13vew8d";
         let host = "https://enym-eagency.pdev.evernym.com";
 
         settings::set_config_value(settings::CONFIG_ENTERPRISE_DID,my_did);

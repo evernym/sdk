@@ -45,7 +45,7 @@ impl GetMessages{
             to_did: String::new(),
             to_vk: String::new(),
             payload: GetMessagesPayload{
-                msg_type: MsgType { name: "GET_MSGS".to_string(), ver: "1.0".to_string(), fmt: None, },
+                msg_type: MsgType { name: "GET_MSGS".to_string(), ver: "1.0".to_string(), },
                 uids: String::new(),
                 status_code: String::new(),
                 exclude_payload: "Y".to_string(),
@@ -219,7 +219,7 @@ mod tests {
                 String::from("error")
             }
         };
-        assert_eq!(msg, "{\"agentPayload\":\"{\\\"@type\\\":{\\\"fmt\\\":null,\\\"name\\\":\\\"GET_MSGS\\\",\\\"ver\\\":\\\"1.0\\\"},\\\"excludePayload\\\":\\\"Y\\\",\\\"statusCodes\\\":\\\"0\\\",\\\"uids\\\":\\\"123\\\"}\",\"to\":\"8XFh8yBzrpJQmNyZzgoTqB\"}");
+        assert_eq!(msg, "{\"agentPayload\":\"{\\\"@type\\\":{\\\"name\\\":\\\"GET_MSGS\\\",\\\"ver\\\":\\\"1.0\\\"},\\\"excludePayload\\\":\\\"Y\\\",\\\"statusCodes\\\":\\\"0\\\",\\\"uids\\\":\\\"123\\\"}\",\"to\":\"8XFh8yBzrpJQmNyZzgoTqB\"}");
     }
 
     #[test]
@@ -284,7 +284,7 @@ mod tests {
             delivery_details: vec![delivery_details2],
         };
         let response = GetMessagesResponse {
-            msg_type: MsgType { name: "MSGS".to_string(), ver: "1.0".to_string(), fmt: None, },
+            msg_type: MsgType { name: "MSGS".to_string(), ver: "1.0".to_string(), },
             msgs: vec![msg1, msg2],
         };
 

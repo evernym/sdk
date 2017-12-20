@@ -54,7 +54,7 @@ impl CreateKeyMsg{
         CreateKeyMsg {
             to_did: String::new(),
             payload: CreateKeyPayload{
-                msg_type: MsgType { name: "CREATE_KEY".to_string(), ver: "1.0".to_string(), fmt: None, } ,
+                msg_type: MsgType { name: "CREATE_KEY".to_string(), ver: "1.0".to_string(), } ,
                 for_did: String::new(),
                 for_verkey: String::new(),
             },
@@ -190,7 +190,7 @@ mod tests {
         let msg_payload = CreateKeyPayload {
             for_did: String::new(),
             for_verkey: String::new(),
-            msg_type: MsgType { name: "CREATE_KEY".to_string(), ver: "1.0".to_string(), fmt: None, } ,
+            msg_type: MsgType { name: "CREATE_KEY".to_string(), ver: "1.0".to_string(), } ,
         };
         assert_eq!(msg.payload, msg_payload);
     }
@@ -204,7 +204,7 @@ mod tests {
         let msg_payload = CreateKeyPayload {
             for_did: for_did.to_string(),
             for_verkey: for_verkey.to_string(),
-            msg_type: MsgType { name: "CREATE_KEY".to_string(), ver: "1.0".to_string(), fmt: None, } ,
+            msg_type: MsgType { name: "CREATE_KEY".to_string(), ver: "1.0".to_string(), } ,
         };
         let msg = create_keys()
             .to(to_did)

@@ -61,7 +61,6 @@ impl MessageResponseCode {
 pub struct MsgType {
     name: String,
     ver: String,
-    fmt: Option<String>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -146,7 +145,7 @@ pub fn bundle_for_agency(message: Vec<u8>, did: &str) -> Result<Vec<u8>, u32> {
 
     info!("forwarding agency bundle to {}", did);
     let outer = Forward {
-        msg_type: MsgType { name: "FWD".to_string(), ver: "1.0".to_string(), fmt: None, },
+        msg_type: MsgType { name: "FWD".to_string(), ver: "1.0".to_string(), },
         fwd: did.to_owned(),
         msg,
     };
@@ -166,7 +165,7 @@ pub fn bundle_for_agent(message: Vec<u8>, did: &str, vk: &str) -> Result<Vec<u8>
     /* forward to did */
     info!("forwarding agent bundle to {}", did);
     let inner = Forward {
-        msg_type: MsgType { name: "FWD".to_string(), ver: "1.0".to_string(), fmt: None, },
+        msg_type: MsgType { name: "FWD".to_string(), ver: "1.0".to_string(), },
         fwd: did.to_string(),
         msg,
     };
@@ -331,9 +330,9 @@ pub mod tests {
         ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
         let agency_did = "BDSmVkzxRYGE4HKyMKxd1H";
-        let agency_vk = "8ZicsPGTh4Uo3YDWGmx2zpXyzwAfGTUYYfL82zfvGFRH";
-        let my_did = "4fUDR9R7fjwELRvH9JT6HH";
-        let my_vk = "2zoa6G7aMfX8GnUEpDxxunFHE7fZktRiiHk1vgMRH2tm";
+        let agency_vk = "BpCWP9SrbYrkWAWK7n7rmp8nZ2a7rTYaUyk2kuuddqcr";
+        let my_did = "2Yc17wdT4RHYCPkEWHhvET";
+        let my_vk = "qqYUsW8MAD3yKgky4DmPha58YM2nsRBsMR3wNzfDwBX";
         //let agent_pw_did = "ShqBZfM59aDVjYtboizRgM";
         //let agent_pw_vk = "F1Z6hYpyH6LPH6XcNUfLoNHSnznuA9vEWVowcMd34rrK";
         let host = "https://enym-eagency.pdev.evernym.com";
@@ -352,7 +351,7 @@ pub mod tests {
         /* STEP 1 - CONNECT */
 
         let payload = ConnectMsg {
-            msg_type: MsgType { name: "CONNECT".to_string(), ver: "1.0".to_string(), fmt: None, },
+            msg_type: MsgType { name: "CONNECT".to_string(), ver: "1.0".to_string(), },
             from_did: my_did.to_string(),
             from_vk: my_vk.to_string(),
         };
@@ -375,7 +374,7 @@ pub mod tests {
         /* STEP 2 - REGISTER */
 
         let payload = GenericMsg {
-            msg_type: MsgType { name: "SIGNUP".to_string(), ver: "1.0".to_string(), fmt: None, },
+            msg_type: MsgType { name: "SIGNUP".to_string(), ver: "1.0".to_string(), },
         };
 
         let data = encode::to_vec_named(&payload).unwrap();
@@ -392,7 +391,7 @@ pub mod tests {
 
         /* STEP 3 - CREATE AGENT */
         let payload = GenericMsg {
-            msg_type: MsgType { name: "CREATE_AGENT".to_string(), ver: "1.0".to_string(), fmt: None, },
+            msg_type: MsgType { name: "CREATE_AGENT".to_string(), ver: "1.0".to_string(), },
         };
 
         let data = encode::to_vec_named(&payload).unwrap();

@@ -45,7 +45,14 @@ pub fn post_u8(body_content: &Vec<u8>, url: &str) -> Result<Vec<u8>,String> {
     };
 
     info!("Response Header: {:?}", response);
-    if !response.status().is_success() {return Err("POST failed".to_string());}
+    if !response.status().is_success() {
+        let mut content = String::new();
+        match response.read_to_string(&mut content) {
+            Ok(x) => error!("Request failed: {}", content),
+            Err(x) => error!("could not read response"),
+        };
+        return Err("POST failed".to_string());
+    }
 
     let mut content = Vec::new();
     match response.read_to_end(&mut content) {

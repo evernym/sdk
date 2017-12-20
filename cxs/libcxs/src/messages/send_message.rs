@@ -129,9 +129,9 @@ impl GeneralMessage for SendMessage{
             return Err(self.validate_rc)
         }
 
-        let create = CreateMessagePayload { msg_type: MsgType { name: "CREATE_MSG".to_string(), ver: "1.0".to_string(), fmt: None, }, mtype: self.message.to_string(), };
-        let detail = MessageDetailPayload { msg_type: MsgType { name: "MSG_DETAIL".to_string(), ver: "1.0".to_string(), fmt: None, }, msg: self.payload.clone(), };
-        let send = SendMessagePayload { msg_type: MsgType { name: "SEND_MSG".to_string(), ver: "1.0".to_string(), fmt: None, }, };
+        let create = CreateMessagePayload { msg_type: MsgType { name: "CREATE_MSG".to_string(), ver: "1.0".to_string(), }, mtype: self.message.to_string(), };
+        let detail = MessageDetailPayload { msg_type: MsgType { name: "MSG_DETAIL".to_string(), ver: "1.0".to_string(), }, msg: self.payload.clone(), };
+        let send = SendMessagePayload { msg_type: MsgType { name: "SEND_MSG".to_string(), ver: "1.0".to_string(), }, };
 
         let create = encode::to_vec_named(&create).unwrap();
         let detail = encode::to_vec_named(&detail).unwrap();
@@ -233,6 +233,6 @@ mod tests {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
         let result = parse_send_message_response(SEND_CLAIM_OFFER_RESPONSE.to_vec()).unwrap();
 
-        assert_eq!("{\"@type\":{\"name\":\"MSG_SENT\",\"ver\":\"1.0\",\"fmt\":null},\"uid\":\"ntc2ytb\"}", result);
+        assert_eq!("{\"@type\":{\"name\":\"MSG_SENT\",\"ver\":\"1.0\"},\"uid\":\"ntc2ytb\"}", result);
     }
 }
