@@ -217,7 +217,7 @@ mod tests {
     use std::time::Duration;
     use api::CxsStateType;
     use utils::httpclient;
-    use utils::constants::CXN_ACCEPTED_MESSAGE;
+    use utils::constants::GET_MESSAGES_RESPONSE;
 
     extern "C" fn create_cb(command_handle: u32, err: u32, connection_handle: u32) {
         if err != 0 {panic!("create_cb failed")}
@@ -281,7 +281,7 @@ mod tests {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
         let handle = build_connection("test_cxs_connection_update_state".to_owned()).unwrap();
         assert!(handle > 0);
-        httpclient::set_next_u8_response(CXN_ACCEPTED_MESSAGE.to_vec());
+        httpclient::set_next_u8_response(GET_MESSAGES_RESPONSE.to_vec());
         let rc = cxs_connection_update_state(0,handle,Some(update_state_cb));
         assert_eq!(rc, error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(300));
@@ -334,14 +334,8 @@ mod tests {
         assert_eq!(err, 0);
         assert!(connection_handle > 0);
         println!("successfully called deserialize_cb");
-        let string = "{\"source_id\":\"test_cxs_connection_deserialize\",\"handle\":4171907673,\
-        \"pw_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"pw_verkey\":\"EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A\",\
-        \"did_endpoint\":\"\",\"state\":1,\"uuid\":\"\",\"endpoint\":\"\",\"invite_detail\":\
-        {\"statusCode\":\"\",\"connReqId\":\"\",\"senderDetail\":{\"name\":\"\",\"agentKeyDlgProof\":\
-        {\"agentDID\":\"\",\"agentDelegatedKey\":\"\",\"signature\":\"\"},\"DID\":\"\",\
-        \"logoUrl\":\"\",\"verKey\":\"\"},\"senderAgencyDetail\":{\"DID\":\"\",\"verKey\":\"\",\
-        \"endpoint\":\"\"},\"targetName\":\"\",\"statusMsg\":\"\"},\"agent_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\
-        \"agent_vk\":\"EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A\"}";
+        let string = r#"{"source_id":"test_cxs_connection_deserialialize_succeeds","handle":2829557145,"pw_did":"8XFh8yBzrpJQmNyZzgoTqB","pw_verkey":"EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A","did_endpoint":"","state":1,"uuid":"","endpoint":"","invite_detail":{"statusCode":"","connReqId":"","senderDetail":{"name":"","agentKeyDlgProof":{"agentDID":"","agentDelegatedKey":"","signature":""},"DID":"","logoUrl":"","verKey":""},"senderAgencyDetail":{"DID":"","verKey":"","endpoint":""},"targetName":"","statusMsg":""},"agent_did":"U5LXs4U7P9msh647kToezy","agent_vk":"FktSZg8idAVzyQZrdUppK6FTrfAzW3wWVzAjJAfdUvJq","their_pw_did":"","their_pw_verkey":""}"#;
+
         let new = to_string(connection_handle).unwrap();
         println!("original: {}",string);
         println!("     new: {}",new);
@@ -352,14 +346,7 @@ mod tests {
     fn test_cxs_connection_deserialize_succeeds() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
-        let string = "{\"source_id\":\"test_cxs_connection_deserialize\",\"handle\":4171907673,\
-        \"pw_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"pw_verkey\":\"EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A\",\
-        \"did_endpoint\":\"\",\"state\":1,\"uuid\":\"\",\"endpoint\":\"\",\"invite_detail\":\
-        {\"statusCode\":\"\",\"connReqId\":\"\",\"senderDetail\":{\"name\":\"\",\"agentKeyDlgProof\":\
-        {\"agentDID\":\"\",\"agentDelegatedKey\":\"\",\"signature\":\"\"},\"DID\":\"\",\
-        \"logoUrl\":\"\",\"verKey\":\"\"},\"senderAgencyDetail\":{\"DID\":\"\",\"verKey\":\"\",\
-        \"endpoint\":\"\"},\"targetName\":\"\",\"statusMsg\":\"\"},\"agent_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\
-        \"agent_vk\":\"EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A\"}";
+        let string = r#"{"source_id":"test_cxs_connection_deserialialize_succeeds","handle":2829557145,"pw_did":"8XFh8yBzrpJQmNyZzgoTqB","pw_verkey":"EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A","did_endpoint":"","state":1,"uuid":"","endpoint":"","invite_detail":{"statusCode":"","connReqId":"","senderDetail":{"name":"","agentKeyDlgProof":{"agentDID":"","agentDelegatedKey":"","signature":""},"DID":"","logoUrl":"","verKey":""},"senderAgencyDetail":{"DID":"","verKey":"","endpoint":""},"targetName":"","statusMsg":""},"agent_did":"U5LXs4U7P9msh647kToezy","agent_vk":"FktSZg8idAVzyQZrdUppK6FTrfAzW3wWVzAjJAfdUvJq","their_pw_did":"","their_pw_verkey":""}"#;
 
         cxs_connection_deserialize(0,CString::new(string).unwrap().into_raw(), Some(deserialize_cb));
         thread::sleep(Duration::from_millis(200));

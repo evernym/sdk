@@ -93,6 +93,30 @@ impl SendMessage{
         self.ref_msg_id = String::from(id);
         self
     }
+
+    pub fn send_secure(&mut self) -> Result<Vec<String>, u32> {
+        let url = format!("{}/agency/msg", settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
+
+        let data = match self.msgpack() {
+            Ok(x) => x,
+            Err(x) => return Err(x),
+        };
+
+        let mut result = Vec::new();
+        match httpclient::post_u8(&data, &url) {
+            Err(_) => return Err(error::POST_MSG_FAILURE.code_num),
+            Ok(response) => {
+                let string: String = if settings::test_agency_mode_enabled() && response.len() == 0 {
+                    String::new()
+                } else {
+                    parse_send_message_response(response)?
+                };
+                result.push(string);
+            },
+        };
+
+        Ok(result.to_owned())
+    }
 }
 
 //Todo: Every GeneralMessage extension, duplicates code
@@ -144,30 +168,6 @@ impl GeneralMessage for SendMessage{
 
         let msg = bundle.encode()?;
         bundle_for_agent(msg, &self.agent_did, &self.agent_vk)
-    }
-
-    fn send_secure(&mut self) -> Result<Vec<String>, u32> {
-        let url = format!("{}/agency/msg", settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
-
-        let data = match self.msgpack() {
-            Ok(x) => x,
-            Err(x) => return Err(x),
-        };
-
-        let mut result = Vec::new();
-        match httpclient::post_u8(&data, &url) {
-            Err(_) => return Err(error::POST_MSG_FAILURE.code_num),
-            Ok(response) => {
-                let string: String = if settings::test_agency_mode_enabled() && response.len() == 0 {
-                    String::new()
-                } else {
-                    parse_send_message_response(response)?
-                };
-                result.push(string);
-            },
-        };
-
-        Ok(result.to_owned())
     }
 }
 
