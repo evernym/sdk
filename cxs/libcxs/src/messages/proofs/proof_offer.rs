@@ -15,46 +15,46 @@ pub struct ProofMessage{
     to_did: String,
     from_did: String,
     proof_request_id: String,
-    proofs: HashMap<String, Proofs>,
-    aggregated_proof: AggregatedProof,
-    requested_proof: RequestedProof,
+    pub proofs: HashMap<String, Proofs>,
+    pub aggregated_proof: AggregatedProof,
+    pub requested_proof: RequestedProof,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-struct AggregatedProof {
+pub struct AggregatedProof {
     c_hash: String,
     c_list: Vec<Value>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-struct RequestedProof {
-    revealed_attrs: HashMap<String, Vec<Value>>,
-    unrevealed_attrs: HashMap<String, Value>,
-    self_attested_attrs: HashMap<String, Value>,
-    predicates: HashMap<String, Value>,
+pub struct RequestedProof {
+    pub revealed_attrs: HashMap<String, Vec<Value>>,
+    pub unrevealed_attrs: HashMap<String, Value>,
+    pub self_attested_attrs: HashMap<String, Value>,
+    pub predicates: HashMap<String, Value>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-struct Proofs{
-    proof: ProofOptions,
-    schema_seq_no: u32,
-    issuer_did: String,
+pub struct Proofs{
+    pub proof: ProofOptions,
+    pub schema_seq_no: u32,
+    pub issuer_did: String,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-struct ProofOptions{
+pub struct ProofOptions{
     primary_proof: EqAndGeProof,
     non_revoc_proof: serde_json::Value,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-struct EqAndGeProof{
+pub struct EqAndGeProof{
     eq_proof: EqProof,
     ge_proofs: serde_json::Value,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-struct EqProof{
+pub struct EqProof{
     revealed_attrs: HashMap<String, Value>,
     a_prime: String,
     e: String,
