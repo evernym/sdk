@@ -30,6 +30,7 @@ export interface IProofData {
 
 export interface IProofResponses {
   proofAttrs: IProofResponseAttr[],
+  proofState: ProofState,
 }
 
 export interface IProofResponseAttr {
@@ -219,7 +220,7 @@ export class Proof extends CXSBase {
             resolve(proofData)
           })
         )
-      return JSON.parse(proof)
+      return {proofAttrs: JSON.parse(proof), proofState: this.getProofState()}
     } catch (err) {
       throw new CXSInternalError(`cxs_get_proof -> ${err}`)
     }

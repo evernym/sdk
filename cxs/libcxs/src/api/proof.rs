@@ -8,7 +8,6 @@ use connection;
 use std::thread;
 use std::ptr;
 use api::CxsStatus;
-use api::{ CxsStateType };
 
 /// Create a new Proof object that requests a proof for an enterprise
 ///
@@ -256,11 +255,6 @@ pub extern fn cxs_get_proof(command_handle: u32,
 
     //update the state to see if proof has come
     proof::update_state(proof_handle);
-
-//    if proof::get_state(proof_handle) != CxsStateType::CxsStateAccepted as u32 {
-//        info!("No proof available for: {}", proof_handle);
-//        return error::NOT_READY.code_num;
-//    }
 
     thread::spawn(move|| {
         match proof::get_proof(proof_handle) {
