@@ -30,6 +30,7 @@ static SERIALIZED_CONNECTION: &str = r#"{"source_id":"test_cxs_connection_connec
 static SERIALIZED_CLAIM: &str = r#"{"source_id":"Claim For Driver's License","handle":3664805180,"claim_attributes":"{\"age\":[\"28\",\"28\"],\"height\":[\"175\",\"175\"],\"name\":[\"Alex\",\"1139481716457488690172217916278103335\"],\"sex\":[\"male\",\"5944657099558967239210949258394887428692050081607692519917050011144233115103\"]}","msg_uid":"7TKyPLr","schema_seq_no":12,"issuer_did":"4fUDR9R7fjwELRvH9JT6HH","issued_did":"62LeFLkN9ZeCr32j73PUyD","state":2,"claim_request":null}"#;
 //static CLAIM_DATA: &str = r#"{"sex":["male","5944657099558967239210949258394887428692050081607692519917050011144233115103"], "name":["Alex","1139481716457488690172217916278103335"], "height":["175","175"], "age":["28","28"] }"#;
 static CLAIM_DATA: &str = r#"{"name":["Alex","1139481716457488690172217916278103335"],"sex":["male","5944657099558967239210949258394887428692050081607692519917050011144233115103"]}"#;
+static CLAIM_DATA_2: &str = r#"{"address1": ["123 Main St", "5944657099558967239210949258394887428692050081607692519917050011144233115103"], "address2": ["Suite 3", "1139481716457488690172217916278103335"], "city": ["Draper", "217181133183131171104287013881253199875104"], "state": ["UT", "96473275571522321025213415717206189191162"], "zip": ["84000", "84000"]}"#;
 static CLAIM_DEF_ISSUER_DID: &str = "4fUDR9R7fjwELRvH9JT6HH";
 static CLAIM_DEF_SCHEMA_SEQ_NUM: u32 = 103;
 
@@ -58,7 +59,7 @@ pub fn open_sandbox_pool() -> u32 {
     pool::open_pool_ledger(&pool_name, Some(config)).unwrap()
 }
 
-#[ignore]
+//#[ignore]
 #[test]
 fn test_demo(){
     let serialize_connection_fn = api::connection::cxs_connection_serialize;
@@ -93,14 +94,14 @@ fn test_demo(){
 
     // Creating a Trustee DID -> sufficient permissions to create ClaimDef
 //    let (trustee_did, trustee_verkey) = signus::SignusUtils::create_and_store_my_did(get_wallet_handle(), Some(r#"{"seed":"000000000000000000000000Trustee1"}"#))?;
-    let (issuer_did, issuer_verkey) = signus::SignusUtils::create_and_store_my_did(get_wallet_handle(), Some(r#"{"seed":"000000000000000000000000Issuer01"}"#))?;
+//    let (issuer_did, issuer_verkey) = signus::SignusUtils::create_and_store_my_did(get_wallet_handle(), Some(r#"{"seed":"000000000000000000000000Issuer01"}"#))?;
 
     // Create Claim Offer ***************************************************************
     let source_id = "Name and Sex";
     let claim_name = "Name and Sex";
-    let claim_data:serde_json::Value = serde_json::from_str(CLAIM_DATA).unwrap(); // this format will make it easier to modify in the futre
+    let claim_data:serde_json::Value = serde_json::from_str(CLAIM_DATA_2).unwrap(); // this format will make it easier to modify in the futre
     let ledger_issuer_did = "4fUDR9R7fjwELRvH9JT6HH";
-    let ledger_schema_seq_num = 103;
+    let ledger_schema_seq_num = 15;
     let (err, claim_handle) = create_claim_offer(claim_name, source_id, claim_data, ledger_issuer_did, ledger_schema_seq_num);
     assert_eq!(err, 0);
     assert!(claim_handle>0);
@@ -131,7 +132,7 @@ fn test_demo(){
     assert!(connection_handle > 0);
     // Insert Claim Def ***************************************************************
     println!("STORING CLAIM DEF");
-    insert_claim_def();
+//    insert_claim_def();
     // Connect ************************************************************************
     let (sender, receiver) = channel();
     let (command_handle, cb) = closure_to_connect_cb(Box::new(move|err|{sender.send(err).unwrap();}));
@@ -139,7 +140,7 @@ fn test_demo(){
 //    let lphone_number = "8017900625";
     let rc = api::connection::cxs_connection_connect(command_handle,
                                                      connection_handle,
-                                                     CString::new("{\"phone\":\"8017170233\"}").unwrap().into_raw(),cb);
+                                                     CString::new("{\"phone\":\"8017170266\"}").unwrap().into_raw(),cb);
     assert_eq!(rc, 0);
     let err = receiver.recv_timeout(utils::timeout::TimeoutUtils::long_timeout()).unwrap();
     assert_eq!(err,0);
@@ -186,7 +187,7 @@ fn receive_request_send_claim(connection_handle: u32, claim_handle:u32){
     assert_eq!(claim_state, target_claim_state);
 
     // Insert Claim Def ***************************************************************
-    insert_claim_def();
+//    insert_claim_def();
 
     // Send claim *********************************************************************
     let err = utils::demo::send_claim(claim_handle, connection_handle);

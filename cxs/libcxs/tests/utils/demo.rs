@@ -16,6 +16,7 @@ use cxs::api;
 use std::sync::Mutex;
 use std::sync::mpsc::channel;
 use ::cxs::utils::callback::CallbackUtils;
+use ::cxs::utils::error;
 lazy_static! {
     static ref COMMAND_HANDLE_COUNTER: AtomicUsize = ATOMIC_USIZE_INIT;
 }
@@ -80,41 +81,41 @@ pub fn build_claim_def_txn(submitter_did: &str,
     if err != 0{
         return Err(error::BUILD_CLAIM_DEF_REQ_ERR.code_num)
     }
-    info!("Created claim_def request");
+    println!("Created claim_def request");
     Ok(claim_def_req)
 }
 
-pub fn sign_and_send_request(pool_handle:u32,
-                             wallet_handle:u32,
-                             submitter_did:u32,
-                             request: &str) ->  Result<String, u32> {
-    let pool_handle = pool::get_pool_handle()?;
-
-    let (sender, receiver) = channel();
-    let cb = Box::new(move |err, valid | {
-        sender.send((err, valid)).unwrap();
-    });
-
-    let (command_handle, cb) = CallbackUtils::closure_to_build_request_cb(cb);
-    unsafe {
-        let indy_err = indy_sign_and_submit_request(command_handle,
-                                           pool_handle as i32,
-                                           wallet_handle as i32,
-                                           CString::new(submitter_did).unwrap().as_ptr(),
-                                           CString::new(request_json).unwrap().as_ptr(),
-                                           cb);
-        if indy_err != 0 {
-            return Err(error::INDY_SUBMIT_REQUEST_ERR.code_num)
-        }
-    }
-
-    let (err, claim_def) = receiver.recv_timeout(TimeoutUtils::long_timeout()).unwrap();
-
-    if err != 0{
-        return Err(error::INDY_SUBMIT_REQUEST_ERR.code_num)
-    }
-    Ok(claim_def)
-}
+//pub fn sign_and_send_request(pool_handle:u32,
+//                             wallet_handle:u32,
+//                             submitter_did:u32,
+//                             request_json: &str) ->  Result<String, u32> {
+//    let pool_handle = ::cxs::utils::pool::get_pool_handle()?;
+//
+//    let (sender, receiver) = channel();
+//    let cb = Box::new(move |err, valid | {
+//        sender.send((err, valid)).unwrap();
+//    });
+//
+//    let (command_handle, cb) = CallbackUtils::closure_to_build_request_cb(cb);
+//    unsafe {
+//        let indy_err = indy_sign_and_submit_request(command_handle,
+//                                           pool_handle as i32,
+//                                           wallet_handle as i32,
+//                                           CString::new(submitter_did).unwrap().as_ptr(),
+//                                           CString::new(request_json).unwrap().as_ptr(),
+//                                           cb);
+//        if indy_err != 0 {
+//            return Err(error::INDY_SUBMIT_REQUEST_ERR.code_num)
+//        }
+//    }
+//
+//    let (err, claim_def) = receiver.recv_timeout(TimeoutUtils::long_timeout()).unwrap();
+//
+//    if err != 0{
+//        return Err(error::INDY_SUBMIT_REQUEST_ERR.code_num)
+//    }
+//    Ok(claim_def)
+//}
 
 #[allow(dead_code)]
 pub fn create_claim_offer(claim_name: &str, source_id: &str, claim_data_value: serde_json::Value, issuer_did: &str, schema_seq_no: u32) -> (u32, u32){
