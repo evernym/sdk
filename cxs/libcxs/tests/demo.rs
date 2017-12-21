@@ -30,7 +30,7 @@ static SERIALIZED_CONNECTION: &str = r#"{"source_id":"test_cxs_connection_connec
 static SERIALIZED_CLAIM: &str = r#"{"source_id":"Claim For Driver's License","handle":3664805180,"claim_attributes":"{\"age\":[\"28\",\"28\"],\"height\":[\"175\",\"175\"],\"name\":[\"Alex\",\"1139481716457488690172217916278103335\"],\"sex\":[\"male\",\"5944657099558967239210949258394887428692050081607692519917050011144233115103\"]}","msg_uid":"7TKyPLr","schema_seq_no":12,"issuer_did":"4fUDR9R7fjwELRvH9JT6HH","issued_did":"62LeFLkN9ZeCr32j73PUyD","state":2,"claim_request":null}"#;
 //static CLAIM_DATA: &str = r#"{"sex":["male","5944657099558967239210949258394887428692050081607692519917050011144233115103"], "name":["Alex","1139481716457488690172217916278103335"], "height":["175","175"], "age":["28","28"] }"#;
 static CLAIM_DATA: &str = r#"{"name":["Alex","1139481716457488690172217916278103335"],"sex":["male","5944657099558967239210949258394887428692050081607692519917050011144233115103"]}"#;
-static CLAIM_DATA_2: &str = r#"{"address1": ["123 Main St", "5944657099558967239210949258394887428692050081607692519917050011144233115103"], "address2": ["Suite 3", "1139481716457488690172217916278103335"], "city": ["Draper", "217181133183131171104287013881253199875104"], "state": ["UT", "96473275571522321025213415717206189191162"], "zip": ["84000", "84000"]}"#;
+static CLAIM_DATA_2: &str = r#"{"address1": ["123 Main St"], "address2": ["Suite 3"], "city": ["Draper"], "state": ["UT"], "zip": ["84000"]}"#;
 static CLAIM_DEF_ISSUER_DID: &str = "4fUDR9R7fjwELRvH9JT6HH";
 static CLAIM_DEF_SCHEMA_SEQ_NUM: u32 = 103;
 
