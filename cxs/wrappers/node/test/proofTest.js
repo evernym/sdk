@@ -113,7 +113,7 @@ describe('A Proof', function () {
     }
   })
 
-  it.only('get proof has an invalid proof state with incorrect proof', async () => {
+  it('get proof has an invalid proof state with incorrect proof', async () => {
     let connection = await Connection.create({ id: '234' })
     await connection.connect()
     const sourceId = 'SerializeDeserialize'

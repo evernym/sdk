@@ -388,10 +388,7 @@ pub fn to_string(handle: u32) -> Result<String, u32> {
 pub fn from_string(proof_data: &str) -> Result<u32, u32> {
     let derived_proof: Proof = match serde_json::from_str(proof_data) {
         Ok(x) => x,
-        Err(y) => {
-            println!("Err: {:?}", y);
-            return Err(error::UNKNOWN_ERROR.code_num)
-        },
+        Err(y) => return Err(error::UNKNOWN_ERROR.code_num),
     };
     let new_handle = derived_proof.handle;
 
