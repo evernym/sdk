@@ -107,7 +107,7 @@ fn test_demo(){
     assert!(claim_handle>0);
 
     // Create Proof **************************************************************
-    let requested_attrs = "[{\"schema_seq_no\":103,\"name\":\"name\",\"issuer_did\":\"4fUDR9R7fjwELRvH9JT6HH\"},{\"schema_seq_no\":103,\"name\":\"sex\",\"issuer_did\":\"4fUDR9R7fjwELRvH9JT6HH\"}]";
+    let requested_attrs = r#"[{"schema_seq_no":15,"name":"address1","issuer_did":"4fUDR9R7fjwELRvH9JT6HH"},{"schema_seq_no":15,"name":"address2","issuer_did":"4fUDR9R7fjwELRvH9JT6HH"},{"schema_seq_no":15,"name":"city","issuer_did":"4fUDR9R7fjwELRvH9JT6HH"},{"schema_seq_no":15,"name":"state","issuer_did":"4fUDR9R7fjwELRvH9JT6HH"},{"schema_seq_no":15,"name":"zip","issuer_did":"4fUDR9R7fjwELRvH9JT6HH"}]"#;
     let (err, proof_handle) = create_proof_request(source_id, requested_attrs);
     assert_eq!(err, 0);
     assert!(proof_handle>0);

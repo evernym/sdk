@@ -1,5 +1,7 @@
 extern crate rusqlite;
 
+use std::env::home_dir;
+
 
 static entries: &[[&str;3];2] = &[
     [
@@ -19,8 +21,10 @@ fn test_putting_claim_def_dependencies() {
     use std::path::Path;
     use rusqlite::Connection;
     use rusqlite::types::ToSql;
-    let path = Path::new("/home/mark/.indy_client/wallet/wallet1/sqlite.db");
-    let connection = Connection::open(path).unwrap();
+    let home = home_dir().unwrap();
+    let indy = Path::new(".indy_client/wallet/wallet1/sqlite.db");
+    let path = home.join(indy);
+    let connection = Connection::open(path.as_path()).unwrap();
 
 
     for entry in entries{
