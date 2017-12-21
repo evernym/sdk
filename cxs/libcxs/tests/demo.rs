@@ -22,16 +22,16 @@ use std::sync::mpsc::channel;
 use cxs::utils::wallet::get_wallet_handle;
 use std::path::Path;
 use cxs::utils::error;
+use cxs::utils::signus;
 
 #[allow(dead_code)]
 static SERIALIZED_CONNECTION: &str = r#"{"source_id":"test_cxs_connection_connect","handle":2608616713,"pw_did":"62LeFLkN9ZeCr32j73PUyD","pw_verkey":"3jnnnL65mTW786LaTJSwEKENEMwmMowuJTYmVho23qNU","did_endpoint":"","state":4,"uuid":"","endpoint":"","invite_detail":{"e":"34.210.228.152:80","rid":"6oHwpBN","sakdp":"key","sn":"enterprise","sD":"62LeFLkN9ZeCr32j73PUyD","lu":"https://s19.postimg.org/ykyz4x8jn/evernym.png","sVk":"3jnnnL65mTW786LaTJSwEKENEMwmMowuJTYmVho23qNU","tn":"there"}}"#;
 #[allow(dead_code)]
-static SERIALIZED_CLAIM: &str = r#"{"source_id":"Claim For Driver's License","handle":3664805180,"claim_attributes":"{\"age\":[\"28\",\"28\"],\"height\":[\"175\",\"175\"],\"name\":[\"Alex\",\"1139481716457488690172217916278103335\"],\"sex\":[\"male\",\"5944657099558967239210949258394887428692050081607692519917050011144233115103\"]}","msg_uid":"7TKyPLr","schema_seq_no":12,"issuer_did":"V4SGRU86Z58d6TV7PBUe6f","issued_did":"62LeFLkN9ZeCr32j73PUyD","state":2,"claim_request":null}"#;
+static SERIALIZED_CLAIM: &str = r#"{"source_id":"Claim For Driver's License","handle":3664805180,"claim_attributes":"{\"age\":[\"28\",\"28\"],\"height\":[\"175\",\"175\"],\"name\":[\"Alex\",\"1139481716457488690172217916278103335\"],\"sex\":[\"male\",\"5944657099558967239210949258394887428692050081607692519917050011144233115103\"]}","msg_uid":"7TKyPLr","schema_seq_no":12,"issuer_did":"4fUDR9R7fjwELRvH9JT6HH","issued_did":"62LeFLkN9ZeCr32j73PUyD","state":2,"claim_request":null}"#;
 //static CLAIM_DATA: &str = r#"{"sex":["male","5944657099558967239210949258394887428692050081607692519917050011144233115103"], "name":["Alex","1139481716457488690172217916278103335"], "height":["175","175"], "age":["28","28"] }"#;
 static CLAIM_DATA: &str = r#"{"name":["Alex","1139481716457488690172217916278103335"],"sex":["male","5944657099558967239210949258394887428692050081607692519917050011144233115103"]}"#;
-static CLAIM_DEF_ISSUER_DID: &str = "V4SGRU86Z58d6TV7PBUe6f";
+static CLAIM_DEF_ISSUER_DID: &str = "4fUDR9R7fjwELRvH9JT6HH";
 static CLAIM_DEF_SCHEMA_SEQ_NUM: u32 = 103;
-
 
 fn sandbox_pool_setup() {
     let node_txns = vec![
@@ -84,26 +84,29 @@ fn test_demo(){
 
     file.write_all(config_string.as_bytes()).unwrap();
 
+    open_sandbox_pool();
+
     let path = CString::new(file.path().to_str().unwrap()).unwrap();
     let r = api::cxs::cxs_init(0,path.as_ptr(),Some(generic_cb));
     assert_eq!(r,0);
     thread::sleep(Duration::from_secs(1));
 
     // Creating a Trustee DID -> sufficient permissions to create ClaimDef
-
+//    let (trustee_did, trustee_verkey) = signus::SignusUtils::create_and_store_my_did(get_wallet_handle(), Some(r#"{"seed":"000000000000000000000000Trustee1"}"#))?;
+    let (issuer_did, issuer_verkey) = signus::SignusUtils::create_and_store_my_did(get_wallet_handle(), Some(r#"{"seed":"000000000000000000000000Issuer01"}"#))?;
 
     // Create Claim Offer ***************************************************************
     let source_id = "Name and Sex";
     let claim_name = "Name and Sex";
     let claim_data:serde_json::Value = serde_json::from_str(CLAIM_DATA).unwrap(); // this format will make it easier to modify in the futre
-    let ledger_issuer_did = "V4SGRU86Z58d6TV7PBUe6f";
+    let ledger_issuer_did = "4fUDR9R7fjwELRvH9JT6HH";
     let ledger_schema_seq_num = 103;
     let (err, claim_handle) = create_claim_offer(claim_name, source_id, claim_data, ledger_issuer_did, ledger_schema_seq_num);
     assert_eq!(err, 0);
     assert!(claim_handle>0);
 
     // Create Proof **************************************************************
-    let requested_attrs = "[{\"schema_seq_no\":103,\"name\":\"name\",\"issuer_did\":\"V4SGRU86Z58d6TV7PBUe6f\"},{\"schema_seq_no\":103,\"name\":\"sex\",\"issuer_did\":\"V4SGRU86Z58d6TV7PBUe6f\"}]";
+    let requested_attrs = "[{\"schema_seq_no\":103,\"name\":\"name\",\"issuer_did\":\"4fUDR9R7fjwELRvH9JT6HH\"},{\"schema_seq_no\":103,\"name\":\"sex\",\"issuer_did\":\"4fUDR9R7fjwELRvH9JT6HH\"}]";
     let (err, proof_handle) = create_proof_request(source_id, requested_attrs);
     assert_eq!(err, 0);
     assert!(proof_handle>0);
@@ -136,7 +139,7 @@ fn test_demo(){
 //    let lphone_number = "8017900625";
     let rc = api::connection::cxs_connection_connect(command_handle,
                                                      connection_handle,
-                                                     CString::new("{\"phone\":\"8017900625\"}").unwrap().into_raw(),cb);
+                                                     CString::new("{\"phone\":\"8017170233\"}").unwrap().into_raw(),cb);
     assert_eq!(rc, 0);
     let err = receiver.recv_timeout(utils::timeout::TimeoutUtils::long_timeout()).unwrap();
     assert_eq!(err,0);
@@ -194,7 +197,6 @@ fn send_proof_request_and_receive_proof(connection_handle: u32, proof_handle:u32
     let state = wait_for_updated_state(proof_handle, 1, api::proof::cxs_proof_update_state);
     let target_state = 4;
     let target_proof_state = 1;
-    open_sandbox_pool();
     // Send Proof Request *************************************************************
     let err = utils::demo::send_proof_request(proof_handle, connection_handle);
 
