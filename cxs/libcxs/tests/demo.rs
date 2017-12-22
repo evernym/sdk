@@ -27,11 +27,11 @@ use cxs::utils::signus;
 #[allow(dead_code)]
 static SERIALIZED_CONNECTION: &str = r#"{"source_id":"test_cxs_connection_connect","handle":2608616713,"pw_did":"62LeFLkN9ZeCr32j73PUyD","pw_verkey":"3jnnnL65mTW786LaTJSwEKENEMwmMowuJTYmVho23qNU","did_endpoint":"","state":4,"uuid":"","endpoint":"","invite_detail":{"e":"34.210.228.152:80","rid":"6oHwpBN","sakdp":"key","sn":"enterprise","sD":"62LeFLkN9ZeCr32j73PUyD","lu":"https://s19.postimg.org/ykyz4x8jn/evernym.png","sVk":"3jnnnL65mTW786LaTJSwEKENEMwmMowuJTYmVho23qNU","tn":"there"}}"#;
 #[allow(dead_code)]
-static SERIALIZED_CLAIM: &str = r#"{"source_id":"Claim For Driver's License","handle":3664805180,"claim_attributes":"{\"age\":[\"28\",\"28\"],\"height\":[\"175\",\"175\"],\"name\":[\"Alex\",\"1139481716457488690172217916278103335\"],\"sex\":[\"male\",\"5944657099558967239210949258394887428692050081607692519917050011144233115103\"]}","msg_uid":"7TKyPLr","schema_seq_no":12,"issuer_did":"4fUDR9R7fjwELRvH9JT6HH","issued_did":"62LeFLkN9ZeCr32j73PUyD","state":2,"claim_request":null}"#;
+static SERIALIZED_CLAIM: &str = r#"{"source_id":"Claim For Driver's License","handle":3664805180,"claim_attributes":"{\"age\":[\"28\",\"28\"],\"height\":[\"175\",\"175\"],\"name\":[\"Alex\",\"1139481716457488690172217916278103335\"],\"sex\":[\"male\",\"5944657099558967239210949258394887428692050081607692519917050011144233115103\"]}","msg_uid":"7TKyPLr","schema_seq_no":12,"issuer_did":"Niaxv2v4mPr1HdTeJkQxuU","issued_did":"62LeFLkN9ZeCr32j73PUyD","state":2,"claim_request":null}"#;
 //static CLAIM_DATA: &str = r#"{"sex":["male","5944657099558967239210949258394887428692050081607692519917050011144233115103"], "name":["Alex","1139481716457488690172217916278103335"], "height":["175","175"], "age":["28","28"] }"#;
 static CLAIM_DATA: &str = r#"{"name":["Alex","1139481716457488690172217916278103335"],"sex":["male","5944657099558967239210949258394887428692050081607692519917050011144233115103"]}"#;
 static CLAIM_DATA_2: &str = r#"{"address1": ["123 Main St"], "address2": ["Suite 3"], "city": ["Draper"], "state": ["UT"], "zip": ["84000"]}"#;
-static CLAIM_DEF_ISSUER_DID: &str = "4fUDR9R7fjwELRvH9JT6HH";
+static CLAIM_DEF_ISSUER_DID: &str = "2hoqvcwupRTUNkXn6ArYzs";
 static CLAIM_DEF_SCHEMA_SEQ_NUM: u32 = 103;
 
 fn sandbox_pool_setup() {
@@ -100,14 +100,14 @@ fn test_demo(){
     let source_id = "Name and Sex";
     let claim_name = "Name and Sex";
     let claim_data:serde_json::Value = serde_json::from_str(CLAIM_DATA_2).unwrap(); // this format will make it easier to modify in the futre
-    let ledger_issuer_did = "4fUDR9R7fjwELRvH9JT6HH";
+    let ledger_issuer_did = CLAIM_DEF_ISSUER_DID.clone();
     let ledger_schema_seq_num = 15;
     let (err, claim_handle) = create_claim_offer(claim_name, source_id, claim_data, ledger_issuer_did, ledger_schema_seq_num);
     assert_eq!(err, 0);
     assert!(claim_handle>0);
 
     // Create Proof **************************************************************
-    let requested_attrs = r#"[{"schema_seq_no":15,"name":"address1","issuer_did":"4fUDR9R7fjwELRvH9JT6HH"},{"schema_seq_no":15,"name":"address2","issuer_did":"4fUDR9R7fjwELRvH9JT6HH"},{"schema_seq_no":15,"name":"city","issuer_did":"4fUDR9R7fjwELRvH9JT6HH"},{"schema_seq_no":15,"name":"state","issuer_did":"4fUDR9R7fjwELRvH9JT6HH"},{"schema_seq_no":15,"name":"zip","issuer_did":"4fUDR9R7fjwELRvH9JT6HH"}]"#;
+    let requested_attrs = r#"[{"schema_seq_no":15,"name":"address1","issuer_did":"2hoqvcwupRTUNkXn6ArYzs"},{"schema_seq_no":15,"name":"address2","issuer_did":"2hoqvcwupRTUNkXn6ArYzs"},{"schema_seq_no":15,"name":"city","issuer_did":"2hoqvcwupRTUNkXn6ArYzs"},{"schema_seq_no":15,"name":"state","issuer_did":"2hoqvcwupRTUNkXn6ArYzs"},{"schema_seq_no":15,"name":"zip","issuer_did":"2hoqvcwupRTUNkXn6ArYzs"}]"#;
     let (err, proof_handle) = create_proof_request(source_id, requested_attrs);
     assert_eq!(err, 0);
     assert!(proof_handle>0);
