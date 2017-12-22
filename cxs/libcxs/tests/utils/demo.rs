@@ -383,13 +383,15 @@ pub fn create_proof_request(source_id: &str, requested_attrs: &str) -> (u32, u32
 #[allow(dead_code)]
 pub fn get_proof(proof_handle: u32, connection_handle: u32) -> u32 {
     fn closure_to_get_proof(closure: Box<FnMut(u32) + Send>) ->
-    (u32, Option<extern fn( command_handle: u32, err: u32 , proof_string: *const c_char)>) {
+    (u32, Option<extern fn( command_handle: u32, err: u32, proof_state: u32, proof_string: *const c_char)>) {
         lazy_static! { static ref CALLBACK_GET_PROOF: Mutex<HashMap<u32,
                                         Box<FnMut(u32) + Send>>> = Default::default(); }
 
-        extern "C" fn callback(command_handle: u32, err: u32, proof_str: *const c_char) {
+        extern "C" fn callback(command_handle: u32, err: u32, proof_state: u32, proof_str: *const c_char) {
             let mut callbacks = CALLBACK_GET_PROOF.lock().unwrap();
             let mut cb = callbacks.remove(&command_handle).unwrap();
+
+            assert_eq!(proof_state, 1);
             assert_eq!(err, 0);
             if proof_str.is_null() {
                 panic!("proof_str is empty");
