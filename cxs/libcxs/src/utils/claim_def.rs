@@ -124,11 +124,15 @@ impl ClaimDef {
 
         let (err, claim_def_req) = receiver.recv_timeout(TimeoutUtils::long_timeout()).unwrap();
 
-        if err != 0{
+        if err != 0 {
             return Err(error::BUILD_CLAIM_DEF_REQ_ERR.code_num)
         }
         info!("Created claim_def request");
-        Ok(claim_def_req)
+
+        claim_def_req.ok_or_else(||{
+            warn!("libindy did not return a string");
+            error::UNKNOWN_LIBINDY_ERROR.code_num
+        })
     }
 
     pub fn send_request(&self, request: &str) ->  Result<String, u32> {
@@ -155,7 +159,11 @@ impl ClaimDef {
         if err != 0{
             return Err(error::INDY_SUBMIT_REQUEST_ERR.code_num)
         }
-        Ok(claim_def)
+
+        claim_def.ok_or_else(||{
+            warn!("libindy did not return a string");
+            error::UNKNOWN_LIBINDY_ERROR.code_num
+        })
     }
 }
 

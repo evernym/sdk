@@ -157,13 +157,16 @@ impl LedgerSchema {
             }
         }
 
-        let (err, txn) = receiver.recv_timeout(TimeoutUtils::medium_timeout()).unwrap();
+        let (err, schema) = receiver.recv_timeout(TimeoutUtils::medium_timeout()).unwrap();
 
         if err != 0 {
             return Err(err as u32)
         }
 
-        Ok(txn)
+        schema.ok_or_else(||{
+            warn!("libindy did not return a string");
+            error::UNKNOWN_LIBINDY_ERROR.code_num
+        })
     }
 
     fn build_get_txn(sequence_num: i32) -> Result<String, u32>
@@ -189,7 +192,10 @@ impl LedgerSchema {
             return Err(error::UNKNOWN_ERROR.code_num)
         }
 
-        Ok(txn)
+        txn.ok_or_else(||{
+            warn!("libindy did not return a string");
+            error::UNKNOWN_LIBINDY_ERROR.code_num
+        })
     }
 }
 

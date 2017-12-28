@@ -82,7 +82,7 @@ pub fn build_claim_def_txn(submitter_did: &str,
         return Err(error::BUILD_CLAIM_DEF_REQ_ERR.code_num)
     }
     println!("Created claim_def request");
-    Ok(claim_def_req)
+    Ok(claim_def_req.unwrap())
 }
 
 //pub fn sign_and_send_request(pool_handle:u32,
