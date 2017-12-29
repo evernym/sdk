@@ -535,13 +535,13 @@ mod tests {
         ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
         let agency_did = "BDSmVkzxRYGE4HKyMKxd1H";
-        let agency_vk = "8ZicsPGTh4Uo3YDWGmx2zpXyzwAfGTUYYfL82zfvGFRH";
-        let agency_pw_did = "GrN3pQ1N4WUZ2Fy1rf5DKu";
-        let agency_pw_vk = "9e5sgmioobhy4djk2UT6F1A1y6hJmRHaNyQgNQvH8t5w";
-        let my_did = "4fUDR9R7fjwELRvH9JT6HH";
-        let my_vk = "2zoa6G7aMfX8GnUEpDxxunFHE7fZktRiiHk1vgMRH2tm";
-        let agent_did = "2jcGTtJC9UqfWZmaD6Ez7i";
-        let agent_vk = "wqRHJuzSFDYPjvYGNTGbqCXvXTyozBnANKJN376qXcX";
+        let agency_vk = "6yUatReYWNSUfEtC2ABgRXmmLaxCyQqsjLwv2BomxsxD";
+        let agency_pw_did = "XYPm31aoZ9Lg6iuGbfpsDP";
+        let agency_pw_vk = "HeUCwZKWukCzPNXH4FYFrVGdh3itSxNYXVzawV1dMMTP";
+        let my_did = "2Yc17wdT4RHYCPkEWHhvET";
+        let my_vk = "qqYUsW8MAD3yKgky4DmPha58YM2nsRBsMR3wNzfDwBX";
+        let agent_did = "Dk3d58g8VDWd4iheycKNmb";
+        let agent_vk = "7wogCh5kjcgpebWAgAXSX1Ruq91tQbShtsWphZey7HMP";
         let host = "https://enym-eagency.pdev.evernym.com";
 
         settings::set_config_value(settings::CONFIG_ENTERPRISE_DID,my_did);

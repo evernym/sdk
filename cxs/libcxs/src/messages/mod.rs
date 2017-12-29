@@ -6,8 +6,8 @@ pub mod invite;
 pub mod validation;
 pub mod get_message;
 pub mod send_message;
-pub mod proof_messages;
 pub mod update_profile;
+pub mod proofs;
 
 use std::u8;
 use settings;
@@ -20,9 +20,9 @@ use self::invite::SendInvite;
 use self::update_profile::UpdateProfileData;
 use self::get_message::GetMessages;
 use self::send_message::SendMessage;
-use self::proof_messages::ProofRequest;
 use serde::Deserialize;
 use self::rmp_serde::Deserializer;
+use self::proofs::proof_request::{ProofRequestMessage};
 
 
 #[derive(Clone, Serialize, Debug, PartialEq, PartialOrd)]
@@ -32,7 +32,28 @@ pub enum MessageType {
     SendInviteMsg(SendInvite),
     UpdateInfoMsg(UpdateProfileData),
     GetMessagesMsg(GetMessages),
-    ProofRequestMsg(ProofRequest)
+}
+
+pub enum MessageResponseCode {
+    MessageCreate,
+    MessageSent,
+    MessagePending,
+    MessageAccepted,
+    MessageRejected,
+    MessageAnswered,
+}
+
+impl MessageResponseCode {
+    pub fn as_str(&self) -> &str {
+        match *self {
+            MessageResponseCode::MessageCreate => "MS-101",
+            MessageResponseCode::MessageSent => "MS-102",
+            MessageResponseCode::MessagePending => "MS-103",
+            MessageResponseCode::MessageAccepted => "MS-104",
+            MessageResponseCode::MessageRejected => "MS-105",
+            MessageResponseCode::MessageAnswered => "MS-106",
+        }
+    }
 }
 
 #[derive(Clone, Deserialize, Serialize, Debug, PartialEq, PartialOrd)]
@@ -252,7 +273,7 @@ pub fn send_invite() -> SendInvite{ SendInvite::create() }
 pub fn update_data() -> UpdateProfileData{ UpdateProfileData::create() }
 pub fn get_messages() -> GetMessages { GetMessages::create() }
 pub fn send_message() -> SendMessage { SendMessage::create() }
-pub fn proof_request() -> ProofRequest { ProofRequest::create() }
+pub fn proof_request() -> ProofRequestMessage { ProofRequestMessage::create() }
 
 #[cfg(test)]
 pub mod tests {
@@ -343,7 +364,7 @@ pub mod tests {
         let response: ConnectResponseMsg = Deserialize::deserialize(&mut de).unwrap();
         println!("response: {:?}", response);
 
-        println!("new did: {} new vk: {}",response.from_did, response.from_vk);
+        println!("agency pw did: {} agency pw vk: {}",response.from_did, response.from_vk);
         let agency_pw_vk = response.from_vk.to_owned();
         let agency_pw_did = response.from_did.to_owned();
 
@@ -382,6 +403,6 @@ pub mod tests {
 
         let mut de = Deserializer::new(&data[0][..]);
         let response: ConnectResponseMsg = Deserialize::deserialize(&mut de).unwrap();
-        println!("response: {:?}", response);
+        println!("response contains: agent pw did/agent pw verkey: {:?}", response);
     }
 }

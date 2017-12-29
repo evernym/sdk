@@ -22,6 +22,7 @@ struct CreateKeyPayload{
     for_did: String,
     #[serde(rename = "forDIDVerKey")]
     for_verkey: String,
+    nonce: String,
 }
 
 #[derive(Serialize, Debug, PartialEq, PartialOrd, Clone)]
@@ -57,6 +58,7 @@ impl CreateKeyMsg{
                 msg_type: MsgType { name: "CREATE_KEY".to_string(), ver: "1.0".to_string(), } ,
                 for_did: String::new(),
                 for_verkey: String::new(),
+                nonce: String::new(),
             },
             agent_payload: String::new(),
             validate_rc: error::SUCCESS.code_num,
@@ -90,6 +92,21 @@ impl CreateKeyMsg{
             },
         }
     }
+
+    pub fn nonce(&mut self, nonce: &str) -> &mut Self {
+        match validation::validate_nonce(nonce){
+            Ok(x) => {
+                self.payload.nonce = x;
+                self
+            },
+            Err(x) => {
+                self.validate_rc = x;
+                self
+            },
+        }
+    }
+
+
 }
 
 //Todo: Every GeneralMessage extension, duplicates code
@@ -191,6 +208,7 @@ mod tests {
             for_did: String::new(),
             for_verkey: String::new(),
             msg_type: MsgType { name: "CREATE_KEY".to_string(), ver: "1.0".to_string(), } ,
+            nonce: String::new(),
         };
         assert_eq!(msg.payload, msg_payload);
     }
@@ -200,15 +218,17 @@ mod tests {
         let to_did = "8XFh8yBzrpJQmNyZzgoTqB";
         let for_did = "11235yBzrpJQmNyZzgoTqB";
         let for_verkey = "EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A";
-        let nonce = "nonce";
+        let nonce = "0";
         let msg_payload = CreateKeyPayload {
             for_did: for_did.to_string(),
             for_verkey: for_verkey.to_string(),
+            nonce: nonce.to_string(),
             msg_type: MsgType { name: "CREATE_KEY".to_string(), ver: "1.0".to_string(), } ,
         };
         let msg = create_keys()
             .to(to_did)
             .for_did(for_did)
+            .nonce("0")
             .for_verkey(for_verkey).clone();
         assert_eq!(msg.payload, msg_payload);
     }
@@ -236,6 +256,7 @@ mod tests {
             .to(&agent_did)
             .for_did(&my_did)
             .for_verkey(&my_vk)
+            .nonce("0")
             .msgpack().unwrap();
         assert!(bytes.len() > 0);
 
@@ -260,7 +281,7 @@ mod tests {
         let to_did = "Fh8yBzrpJQmNyZzgoTqB";
         let for_did = "11235yBzrpJQmNyZzgoTqB";
         let for_verkey = "EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A";
-        let nonce = "nonce";
+        let nonce = "0";
         let msg = create_keys()
             .to(to_did)
             .for_did(for_did)
