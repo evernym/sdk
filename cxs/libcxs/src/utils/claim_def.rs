@@ -2,31 +2,10 @@ extern crate serde_json;
 extern crate libc;
 
 use settings;
-use std::sync::mpsc::channel;
-use self::libc::c_char;
-use std::ffi::CString;
-use utils::callback::CallbackUtils;
 use utils::pool;
 use utils::error;
-use utils::timeout::TimeoutUtils;
-
-extern {
-
-    fn indy_build_get_claim_def_txn(command_handle: i32,
-                                    submitter_did: *const c_char,
-                                    xref: i32,
-                                    signature_type: *const c_char,
-                                    origin: *const c_char,
-                                    cb: Option<extern fn(xcommand_handle: i32, err: i32,
-                                                         request_json: *const c_char)>) -> i32;
-
-    fn indy_submit_request(command_handle: i32,
-                           pool_handle: i32,
-                           request_json: *const c_char,
-                           cb: Option<extern fn(xcommand_handle: i32, err: i32,
-                                                           request_result_json: *const c_char)>) -> i32;
-
-}
+use utils::libindy::SigTypes;
+use utils::libindy::ledger::{libindy_submit_request, libindy_build_get_claim_def_txn};
 
 #[derive(Clone, Serialize, Deserialize, Debug, PartialEq, PartialOrd)]
 pub struct ClaimDef {
@@ -104,66 +83,15 @@ impl ClaimDef {
     }
 
     pub fn build_request_msg(&self, submitter_did: &str) -> Result<String, u32> {
-        let (sender, receiver) = channel();
-        let cb = Box::new(move |err, valid | {
-            sender.send((err, valid)).unwrap();
-        });
-
-        let (command_handle, cb) = CallbackUtils::closure_to_build_request_cb(cb);
-        unsafe {
-            let indy_err = indy_build_get_claim_def_txn(command_handle,
-                                                        CString::new(submitter_did).unwrap().as_ptr(),
-                                                        self.schema_seq_no as i32,
-                                                        CString::new( self.signature_type.clone()).unwrap().as_ptr(),
-                                                        CString::new(self.origin.clone()).unwrap().as_ptr(),
-                                                        cb);
-            if indy_err != 0 {
-                return Err(error::BUILD_CLAIM_DEF_REQ_ERR.code_num)
-            }
-        }
-
-        let (err, claim_def_req) = receiver.recv_timeout(TimeoutUtils::long_timeout()).unwrap();
-
-        if err != 0 {
-            return Err(error::BUILD_CLAIM_DEF_REQ_ERR.code_num)
-        }
-        info!("Created claim_def request");
-
-        claim_def_req.ok_or_else(||{
-            warn!("libindy did not return a string");
-            error::UNKNOWN_LIBINDY_ERROR.code_num
-        })
+        libindy_build_get_claim_def_txn(submitter_did.to_string(),
+                                        self.schema_seq_no as i32,
+                                        Some(SigTypes::CL),
+                                        self.origin.clone())
     }
 
     pub fn send_request(&self, request: &str) ->  Result<String, u32> {
         let pool_handle = pool::get_pool_handle()?;
-
-        let (sender, receiver) = channel();
-        let cb = Box::new(move |err, valid | {
-            sender.send((err, valid)).unwrap();
-        });
-
-        let (command_handle, cb) = CallbackUtils::closure_to_build_request_cb(cb);
-        unsafe {
-            let indy_err = indy_submit_request(command_handle,
-                                               pool_handle as i32,
-                                               CString::new(request).unwrap().as_ptr(),
-                                               cb);
-            if indy_err != 0 {
-                return Err(error::INDY_SUBMIT_REQUEST_ERR.code_num)
-            }
-        }
-
-        let (err, claim_def) = receiver.recv_timeout(TimeoutUtils::long_timeout()).unwrap();
-
-        if err != 0{
-            return Err(error::INDY_SUBMIT_REQUEST_ERR.code_num)
-        }
-
-        claim_def.ok_or_else(||{
-            warn!("libindy did not return a string");
-            error::UNKNOWN_LIBINDY_ERROR.code_num
-        })
+        libindy_submit_request(pool_handle, request.to_string())
     }
 }
 
