@@ -347,7 +347,7 @@ pub mod tests {
         ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
         let agency_did = "BDSmVkzxRYGE4HKyMKxd1H";
-        let agency_vk = "BpCWP9SrbYrkWAWK7n7rmp8nZ2a7rTYaUyk2kuuddqcr";
+        let agency_vk = "6yUatReYWNSUfEtC2ABgRXmmLaxCyQqsjLwv2BomxsxD";
         let my_did = "2Yc17wdT4RHYCPkEWHhvET";
         let my_vk = "qqYUsW8MAD3yKgky4DmPha58YM2nsRBsMR3wNzfDwBX";
         //let agent_pw_did = "ShqBZfM59aDVjYtboizRgM";
