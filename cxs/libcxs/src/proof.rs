@@ -23,7 +23,7 @@ use self::libc::c_char;
 use std::ffi::CString;
 use utils::timeout::TimeoutUtils;
 use utils::claim_def::{ClaimDef};
-use utils::constants::{REVOC_REGS_JSON, LARGE_NONCE};
+use utils::constants::*;
 use schema::LedgerSchema;
 
 lazy_static! {
@@ -68,7 +68,8 @@ impl Proof {
     }
 
     fn validate_proof_indy(&mut self, proof_req_json: &str, proof_json: &str, schemas_json: &str, claim_defs_json: &str, revoc_regs_json: &str) -> Result<u32, u32> {
-        self.proof_state = ProofStateType::ProofUndefined;
+        if settings::test_indy_mode_enabled() {return Ok(error::SUCCESS.code_num);}
+
         let (sender, receiver) = channel();
         let cb = Box::new(move |err, valid | {
             sender.send((err, valid)).unwrap();
@@ -127,14 +128,9 @@ impl Proof {
     }
 
     fn build_schemas_json(&mut self, claim_data:&Vec<ClaimData>) -> Result<String, u32> {
-        //get schema #
-        let schema_obj = LedgerSchema::new_from_ledger(claim_data[0].schema_seq_no as i32)?;
-//        Ok(schema_obj.to_string())
-        let data = match schema_obj.data {
-            Some(x) => x,
-            None => return Err(error::INVALID_PROOF_OFFER.code_num)
-        };
-        Ok(json!({claim_data[0].claim_uuid.clone():data}).to_string())
+        if settings::test_indy_mode_enabled() { return Ok("{}".to_string()); }
+        let schema_obj = LedgerSchema::new_from_ledger(15)?;
+        Ok(schema_obj.to_string())
     }
 
     fn build_proof_req_json(&mut self) -> Result<String, u32> {
@@ -269,13 +265,6 @@ impl Proof {
         }
         else if self.state != CxsStateType::CxsStateOfferSent || self.msg_uid.is_empty() || self.prover_did.is_empty() {
             return;
-        }
-
-        if settings::test_agency_mode_enabled() {
-            let response = "{\"msgs\":[{\"uid\":\"6gmsuWZ\",\"typ\":\"conReq\",\"statusCode\":\"MS-102\",\"statusMsg\":\"message sent\"},\
-            {\"statusCode\":\"MS-104\",\"edgeAgentPayload\":\"{\\\"attr\\\":\\\"value\\\"}\",\"sendStatusCode\":\"MSS-101\",\"typ\":\"claimOffer\",\"statusMsg\":\"message accepted\",\"uid\":\"6a9u7Jt\",\"refMsgId\":\"CKrG14Z\"},\
-            {\"msg_type\":\"CLAIM_REQUEST\",\"typ\":\"claimReq\",\"edgeAgentPayload\":\"{\\\"blinded_ms\\\":{\\\"prover_did\\\":\\\"FQ7wPBUgSPnDGJnS1EYjTK\\\",\\\"u\\\":\\\"923...607\\\",\\\"ur\\\":\\\"null\\\"},\\\"version\\\":\\\"0.1\\\",\\\"mid\\\":\\\"\\\",\\\"to_did\\\":\\\"BnRXf8yDMUwGyZVDkSENeq\\\",\\\"from_did\\\":\\\"GxtnGN6ypZYgEqcftSQFnC\\\",\\\"iid\\\":\\\"cCanHnpFAD\\\",\\\"issuer_did\\\":\\\"QTrbV4raAcND4DWWzBmdsh\\\",\\\"schema_seq_no\\\":48,\\\"optional_data\\\":{\\\"terms_of_service\\\":\\\"<Large block of text>\\\",\\\"price\\\":6}}\"}]}";
-            httpclient::set_next_str_response(response.to_string());
         }
 
         // State is proof request sent
@@ -453,6 +442,7 @@ fn get_matching_messages<'a>(msg_uid:&'a str, to_did: &'a str) -> Result<Vec<ser
     let response = match messages::get_messages().to(to_did).uid(msg_uid).send() {
         Ok(x) => x,
         Err(x) => {
+            error!("get_messages return: {}", x);
             return Err("invalid response to get_messages for proof")
         },
     };
@@ -504,8 +494,10 @@ mod tests {
     use super::*;
     use std::thread;
     use std::time::Duration;
+    //use utils::constants::*;
+    //use proof_offer::tests::create_default_proof_offer;
     use connection::build_connection;
-    static DEFAULT_PROOF_STR: &str = r#"{"source_id":"","handle":486356518,"requested_attrs":"[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]","requested_predicates":"[{\"attr_name\":\"age\",\"p_type\":\"GE\",\"value\":18,\"schema_seq_no\":1,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\"}]","msg_uid":"","ref_msg_id":"","requester_did":"","prover_did":"","state":1,"proof_state":0,"name":"Optional","version":"1.0","nonce":"1067639606","proof":null}"#;
+    static DEFAULT_PROOF_STR: &str = r#"{"source_id":"","handle":486356518,"requested_attrs":"[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]","requested_predicates":"[{\"attr_name\":\"age\",\"p_type\":\"GE\",\"value\":18,\"schema_seq_no\":1,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\"}]","msg_uid":"","ref_msg_id":"","requester_did":"","prover_did":"","state":1,"proof_state":0,"tid":0,"mid":0,"name":"Optional","version":"1.0","nonce":"1067639606","proof_offer":null}"#;
     static REQUESTED_ATTRS: &'static str = "[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]";
     static REQUESTED_PREDICATES: &'static str = "[{\"attr_name\":\"age\",\"p_type\":\"GE\",\"value\":18,\"schema_seq_no\":1,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\"}]";
 
@@ -661,7 +653,8 @@ mod tests {
     }
 
     #[test]
-    fn test_update_state_with_pending_proof() {
+    fn test_update_state_with_pending_proof_offer() {
+        ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "agency");
 
@@ -683,7 +676,6 @@ mod tests {
             proof: None,
             proof_request: None,
         });
-
         let response = "{\"msgs\":[{\"uid\":\"6gmsuWZ\",\"typ\":\"conReq\",\"statusCode\":\"MS-102\",\"statusMsg\":\"message sent\"},\
         {\"statusCode\":\"MS-104\",\"edgeAgentPayload\":\"{\\\"attr\\\":\\\"value\\\"}\",\"sendStatusCode\":\"MSS-101\",\"typ\":\"claimOffer\",\"statusMsg\":\"message accepted\",\"uid\":\"6a9u7Jt\",\"refMsgId\":\"CKrG14Z\"},\
         {\"msg_type\":\"PROOF\",\"typ\":\"proof\",\"edgeAgentPayload\":\"{\\\"msg_type\\\":\\\"proof\\\",\\\"version\\\":\\\"0.1\\\",\\\"to_did\\\":\\\"BnRXf8yDMUwGyZVDkSENeq\\\",\\\"from_did\\\":\\\"GxtnGN6ypZYgEqcftSQFnC\\\",\\\"proof_request_id\\\":\\\"cCanHnpFAD\\\",\\\"proofs\\\":{\\\"claim::f22cc7c8-924f-4541-aeff-29a9aed9c46b\\\":{\\\"proof\\\":{\\\"primary_proof\\\":{\\\"eq_proof\\\":{\\\"revealed_attrs\\\":{\\\"state\\\":\\\"96473275571522321025213415717206189191162\\\"},\\\"a_prime\\\":\\\"921....546\\\",\\\"e\\\":\\\"158....756\\\",\\\"v\\\":\\\"114....069\\\",\\\"m\\\":{\\\"address1\\\":\\\"111...738\\\",\\\"zip\\\":\\\"149....066\\\",\\\"city\\\":\\\"209....294\\\",\\\"address2\\\":\\\"140....691\\\"},\\\"m1\\\":\\\"777....518\\\",\\\"m2\\\":\\\"515....229\\\"},\\\"ge_proofs\\\":[]},\\\"non_revoc_proof\\\":null},\\\"schema_seq_no\\\":15,\\\"issuer_did\\\":\\\"4fUDR9R7fjwELRvH9JT6HH\\\"}},\\\"aggregated_proof\\\":{\\\"c_hash\\\":\\\"25105671496406009212798488318112715144459298495509265715919744143493847046467\\\",\\\"c_list\\\":[[72,245,38,\\\"....\\\",46,195,18]]},\\\"requested_proof\\\":{\\\"revealed_attrs\\\":{\\\"attr_key_id\\\":[\\\"claim::f22cc7c8-924f-4541-aeff-29a9aed9c46b\\\",\\\"UT\\\",\\\"96473275571522321025213415717206189191162\\\"]},\\\"unrevealed_attrs\\\":{},\\\"self_attested_attrs\\\":{},\\\"predicates\\\":{}}}\"}]}";

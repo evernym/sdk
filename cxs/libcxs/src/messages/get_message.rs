@@ -76,6 +76,23 @@ impl GetMessages{
         self
     }
 
+    pub fn send_secure(&mut self) -> Result<Vec<Message>, u32> {
+        let url = format!("{}/agency/msg", settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
+
+        let data = match self.msgpack() {
+            Ok(x) => x,
+            Err(x) => return Err(x),
+        };
+
+        match httpclient::post_u8(&data, &url) {
+            Err(_) => return Err(error::POST_MSG_FAILURE.code_num),
+            Ok(response) => if settings::test_agency_mode_enabled() && response.len() == 0 {
+                return Ok(Vec::new());
+            } else {
+                parse_get_messages_response(response)
+            },
+        }
+    }
 }
 
 //Todo: Every GeneralMessage extension, duplicates code
@@ -120,30 +137,23 @@ impl GeneralMessage for GetMessages{
 
         bundle_for_agent(msg, &self.agent_did, &self.agent_vk)
     }
+}
 
-    fn send_enc(&mut self) -> Result<Vec<String>, u32> {
-        let url = format!("{}/agency/msg", settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
+#[derive(Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct GetMsgType {
+    pub name: String,
+    pub ver: String,
+    pub fmt: String,
+}
 
-        let data = match self.msgpack() {
-            Ok(x) => x,
-            Err(x) => return Err(x),
-        };
-
-        let mut result = Vec::new();
-        match httpclient::post_u8(&data, &url) {
-            Err(_) => return Err(error::POST_MSG_FAILURE.code_num),
-            Ok(response) => {
-                let string: String = if settings::test_agency_mode_enabled() && response.len() == 0 {
-                    String::new()
-                } else {
-                    parse_get_messages_response(response)?
-                };
-                result.push(string);
-            },
-        };
-
-        Ok(result.to_owned())
-    }
+#[derive(Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct GetMsgResponse {
+    #[serde(rename = "@type")]
+    pub msg_type: GetMsgType,
+    #[serde(rename = "@msg")]
+    pub msg: Vec<i8>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
@@ -157,15 +167,15 @@ pub struct DeliveryDetails {
 #[derive(Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Message {
-    status_code: String,
-    payload: Vec<u8>,
+    pub status_code: String,
+    pub payload: Option<Vec<i8>>,
     #[serde(rename = "senderDID")]
-    sender_did: String,
-    uid: String,
+    pub sender_did: String,
+    pub uid: String,
     #[serde(rename = "type")]
-    msg_type: String,
-    ref_msg_id: Option<String>,
-    delivery_details: Vec<DeliveryDetails>,
+    pub msg_type: String,
+    pub ref_msg_id: Option<String>,
+    pub delivery_details: Vec<DeliveryDetails>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, PartialOrd, Clone)]
@@ -176,10 +186,10 @@ pub struct GetMessagesResponse {
     msgs: Vec<Message>,
 }
 
-fn parse_get_messages_response(response: Vec<u8>) -> Result<String, u32> {
+fn parse_get_messages_response(response: Vec<u8>) -> Result<Vec<Message>, u32> {
     let data = unbundle_from_agency(response)?;
 
-    debug!("get_message response: {:?}", data[0]);
+    info!("get_message response: {:?}", data[0]);
     let mut de = Deserializer::new(&data[0][..]);
     let response: GetMessagesResponse = match Deserialize::deserialize(&mut de) {
         Ok(x) => x,
@@ -189,18 +199,14 @@ fn parse_get_messages_response(response: Vec<u8>) -> Result<String, u32> {
         },
     };
 
-    info!("messages: {:?}", response);
-    match serde_json::to_string(&response) {
-        Ok(x) => Ok(x),
-        Err(_) => Err(error::INVALID_JSON.code_num),
-    }
+    Ok(response.msgs.to_owned())
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use messages::get_messages;
-    use utils::constants::{GET_MESSAGES_RESPONSE, GET_MESSAGES_RESPONSE_STR};
+    use utils::constants::GET_MESSAGES_RESPONSE;
 
     #[test]
     fn test_get_messages_set_values_and_serialize(){
@@ -246,7 +252,7 @@ mod tests {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
 
         let result = parse_get_messages_response(GET_MESSAGES_RESPONSE.to_vec()).unwrap();
-        assert_eq!(result, GET_MESSAGES_RESPONSE_STR);
+        assert_eq!(result.len(), 3)
     }
 
     #[test]
@@ -267,7 +273,7 @@ mod tests {
 
         let msg1 = Message {
             status_code: "MS-104".to_string(),
-            payload: vec![99, 108, 97, 105, 109, 45, 100, 97, 116, 97],
+            payload: Some(vec![-9, 108, 97, 105, 109, 45, 100, 97, 116, 97]),
             sender_did: "WVsWVh8nL96BE3T3qwaCd5".to_string(),
             uid: "mmi3yze".to_string(),
             msg_type: "connReq".to_string(),
@@ -276,12 +282,12 @@ mod tests {
         };
         let msg2 = Message {
             status_code: "MS-101".to_string(),
-            payload: vec![99, 108, 97, 105, 109, 45, 100, 97, 116, 97],
+            payload: None,
             sender_did: "WVsWVh8nL96BE3T3qwaCd5".to_string(),
             uid: "zjcynmq".to_string(),
             msg_type: "claimOffer".to_string(),
             ref_msg_id: None,
-            delivery_details: vec![delivery_details2],
+            delivery_details: Vec::new(),
         };
         let response = GetMessagesResponse {
             msg_type: MsgType { name: "MSGS".to_string(), ver: "1.0".to_string(), },
@@ -294,7 +300,7 @@ mod tests {
         let bundle = Bundled::create(data).encode().unwrap();
         println!("bundle: {:?}", bundle);
         let result = parse_get_messages_response(bundle).unwrap();
-        println!("response: {}", result);
+        println!("response: {:?}", result);
 
     }
 }

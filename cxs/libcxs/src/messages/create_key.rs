@@ -107,6 +107,28 @@ impl CreateKeyMsg{
     }
 
 
+    pub fn send_secure(&mut self) -> Result<Vec<String>, u32> {
+        let url = format!("{}/agency/msg", settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
+
+        let data = match self.msgpack() {
+            Ok(x) => x,
+            Err(x) => return Err(x),
+        };
+
+        if settings::test_agency_mode_enabled() {httpclient::set_next_u8_response(CREATE_KEYS_RESPONSE.to_vec());}
+
+        let mut result = Vec::new();
+        match httpclient::post_u8(&data, &url) {
+            Err(_) => return Err(error::POST_MSG_FAILURE.code_num),
+            Ok(response) => {
+                let (did, vk) = parse_create_keys_response(response)?;
+                result.push(did);
+                result.push(vk);
+            },
+        };
+
+        Ok(result.to_owned())
+    }
 }
 
 //Todo: Every GeneralMessage extension, duplicates code
@@ -157,29 +179,6 @@ impl GeneralMessage for CreateKeyMsg  {
 
         let to_did = settings::get_config_value(settings::CONFIG_AGENT_PAIRWISE_DID).unwrap();
         bundle_for_agency(msg, &to_did)
-    }
-
-    fn send_enc(&mut self) -> Result<Vec<String>, u32> {
-        let url = format!("{}/agency/msg", settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
-
-        let data = match self.msgpack() {
-            Ok(x) => x,
-            Err(x) => return Err(x),
-        };
-
-        if settings::test_agency_mode_enabled() {httpclient::set_next_u8_response(CREATE_KEYS_RESPONSE.to_vec());}
-
-        let mut result = Vec::new();
-        match httpclient::post_u8(&data, &url) {
-            Err(_) => return Err(error::POST_MSG_FAILURE.code_num),
-            Ok(response) => {
-                let (did, vk) = parse_create_keys_response(response)?;
-                result.push(did);
-                result.push(vk);
-            },
-        };
-
-        Ok(result.to_owned())
     }
 }
 

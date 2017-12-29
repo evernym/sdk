@@ -129,7 +129,7 @@ impl IssuerClaim {
             .agent_vk(&agent_vk)
             .ref_msg_id(&self.ref_msg_id)
             .status_code(MessageAccepted.as_str())
-            .send_enc() {
+            .send_secure() {
             Err(x) => {
                 warn!("could not send claimOffer: {}", x);
                 return Err(x);
@@ -196,7 +196,7 @@ impl IssuerClaim {
             .edge_agent_payload(&data)
             .agent_did(&agent_did)
             .agent_vk(&agent_vk)
-            .send_enc() {
+            .send_secure() {
             Err(x) => {
                 warn!("could not send claim: {}", x);
                 return Err(x);
@@ -303,13 +303,6 @@ impl IssuerClaim {
         }
         else if self.state != CxsStateType::CxsStateOfferSent || self.msg_uid.is_empty() || self.issued_did.is_empty() {
             return;
-        }
-
-        if settings::test_agency_mode_enabled() {
-            let response = "{\"msgs\":[{\"uid\":\"6gmsuWZ\",\"typ\":\"conReq\",\"statusCode\":\"MS-102\",\"statusMsg\":\"message sent\"},\
-            {\"statusCode\":\"MS-104\",\"edgeAgentPayload\":\"{\\\"attr\\\":\\\"value\\\"}\",\"sendStatusCode\":\"MSS-101\",\"typ\":\"claimOffer\",\"statusMsg\":\"message accepted\",\"uid\":\"6a9u7Jt\",\"refMsgId\":\"CKrG14Z\"},\
-            {\"msg_type\":\"CLAIM_REQUEST\",\"typ\":\"claimReq\",\"edgeAgentPayload\":\"{\\\"blinded_ms\\\":{\\\"prover_did\\\":\\\"FQ7wPBUgSPnDGJnS1EYjTK\\\",\\\"u\\\":\\\"923...607\\\",\\\"ur\\\":\\\"null\\\"},\\\"version\\\":\\\"0.1\\\",\\\"mid\\\":\\\"\\\",\\\"to_did\\\":\\\"BnRXf8yDMUwGyZVDkSENeq\\\",\\\"from_did\\\":\\\"GxtnGN6ypZYgEqcftSQFnC\\\",\\\"iid\\\":\\\"cCanHnpFAD\\\",\\\"issuer_did\\\":\\\"QTrbV4raAcND4DWWzBmdsh\\\",\\\"schema_seq_no\\\":48,\\\"optional_data\\\":{\\\"terms_of_service\\\":\\\"<Large block of text>\\\",\\\"price\\\":6}}\"}]}";
-            httpclient::set_next_str_response(response.to_string());
         }
 
         let msgs = match get_matching_messages(&self.msg_uid, &self.issued_did) {
@@ -600,22 +593,21 @@ pub fn convert_to_map(s:&str) -> Result<serde_json::Map<String, serde_json::Valu
 }
 
 fn get_matching_messages<'a>(msg_uid:&'a str, did:&'a str) -> Result<Vec<serde_json::Value>, &'a str> {
-    let response = match messages::get_messages().to(did).uid(msg_uid).send_enc() {
+    let response = match messages::get_messages().to(did).uid(msg_uid).send() {
         Ok(x) => x,
         Err(x) => return Err("invalid response to get_messages for claim"),
 
     };
 
-    let mut array: Vec<serde_json::Value> = Vec::new();
+    let json: serde_json::Value = match serde_json::from_str(&response) {
+        Ok(json) => json,
+        Err(_) => return Err("invalid json in get_messages for claim"),
+    };
 
-    for i in response {
-        let json: serde_json::Value = match serde_json::from_str(&i) {
-            Ok(json) => json,
-            Err(_) => return Err("invalid json in get_messages for claim"),
-        };
-        array.push(json);
+    match json["msgs"].as_array() {
+        Some(array) => Ok(array.to_owned()),
+        None => Err("invalid msgs array returned for claim"),
     }
-    Ok(array)
 }
 
 #[cfg(test)]
