@@ -638,14 +638,14 @@ mod tests {
     fn test_cxs_connection_create_real() {
         ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
-        let agency_did = "BDSmVkzxRYGE4HKyMKxd1H";
-        let agency_vk = "6yUatReYWNSUfEtC2ABgRXmmLaxCyQqsjLwv2BomxsxD";
-        let agency_pw_did = "XYPm31aoZ9Lg6iuGbfpsDP";
-        let agency_pw_vk = "HeUCwZKWukCzPNXH4FYFrVGdh3itSxNYXVzawV1dMMTP";
+        let agency_did = "FhrSrYtQcw3p9xwf7NYemf";
+        let agency_vk = "91qMFrZjXDoi2Vc8Mm14Ys112tEZdDegBZZoembFEATE";
+        let agency_pw_did = "NYgKRhj9yBMjPwgdhxpMfe";
+        let agency_pw_vk = "Ck7nLmVdvgt45C6bUwMLfWukagHVd5FuF5VtWBY8FNSx";
         let my_did = "2Yc17wdT4RHYCPkEWHhvET";
         let my_vk = "qqYUsW8MAD3yKgky4DmPha58YM2nsRBsMR3wNzfDwBX";
-        let agent_did = "Dk3d58g8VDWd4iheycKNmb";
-        let agent_vk = "7wogCh5kjcgpebWAgAXSX1Ruq91tQbShtsWphZey7HMP";
+        let agent_did = "Tf92uPkwrLHJghoKbQkLRm";
+        let agent_vk = "FXhVBe5VhfXu8tiiaAKR4YkvEkUyb5G5za3D8ZkT4mVF";
         let host = "https://enym-eagency.pdev.evernym.com";
 
         settings::set_config_value(settings::CONFIG_ENTERPRISE_DID,my_did);

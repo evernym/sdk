@@ -346,8 +346,8 @@ pub mod tests {
     fn test_connect_register_provision() {
         ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
-        let agency_did = "BDSmVkzxRYGE4HKyMKxd1H";
-        let agency_vk = "6yUatReYWNSUfEtC2ABgRXmmLaxCyQqsjLwv2BomxsxD";
+        let agency_did = "FhrSrYtQcw3p9xwf7NYemf";
+        let agency_vk = "91qMFrZjXDoi2Vc8Mm14Ys112tEZdDegBZZoembFEATE";
         let my_did = "2Yc17wdT4RHYCPkEWHhvET";
         let my_vk = "qqYUsW8MAD3yKgky4DmPha58YM2nsRBsMR3wNzfDwBX";
         //let agent_pw_did = "ShqBZfM59aDVjYtboizRgM";
