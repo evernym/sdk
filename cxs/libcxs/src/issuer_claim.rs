@@ -122,7 +122,7 @@ impl IssuerClaim {
 
         if settings::test_agency_mode_enabled() { httpclient::set_next_u8_response(SEND_CLAIM_OFFER_RESPONSE.to_vec()); }
 
-        let data = connection::encrypt_payload(connection_handle, &payload)?;
+        let data = connection::generate_encrypted_payload(connection_handle, &payload, "CLAIM_OFFER")?;
         match messages::send_message().to(&to_did).msg_type("claimOffer")
             .edge_agent_payload(&data)
             .agent_did(&agent_did)
@@ -185,7 +185,7 @@ impl IssuerClaim {
 
         debug!("claim data: {}", data);
 
-        let data = connection::encrypt_payload(connection_handle, &data)?;
+        let data = connection::generate_encrypted_payload(connection_handle, &data, "CLAIM")?;
 
         if settings::test_agency_mode_enabled() { httpclient::set_next_u8_response(SEND_CLAIM_OFFER_RESPONSE.to_vec()); }
 

@@ -189,7 +189,7 @@ impl Proof {
             .serialize_message()?;
 
         self.proof_request = Some(proof_obj);
-        let data = connection::encrypt_payload(connection_handle, &proof_request)?;
+        let data = connection::generate_encrypted_payload(connection_handle, &proof_request, "PROOF_REQUEST")?;
         if settings::test_agency_mode_enabled() { httpclient::set_next_str_response("{\"uid\":\"6a9u7Jt\",\"typ\":\"proofRequest\",\"statusCode\":\"MS-101\"}".to_string()) }
 
         match messages::send_message().to(&self.prover_did).msg_type("proofReq").edge_agent_payload(&data).send() {
