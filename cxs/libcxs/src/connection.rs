@@ -346,7 +346,7 @@ pub fn parse_acceptance_details(handle: u32, message: &Message) -> Result<Sender
     debug!("parsing acceptance details for message {:?}", message);
     if message.payload.is_none() {return Err(error::INVALID_MSGPACK.code_num); }
 
-    let my_vk = get_pw_verkey(handle)?;
+    let my_vk = settings::get_config_value(settings::CONFIG_ENTERPRISE_VERKEY).unwrap();
     let payload = messages::to_u8(message.payload.as_ref().unwrap());
     let payload = crypto::parse_msg(wallet::get_wallet_handle(),&my_vk,&payload)?;
 
@@ -640,12 +640,12 @@ mod tests {
         settings::set_defaults();
         let agency_did = "FhrSrYtQcw3p9xwf7NYemf";
         let agency_vk = "91qMFrZjXDoi2Vc8Mm14Ys112tEZdDegBZZoembFEATE";
-        let agency_pw_did = "NYgKRhj9yBMjPwgdhxpMfe";
-        let agency_pw_vk = "Ck7nLmVdvgt45C6bUwMLfWukagHVd5FuF5VtWBY8FNSx";
-        let my_did = "2Yc17wdT4RHYCPkEWHhvET";
-        let my_vk = "qqYUsW8MAD3yKgky4DmPha58YM2nsRBsMR3wNzfDwBX";
-        let agent_did = "Tf92uPkwrLHJghoKbQkLRm";
-        let agent_vk = "FXhVBe5VhfXu8tiiaAKR4YkvEkUyb5G5za3D8ZkT4mVF";
+        let agency_pw_did = "Qozf4ZGG4CFyUSodm4CQ4L";
+        let agency_pw_vk = "DygwpNvUdUYKb2CY52YFKJxq4J9mGMqAb3M1GUqijWe6";
+        let my_did = "PDgrtXLt8rDfCJpS8GSU9S";
+        let my_vk = "D7NwmZAjgeeWpB3LVQ1zGhJw5a3W7fCPiTMCrUFak3me";
+        let agent_did = "K3auW2ULcmS5k4h3PxFaC7";
+        let agent_vk = "AqRbtbpKGAy6YtMnAxnTVuuvs4ix9PKTTgieKsTpHe6d";
         let host = "https://enym-eagency.pdev.evernym.com";
 
         settings::set_config_value(settings::CONFIG_ENTERPRISE_DID,my_did);
@@ -661,7 +661,7 @@ mod tests {
         wallet::init_wallet("my_real_wallet").unwrap();
 
         let handle = build_connection("test_real_connection_create".to_owned()).unwrap();
-        connect(handle,"{ \"phone\": \"3852500260\" }".to_string()).unwrap();
+        connect(handle,"{ \"phone\": \"8014710072\" }".to_string()).unwrap();
 
         let string = to_string(handle).unwrap();
         println!("my connection: {}", string);

@@ -14,10 +14,10 @@ struct GetMessagesPayload{
     #[serde(rename = "@type")]
     msg_type: MsgType,
     #[serde(rename = "excludePayload")]
-    exclude_payload: String,
-    uids: String,
-    #[serde(rename = "statusCodes")]
-    status_code: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    exclude_payload: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    uids: Option<String>,
 }
 
 #[derive(Serialize, Debug, PartialEq, PartialOrd, Clone)]
@@ -46,9 +46,8 @@ impl GetMessages{
             to_vk: String::new(),
             payload: GetMessagesPayload{
                 msg_type: MsgType { name: "GET_MSGS".to_string(), ver: "1.0".to_string(), },
-                uids: String::new(),
-                status_code: String::new(),
-                exclude_payload: "Y".to_string(),
+                uids: None,
+                exclude_payload: None,
             },
             agent_payload: String::new(),
             validate_rc: error::SUCCESS.code_num,
@@ -59,20 +58,13 @@ impl GetMessages{
 
     pub fn uid(&mut self, uid: &str) -> &mut Self{
         //Todo: validate msg_uid??
-        self.payload.uids = uid.to_string();
+        self.payload.uids = Some(uid.to_string());
         self
     }
-
-    pub fn status_code(&mut self, code: &str) -> &mut Self {
-        //Todo: validate that it can be parsed to number??
-        self.payload.status_code = code.to_string();
-        self
-    }
-
 
     pub fn include_edge_payload(&mut self, payload: &str) -> &mut Self {
         //todo: is this a json value, String??
-        self.payload.exclude_payload = payload.to_string();
+        self.payload.exclude_payload = Some(payload.to_string());
         self
     }
 
@@ -211,13 +203,10 @@ mod tests {
     #[test]
     fn test_get_messages_set_values_and_serialize(){
         let to_did = "8XFh8yBzrpJQmNyZzgoTqB";
-        let uid = "123";
-        let status_code = "0";
         let payload = "Some Data";
         let msg = match get_messages()
             .to(&to_did)
-            .uid(&uid)
-            .status_code(&status_code)
+            .uid("123")
             .serialize_message(){
             Ok(x) => x.to_string(),
             Err(y) => {
@@ -225,19 +214,32 @@ mod tests {
                 String::from("error")
             }
         };
-        assert_eq!(msg, "{\"agentPayload\":\"{\\\"@type\\\":{\\\"name\\\":\\\"GET_MSGS\\\",\\\"ver\\\":\\\"1.0\\\"},\\\"excludePayload\\\":\\\"Y\\\",\\\"statusCodes\\\":\\\"0\\\",\\\"uids\\\":\\\"123\\\"}\",\"to\":\"8XFh8yBzrpJQmNyZzgoTqB\"}");
+        assert_eq!(msg, "{\"agentPayload\":\"{\\\"@type\\\":{\\\"name\\\":\\\"GET_MSGS\\\",\\\"ver\\\":\\\"1.0\\\"},\\\"uids\\\":\\\"123\\\"}\",\"to\":\"8XFh8yBzrpJQmNyZzgoTqB\"}");
+    }
+
+    #[test]
+    fn test_get_messages_set_some_values_and_serialize(){
+        let to_did = "8XFh8yBzrpJQmNyZzgoTqB";
+        let payload = "Some Data";
+        let msg = match get_messages()
+            .to(&to_did)
+            .serialize_message(){
+            Ok(x) => x.to_string(),
+            Err(y) => {
+             println!("Had error during message build: {}", y);
+                String::from("error")
+            }
+        };
+        assert_eq!(msg, "{\"agentPayload\":\"{\\\"@type\\\":{\\\"name\\\":\\\"GET_MSGS\\\",\\\"ver\\\":\\\"1.0\\\"}}\",\"to\":\"8XFh8yBzrpJQmNyZzgoTqB\"}");
     }
 
     #[test]
     fn test_get_messages_set_invalid_did_errors_at_serialize(){
         let to_did = "A";
-        let uid = "123";
-        let status_code = "0";
         let payload = "Some Data";
         let mut msg = get_messages()
             .to(&to_did)
-            .uid(&uid)
-            .status_code(&status_code)
+            .uid("123")
             .include_edge_payload(&payload).clone();
 
         match msg.serialize_message(){

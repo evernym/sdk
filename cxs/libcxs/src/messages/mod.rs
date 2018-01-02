@@ -348,8 +348,8 @@ pub mod tests {
         settings::set_defaults();
         let agency_did = "FhrSrYtQcw3p9xwf7NYemf";
         let agency_vk = "91qMFrZjXDoi2Vc8Mm14Ys112tEZdDegBZZoembFEATE";
-        let my_did = "2Yc17wdT4RHYCPkEWHhvET";
-        let my_vk = "qqYUsW8MAD3yKgky4DmPha58YM2nsRBsMR3wNzfDwBX";
+        let my_did = "PDgrtXLt8rDfCJpS8GSU9S";
+        let my_vk = "D7NwmZAjgeeWpB3LVQ1zGhJw5a3W7fCPiTMCrUFak3me";
         //let agent_pw_did = "ShqBZfM59aDVjYtboizRgM";
         //let agent_pw_vk = "F1Z6hYpyH6LPH6XcNUfLoNHSnznuA9vEWVowcMd34rrK";
         let host = "https://enym-eagency.pdev.evernym.com";
