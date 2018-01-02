@@ -25,6 +25,21 @@ use self::rmp_serde::Deserializer;
 use self::proofs::proof_request::{ProofRequestMessage};
 
 
+#[derive(Clone, Deserialize, Serialize, Debug, PartialEq, PartialOrd)]
+pub struct MsgInfo {
+    pub name: String,
+    pub ver: String,
+    pub fmt: String,
+}
+
+#[derive(Clone, Deserialize, Serialize, Debug, PartialEq, PartialOrd)]
+pub struct Payload {
+    #[serde(rename = "@type")]
+    pub msg_info: MsgInfo,
+    #[serde(rename = "@msg")]
+    pub msg: String,
+}
+
 #[derive(Clone, Serialize, Debug, PartialEq, PartialOrd)]
 pub enum MessageType {
     EmptyPayload{},
@@ -144,6 +159,19 @@ pub fn bundle_from_u8(data: Vec<u8>) -> Result<Bundled<Vec<u8>>, u32> {
     };
 
     Ok(bundle)
+}
+
+pub fn extract_json_payload(data: &Vec<u8>) -> Result<String, u32> {
+    let mut de = Deserializer::new(&data[..]);
+    let my_payload: Payload = match Deserialize::deserialize(&mut de) {
+        Ok(x) => x,
+        Err(x) => {
+            error!("could not deserialize bundle with i8 or u8: {}", x);
+            return Err(error::INVALID_MSGPACK.code_num);
+            },
+        };
+
+    Ok(my_payload.msg.to_owned())
 }
 
 pub fn bundle_for_agency(message: Vec<u8>, did: &str) -> Result<Vec<u8>, u32> {
@@ -348,8 +376,8 @@ pub mod tests {
         settings::set_defaults();
         let agency_did = "FhrSrYtQcw3p9xwf7NYemf";
         let agency_vk = "91qMFrZjXDoi2Vc8Mm14Ys112tEZdDegBZZoembFEATE";
-        let my_did = "PDgrtXLt8rDfCJpS8GSU9S";
-        let my_vk = "D7NwmZAjgeeWpB3LVQ1zGhJw5a3W7fCPiTMCrUFak3me";
+        let my_did = "2hoqvcwupRTUNkXn6ArYzs";
+        let my_vk = "vrWGArMA3toVoZrYGSAMjR2i9KjBS66bZWyWuYJJYPf";
         //let agent_pw_did = "ShqBZfM59aDVjYtboizRgM";
         //let agent_pw_vk = "F1Z6hYpyH6LPH6XcNUfLoNHSnznuA9vEWVowcMd34rrK";
         let host = "https://enym-eagency.pdev.evernym.com";
@@ -363,7 +391,7 @@ pub mod tests {
         settings::set_config_value(settings::CONFIG_AGENCY_PAIRWISE_VERKEY, agency_vk); /* this is unique to the first call and gets changed after we get the reponse to CONNECT */
 
         let url = format!("{}/agency/msg", settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
-        wallet::init_wallet("my_real_wallet").unwrap();
+        wallet::init_wallet("wallet1").unwrap();
 
         /* STEP 1 - CONNECT */
 

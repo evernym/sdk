@@ -16,7 +16,6 @@ use std::str;
 
 
 #[derive(Clone, Deserialize, Serialize, Debug, PartialEq, PartialOrd)]
-#[serde(rename_all = "camelCase")]
 struct CreateMsgPayload {
     #[serde(rename = "@type")]
     msg_type: MsgType,
@@ -320,6 +319,7 @@ pub fn parse_invitation_acceptance_details(payload: Vec<u8>) -> Result<SenderDet
     };
     Ok(response.sender_detail.to_owned())
 }
+
 
 #[cfg(test)]
 mod tests {

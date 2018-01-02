@@ -116,6 +116,7 @@ pub fn prep_anonymous_msg(recipient_vk: &str, msg: &[u8]) -> Result<Vec<u8>, u32
 pub fn parse_msg(wallet_handle: i32, recipient_vk: &str, msg: &[u8]) -> Result<Vec<u8>, u32> {
     if settings::test_indy_mode_enabled() { return Ok(Vec::from(msg).to_owned()) }
 
+    info!("parse_msg vk: {}",recipient_vk);
     let (sender, receiver) = channel();
 
     let cb = Box::new(move |err, verkey, msg| {

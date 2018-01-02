@@ -457,25 +457,11 @@ pub fn get_invite_detail(response: &str) -> Result<InviteDetail, u32> {
 
 pub fn generate_encrypted_payload(handle: u32, data: &str, msg_type: &str) -> Result<Vec<u8>, u32> {
 
-    #[derive(Serialize, Debug, PartialEq, PartialOrd, Clone)]
-    struct MsgInfo {
-        name: String,
-        ver: String,
-        fmt: String,
-    }
-    #[derive(Serialize, Debug, PartialEq, PartialOrd, Clone)]
-    #[serde(rename_all = "camelCase")]
-    struct Payload {
-        #[serde(rename = "@type")]
-        msg_info: MsgInfo,
-        #[serde(rename = "@msg")]
-        msg: String,
-    }
     let my_vk = get_pw_verkey(handle)?;
     let their_vk = get_their_pw_verkey(handle)?;
 
-    let my_payload = Payload {
-        msg_info: MsgInfo { name: msg_type.to_string(), ver: "1.0".to_string(), fmt: "json".to_string(), },
+    let my_payload = messages::Payload {
+        msg_info: messages::MsgInfo { name: msg_type.to_string(), ver: "1.0".to_string(), fmt: "json".to_string(), },
         msg: data.to_string(),
     };
     let bytes = match encode::to_vec_named(&my_payload) {
@@ -485,6 +471,7 @@ pub fn generate_encrypted_payload(handle: u32, data: &str, msg_type: &str) -> Re
             return Err(error::INVALID_MSGPACK.code_num);
         },
     };
+    debug!("Sending payload: {:?}", bytes);
     crypto::prep_msg(wallet::get_wallet_handle(),&my_vk, &their_vk, &bytes)
 }
 
@@ -492,7 +479,6 @@ pub fn generate_encrypted_payload(handle: u32, data: &str, msg_type: &str) -> Re
 mod tests {
     use utils::constants::*;
     use utils::httpclient;
-    use issuer_claim;
     use messages::get_message::*;
     use std::thread;
     use std::time::Duration;
@@ -666,12 +652,12 @@ mod tests {
         settings::set_defaults();
         let agency_did = "FhrSrYtQcw3p9xwf7NYemf";
         let agency_vk = "91qMFrZjXDoi2Vc8Mm14Ys112tEZdDegBZZoembFEATE";
-        let agency_pw_did = "Qozf4ZGG4CFyUSodm4CQ4L";
-        let agency_pw_vk = "DygwpNvUdUYKb2CY52YFKJxq4J9mGMqAb3M1GUqijWe6";
-        let my_did = "PDgrtXLt8rDfCJpS8GSU9S";
-        let my_vk = "D7NwmZAjgeeWpB3LVQ1zGhJw5a3W7fCPiTMCrUFak3me";
-        let agent_did = "K3auW2ULcmS5k4h3PxFaC7";
-        let agent_vk = "AqRbtbpKGAy6YtMnAxnTVuuvs4ix9PKTTgieKsTpHe6d";
+        let agency_pw_did = "26ftatXdzv9Fx63FCb32t6";
+        let agency_pw_vk = "bhkWna9z4M6xbyTKVSCpE9KjVhNJiZwnVGuWtCdsD31";
+        let my_did = "2hoqvcwupRTUNkXn6ArYzs";
+        let my_vk = "vrWGArMA3toVoZrYGSAMjR2i9KjBS66bZWyWuYJJYPf";
+        let agent_did = "FVWwkg4PS8gBPADXB1o1hZ";
+        let agent_vk = "8u7NqTAmT7pAzAPScNAFAXCs4HS15NFjpvdEnaAntTbX";
         let host = "https://enym-eagency.pdev.evernym.com";
 
         settings::set_config_value(settings::CONFIG_ENTERPRISE_DID,my_did);
@@ -684,7 +670,7 @@ mod tests {
         settings::set_config_value(settings::CONFIG_AGENCY_PAIRWISE_VERKEY, agency_vk);
 
         let url = format!("{}/agency/msg", settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
-        wallet::init_wallet("my_real_wallet").unwrap();
+        wallet::init_wallet("wallet1").unwrap();
 
         let handle = build_connection("test_real_connection_create".to_owned()).unwrap();
         connect(handle,"{ \"phone\": \"8014710072\" }".to_string()).unwrap();
@@ -696,11 +682,5 @@ mod tests {
             thread::sleep(Duration::from_millis(1000));
             update_state(handle).unwrap();
         }
-
-        /* TODO: get claims working
-        let issuer_handle = issuer_claim::from_string(DEFAULT_SERIALIZED_ISSUER_CLAIM).unwrap();
-        assert_eq!(issuer_claim::get_state(issuer_handle),CxsStateType::CxsStateInitialized as u32);
-        assert_eq!(issuer_claim::send_claim_offer(issuer_handle,handle).unwrap(), error::SUCCESS.code_num);
-        */
     }
 }

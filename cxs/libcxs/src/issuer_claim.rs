@@ -22,6 +22,7 @@ use utils::timeout::TimeoutUtils;
 use utils::wallet;
 use utils::openssl::encode;
 use utils::httpclient;
+use utils::crypto;
 use utils::constants::SEND_CLAIM_OFFER_RESPONSE;
 
 lazy_static! {
@@ -74,6 +75,8 @@ pub struct IssuerClaim {
     claim_name: String,
     claim_id: String,
     ref_msg_id: String,
+    #[serde(skip)]
+    connection_handle: u32,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -137,6 +140,7 @@ impl IssuerClaim {
             Ok(response) => {
                 self.msg_uid = get_offer_details(&response[0])?;
                 self.issued_did = to_did;
+                self.connection_handle = connection_handle;
                 self.state = CxsStateType::CxsStateOfferSent;
                 return Ok(error::SUCCESS.code_num);
             }
@@ -204,6 +208,7 @@ impl IssuerClaim {
             Ok(response) => {
                 self.msg_uid = get_offer_details(&response[0])?;
                 self.issued_did = to;
+                self.connection_handle = connection_handle;
                 self.state = CxsStateType::CxsStateAccepted;
                 return Ok(error::SUCCESS.code_num);
             }
@@ -260,9 +265,10 @@ impl IssuerClaim {
         }
     }
 
+    /*
     fn get_claim_req(&mut self, msg_uid: &str) {
         info!("Checking for outstanding claimReq for {} with uid: {}", self.handle, msg_uid);
-        let msgs = match get_matching_messages(msg_uid, &self.issued_did) {
+        let msgs = match get_matching_messages(msg_uid, self.connection_handle) {
             Ok(x) => x,
             Err(err) => {
                 warn!("{} {}", err, self.handle);
@@ -295,6 +301,7 @@ impl IssuerClaim {
             }
         }
     }
+    */
 
     fn get_claim_offer_status(&mut self) {
         info!("getting outstanding claim messages issuer_claim handle {}", self.handle);
@@ -305,7 +312,7 @@ impl IssuerClaim {
             return;
         }
 
-        let msgs = match get_matching_messages(&self.msg_uid, &self.issued_did) {
+        let payload = match get_claim_req_payload(&self.msg_uid, self.connection_handle) {
             Ok(x) => x,
             Err(err) => {
                 warn!("{} {}", err, self.handle);
@@ -313,21 +320,12 @@ impl IssuerClaim {
             }
         };
 
-        for msg in msgs {
-            if msg["statusCode"] == serde_json::to_value(MessageAccepted.as_str())
-                .unwrap_or(serde_json::Value::Null) {
-                //get the followup-claim-req using refMsgId
-                let ref_msg_id = match msg["refMsgId"].as_str() {
-                    Some(x) => x,
-                    None => {
-                        warn!("invalid message reference id for claim {}", self.handle);
-                        return
-                    }
-                };
-                self.ref_msg_id = ref_msg_id.to_owned();
-                self.get_claim_req(ref_msg_id);
-            }
-        }
+        self.claim_request = match parse_claim_req_payload(&payload) {
+            Err(_) => return,
+            Ok(x) => Some(x),
+        };
+
+        self.state = CxsStateType::CxsStateRequestReceived;
     }
 
     fn update_state(&mut self) {
@@ -351,6 +349,7 @@ impl IssuerClaim {
             claim_attributes: CLAIM_DATA.to_owned(),
             issuer_did: "QTrbV4raAcND4DWWzBmdsh".to_owned(),
             issued_did: "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
+            connection_handle: 0,
             state: CxsStateType::CxsStateOfferSent,
             claim_request: Some(claim_req),
             claim_name: "Claim".to_owned(),
@@ -439,6 +438,19 @@ pub fn get_offer_uid(handle: u32) -> Result<String,u32> {
     }
 }
 
+fn parse_claim_req_payload(payload: &Vec<u8>) -> Result<ClaimRequest, u32> {
+    let data = messages::extract_json_payload(payload)?;
+
+    let my_claim_req = match ClaimRequest::from_str(&data) {
+         Ok(x) => x,
+         Err(x) => {
+             warn!("invalid json {}", x);
+             return Err(error::INVALID_JSON.code_num);
+         },
+    };
+    Ok(my_claim_req)
+}
+
 pub fn issuer_claim_create(schema_seq_no: u32,
                            source_id: Option<String>,
                            issuer_did: String,
@@ -454,6 +466,7 @@ pub fn issuer_claim_create(schema_seq_no: u32,
         msg_uid: String::new(),
         claim_attributes: claim_data,
         issued_did: String::new(),
+        connection_handle: 0,
         issuer_did: issuer_did,
         state: CxsStateType::CxsStateNone,
         schema_seq_no,
@@ -592,22 +605,37 @@ pub fn convert_to_map(s:&str) -> Result<serde_json::Map<String, serde_json::Valu
     Ok(v)
 }
 
-fn get_matching_messages<'a>(msg_uid:&'a str, did:&'a str) -> Result<Vec<serde_json::Value>, &'a str> {
-    let response = match messages::get_messages().to(did).uid(msg_uid).send() {
-        Ok(x) => x,
-        Err(x) => return Err("invalid response to get_messages for claim"),
+fn get_claim_req_payload(msg_uid: &str, connection_handle: u32) -> Result<Vec<u8>, u32> {
+    let pw_did = connection::get_pw_did(connection_handle)?;
+    let pw_vk = connection::get_pw_verkey(connection_handle)?;
+    let agent_did = connection::get_agent_did(connection_handle)?;
+    let agent_vk = connection::get_agent_verkey(connection_handle)?;
+    let my_vk = connection::get_pw_verkey(connection_handle)?;
 
-    };
+    match messages::get_messages()
+        .to(&pw_did)
+        .to_vk(&pw_vk)
+        .agent_did(&agent_did)
+        .agent_vk(&agent_vk)
+        //.uid(msg_uid)
+        .send_secure() {
+        Err(x) => {
+            error!("could not post get_messages: {}", x);
+            return Err(error::POST_MSG_FAILURE.code_num)
+        },
+        Ok(response) => {
+            info!("claim_response: {:?}", response);
+            for i in response {
+                if i.status_code == "MS-103" && i.msg_type == "claimReq" && !i.payload.is_none() {
+                    let payload = messages::to_u8(i.payload.as_ref().unwrap());
+                    let payload = crypto::parse_msg(wallet::get_wallet_handle(), &my_vk, &payload)?;
+                    return Ok(payload);
+                    }
+                }
+            },
+        };
 
-    let json: serde_json::Value = match serde_json::from_str(&response) {
-        Ok(json) => json,
-        Err(_) => return Err("invalid json in get_messages for claim"),
-    };
-
-    match json["msgs"].as_array() {
-        Some(array) => Ok(array.to_owned()),
-        None => Err("invalid msgs array returned for claim"),
-    }
+    Err(error::INVALID_HTTP_RESPONSE.code_num)
 }
 
 #[cfg(test)]
@@ -675,6 +703,7 @@ mod tests {
             claim_attributes: CLAIM_DATA.to_owned(),
             issuer_did: "QTrbV4raAcND4DWWzBmdsh".to_owned(),
             issued_did: "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
+            connection_handle: 0,
             state: CxsStateType::CxsStateOfferSent,
             claim_name: DEFAULT_CLAIM_NAME.to_owned(),
             claim_request: Some(claim_req.to_owned()),
@@ -814,6 +843,7 @@ mod tests {
             claim_name: DEFAULT_CLAIM_NAME.to_owned(),
             claim_id: String::from(DEFAULT_CLAIM_ID),
             ref_msg_id: String::new(),
+            connection_handle: 0,
         };
 
         let response = "{\"msgs\":[{\"uid\":\"6gmsuWZ\",\"typ\":\"conReq\",\"statusCode\":\"MS-102\",\"statusMsg\":\"message sent\"},\
