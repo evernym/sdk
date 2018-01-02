@@ -18,7 +18,7 @@ use messages;
 use messages::invite::{InviteDetail, SenderDetail};
 use messages::get_message::Message;
 use serde::Deserialize;
-use self::rmp_serde::Deserializer;
+use self::rmp_serde::{encode, Deserializer};
 
 lazy_static! {
     static ref CONNECTION_MAP: Mutex<HashMap<u32, Box<Connection>>> = Default::default();
@@ -455,11 +455,37 @@ pub fn get_invite_detail(response: &str) -> Result<InviteDetail, u32> {
     Ok(details)
 }
 
-pub fn encrypt_payload(handle: u32, payload: &str) -> Result<Vec<u8>, u32> {
+pub fn generate_encrypted_payload(handle: u32, data: &str, msg_type: &str) -> Result<Vec<u8>, u32> {
+
+    #[derive(Serialize, Debug, PartialEq, PartialOrd, Clone)]
+    struct MsgInfo {
+        name: String,
+        ver: String,
+        fmt: String,
+    }
+    #[derive(Serialize, Debug, PartialEq, PartialOrd, Clone)]
+    #[serde(rename_all = "camelCase")]
+    struct Payload {
+        #[serde(rename = "@type")]
+        msg_info: MsgInfo,
+        #[serde(rename = "@msg")]
+        msg: String,
+    }
     let my_vk = get_pw_verkey(handle)?;
     let their_vk = get_their_pw_verkey(handle)?;
 
-    crypto::prep_msg(wallet::get_wallet_handle(),&my_vk, &their_vk, payload.as_bytes())
+    let my_payload = Payload {
+        msg_info: MsgInfo { name: msg_type.to_string(), ver: "1.0".to_string(), fmt: "json".to_string(), },
+        msg: data.to_string(),
+    };
+    let bytes = match encode::to_vec_named(&my_payload) {
+        Ok(x) => x,
+        Err(x) => {
+            error!("could not encode create_keys msg: {}", x);
+            return Err(error::INVALID_MSGPACK.code_num);
+        },
+    };
+    crypto::prep_msg(wallet::get_wallet_handle(),&my_vk, &their_vk, &bytes)
 }
 
 #[cfg(test)]
