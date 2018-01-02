@@ -4,7 +4,7 @@ use serde_json::Value;
 use settings;
 use utils::error;
 use utils::libindy::ledger::{libindy_build_get_txn_request, libindy_submit_request};
-use utils::pool::get_pool_handle;
+use utils::libindy::pool::get_pool_handle;
 use std::string::ToString;
 use std::fmt;
 
@@ -133,7 +133,7 @@ impl LedgerSchema {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use utils::pool;
+    use utils::libindy::pool;
     use std::path::Path;
     use std::str::FromStr;
 

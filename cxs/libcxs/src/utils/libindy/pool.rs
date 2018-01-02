@@ -11,6 +11,8 @@ use std::ptr::null;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::channel;
 use utils::error;
+use utils::libindy::{map_indy_call_error, map_string_error, indy_function_eval, check_str};
+use utils::libindy::types::Return_I32;
 use utils::json::JsonEncodable;
 
 pub static mut POOL_HANDLE: i32 = 0;
@@ -59,30 +61,6 @@ fn tmp_file_path(file_name: &str) -> PathBuf {
     path
 }
 
-/*
-pub fn create_pool_config<'a>(pool1:&str, config_name:&str)-> u32 {
-    let pool_name = pool1;
-    let config_name = config_name;
-    let c_pool_name = CString::new(pool_name).unwrap();
-    let c_config_name = CString::new(config_name).unwrap();
-    let command_handle: i32 = generate_command_handle();
-
-    // currently we have no call backs
-    extern "C" fn f(_handle: i32, _err: i32) { }
-
-    unsafe {
-        let indy_err = indy_create_pool_ledger_config(command_handle,
-                                                      c_pool_name.as_ptr(),
-                                                      c_config_name.as_ptr(),
-                                                      Some(f));
-
-        info!("indy_create_pool_ledger_config returned {}", indy_err);
-
-        indy_error_to_cxs_error_code(indy_err)
-    }
-}
-*/
-
 pub fn create_genesis_txn_file(pool_name: &str,
                                txn_file_data: &str,
                                txn_file_path: Option<&Path>) -> PathBuf {
@@ -116,41 +94,28 @@ pub fn pool_config_json(txn_file_path: &Path) -> String {
 }
 
 pub fn create_pool_ledger_config(pool_name: &str, path: Option<&Path>) -> Result<u32, u32> {
-
     let pool_config = match path {
         Some(c) => pool_config_json(c),
         None => return Err(error::INVALID_GENESIS_TXN_PATH.code_num)
     };
 
-    let (sender, receiver) = channel();
+    let pool_name = CString::new(pool_name).map_err(map_string_error)?;
+    let pool_config = CString::new(pool_config).map_err(map_string_error)?;
 
-    let cb = Box::new(move |err| {
-        sender.send(err).unwrap();
-    });
-
-    let (command_handle, cb) = CallbackUtils::closure_to_create_pool_ledger_cb(cb);
-
-    let pool_name = CString::new(pool_name).unwrap();
-    let pool_config = CString::new(pool_config).unwrap();
+    let rtn_obj = Return_I32::new()?;
 
     unsafe {
-        let err = indy_create_pool_ledger_config(command_handle,
+        indy_function_eval(
+            indy_create_pool_ledger_config(rtn_obj.command_handle,
                                                  pool_name.as_ptr(),
                                                  pool_config.as_ptr(),
-                                                 cb);
-
-        if err != 0 && err != 306 {
-            return Err(error::CREATE_POOL_CONFIG_PARAMETERS.code_num)
-        }
-
-        let err = receiver.recv_timeout(TimeoutUtils::short_timeout()).unwrap();
-
-        if err != 0 && err != 306 {
-            return Err(error::CREATE_POOL_CONFIG.code_num)
-        }
+                                                 Some(rtn_obj.get_callback()))
+        ).map_err(map_indy_call_error)?;
     }
 
-    return Ok(error::SUCCESS.code_num);
+    rtn_obj.receive().and_then(|unit|{
+        Ok(0)
+    })
 }
 
 pub fn open_pool_ledger(pool_name: &str, config: Option<&str>) -> Result<u32, u32> {
@@ -257,7 +222,7 @@ pub fn get_pool_handle() -> Result<i32, u32> {
 pub mod tests {
     use std::path::{Path, PathBuf};
     use std::env::home_dir;
-    use utils::pool::create_pool_ledger_config;
+    use utils::libindy::pool::create_pool_ledger_config;
     use super::*;
 
     pub fn create_genesis_txn_file_for_test_pool(pool_name: &str,

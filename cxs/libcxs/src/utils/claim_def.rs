@@ -2,7 +2,7 @@ extern crate serde_json;
 extern crate libc;
 
 use settings;
-use utils::pool;
+use utils::libindy::pool;
 use utils::error;
 use utils::libindy::SigTypes;
 use utils::libindy::ledger::{libindy_submit_request, libindy_build_get_claim_def_txn};

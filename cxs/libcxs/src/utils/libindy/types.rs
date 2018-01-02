@@ -4,6 +4,7 @@ use self::libc::c_char;
 use std::sync::mpsc::Receiver;
 use utils::libindy::next_command_handle;
 use utils::libindy::callback;
+use utils::libindy::error_codes::map_indy_error;
 use utils::timeout::TimeoutUtils;
 use utils::error;
 use std::sync::mpsc::channel;
@@ -43,7 +44,7 @@ const POISON_MSG: &str = "FAILED TO LOCK CALLBACK MAP!";
 
 #[allow(non_camel_case_types)]
 pub struct Return_I32 {
-    command_handle: i32,
+    pub command_handle: i32,
     receiver: Receiver<i32>,
 }
 
@@ -72,17 +73,13 @@ impl Return_I32 {
     pub fn receive(&self) -> Result<(), u32> {
         let err = receive(&self.receiver)?;
 
-        if err != 0 {
-            return Err(error::UNKNOWN_ERROR.code_num)
-        }
-
-        Ok(())
+        map_indy_error((), err)
     }
 }
 
 #[allow(non_camel_case_types)]
 pub struct Return_I32_I32 {
-    command_handle: i32,
+    pub command_handle: i32,
     receiver: Receiver<(i32, i32)>,
 }
 impl Return_I32_I32 {
@@ -110,12 +107,7 @@ impl Return_I32_I32 {
     pub fn receive(&self) -> Result<i32, u32> {
         let (err, arg1) = receive(&self.receiver)?;
 
-        if err != 0 {
-            Err(error::UNKNOWN_ERROR.code_num)
-        }
-        else {
-            Ok(arg1)
-        }
+        map_indy_error(arg1, err)
     }
 }
 
@@ -150,11 +142,7 @@ impl Return_I32_STR {
     pub fn receive(&self) -> Result<Option<String>, u32> {
         let (err, str1) = receive(&self.receiver)?;
 
-        if err != 0 {
-            return Err(error::UNKNOWN_ERROR.code_num)
-        }
-
-        Ok(str1)
+        map_indy_error(str1, err)
     }
 }
 

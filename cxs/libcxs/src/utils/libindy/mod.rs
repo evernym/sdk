@@ -1,7 +1,8 @@
 pub mod ledger;
 pub mod callback;
 pub mod types;
-
+pub mod pool;
+mod error_codes;
 
 use std::ffi::NulError;
 use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
@@ -29,9 +30,7 @@ fn next_command_handle() -> i32 {
     (COMMAND_HANDLE_COUNTER.fetch_add(1, Ordering::SeqCst) + 1) as i32
 }
 
-fn map_indy_call_error(err: i32) -> u32 {
-    error::UNKNOWN_ERROR.code_num
-}
+
 
 fn map_string_error(err: NulError) -> u32 {
     error::UNKNOWN_ERROR.code_num
@@ -44,4 +43,14 @@ fn indy_function_eval(err: i32) -> Result<(), i32> {
         else {
             Ok(())
         }
+}
+
+fn check_str(str_opt: Option<String>) -> Result<String, u32>{
+    match str_opt {
+        Some(str) => Ok(str),
+        None => {
+            warn!("libindy did not return a string");
+            return Err(error::UNKNOWN_LIBINDY_ERROR.code_num)
+        }
+    }
 }

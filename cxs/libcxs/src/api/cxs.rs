@@ -2,7 +2,8 @@ extern crate libc;
 
 use self::libc::c_char;
 use utils::cstring::CStringUtils;
-use utils::{pool, wallet};
+use utils::wallet;
+use utils::libindy::pool;
 use utils::error;
 use settings;
 use std::thread;
