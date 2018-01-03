@@ -652,12 +652,10 @@ mod tests {
         settings::set_defaults();
         let agency_did = "FhrSrYtQcw3p9xwf7NYemf";
         let agency_vk = "91qMFrZjXDoi2Vc8Mm14Ys112tEZdDegBZZoembFEATE";
-        let agency_pw_did = "26ftatXdzv9Fx63FCb32t6";
-        let agency_pw_vk = "bhkWna9z4M6xbyTKVSCpE9KjVhNJiZwnVGuWtCdsD31";
         let my_did = "2hoqvcwupRTUNkXn6ArYzs";
         let my_vk = "vrWGArMA3toVoZrYGSAMjR2i9KjBS66bZWyWuYJJYPf";
-        let agent_did = "FVWwkg4PS8gBPADXB1o1hZ";
-        let agent_vk = "8u7NqTAmT7pAzAPScNAFAXCs4HS15NFjpvdEnaAntTbX";
+        let agent_did = "U3w76D784aCFmVQm1FKCEs";
+        let agent_vk = "Fk84VW2ZgAAziFqDNuqJacYy2B8PmKKNiEvBVXRXdhMq";
         let host = "https://enym-eagency.pdev.evernym.com";
 
         settings::set_config_value(settings::CONFIG_ENTERPRISE_DID,my_did);
@@ -670,7 +668,7 @@ mod tests {
         settings::set_config_value(settings::CONFIG_AGENCY_PAIRWISE_VERKEY, agency_vk);
 
         let url = format!("{}/agency/msg", settings::get_config_value(settings::CONFIG_AGENT_ENDPOINT).unwrap());
-        wallet::init_wallet("wallet1").unwrap();
+        wallet::init_wallet("my_real_wallet").unwrap();
 
         let handle = build_connection("test_real_connection_create".to_owned()).unwrap();
         connect(handle,"{ \"phone\": \"8014710072\" }".to_string()).unwrap();

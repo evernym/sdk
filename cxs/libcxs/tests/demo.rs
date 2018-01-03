@@ -68,14 +68,15 @@ fn test_demo(){
     let issuer_did = "TCwEv4tiAuA5DfC7VTdu83";
     let config_string = format!("{{\"agent_endpoint\":\"{}\",\
     \"agency_pairwise_did\":\"FhrSrYtQcw3p9xwf7NYemf\",\
-    \"agent_pairwise_did\":\"FVWwkg4PS8gBPADXB1o1hZ\",\
+    \"agent_pairwise_did\":\"U3w76D784aCFmVQm1FKCEs\",\
     \"agent_enterprise_verkey\":\"vrWGArMA3toVoZrYGSAMjR2i9KjBS66bZWyWuYJJYPf\",\
     \"enterprise_did_agency\":\"{}\",\
     \"enterprise_did_agent\":\"PDgrtXLt8rDfCJpS8GSU9S\",\
     \"enterprise_name\":\"enterprise\",\
+    \"wallet_name\":\"my_real_wallet\",\
     \"logo_url\":\"https://s19.postimg.org/ykyz4x8jn/evernym.png\",\
     \"agency_pairwise_verkey\":\"91qMFrZjXDoi2Vc8Mm14Ys112tEZdDegBZZoembFEATE\",\
-    \"agent_pairwise_verkey\":\"8u7NqTAmT7pAzAPScNAFAXCs4HS15NFjpvdEnaAntTbX\"}}", "https://enym-eagency.pdev.evernym.com",
+    \"agent_pairwise_verkey\":\"Fk84VW2ZgAAziFqDNuqJacYy2B8PmKKNiEvBVXRXdhMq\"}}", "https://enym-eagency.pdev.evernym.com",
                                 issuer_did);
 
     let mut file = NamedTempFileOptions::new()

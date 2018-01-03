@@ -24,6 +24,8 @@ use std::ffi::CString;
 use utils::timeout::TimeoutUtils;
 use utils::claim_def::{ClaimDef};
 use utils::constants::*;
+use utils::crypto;
+use utils::wallet;
 use schema::LedgerSchema;
 
 lazy_static! {
@@ -58,6 +60,8 @@ struct Proof {
     nonce: String,
     proof: Option<ProofMessage>,
     proof_request: Option<ProofRequestMessage>,
+    #[serde(skip)]
+    connection_handle: u32,
 }
 
 impl Proof {
@@ -129,8 +133,14 @@ impl Proof {
 
     fn build_schemas_json(&mut self, claim_data:&Vec<ClaimData>) -> Result<String, u32> {
         if settings::test_indy_mode_enabled() { return Ok("{}".to_string()); }
-        let schema_obj = LedgerSchema::new_from_ledger(15)?;
-        Ok(schema_obj.to_string())
+        //get schema #
+        let schema_obj = LedgerSchema::new_from_ledger(claim_data[0].schema_seq_no as i32)?;
+//      Ok(schema_obj.to_string())
+        let data = match schema_obj.data {
+            Some(x) => x,
+            None => return Err(error::INVALID_PROOF_OFFER.code_num)
+        };
+        Ok(json!({claim_data[0].claim_uuid.clone():data}).to_string())
     }
 
     fn build_proof_req_json(&mut self) -> Result<String, u32> {
@@ -175,6 +185,10 @@ impl Proof {
         }
         self.prover_did = connection::get_pw_did(connection_handle)?;
         self.requester_did = settings::get_config_value(settings::CONFIG_ENTERPRISE_DID_AGENT).unwrap();
+
+        let agent_did = connection::get_agent_did(connection_handle)?;
+        let agent_vk = connection::get_agent_verkey(connection_handle)?;
+
         let data_version = "0.1";
         let mut proof_obj = messages::proof_request();
         let proof_request = proof_obj
@@ -190,12 +204,17 @@ impl Proof {
 
         self.proof_request = Some(proof_obj);
         let data = connection::generate_encrypted_payload(connection_handle, &proof_request, "PROOF_REQUEST")?;
-        if settings::test_agency_mode_enabled() { httpclient::set_next_str_response("{\"uid\":\"6a9u7Jt\",\"typ\":\"proofRequest\",\"statusCode\":\"MS-101\"}".to_string()) }
+        if settings::test_agency_mode_enabled() { httpclient::set_next_u8_response(SEND_CLAIM_OFFER_RESPONSE.to_vec()); }
 
-        match messages::send_message().to(&self.prover_did).msg_type("proofReq").edge_agent_payload(&data).send() {
+        match messages::send_message().to(&self.prover_did).msg_type("proofReq")
+            .agent_did(&agent_did)
+            .agent_vk(&agent_vk)
+            .edge_agent_payload(&data)
+            .send_secure() {
             Ok(response) => {
-                self.msg_uid = get_proof_details(&response)?;
+                self.msg_uid = get_proof_details(&response[0])?;
                 self.state = CxsStateType::CxsStateOfferSent;
+                self.connection_handle = connection_handle;
                 return Ok(error::SUCCESS.code_num)
             },
             Err(x) => {
@@ -213,53 +232,8 @@ impl Proof {
         proof.get_proof_attributes()
     }
 
-    fn check_for_proof(&mut self, msg_uid: &str) {
-        info!("Checking for outstanding proofOffer for {} with uid: {}", self.handle, msg_uid);
-        let msgs = match get_matching_messages(msg_uid, &self.prover_did) {
-            Ok(x) => x,
-            Err(err) => {
-                warn!("{} {}", err, self.handle);
-                return
-            }
-        };
-
-        for msg in msgs {
-            if msg["typ"] == String::from("proof") {
-                self.state = CxsStateType::CxsStateAccepted;
-                let payload = match msg["edgeAgentPayload"].as_str() {
-                    Some(x) => x,
-                    None => {
-                        warn!("proof has no edge agent payload");
-                        return
-                    }
-                };
-
-                self.proof = match ProofMessage::from_str(&payload) {
-                    Ok(x) => Some(x),
-                    Err(_) => {
-                        warn!("invalid claim request for proof {}", self.handle);
-                        return
-                    }
-                };
-
-                match self.proof_validation() {
-                    Ok(x) => {
-                        if self.proof_state != ProofStateType::ProofInvalid {
-                            info!("Proof format was validated for proof {}", self.handle);
-                            self.proof_state = ProofStateType::ProofValidated;
-                        }
-                    }
-                    Err(x) => {
-                        info!("Proof {} had invalid format with err {}", self.handle, x);
-                        self.proof_state = ProofStateType::ProofInvalid;
-                    }
-                };
-                return
-            }
-        }
-    }
-
     fn get_proof_request_status(&mut self) {
+        info!("updating state for proof {}", self.handle);
         if self.state == CxsStateType::CxsStateAccepted {
             return;
         }
@@ -267,29 +241,33 @@ impl Proof {
             return;
         }
 
-        // State is proof request sent
-        let msgs = match get_matching_messages(&self.msg_uid, &self.prover_did) {
+        let payload = match get_proof_offer_payload(&self.msg_uid, &self.prover_did, self.connection_handle) {
             Ok(x) => x,
             Err(err) => {
                 warn!("{} {}", err, self.handle);
                 return
             }
         };
-        for msg in msgs {
-            if msg["statusCode"] == serde_json::to_value(MessageAccepted.as_str())
-                .unwrap_or(serde_json::Value::Null){
-                let ref_msg_id = match msg["refMsgId"].as_str() {
-                    Some(x) => x,
-                    None => {
-                        warn!("invalid message reference id for proof {}", self.handle);
-                        return
-                    }
-                };
-                self.ref_msg_id = ref_msg_id.to_owned();
-                self.check_for_proof(ref_msg_id);
-                return
+
+        self.proof = match parse_proof_offer_payload(&payload) {
+            Err(_) => return,
+            Ok(x) => Some(x),
+        };
+
+        self.state = CxsStateType::CxsStateAccepted;
+
+        match self.proof_validation() {
+            Ok(x) => {
+                if self.proof_state != ProofStateType::ProofInvalid {
+                    info!("Proof format was validated for proof {}", self.handle);
+                    self.proof_state = ProofStateType::ProofValidated;
+                }
             }
-        }
+            Err(x) => {
+                info!("Proof {} had invalid format with err {}", self.handle, x);
+                self.proof_state = ProofStateType::ProofInvalid;
+            }
+        };
     }
 
     fn update_state(&mut self) {
@@ -329,6 +307,7 @@ pub fn create_proof(source_id: Option<String>,
         nonce: generate_nonce()?,
         proof: None,
         proof_request: None,
+        connection_handle: 0,
     });
 
     new_proof.validate_proof_request()?;
@@ -438,30 +417,54 @@ pub fn get_proof_uuid(handle: u32) -> Result<String,u32> {
     }
 }
 
-fn get_matching_messages<'a>(msg_uid:&'a str, to_did: &'a str) -> Result<Vec<serde_json::Value>, &'a str> {
-    let response = match messages::get_messages().to(to_did).uid(msg_uid).send() {
+fn parse_proof_offer_payload(payload: &Vec<u8>) -> Result<ProofMessage, u32> {
+    info!("parsing proof offer payload: {:?}", payload);
+    let data = messages::extract_json_payload(payload)?;
+
+    let my_claim_req = match ProofMessage::from_str(&data) {
         Ok(x) => x,
         Err(x) => {
-            error!("get_messages return: {}", x);
-            return Err("invalid response to get_messages for proof")
+            warn!("invalid json {}", x);
+            return Err(error::INVALID_JSON.code_num);
+        },
+    };
+    Ok(my_claim_req)
+}
+
+fn get_proof_offer_payload(msg_uid:&str, to_did: &str, connection_handle: u32) -> Result<Vec<u8>, u32> {
+    info!("getting proof offer payload from response");
+    let pw_vk = connection::get_pw_verkey(connection_handle)?;
+    info!("got pw_vk: {}", pw_vk);
+    let agent_did = connection::get_agent_did(connection_handle)?;
+    info!("got agent_did: {}", agent_did);
+    let agent_vk = connection::get_agent_verkey(connection_handle)?;
+    info!("got agent_vk: {}", agent_vk);
+    let my_vk = connection::get_pw_verkey(connection_handle)?;
+    info!("got my_vk: {}", my_vk);
+
+    let response = match messages::get_messages()
+        .to(to_did)
+        //.uid(msg_uid)
+        .agent_did(&agent_did)
+        .agent_vk(&agent_vk)
+        .send_secure() {
+        Err(x) => {
+            error!("could not post get_messages: {}", x);
+            return Err(error::POST_MSG_FAILURE.code_num)
+        },
+        Ok(response) => {
+            info!("proof_offer_response: {:?}", response);
+            for i in response {
+                if i.status_code == "MS-103" && i.msg_type == "proof" && !i.payload.is_none() {
+                    let payload = messages::to_u8(i.payload.as_ref().unwrap());
+                    let payload = crypto::parse_msg(wallet::get_wallet_handle(), &my_vk, &payload)?;
+                    return Ok(payload);
+                }
+            }
         },
     };
 
-    let json: serde_json::Value = match serde_json::from_str(&response) {
-        Ok(json) => json,
-        Err(_) => {
-            return Err("invalid json in get_messages for proof")
-
-
-        },
-    };
-
-    match json["msgs"].as_array() {
-        Some(array) => Ok(array.to_owned()),
-        None => {
-            Err("invalid msgs array returned for proof")
-        },
-    }
+    Err(error::INVALID_HTTP_RESPONSE.code_num)
 }
 
 pub fn get_proof(handle: u32) -> Result<String,u32> {
@@ -585,6 +588,7 @@ mod tests {
 
     #[test]
     fn test_send_proof_request() {
+        ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
 
@@ -597,11 +601,9 @@ mod tests {
             Ok(x) => x,
             Err(_) => panic!("Proof creation failed"),
         };
-        thread::sleep(Duration::from_millis(500));
         assert_eq!(send_proof_request(handle, connection_handle).unwrap(), error::SUCCESS.code_num);
-        thread::sleep(Duration::from_millis(500));
         assert_eq!(get_state(handle), CxsStateType::CxsStateOfferSent as u32);
-        assert_eq!(get_proof_uuid(handle).unwrap(), "6a9u7Jt");
+        assert_eq!(get_proof_uuid(handle).unwrap(), "ntc2ytb");
     }
 
     
@@ -623,7 +625,6 @@ mod tests {
             Ok(x) => x,
             Err(_) => panic!("Proof creation failed"),
         };
-        thread::sleep(Duration::from_millis(500));
         match send_proof_request(handle, connection_handle) {
             Ok(x) => panic!("Should have failed in send_proof_request"),
             Err(y) => assert_eq!(y, error::INVALID_DID.code_num)
@@ -654,9 +655,10 @@ mod tests {
 
     #[test]
     fn test_update_state_with_pending_proof_offer() {
-        ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "agency");
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
+
+        let connection_handle = build_connection("test_send_proof_request".to_owned()).unwrap();
 
         let new_handle = 1;
         let mut proof = Box::new(Proof {
@@ -675,16 +677,12 @@ mod tests {
             nonce: generate_nonce().unwrap(),
             proof: None,
             proof_request: None,
+            connection_handle,
         });
-        let response = "{\"msgs\":[{\"uid\":\"6gmsuWZ\",\"typ\":\"conReq\",\"statusCode\":\"MS-102\",\"statusMsg\":\"message sent\"},\
-        {\"statusCode\":\"MS-104\",\"edgeAgentPayload\":\"{\\\"attr\\\":\\\"value\\\"}\",\"sendStatusCode\":\"MSS-101\",\"typ\":\"claimOffer\",\"statusMsg\":\"message accepted\",\"uid\":\"6a9u7Jt\",\"refMsgId\":\"CKrG14Z\"},\
-        {\"msg_type\":\"PROOF\",\"typ\":\"proof\",\"edgeAgentPayload\":\"{\\\"msg_type\\\":\\\"proof\\\",\\\"version\\\":\\\"0.1\\\",\\\"to_did\\\":\\\"BnRXf8yDMUwGyZVDkSENeq\\\",\\\"from_did\\\":\\\"GxtnGN6ypZYgEqcftSQFnC\\\",\\\"proof_request_id\\\":\\\"cCanHnpFAD\\\",\\\"proofs\\\":{\\\"claim::f22cc7c8-924f-4541-aeff-29a9aed9c46b\\\":{\\\"proof\\\":{\\\"primary_proof\\\":{\\\"eq_proof\\\":{\\\"revealed_attrs\\\":{\\\"state\\\":\\\"96473275571522321025213415717206189191162\\\"},\\\"a_prime\\\":\\\"921....546\\\",\\\"e\\\":\\\"158....756\\\",\\\"v\\\":\\\"114....069\\\",\\\"m\\\":{\\\"address1\\\":\\\"111...738\\\",\\\"zip\\\":\\\"149....066\\\",\\\"city\\\":\\\"209....294\\\",\\\"address2\\\":\\\"140....691\\\"},\\\"m1\\\":\\\"777....518\\\",\\\"m2\\\":\\\"515....229\\\"},\\\"ge_proofs\\\":[]},\\\"non_revoc_proof\\\":null},\\\"schema_seq_no\\\":15,\\\"issuer_did\\\":\\\"4fUDR9R7fjwELRvH9JT6HH\\\"}},\\\"aggregated_proof\\\":{\\\"c_hash\\\":\\\"25105671496406009212798488318112715144459298495509265715919744143493847046467\\\",\\\"c_list\\\":[[72,245,38,\\\"....\\\",46,195,18]]},\\\"requested_proof\\\":{\\\"revealed_attrs\\\":{\\\"attr_key_id\\\":[\\\"claim::f22cc7c8-924f-4541-aeff-29a9aed9c46b\\\",\\\"UT\\\",\\\"96473275571522321025213415717206189191162\\\"]},\\\"unrevealed_attrs\\\":{},\\\"self_attested_attrs\\\":{},\\\"predicates\\\":{}}}\"}]}";
-        httpclient::set_next_str_response(response.to_string());
-        httpclient::set_next_str_response(response.to_string());
+        httpclient::set_next_u8_response(GET_PROOF_RESPONSE.to_vec());
 
         proof.update_state();
         assert_eq!(proof.get_state(), CxsStateType::CxsStateAccepted as u32);
-        thread::sleep(Duration::from_millis(500));
     }
 
 //    #[test]
@@ -760,8 +758,11 @@ mod tests {
 
     #[test]
     fn test_get_proof_returns_proof_when_proof_state_invalid() {
+        ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "agency");
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
+
+        let connection_handle = build_connection("test_send_proof_request".to_owned()).unwrap();
 
         let proof_msg = r#"{"msg_type":"proof","version":"0.1","to_did":"BnRXf8yDMUwGyZVDkSENeq","from_did":"GxtnGN6ypZYgEqcftSQFnC","proof_request_id":"cCanHnpFAD","proofs":{"claim::e5fec91f-d03d-4513-813c-ab6db5715d55":{"proof":{"primary_proof":{"eq_proof":{"revealed_attrs":{"state":"96473275571522321025213415717206189191162"},"a_prime":"22605045280481376895214546474258256134055560453004805058368015338423404000586901936329279496160366852115900235316791489357953785379851822281248296428005020302405076144264617943389810572564188437603815231794326272302243703078443007359698858400857606408856314183672828086906560155576666631125808137726233827430076624897399072853872527464581329767287002222137559918765406079546649258389065217669558333867707240780369514832185660287640444094973804045885379406641474693993903268791773620198293469768106363470543892730424494655747935463337367735239405840517696064464669905860189004121807576749786474060694597244797343224031","e":"70192089123105616042684481760592174224585053817450673797400202710878562748001698340846985261463026529360990669802293480312441048965520897","v":"1148619141217957986496757711054111791862691178309410923416837802801708689012670430650138736456223586898110113348220116209094530854607083005898964558239710027534227973983322542548800291320747321452329327824406430787211689678096549398458892087551551587767498991043777397791000822007896620414888602588897806008609113730393639807814070738699614969916095861363383223421727858670289337712185089527052065958362840287749622133424503902085247641830693297082507827948006947829401008622239294382186995101394791468192083810475776455445579931271665980788474331866572497866962452476638881287668931141052552771328556458489781734943404258692308937784221642452132005267809852656378394530342203469943982066011466088478895643800295937901139711103301249691253510784029114718919483272055970725860849610885050165709968510696738864528287788491998027072378656038991754015693216663830793243584350961586874315757599094357535856429087122365865868729","m":{"address2":"11774234640096848605908744857306447015748098256395922562149769943967941106193320512788344020652220849708117081570187385467979956319507248530701654682748372348387275979419669108338","city":"4853213962270369118453000522408430296589146124488849630769837449684434138367659379663124155088827069418193027370932024893343033367076071757003149452226758383807126385017161888440","address1":"12970590675851114145396120869959510754345567924518524026685086869487243290925032320159287997675756075512889990901552679591155319959039145119122576164798225386578339739435869622811","zip":"8333721522340131864419931745588776943042067606218561135102011966361165456174036379901390244538991611895455576519950813910672825465382312504250936740379785802177629077591444977329"},"m1":"92853615502250003546205004470333326341901175168428906399291824325990659330595200000112546157141090642053863739870044907457400076448073272490169488870502566172795456430489790324815765612798273406119873266684053517977802902202155082987833343670942161987285661291655743810590661447300059024966135828466539810035","m2":"14442362430453309930284822850357071315613831915865367971974791350454381198894252834180803515368579729220423713315556807632571621646127926114010380486713602821529657583905131582938"},"ge_proofs":[]},"non_revoc_proof":null},"schema_seq_no":15,"issuer_did":"4fUDR9R7fjwELRvH9JT6HH"}},"aggregated_proof":{"c_hash":"68430476900085482958838239880418115228681348197588159723604944078288347793331","c_list":[[179,17,2,242,194,227,92,203,28,32,255,113,112,20,5,243,9,111,220,111,21,210,116,12,167,119,253,181,37,40,143,215,140,42,179,97,75,229,96,94,54,248,206,3,48,14,61,219,160,122,139,227,166,183,37,43,197,200,28,220,217,10,65,42,6,195,124,44,164,65,114,206,51,231,254,156,170,141,21,153,50,251,237,65,147,97,243,17,157,116,213,201,80,119,106,70,88,60,55,36,33,160,135,106,60,212,191,235,116,57,78,177,61,86,44,226,205,100,134,118,93,6,26,58,220,66,232,166,202,62,90,174,231,207,19,239,233,223,70,191,199,100,157,62,139,176,28,184,9,70,116,199,142,237,198,183,12,32,53,84,207,202,77,56,97,177,154,169,223,201,212,163,212,101,184,255,215,167,16,163,136,44,25,123,49,15,229,41,149,133,159,86,106,208,234,73,207,154,194,162,141,63,159,145,94,47,174,51,225,91,243,2,221,202,59,11,212,243,197,208,116,42,242,131,221,137,16,169,203,215,239,78,254,150,42,169,202,132,172,106,179,130,178,130,147,24,173,213,151,251,242,44,54,47,208,223]]},"requested_proof":{"revealed_attrs":{"sdf":["claim::e5fec91f-d03d-4513-813c-ab6db5715d55","UT","96473275571522321025213415717206189191162"]},"unrevealed_attrs":{},"self_attested_attrs":{},"predicates":{}}}"#;
         let new_handle = 1;
@@ -781,18 +782,15 @@ mod tests {
             nonce: generate_nonce().unwrap(),
             proof: Some(ProofMessage::from_str(&proof_msg).unwrap()),
             proof_request: None,
+            connection_handle,
         });
 
-        let response = "{\"msgs\":[{\"uid\":\"6gmsuWZ\",\"typ\":\"conReq\",\"statusCode\":\"MS-102\",\"statusMsg\":\"message sent\"},\
-        {\"statusCode\":\"MS-104\",\"edgeAgentPayload\":\"{\\\"attr\\\":\\\"value\\\"}\",\"sendStatusCode\":\"MSS-101\",\"typ\":\"claimOffer\",\"statusMsg\":\"message accepted\",\"uid\":\"6a9u7Jt\",\"refMsgId\":\"CKrG14Z\"},\
-        {\"msg_type\":\"PROOF\",\"typ\":\"proof\",\"edgeAgentPayload\":\"{\\\"msg_type\\\":\\\"proof\\\",\\\"version\\\":\\\"0.1\\\",\\\"to_did\\\":\\\"BnRXf8yDMUwGyZVDkSENeq\\\",\\\"from_did\\\":\\\"GxtnGN6ypZYgEqcftSQFnC\\\",\\\"proof_request_id\\\":\\\"cCanHnpFAD\\\",\\\"proofs\\\":{\\\"claim::f22cc7c8-924f-4541-aeff-29a9aed9c46b\\\":{\\\"proof\\\":{\\\"primary_proof\\\":{\\\"eq_proof\\\":{\\\"revealed_attrs\\\":{\\\"state\\\":\\\"96473275571522321025213415717206189191162\\\"},\\\"a_prime\\\":\\\"921....546\\\",\\\"e\\\":\\\"158....756\\\",\\\"v\\\":\\\"114....069\\\",\\\"m\\\":{\\\"address1\\\":\\\"111...738\\\",\\\"zip\\\":\\\"149....066\\\",\\\"city\\\":\\\"209....294\\\",\\\"address2\\\":\\\"140....691\\\"},\\\"m1\\\":\\\"777....518\\\",\\\"m2\\\":\\\"515....229\\\"},\\\"ge_proofs\\\":[]},\\\"non_revoc_proof\\\":null},\\\"schema_seq_no\\\":15,\\\"issuer_did\\\":\\\"4fUDR9R7fjwELRvH9JT6HH\\\"}},\\\"aggregated_proof\\\":{\\\"c_hash\\\":\\\"25105671496406009212798488318112715144459298495509265715919744143493847046467\\\",\\\"c_list\\\":[[72,245,38,\\\"....\\\",46,195,18]]},\\\"requested_proof\\\":{\\\"revealed_attrs\\\":{\\\"attr_key_id\\\":[\\\"claim::f22cc7c8-924f-4541-aeff-29a9aed9c46b\\\",\\\"UT\\\",\\\"96473275571522321025213415717206189191162\\\"]},\\\"unrevealed_attrs\\\":{},\\\"self_attested_attrs\\\":{},\\\"predicates\\\":{}}}\"}]}";
-        httpclient::set_next_str_response(response.to_string());
-        httpclient::set_next_str_response(response.to_string());
+        httpclient::set_next_u8_response(GET_PROOF_RESPONSE.to_vec());
 
         proof.update_state();
         assert_eq!(proof.get_state(), CxsStateType::CxsStateAccepted as u32);
         assert_eq!(proof.get_proof_state(), ProofStateType::ProofInvalid as u32);
-        assert_eq!(proof.get_proof().unwrap(), "[{\"schema_seq_no\":15,\"issuer_did\":\"4fUDR9R7fjwELRvH9JT6HH\",\"claim_uuid\":\"claim::f22cc7c8-924f-4541-aeff-29a9aed9c46b\",\"name\":\"state\",\"value\":\"UT\",\"type\":\"revealed\"}]".to_string());
-        thread::sleep(Duration::from_millis(500));
+        assert_eq!(proof.prover_did,"GxtnGN6ypZYgEqcftSQFnC");
+        /* converting proof to a string produces non-deterministic results */
     }
 }
