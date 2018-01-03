@@ -249,7 +249,7 @@ impl Proof {
             }
         };
 
-        self.proof = match parse_proof_offer_payload(&payload) {
+        self.proof = match parse_proof_payload(&payload) {
             Err(_) => return,
             Ok(x) => Some(x),
         };
@@ -417,8 +417,8 @@ pub fn get_proof_uuid(handle: u32) -> Result<String,u32> {
     }
 }
 
-fn parse_proof_offer_payload(payload: &Vec<u8>) -> Result<ProofMessage, u32> {
-    info!("parsing proof offer payload: {:?}", payload);
+fn parse_proof_payload(payload: &Vec<u8>) -> Result<ProofMessage, u32> {
+    info!("parsing proof payload: {:?}", payload);
     let data = messages::extract_json_payload(payload)?;
 
     let my_claim_req = match ProofMessage::from_str(&data) {
@@ -432,7 +432,7 @@ fn parse_proof_offer_payload(payload: &Vec<u8>) -> Result<ProofMessage, u32> {
 }
 
 fn get_proof_payload(msg_uid:&str, to_did: &str, connection_handle: u32) -> Result<Vec<u8>, u32> {
-    info!("getting proof offer payload from response");
+    info!("getting proof payload from response");
     let pw_vk = connection::get_pw_verkey(connection_handle)?;
     info!("got pw_vk: {}", pw_vk);
     let agent_did = connection::get_agent_did(connection_handle)?;
@@ -453,7 +453,7 @@ fn get_proof_payload(msg_uid:&str, to_did: &str, connection_handle: u32) -> Resu
             return Err(error::POST_MSG_FAILURE.code_num)
         },
         Ok(response) => {
-            info!("proof_offer_response: {:?}", response);
+            info!("proof_response: {:?}", response);
             for i in response {
                 if i.status_code == "MS-103" && i.msg_type == "proof" && !i.payload.is_none() {
                     let payload = messages::to_u8(i.payload.as_ref().unwrap());
@@ -498,7 +498,6 @@ mod tests {
     use std::thread;
     use std::time::Duration;
     //use utils::constants::*;
-    //use proof_offer::tests::create_default_proof_offer;
     use connection::build_connection;
     static DEFAULT_PROOF_STR: &str = r#"{"source_id":"","handle":486356518,"requested_attrs":"[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]","requested_predicates":"[{\"attr_name\":\"age\",\"p_type\":\"GE\",\"value\":18,\"schema_seq_no\":1,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\"}]","msg_uid":"","ref_msg_id":"","requester_did":"","prover_did":"","state":1,"proof_state":0,"tid":0,"mid":0,"name":"Optional","version":"1.0","nonce":"1067639606","proof_offer":null}"#;
     static REQUESTED_ATTRS: &'static str = "[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]";
@@ -654,7 +653,7 @@ mod tests {
     }
 
     #[test]
-    fn test_update_state_with_pending_proof_offer() {
+    fn test_update_state_with_pending_proof() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
 
