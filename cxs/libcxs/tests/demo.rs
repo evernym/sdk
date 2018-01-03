@@ -74,6 +74,7 @@ fn test_demo(){
     \"enterprise_did_agent\":\"PDgrtXLt8rDfCJpS8GSU9S\",\
     \"enterprise_name\":\"enterprise\",\
     \"wallet_name\":\"my_real_wallet\",\
+    \"genesis_path\":\"/tmp/PoolForDemo.txn\",\
     \"logo_url\":\"https://s19.postimg.org/ykyz4x8jn/evernym.png\",\
     \"agency_pairwise_verkey\":\"91qMFrZjXDoi2Vc8Mm14Ys112tEZdDegBZZoembFEATE\",\
     \"agent_pairwise_verkey\":\"Fk84VW2ZgAAziFqDNuqJacYy2B8PmKKNiEvBVXRXdhMq\"}}", "https://enym-eagency.pdev.evernym.com",
