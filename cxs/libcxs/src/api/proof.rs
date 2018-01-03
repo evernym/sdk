@@ -323,7 +323,7 @@ mod tests {
     }
 
     extern "C" fn no_proof_cb(handle: u32, err: u32, proof_state: u32, proof_string: *const c_char) {
-        assert_eq!(err, error::INVALID_PROOF_OFFER.code_num);
+        assert_eq!(err, error::INVALID_PROOF.code_num);
         assert!(proof_string.is_null());
         assert_eq!(proof_state, ProofStateType::ProofUndefined as u32);
         println!("successfully called no_proof_cb: null");
