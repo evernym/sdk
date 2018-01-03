@@ -241,7 +241,7 @@ impl Proof {
             return;
         }
 
-        let payload = match get_proof_offer_payload(&self.msg_uid, &self.prover_did, self.connection_handle) {
+        let payload = match get_proof_payload(&self.msg_uid, &self.prover_did, self.connection_handle) {
             Ok(x) => x,
             Err(err) => {
                 warn!("{} {}", err, self.handle);
@@ -431,7 +431,7 @@ fn parse_proof_offer_payload(payload: &Vec<u8>) -> Result<ProofMessage, u32> {
     Ok(my_claim_req)
 }
 
-fn get_proof_offer_payload(msg_uid:&str, to_did: &str, connection_handle: u32) -> Result<Vec<u8>, u32> {
+fn get_proof_payload(msg_uid:&str, to_did: &str, connection_handle: u32) -> Result<Vec<u8>, u32> {
     info!("getting proof offer payload from response");
     let pw_vk = connection::get_pw_verkey(connection_handle)?;
     info!("got pw_vk: {}", pw_vk);
