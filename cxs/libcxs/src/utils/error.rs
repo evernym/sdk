@@ -41,6 +41,8 @@ pub static NO_POOL_OPEN: Error = Error{code_num: 1030, message: "No Pool open. C
 pub static INVALID_SCHEMA: Error = Error{code_num: 1031, message: "Schema was invalid or corrupt"};
 pub static FAILED_PROOF_COMPLIANCE: Error = Error{code_num: 1032, message: "Proof is not compliant to proof request"};
 pub static INVALID_HTTP_RESPONSE: Error = Error{code_num: 1033, message: "Invalid HTTP response."};
+pub static CREATE_CLAIM_DEF_ERR: Error = Error{code_num: 1034, message: "Call to create Claim Definition failed"};
+pub static UNKNOWN_LIBINDY_ERROR: Error = Error{code_num: 1035, message: "Unknown libindy error"};
 
 lazy_static! {
     static ref ERROR_MESSAGES: HashMap<u32, &'static str> = {
@@ -79,6 +81,8 @@ lazy_static! {
         insert_message(&mut m, &INVALID_SCHEMA);
         insert_message(&mut m, &FAILED_PROOF_COMPLIANCE);
         insert_message(&mut m, &INVALID_HTTP_RESPONSE);
+        insert_message(&mut m, &CREATE_CLAIM_DEF_ERR);
+        insert_message(&mut m, &UNKNOWN_LIBINDY_ERROR);
         m
     };
 }
@@ -233,5 +237,14 @@ mod tests {
     #[test]
     fn test_failed_proof_compliance() {
         assert_eq!(error_message(&FAILED_PROOF_COMPLIANCE.code_num), FAILED_PROOF_COMPLIANCE.message);
+    }
+    #[test]
+    fn test_claim_def_err() {
+        assert_eq!(error_message(&CREATE_CLAIM_DEF_ERR.code_num), CREATE_CLAIM_DEF_ERR.message);
+    }
+
+    #[test]
+    fn test_unknown_libindy_error() {
+        assert_eq!(error_message(&UNKNOWN_LIBINDY_ERROR.code_num), UNKNOWN_LIBINDY_ERROR.message);
     }
 }

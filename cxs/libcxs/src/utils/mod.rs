@@ -5,7 +5,6 @@ pub mod ccallback;
 pub mod cstring;
 
 pub mod pool;
-pub mod claim_def;
 pub mod wallet;
 pub mod init;
 pub mod error;

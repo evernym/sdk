@@ -22,7 +22,7 @@ use std::sync::mpsc::channel;
 use self::libc::c_char;
 use std::ffi::CString;
 use utils::timeout::TimeoutUtils;
-use utils::claim_def::{ClaimDef};
+use claim_def::{ClaimDefinition};
 use utils::constants::*;
 use utils::crypto;
 use utils::wallet;
@@ -116,7 +116,7 @@ impl Proof {
         let schema_no = claim_data[0].schema_seq_no;
         let claim_uuid: &str = claim_data[0].claim_uuid.as_ref();
 
-        let claim_def = ClaimDef::create()
+        let claim_def = ClaimDefinition::new()
             .retrieve_claim_def("GGBDg1j8bsKmr4h5T9XqYf", schema_no, "CL", &issuer_did)?;
 
         let claim_def_data:serde_json::Value = serde_json::from_str(&claim_def).unwrap();
@@ -690,7 +690,7 @@ mod tests {
 //        let proof_json = PROOF_JSON;
 //        let schemas_json = SCHEMAS_JSON;
 ////        let claim_defs_json = CLAIM_DEFS_JSON;
-//        let mut claim_defs_json = ClaimDef::create()
+//        let mut claim_defs_json = ClaimDefinition::new()
 //            .retrieve_claim_def("GGBDg1j8bsKmr4h5T9XqYf",
 //                                15,
 //                                "CL",
