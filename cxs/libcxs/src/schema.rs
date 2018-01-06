@@ -1,7 +1,6 @@
 use serde_json;
 use serde_json::Value;
 
-use settings;
 use utils::error;
 use utils::libindy::ledger::{libindy_build_get_txn_request, libindy_submit_request};
 use utils::libindy::pool::get_pool_handle;
@@ -132,6 +131,7 @@ impl LedgerSchema {
 
 #[cfg(test)]
 mod tests {
+    use settings;
     use super::*;
     use utils::libindy::pool;
     use std::path::Path;

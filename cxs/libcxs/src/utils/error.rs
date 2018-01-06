@@ -30,7 +30,7 @@ pub static INVALID_MSGPACK: Error = Error{code_num:1019, message:"Invalid Messag
 pub static INVALID_MESSAGES: Error = Error{code_num:1020, message:"Error Retrieving messages from API"};
 pub static INVALID_ATTRIBUTES_STRUCTURE: Error = Error{code_num:1021, message: "Attributes provided to Claim Offer are not correct, possibly malformed"};
 pub static BIG_NUMBER_ERROR: Error = Error{code_num: 1022, message: "Could not encode string to a big integer."};
-pub static INVALID_PROOF_OFFER: Error = Error{code_num: 1023, message: "Proof Message has invalid format"};
+pub static INVALID_PROOF: Error = Error{code_num: 1023, message: "Proof had invalid format"};
 pub static INVALID_GENESIS_TXN_PATH: Error = Error{code_num: 1024, message: "Must have valid genesis txn file path"};
 pub static CREATE_POOL_CONFIG_PARAMETERS: Error = Error{code_num: 1025, message: "Parameters for creating pool config are incorrect."};
 pub static CREATE_POOL_CONFIG: Error = Error{code_num: 1026, message: "Formatting for Pool Config are incorrect."};
@@ -40,8 +40,8 @@ pub static BUILD_CLAIM_DEF_REQ_ERR: Error = Error{code_num: 1029, message: "Call
 pub static NO_POOL_OPEN: Error = Error{code_num: 1030, message: "No Pool open. Can't return handle."};
 pub static INVALID_SCHEMA: Error = Error{code_num: 1031, message: "Schema was invalid or corrupt"};
 pub static FAILED_PROOF_COMPLIANCE: Error = Error{code_num: 1032, message: "Proof is not compliant to proof request"};
-pub static UNKNOWN_LIBINDY_ERROR: Error = Error{code_num: 1033, message: "Unknown libindy error"};
-
+pub static INVALID_HTTP_RESPONSE: Error = Error{code_num: 1033, message: "Invalid HTTP response."};
+pub static UNKNOWN_LIBINDY_ERROR: Error = Error{code_num: 1034, message: "Unknown libindy error"};
 
 lazy_static! {
     static ref ERROR_MESSAGES: HashMap<u32, &'static str> = {
@@ -69,7 +69,7 @@ lazy_static! {
         insert_message(&mut m, &INVALID_PROOF_HANDLE);
         insert_message(&mut m, &INVALID_CLAIM_REQUEST);
         insert_message(&mut m, &BIG_NUMBER_ERROR);
-        insert_message(&mut m, &INVALID_PROOF_OFFER);
+        insert_message(&mut m, &INVALID_PROOF);
         insert_message(&mut m, &INVALID_GENESIS_TXN_PATH);
         insert_message(&mut m, &CREATE_POOL_CONFIG);
         insert_message(&mut m, &INVALID_PROOF_CLAIM_DATA);
@@ -79,6 +79,7 @@ lazy_static! {
         insert_message(&mut m, &NO_POOL_OPEN);
         insert_message(&mut m, &INVALID_SCHEMA);
         insert_message(&mut m, &FAILED_PROOF_COMPLIANCE);
+        insert_message(&mut m, &INVALID_HTTP_RESPONSE);
         insert_message(&mut m, &UNKNOWN_LIBINDY_ERROR);
         m
     };
@@ -194,8 +195,8 @@ mod tests {
     }
 
     #[test]
-    fn test_error_invalid_proof_offer() {
-        assert_eq!(error_message(&INVALID_PROOF_OFFER.code_num), INVALID_PROOF_OFFER.message);
+    fn test_error_invalid_proof() {
+        assert_eq!(error_message(&INVALID_PROOF.code_num), INVALID_PROOF.message);
     }
     #[test]
     fn test_error_genesis() {
@@ -219,8 +220,8 @@ mod tests {
     }
 
     #[test]
-    fn test_proof_offer_incorrect_json_format_error(){
-        assert_eq!(error_message(&INVALID_PROOF_OFFER.code_num), INVALID_PROOF_OFFER.message);
+    fn test_proof_incorrect_json_format_error(){
+        assert_eq!(error_message(&INVALID_PROOF.code_num), INVALID_PROOF.message);
     }
 
     #[test]

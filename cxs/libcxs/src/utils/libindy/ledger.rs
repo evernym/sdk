@@ -1,10 +1,10 @@
 extern crate libc;
 use self::libc::c_char;
 use std::ffi::CString;
-use utils::error;
-use utils::libindy::{map_indy_call_error, map_string_error, indy_function_eval, check_str};
+use utils::libindy::{map_string_error, indy_function_eval, check_str};
 use utils::libindy::types::Return_I32_STR;
 use utils::libindy::SigTypes;
+use utils::libindy::error_codes::map_indy_error_code;
 
 extern {
 
@@ -44,7 +44,7 @@ pub fn libindy_submit_request(pool_handle: i32, request_json: String) -> Result<
                                 pool_handle as i32,
                                 json.as_ptr(),
                                 Some(rtn_obj.get_callback()))
-        ).map_err(map_indy_call_error)?;
+        ).map_err(map_indy_error_code)?;
     }
 
     rtn_obj.receive().and_then(check_str)
@@ -60,7 +60,7 @@ pub fn libindy_build_get_txn_request(submitter_did: String, sequence_num: i32) -
                                        did.as_ptr(),
                                        sequence_num,
                                        Some(rtn_obj.get_callback()))
-        ).map_err(map_indy_call_error)?;
+        ).map_err(map_indy_error_code)?;
     }
 
     rtn_obj.receive().and_then(check_str)
@@ -83,7 +83,7 @@ pub fn libindy_build_get_claim_def_txn(submitter_did: String,
                                          s_type.as_ptr(),
                                          i_did.as_ptr(),
                                          Some(rtn_obj.get_callback()))
-        ).map_err(map_indy_call_error)?;
+        ).map_err(map_indy_error_code)?;
     }
 
     rtn_obj.receive().and_then(check_str)

@@ -11,9 +11,10 @@ use std::ptr::null;
 use std::path::{Path, PathBuf};
 use std::sync::mpsc::channel;
 use utils::error;
-use utils::libindy::{map_indy_call_error, map_string_error, indy_function_eval, check_str};
-use utils::libindy::types::Return_I32;
+use utils::libindy::{map_string_error, indy_function_eval};
+use utils::libindy::types::{Return_I32, Return_I32_I32};
 use utils::json::JsonEncodable;
+use utils::libindy::error_codes::map_indy_error_code;
 
 pub static mut POOL_HANDLE: i32 = 0;
 
@@ -110,103 +111,95 @@ pub fn create_pool_ledger_config(pool_name: &str, path: Option<&Path>) -> Result
                                                  pool_name.as_ptr(),
                                                  pool_config.as_ptr(),
                                                  Some(rtn_obj.get_callback()))
-        ).map_err(map_indy_call_error)?;
+        ).map_err(map_indy_error_code)?;
     }
 
-    rtn_obj.receive().and_then(|unit|{
-        Ok(0)
-    })
+    match rtn_obj.receive() {
+        Ok(()) => Ok(0),
+        Err(e) => Err(error::CREATE_POOL_CONFIG.code_num)
+    }
 }
 
 pub fn open_pool_ledger(pool_name: &str, config: Option<&str>) -> Result<u32, u32> {
-    let (sender, receiver) = channel();
 
-    let cb = Box::new(move |err, pool_handle| {
-        sender.send((err, pool_handle)).unwrap();
-    });
+    let pool_name = CString::new(pool_name).map_err(map_string_error)?;
+    let pool_config = match config {
+        Some(str) => Some(CString::new(str).map_err(map_string_error)?),
+        None => None
+    };
+    let rtn_obj = Return_I32_I32::new()?;
 
-    let (command_handle, cb) = CallbackUtils::closure_to_open_pool_ledger_cb(cb);
-
-    let pool_name = CString::new(pool_name).unwrap();
-    let config_str = config.map(|s| CString::new(s).unwrap()).unwrap_or(CString::new("").unwrap());
     unsafe {
-        let err = indy_open_pool_ledger(command_handle,
-                                        pool_name.as_ptr(),
-                                        if config.is_some() { config_str.as_ptr() } else { null() },
-                                        cb);
-
-        if err != error::SUCCESS.code_num as i32 {
-            return Err(error::UNKNOWN_ERROR.code_num);
-        }
-
-        let (err, pool_handle) = receiver.recv_timeout(TimeoutUtils::medium_timeout()).unwrap();
-
-        if err != error::SUCCESS.code_num as i32 {
-            return Err(error::UNKNOWN_ERROR.code_num);
-        }
-
-        POOL_HANDLE = pool_handle;
-
-        Ok(pool_handle as u32)
+        indy_function_eval(indy_open_pool_ledger(rtn_obj.command_handle,
+                                pool_name.as_ptr(),
+                                match pool_config {
+                                    Some(str) => str.as_ptr(),
+                                    None => null()
+                                },
+                                Some(rtn_obj.get_callback()))
+        ).map_err(map_indy_error_code)?;
     }
+
+    rtn_obj.receive().and_then(|handle|{
+        unsafe {
+            POOL_HANDLE = handle;
+        }
+        Ok(handle as u32)
+    })
+}
+
+pub fn call(pool_handle: i32, func: unsafe extern "C" fn(i32, i32, Option<extern "C" fn(i32, i32)>) -> i32) -> Result<(), u32> {
+    let rtn_obj = Return_I32::new()?;
+    unsafe {
+        indy_function_eval(func(rtn_obj.command_handle,
+                                pool_handle,
+                                Some(rtn_obj.get_callback()))
+        ).map_err(map_indy_error_code)?;
+    }
+
+    rtn_obj.receive()
 }
 
 pub fn refresh(pool_handle: i32) -> Result<(), u32> {
-    let (sender, receiver) = channel();
-    let (command_handle, cb) = CallbackUtils::closure_to_refresh_pool_ledger_cb(
-        Box::new(move |res| sender.send(res).unwrap()));
-
-    unsafe {
-        let res = indy_refresh_pool_ledger(command_handle, pool_handle, cb);
-        if res != error::SUCCESS.code_num as i32 {
-            return Err(error::UNKNOWN_ERROR.code_num);
-        }
-        let res = receiver.recv_timeout(TimeoutUtils::short_timeout()).unwrap();
-        if res != error::SUCCESS.code_num as i32 {
-            return Err(error::UNKNOWN_ERROR.code_num);
-        }
-    }
-
-    Ok(())
+    call(pool_handle, indy_refresh_pool_ledger)
 }
 
 pub fn close(pool_handle: i32) -> Result<(), u32> {
-    let (sender, receiver) = channel();
-    let (command_handle, cb) = CallbackUtils::closure_to_close_pool_ledger_cb(
-        Box::new(move |res| sender.send(res).unwrap()));
-
-    unsafe {
-        let res = indy_close_pool_ledger(command_handle, pool_handle, cb);
-        if res != error::SUCCESS.code_num as i32 {
-            return Err(error::UNKNOWN_ERROR.code_num);
-        }
-        let res = receiver.recv_timeout(TimeoutUtils::short_timeout()).unwrap();
-        if res != error::SUCCESS.code_num as i32 {
-            return Err(error::UNKNOWN_ERROR.code_num);
-        }
-    }
-
-    Ok(())
+    call(pool_handle, indy_close_pool_ledger)
 }
 
 pub fn delete(pool_name: &str) -> Result<(), u32> {
-    let (sender, receiver) = channel();
-    let (cmd_id, cb) = CallbackUtils::closure_to_delete_pool_ledger_config_cb(Box::new(
-        move |res| sender.send(res).unwrap()));
+//    let (sender, receiver) = channel();
+//    let (cmd_id, cb) = CallbackUtils::closure_to_delete_pool_ledger_config_cb(Box::new(
+//        move |res| sender.send(res).unwrap()));
+//
+//    let pool_name = CString::new(pool_name).unwrap();
+//
+//    unsafe {
+//        let res = indy_delete_pool_ledger_config(cmd_id, pool_name.as_ptr(), cb);
+//        if res != error::SUCCESS.code_num as i32 {
+//            return Err(error::UNKNOWN_ERROR.code_num)
+//        }
+//        let res = receiver.recv_timeout(TimeoutUtils::short_timeout()).unwrap();
+//        if res != error::SUCCESS.code_num as i32 {
+//            return Err(error::UNKNOWN_ERROR.code_num)
+//        }
+//    }
+//    Ok(())
 
-    let pool_name = CString::new(pool_name).unwrap();
+    let pool_name = CString::new(pool_name).map_err(map_string_error)?;
+
+    let rtn_obj = Return_I32::new()?;
 
     unsafe {
-        let res = indy_delete_pool_ledger_config(cmd_id, pool_name.as_ptr(), cb);
-        if res != error::SUCCESS.code_num as i32 {
-            return Err(error::UNKNOWN_ERROR.code_num)
-        }
-        let res = receiver.recv_timeout(TimeoutUtils::short_timeout()).unwrap();
-        if res != error::SUCCESS.code_num as i32 {
-            return Err(error::UNKNOWN_ERROR.code_num)
-        }
+        indy_function_eval(
+            indy_delete_pool_ledger_config(rtn_obj.command_handle,
+                                           pool_name.as_ptr(),
+                                           Some(rtn_obj.get_callback()))
+        ).map_err(map_indy_error_code).map(|rtn_code|{()});
     }
-    Ok(())
+
+    rtn_obj.receive()
 }
 
 pub fn get_pool_handle() -> Result<i32, u32> {
