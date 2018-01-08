@@ -21,6 +21,7 @@ lazy_static! {
 }
 
 extern {
+    #[allow(dead_code)]
     pub fn indy_build_nym_request(command_handle: i32,
                                          submitter_did: *const c_char,
                                          target_did: *const c_char,
