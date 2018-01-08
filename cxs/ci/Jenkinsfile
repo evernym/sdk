@@ -83,7 +83,7 @@ def createZip(envn) {
 def createDeb() {
     sh 'pwd'
     sh 'ls'
-    sh 'cd cxs/libcxs; pwd; ls; cargo deb'
+    sh 'cd cxs/libcxs; pwd; ls; cargo package; cargo deb'
     archiveArtifacts allowEmptyARchive: true, artifacts: 'target/debian/libcxs_0.0.1_amd64.deb'
 }
 
