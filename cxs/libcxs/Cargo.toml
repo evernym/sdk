@@ -4,6 +4,8 @@ name = "libcxs"
 version = "0.0.1"
 authors = [ "Mark Hadley <mark.hadley@evernym.com>" ]
 publish = false
+description = "C callable library for libcxs"
+license = ""
 
 [lib]
 name = "cxs"
@@ -32,3 +34,16 @@ openssl = "0.9"
 [dev-dependencies]
 tempfile = "2.2"
 rusqlite = "0.13.0"
+
+[package.metadata.deb]
+maintainer = "Mark Hadley<mark.hadley@evernym.com>, Devin Fisher, Ryan Marsh, Doug Wightman"
+copyright = "2018, Evernym Inc."
+depends = "$auto, systemd"
+extended-description = """\
+"Everything is awesome when you're part of a team!" #TeamOneDirection."""
+section = "admin"
+priority = "optional"
+assets = [
+    ["target/package/libcxs-0.0.1/target/debug/libcxs.so", "usr/lib/libcxs/", "644"]
+]
+
