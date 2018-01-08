@@ -1,6 +1,5 @@
 #!groovy
 
-def version = "0.0.1"
 def dockerfile= 'dockerfile'
 
 def getUserUid() {
@@ -17,10 +16,10 @@ node('ubuntu') {
             checkout scm
         }
         app = buildDocker()
-        buildRust(app)
-        testRust(app) 
-        testNodeWrapper(app)
-        createZip(app)
+//        buildRust(app)
+//        testRust(app) 
+//        testNodeWrapper(app)
+//        createZip(app)
         createDeb(app)
     } catch (Exception ex) {
         currentBuild.result = "FAILED"
@@ -80,6 +79,7 @@ def createZip(envn) {
 }
 
 def createDeb(envn) {
+    def version = "0.0.1"
     stage('Build Libcxs Debian') {
         envn.inside {
             sh 'pwd'
