@@ -16,11 +16,11 @@ node('ubuntu') {
             checkout scm
         }
         app = buildDocker()
-        buildRust(app)
-        testRust(app) 
-        testNodeWrapper(app)
+//        buildRust(app)
+//        testRust(app) 
+//        testNodeWrapper(app)
 //        if (env.BRANCH_NAME == "master") {
-            createZip(app)
+//            createZip(app)
             createDeb(app)
 //        }
     } catch (Exception ex) {
@@ -84,6 +84,8 @@ def createDeb(envn) {
     dir('cxs/libcxs') {
         stage('Create Debian File') {
             envn.inside {
+                sh 'pwd'
+                sh 'ls'
                 sh 'cargo deb'
                 archiveArtifacts allowEmptyARchive: true, artifacts: 'target/debian/libcxs_0.0.1_amd64.deb'
             }
