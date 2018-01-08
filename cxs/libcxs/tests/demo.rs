@@ -58,27 +58,31 @@ pub fn open_sandbox_pool() -> u32 {
     pool::open_pool_ledger(&pool_name, Some(config)).unwrap()
 }
 
-#[ignore]
 #[test]
 fn test_demo(){
+    use std::env;
+    match env::var("RUST_TEST_DEMO"){
+        Ok(_) => demo(),
+        Err(_) => {},
+    }
+}
+
+fn demo(){
     let serialize_connection_fn = api::connection::cxs_connection_serialize;
     let serialize_claim_fn = api::issuer_claim::cxs_issuer_claim_serialize;
 
     // Init SDK  *********************************************************************
-    let issuer_did = "TCwEv4tiAuA5DfC7VTdu83";
-    let config_string = format!("{{\"agent_endpoint\":\"{}\",\
+    let config_string = format!("{{\"agent_endpoint\":\"https://enym-eagency.pdev.evernym.com\",\
     \"agency_pairwise_did\":\"FhrSrYtQcw3p9xwf7NYemf\",\
-    \"agent_pairwise_did\":\"U3w76D784aCFmVQm1FKCEs\",\
-    \"agent_enterprise_verkey\":\"vrWGArMA3toVoZrYGSAMjR2i9KjBS66bZWyWuYJJYPf\",\
-    \"enterprise_did_agency\":\"{}\",\
-    \"enterprise_did_agent\":\"PDgrtXLt8rDfCJpS8GSU9S\",\
+    \"agent_pairwise_did\":\"6nLzki22uwcg9n5VAJxhGN\",\
+    \"agent_enterprise_verkey\":\"3W9WGtRowAanh5q6giQrGncZVMvRwPedB9fJAJkAN5Gk\",\
+    \"enterprise_did_agent\":\"5bJqPo8aCWyBwLQosZkJcB\",\
     \"enterprise_name\":\"enterprise\",\
     \"wallet_name\":\"my_real_wallet\",\
     \"genesis_path\":\"/tmp/PoolForDemo.txn\",\
     \"logo_url\":\"https://s19.postimg.org/ykyz4x8jn/evernym.png\",\
     \"agency_pairwise_verkey\":\"91qMFrZjXDoi2Vc8Mm14Ys112tEZdDegBZZoembFEATE\",\
-    \"agent_pairwise_verkey\":\"Fk84VW2ZgAAziFqDNuqJacYy2B8PmKKNiEvBVXRXdhMq\"}}", "https://enym-eagency.pdev.evernym.com",
-                                issuer_did);
+    \"agent_pairwise_verkey\":\"49mui8cB48JvLnnWzRmMGzWXuXDUKaVHsQi6N4Hyof8c\"}}");
 
     let mut file = NamedTempFileOptions::new()
         .suffix(".json")
@@ -87,7 +91,7 @@ fn test_demo(){
 
     file.write_all(config_string.as_bytes()).unwrap();
 
-    open_sandbox_pool();
+//    open_sandbox_pool();
 
     let path = CString::new(file.path().to_str().unwrap()).unwrap();
     let r = api::cxs::cxs_init(0,path.as_ptr(),Some(generic_cb));
@@ -142,7 +146,7 @@ fn test_demo(){
 //    let lphone_number = "8017900625";
     let rc = api::connection::cxs_connection_connect(command_handle,
                                                      connection_handle,
-                                                     CString::new("{\"phone\":\"8014710072\"}").unwrap().into_raw(),cb);
+                                                     CString::new("{\"phone\":\"2056905467\"}").unwrap().into_raw(),cb);
     assert_eq!(rc, 0);
     let err = receiver.recv_timeout(utils::timeout::TimeoutUtils::long_timeout()).unwrap();
     assert_eq!(err,0);
