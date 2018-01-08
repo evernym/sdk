@@ -85,7 +85,7 @@ def createDeb(envn) {
             sh 'pwd'
             sh 'ls'
             sh 'cd cxs/libcxs; pwd; ls; cargo package; cargo deb'
-            archiveArtifacts allowEmptyARchive: true, artifacts: 'cxs/libcxs/target/debian/libcxs_${version}_amd64.deb'
+            archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs/target/debian/libcxs_${version}_amd64.deb"
         }
     }
 }
