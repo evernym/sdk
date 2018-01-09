@@ -16,10 +16,10 @@ node('ubuntu') {
             checkout scm
         }
         app = buildDocker()
-//        buildRust(app)
-//        testRust(app) 
-//        testNodeWrapper(app)
-//        createZip(app)
+        buildRust(app)
+        testRust(app) 
+        testNodeWrapper(app)
+        createZip(app)
         createDeb(app)
     } catch (Exception ex) {
         currentBuild.result = "FAILED"
