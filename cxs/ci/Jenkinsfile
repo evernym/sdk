@@ -1,6 +1,7 @@
 #!groovy
 
 def dockerfile= 'dockerfile'
+def version = "0.0.1"
 
 def getUserUid() {
     return sh(returnStdout: true, script: 'id -u').trim()
@@ -79,7 +80,6 @@ def createZip(envn) {
 }
 
 def createDeb(envn) {
-    def version = "0.0.1"
     stage('Build Libcxs Debian') {
         envn.inside {
             sh 'pwd'
@@ -102,11 +102,11 @@ def testNodeWrapper(envn) {
                 sh 'npm test'
             }
         }
-        stage ('Build Node Artifact'){
+        stage ('Build Npm Tar'){
             envn.inside {
                 //if (env.BRANCH_NAME == "master") {
                     sh 'npm pack'
-                    sh 'test -f cxs-1.0.0.tgz'
+                    sh "test -f cxs-${version}.tgz"
                     archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
                 //}
             }
