@@ -18,10 +18,10 @@ node('ubuntu') {
         }
         app = buildDocker()
         buildRust(app)
-        testRust(app) 
+        //testRust(app) 
         testNodeWrapper(app)
-        createZip(app)
-        createDeb(app)
+        //createZip(app)
+        //createDeb(app)
     } catch (Exception ex) {
         currentBuild.result = "FAILED"
         if (env.BRANCH_NAME == "master") {
@@ -106,6 +106,7 @@ def testNodeWrapper(envn) {
             envn.inside {
                 //if (env.BRANCH_NAME == "master") {
                     sh 'npm pack'
+                    sh 'ls'
                     sh "test -f cxs-${version}.tgz"
                     archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
                 //}
