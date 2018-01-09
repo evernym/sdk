@@ -58,7 +58,7 @@ RUN curl -fsOSL $RUST_DOWNLOAD_URL \
 
 
 RUN useradd -ms /bin/bash -u $uid cxs
-#USER cxs
+USER cxs
 
 RUN cargo install cargo-deb
 
