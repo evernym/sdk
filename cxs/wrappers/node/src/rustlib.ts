@@ -64,6 +64,8 @@ export interface IFFIEntryPoint {
   cxs_proof_send_request: (commandId: number, proofHandle: string, connectionHandle: string, cb: any) => number,
   cxs_proof_serialize: (commandId: number, handle: string, cb: any) => number,
   cxs_proof_update_state: (commandId: number, handle: string, cb: any) => number,
+  // mock
+  cxs_set_next_agency_response: (messageIndex: number) => void,
 
   cxs_claimdef_create: (commandId: number, sourceId: string, claimDefName: string, schemaNo: number, issuerDid: string,
                         revocation: boolean, cb: any) => number
@@ -115,6 +117,8 @@ export const FFIConfiguration: { [ Key in keyof IFFIEntryPoint ]: any } = {
   cxs_claimdef_release: [FFI_ERROR_CODE, [FFI_CLAIMDEF_HANDLE]],
   cxs_claimdef_serialize: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CLAIMDEF_HANDLE, FFI_CALLBACK_PTR]],
   cxs_claimdef_update_state: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CLAIMDEF_HANDLE, FFI_CALLBACK_PTR]],
+  // mock
+  cxs_set_next_agency_response: [FFI_VOID, [FFI_UNSIGNED_INT]],
 
   free: [FFI_VOID, ['void*']]
 }
