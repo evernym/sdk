@@ -44,6 +44,7 @@ pub static INVALID_HTTP_RESPONSE: Error = Error{code_num: 1033, message: "Invali
 pub static CREATE_CLAIM_DEF_ERR: Error = Error{code_num: 1034, message: "Call to create Claim Definition failed"};
 pub static UNKNOWN_LIBINDY_ERROR: Error = Error{code_num: 1035, message: "Unknown libindy error"};
 pub static INVALID_CLAIM_DEF_JSON: Error = Error{code_num: 1036, message: "Claim Def not in valid json"};
+pub static INVALID_CLAIM_DEF_HANDLE: Error = Error{code_num: 1037, message: "Claim Def handle not found"};
 
 lazy_static! {
     static ref ERROR_MESSAGES: HashMap<u32, &'static str> = {
@@ -85,6 +86,7 @@ lazy_static! {
         insert_message(&mut m, &CREATE_CLAIM_DEF_ERR);
         insert_message(&mut m, &UNKNOWN_LIBINDY_ERROR);
         insert_message(&mut m, &INVALID_CLAIM_DEF_JSON);
+        insert_message(&mut m, &INVALID_CLAIM_DEF_HANDLE);
         m
     };
 }
@@ -254,5 +256,10 @@ mod tests {
     #[test]
     fn test_invalid_claim_def_json() {
         assert_eq!(error_message(&INVALID_CLAIM_DEF_JSON.code_num), INVALID_CLAIM_DEF_JSON.message);
+    }
+
+    #[test]
+    fn test_claim_def_handle_err() {
+        assert_eq!(error_message(&INVALID_CLAIM_DEF_HANDLE.code_num), INVALID_CLAIM_DEF_HANDLE.message);
     }
 }

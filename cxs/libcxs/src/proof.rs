@@ -182,7 +182,7 @@ impl Proof {
             return Err(error::NOT_READY.code_num);
         }
         self.prover_did = connection::get_pw_did(connection_handle)?;
-        self.requester_did = settings::get_config_value(settings::CONFIG_ENTERPRISE_DID_AGENT).unwrap();
+        self.requester_did = settings::get_config_value(settings::CONFIG_ENTERPRISE_DID_AGENT)?;
 
         let agent_did = connection::get_agent_did(connection_handle)?;
         let agent_vk = connection::get_agent_verkey(connection_handle)?;

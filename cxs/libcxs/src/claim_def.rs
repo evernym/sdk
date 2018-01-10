@@ -13,6 +13,7 @@ use schema::LedgerSchema;
 use utils::constants::{ SCHEMAS_JSON, CLAIM_DEF_JSON };
 use utils::wallet::{ get_wallet_handle };
 use utils::libindy::SigTypes;
+use api::{ CxsStateType };
 use utils::libindy::anoncreds::{libindy_create_and_store_claim_def};
 use utils::libindy::ledger::{libindy_submit_request,
                              libindy_build_get_claim_def_txn,
@@ -33,6 +34,8 @@ pub struct CreateClaimDef {
     claim_def: ClaimDefinition,
     handle: u32,
     name: String,
+    source_id: String,
+    state: u32,
 }
 
 #[derive(Deserialize, Debug, Serialize, PartialEq, Clone)]
@@ -141,6 +144,8 @@ impl ClaimDefCommon for CreateClaimDef {
             handle: 0,
             claim_def: ClaimDefinition::new(),
             name: String::new(),
+            source_id: String::new(),
+            state: CxsStateType::CxsStateNone as u32,
         }
     }
 }
@@ -165,9 +170,13 @@ impl CreateClaimDef {
 
     pub fn set_handle(&mut self, handle: u32) { self.handle = handle; }
 
+    pub fn set_state(&mut self, state: u32) { self.state = state; }
+
     pub fn set_claim_def(&mut self, claim_def: ClaimDefinition) { self.claim_def = claim_def.clone(); }
 
     pub fn set_name(&mut self, name: String) { self.name = name.clone(); }
+
+    pub fn set_source_id(&mut self, source_id: String) { self.source_id = source_id.clone(); }
 }
 
 impl ClaimDefinitionData {
@@ -204,13 +213,15 @@ impl ClaimDefinition {
     }
 }
 
-pub fn create_new_claimdef(claimdef_name: String,
+pub fn create_new_claimdef(source_id: String,
+                           claimdef_name: String,
                            schema_seq_no: u32,
                            issuer_did: String,
                            create_non_revoc: bool) -> Result<u32, u32> {
 
     let mut new_claimdef = Box::new(CreateClaimDef::new());
     let schema_data = get_schema_data(schema_seq_no)?;
+    //Todo: check to see if on ledger
     let claim_def_json = create_and_store_claim_def(&schema_data,
                                                     &issuer_did,
                                                     Some(SigTypes::CL),
@@ -229,6 +240,8 @@ pub fn create_new_claimdef(claimdef_name: String,
     let new_handle = rand::thread_rng().gen::<u32>();
     new_claimdef.set_name(claimdef_name);
     new_claimdef.set_handle(new_handle);
+    new_claimdef.set_state(CxsStateType::CxsStateOfferSent as u32);
+    new_claimdef.set_source_id(source_id);
     {
         let mut m = CLAIMDEF_MAP.lock().unwrap();
         info!("inserting handle {} into claimdef table", new_handle);
@@ -255,6 +268,61 @@ pub fn get_schema_data(schema_seq_no: u32) -> Result<String, u32> {
     if settings::test_indy_mode_enabled() { return Ok(SCHEMAS_JSON.to_string()); }
     let schema_obj = LedgerSchema::new_from_ledger(schema_seq_no as i32)?;
     Ok(schema_obj.to_string())
+}
+
+pub fn is_valid_handle(handle: u32) -> bool {
+    match CLAIMDEF_MAP.lock().unwrap().get(&handle) {
+        Some(_) => true,
+        None => false,
+    }
+}
+
+pub fn to_string(handle: u32) -> Result<String, u32> {
+    match CLAIMDEF_MAP.lock().unwrap().get(&handle) {
+        Some(p) => Ok(serde_json::to_string(&p).unwrap().to_owned()),
+        None => Err(error::INVALID_CLAIM_DEF_HANDLE.code_num)
+    }
+}
+
+pub fn from_string(claimdef_data: &str) -> Result<u32, u32> {
+    let derived_claimdef: CreateClaimDef = match serde_json::from_str(claimdef_data) {
+        Ok(x) => x,
+        Err(y) => return Err(error::UNKNOWN_ERROR.code_num),
+    };
+    let new_handle = derived_claimdef.handle;
+
+    if is_valid_handle(new_handle) {return Ok(new_handle);}
+    let claimdef = Box::from(derived_claimdef);
+
+    {
+        let mut m = CLAIMDEF_MAP.lock().unwrap();
+        info!("inserting handle {} into claimdef table", new_handle);
+        m.insert(new_handle, claimdef);
+    }
+    Ok(new_handle)
+}
+
+pub fn update_state(handle: u32) {
+    //Todo: don't know if claimdef needs state changes
+    match CLAIMDEF_MAP.lock().unwrap().get_mut(&handle) {
+        Some(t) => {},
+        None => {}
+    };
+}
+
+pub fn get_state(handle: u32) -> u32 {
+    //Todo: don't know if claimdef needs state changes
+    match CLAIMDEF_MAP.lock().unwrap().get(&handle) {
+        Some(t) => CxsStateType::CxsStateOfferSent as u32,
+        None => CxsStateType::CxsStateNone as u32,
+    }
+}
+
+pub fn release(handle: u32) -> u32 {
+    match CLAIMDEF_MAP.lock().unwrap().remove(&handle) {
+        Some(t) => error::SUCCESS.code_num,
+        None => error::INVALID_CLAIM_DEF_HANDLE.code_num,
+    }
 }
 
 #[cfg(test)]
@@ -398,7 +466,39 @@ pub mod tests {
     #[test]
     fn test_create_claimdef_success() {
         set_default_and_enable_test_mode();
-        let handle = create_new_claimdef(CLAIM_DEF_NAME.to_string(), 15, ISSUER_DID.to_string(), false).unwrap();
+        let handle = create_new_claimdef("SourceId".to_string(), CLAIM_DEF_NAME.to_string(), 15, ISSUER_DID.to_string(), false).unwrap();
         assert!(handle > 0);
+    }
+
+    #[test]
+    fn test_to_string_succeeds() {
+        set_default_and_enable_test_mode();
+
+        let handle = create_new_claimdef("SID".to_string(),
+                                        "NAME".to_string(),
+                                        15,
+                                        ISSUER_DID.to_string(),
+                                               false).unwrap();
+        let claim_string = to_string(handle).unwrap();
+        assert!(!claim_string.is_empty());
+    }
+
+    #[test]
+    fn test_from_string_succeeds() {
+        set_default_and_enable_test_mode();
+        let handle = create_new_claimdef("SID".to_string(),
+                                               "NAME".to_string(),
+                                               15,
+                                               ISSUER_DID.to_string(),
+                                               false).unwrap();
+        let claimdef_data = to_string(handle).unwrap();
+        assert!(!claimdef_data.is_empty());
+        release(handle);
+        let new_handle = from_string(&claimdef_data).unwrap();
+        let new_claimdef_data = to_string(new_handle).unwrap();
+        assert_eq!(new_handle,handle);
+        let claimdef1: CreateClaimDef = serde_json::from_str(&claimdef_data).unwrap();
+        let claimdef2: CreateClaimDef = serde_json::from_str(&new_claimdef_data).unwrap();
+        assert_eq!(claimdef1,claimdef2);
     }
 }
