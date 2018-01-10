@@ -141,7 +141,6 @@ impl Return_I32_STR {
 
     pub fn receive(&self) -> Result<Option<String>, u32> {
         let (err, str1) = receive(&self.receiver)?;
-
         map_indy_error(str1, err)
     }
 }
