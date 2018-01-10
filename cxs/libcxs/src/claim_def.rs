@@ -330,7 +330,7 @@ pub fn release(handle: u32) -> u32 {
 #[cfg(test)]
 pub mod tests {
     use utils::signus::SignusUtils;
-    use utils::wallet::{ init_wallet };
+    use utils::wallet::{ init_wallet, delete_wallet };
     use utils::constants::{ MY1_SEED };
     use std::path::{Path};
     use super::*;
@@ -379,19 +379,21 @@ pub mod tests {
                                                     15,
                                                     Some(SigTypes::CL),
                                                     "4fUDR9R7fjwELRvH9JT6HH").unwrap();
+        delete_wallet("wallet1").unwrap();
         assert!(claim_def_req.contains("\"identifier\":\"GGBDg1j8bsKmr4h5T9XqYf\",\"operation\":{\"type\":\"108\",\"ref\":15,\"signature_type\":\"CL\",\"origin\":\"4fUDR9R7fjwELRvH9JT6HH\"}"));
     }
 
     #[test]
     fn test_get_claim_def_by_extract_result() {
         settings::set_defaults();
-        assert!(init_wallet(&settings::CONFIG_WALLET_NAME).unwrap() > 0);
+        assert!(init_wallet("wallet1").unwrap() > 0);
         let wallet_handle = get_wallet_handle();
         let mut claim_def = RetrieveClaimDef::new();
         let claim_def_response = claim_def.extract_result(CLAIM_DEF_EX).unwrap();
         let claim_def_obj: serde_json::Value = serde_json::from_str(&claim_def_response).unwrap();
         assert_eq!(claim_def_obj["identifier"], json!("GGBDg1j8bsKmr4h5T9XqYf"));
         assert_eq!(claim_def_obj["data"]["revocation"], serde_json::Value::Null);
+        delete_wallet("wallet1").unwrap();
     }
 
     #[ignore] /* on some systems the pool may be open */
@@ -401,6 +403,7 @@ pub mod tests {
         assert_eq!(RetrieveClaimDef::new().send_request("{}"), Err(error::NO_POOL_OPEN.code_num));
     }
 
+    #[ignore] /* on some systems the pool may be open */
     #[test]
     fn test_build_claim_def_req_fails() {
         assert_eq!(RetrieveClaimDef::new().build_get_txn("", 0, None, ""), Err(error::BUILD_CLAIM_DEF_REQ_ERR.code_num));
@@ -409,8 +412,6 @@ pub mod tests {
     #[ignore]
     #[test]
     fn test_get_claim_def() {
-        use utils::wallet::delete_wallet;
-
         settings::set_defaults();
         open_sandbox_pool();
         assert!(init_wallet("test_wallet").unwrap() > 0);
@@ -433,9 +434,10 @@ pub mod tests {
     #[test]
     fn test_create_claim_def_and_store_in_wallet() {
         settings::set_defaults();
-        assert!(init_wallet(&settings::CONFIG_WALLET_NAME).unwrap() > 0);
+        assert!(init_wallet("wallet1").unwrap() > 0);
         let wallet_handle = get_wallet_handle();
         let claim_def_json = create_and_store_claim_def(SCHEMAS_JSON, ISSUER_DID, Some(SigTypes::CL), false).unwrap();
+        delete_wallet("wallet1").unwrap();
         let claim_def_obj = ClaimDefinition::from_str(&claim_def_json).unwrap();
         assert_eq!(claim_def_obj.schema_seq_no, 15);
         assert_eq!(claim_def_obj.issuer_did, ISSUER_DID.to_string());
@@ -446,7 +448,6 @@ pub mod tests {
     #[ignore]
     #[test]
     fn test_create_claim_def_txn_and_submit_req() {
-        use utils::wallet::delete_wallet;
         settings::set_defaults();
         open_sandbox_pool();
         let wallet_handle = init_wallet("wallet1").unwrap();
