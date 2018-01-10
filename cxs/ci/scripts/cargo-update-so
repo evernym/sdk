@@ -1,0 +1,38 @@
+#!/usr/bin/env python
+
+import os
+import toml_utils
+import re
+
+def remove_old_so(d):
+    cur_path = os.getcwd()
+    print(d)
+    print(os.path.isdir(d))
+    files = os.listdir(d)
+
+    pat = re.compile("libcxs\.so\.*\d")
+    files = filter(pat.match, files)
+    for f in files:
+        print("removing file: %s " % f)
+        os.remove(d + "/" + f)
+
+TOML = 'Cargo.toml'
+SO_DIR = './target/release/'
+def main():
+    # Verify that the so exists
+    dir_path = os.getcwd()
+    full_path_file = dir_path + '/' + SO_DIR
+    if os.path.isdir(full_path_file) is True:
+        remove_old_so(full_path_file)
+        if os.path.isfile(dir_path + '/' + TOML) is True:
+            version = toml_utils.get_version_from_file(TOML)
+            toml_utils.update_so(SO_DIR, version)
+        else:
+            print("Error, %s does not exist" % TOML)
+    else:
+        print("%s does not exists" % full_path_file)
+
+
+if __name__ == "__main__":
+    main()
+        
