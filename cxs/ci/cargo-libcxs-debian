@@ -1,0 +1,74 @@
+#!/usr/bin/python3
+
+# Builds and packages libcxs with symver
+# Assumes that libcxs --release is already built.
+# Assumes that you are in the libcxs directory, with 
+# Cargo.toml in you cwd.
+
+import os
+import subprocess
+from subprocess import PIPE, Popen
+import get_cxs_version
+import change_toml_version
+import extract_major_minor
+import buildnum
+
+PACKAGE_NAME = 'libcxs'
+CARGO_TOML = 'Cargo.toml'
+TARGET_RELEASE_DIR = './target/release/%s.so'
+
+def git_hash():
+    process = subprocess.Popen(['git','log','--pretty=format:\'%h\'','-n','1'], stdin=PIPE, stdout=PIPE)
+    result = process.communicate()
+    if len(result) > 1:
+        print(" Git hash found: %s" % result[0])
+        return result[0].decode("UTF-8").strip('\'')
+    else:
+        print("Git not found, commit not found")
+        return ""
+
+
+def change_so_file(mm_version, build_number):
+    filename = TARGET_RELEASE_DIR % PACKAGE_NAME
+    cmd = "mv %s %s.%s.%s" % (filename, filename, mm_version, build_number)
+    os.system(cmd)
+
+def revert_so_file(mm_version, build_number):
+    filename = TARGET_RELEASE_DIR % PACKAGE_NAME
+    cmd = "mv %s.%s.%s %s" % (filename, mm_version, build_number, filename)
+    os.system(cmd)
+
+
+def package_debian():
+    print("Packaging Debian")
+    cmd = "cargo deb --no-build"
+    os.system(cmd)
+
+
+def main():
+    # get commit hash
+    g_hash = git_hash()
+
+    # get build number
+    build_number = buildnum.main()
+
+    # get major_minor version
+    mm_version = extract_major_minor.extract(CARGO_TOML)
+    print("Version: %s" % mm_version)
+
+    full_symver = "%s.%s+%s" % (mm_version, build_number, g_hash)
+    # change toml file
+    change_toml_version.main(CARGO_TOML, full_symver)
+
+    # change so file
+    change_so_file(mm_version, build_number)
+
+    # package debian
+    package_debian()
+
+    # revert so file
+    revert_so_file(mm_version, build_number)
+
+
+if __name__ == "__main__":
+    main()
