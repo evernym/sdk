@@ -282,7 +282,7 @@ mod tests {
 
     #[test]
     fn test_init_bad_path() {
-        use utils::pool::get_pool_handle;
+        use utils::libindy::pool::get_pool_handle;
         let empty_str = CString::new("").unwrap().into_raw();
         assert_eq!(error::UNKNOWN_ERROR.code_num,cxs_init(0,empty_str,Some(init_cb)));
 

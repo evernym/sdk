@@ -174,24 +174,6 @@ pub fn close(pool_handle: i32) -> Result<(), u32> {
 }
 
 pub fn delete(pool_name: &str) -> Result<(), u32> {
-//    let (sender, receiver) = channel();
-//    let (cmd_id, cb) = CallbackUtils::closure_to_delete_pool_ledger_config_cb(Box::new(
-//        move |res| sender.send(res).unwrap()));
-//
-//    let pool_name = CString::new(pool_name).unwrap();
-//
-//    unsafe {
-//        let res = indy_delete_pool_ledger_config(cmd_id, pool_name.as_ptr(), cb);
-//        if res != error::SUCCESS.code_num as i32 {
-//            return Err(error::UNKNOWN_ERROR.code_num)
-//        }
-//        let res = receiver.recv_timeout(TimeoutUtils::short_timeout()).unwrap();
-//        if res != error::SUCCESS.code_num as i32 {
-//            return Err(error::UNKNOWN_ERROR.code_num)
-//        }
-//    }
-//    Ok(())
-
     let pool_name = CString::new(pool_name).map_err(map_string_error)?;
 
     let rtn_obj = Return_I32::new()?;
@@ -201,7 +183,7 @@ pub fn delete(pool_name: &str) -> Result<(), u32> {
             indy_delete_pool_ledger_config(rtn_obj.command_handle,
                                            pool_name.as_ptr(),
                                            Some(rtn_obj.get_callback()))
-        ).map_err(map_indy_error_code).map(|rtn_code|{()});
+        ).map_err(map_indy_error_code)?;
     }
 
     rtn_obj.receive()

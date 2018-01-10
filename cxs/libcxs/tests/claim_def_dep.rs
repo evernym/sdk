@@ -3,7 +3,7 @@ extern crate rusqlite;
 use std::env::home_dir;
 
 
-static entries: &[[&str;3];4] = &[
+static ENTRIES: &[[&str;3];4] = &[
     [
         "claim_definition_private::2hoqvcwupRTUNkXn6ArYzs:15",
         r#"{"secret_key":{"p":"139487684743426934866224951962492278976033872927645764870932099401267417300834447210226071235132419566799186258471528658750224371754894423526601605874987628975850529277895758002503639302057158499505184482062019901147451416880932855653178276409188907179487058776296448670567237107274584022583573914693235126821","q":"150848315904778847602727788295995229612801377223526257362482582038708340756470009735494354494609454294515467595648482398436537100160962376767833965508330374282858620557637157382774173692642101254072735113266054904673545355852844559552372533850929673778342367814495098505607753561587539451888902205754598009903"},"secret_key_revocation":null}"#,
@@ -30,15 +30,14 @@ static entries: &[[&str;3];4] = &[
 fn test_putting_claim_def_dependencies() {
     use std::path::Path;
     use rusqlite::Connection;
-    use rusqlite::types::ToSql;
     let home = home_dir().unwrap();
     let indy = Path::new(".indy_client/wallet/wallet1/sqlite.db");
     let path = home.join(indy);
     let connection = Connection::open(path.as_path()).unwrap();
 
 
-    for entry in entries{
-        connection.execute("INSERT INTO wallet VALUES (?,?,?)", &[&entry[0].to_string(),&entry[1].to_string(),&entry[2].to_string()]);
+    for entry in ENTRIES {
+        connection.execute("INSERT INTO wallet VALUES (?,?,?)", &[&entry[0].to_string(),&entry[1].to_string(),&entry[2].to_string()]).unwrap();
     }
 
 }
