@@ -51,11 +51,9 @@ fn sandbox_pool_setup() {
 
 }
 
-pub fn open_sandbox_pool() -> u32 {
+pub fn open_sandbox_pool() {
     let pool_name = "PoolForDemo";
     sandbox_pool_setup();
-    let config = r#"{"refresh_on_open": true}"#;
-    pool::open_pool_ledger(&pool_name, Some(config)).unwrap()
 }
 
 #[test]
