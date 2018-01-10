@@ -87,12 +87,14 @@ impl ClaimDef {
                                         self.schema_seq_no as i32,
                                         Some(SigTypes::CL),
                                         self.origin.clone())
+            .or(Err(error::BUILD_CLAIM_DEF_REQ_ERR.code_num))
     }
 
     pub fn send_request(&self, request: &str) ->  Result<String, u32> {
         if settings::test_indy_mode_enabled() { return Ok("{}".to_string()); }
         let pool_handle = pool::get_pool_handle()?;
         libindy_submit_request(pool_handle, request.to_string())
+            .or(Err(error::INDY_SUBMIT_REQUEST_ERR.code_num))
     }
 }
 

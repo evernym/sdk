@@ -3,20 +3,27 @@ extern crate libc;
 use self::libc::c_char;
 use std::ffi::CString;
 use std::env;
-use utils::callback::CallbackUtils;
-use utils::timeout::TimeoutUtils;
 use std::fs;
 use std::io::Write;
 use std::ptr::null;
 use std::path::{Path, PathBuf};
-use std::sync::mpsc::channel;
 use utils::error;
 use utils::libindy::{map_string_error, indy_function_eval};
 use utils::libindy::types::{Return_I32, Return_I32_I32};
 use utils::json::JsonEncodable;
 use utils::libindy::error_codes::map_indy_error_code;
+//use utils::libindy::call::{call_i32_r_i32, call_str_r_i32};
+use std::sync::RwLock;
 
-pub static mut POOL_HANDLE: i32 = 0;
+lazy_static! {
+    static ref POOL_HANDLE: RwLock<Option<i32>> = RwLock::new(None);
+}
+
+fn change_pool_handle(handle: Option<i32>){
+    let mut h = POOL_HANDLE.write().unwrap();
+    *h = handle;
+}
+
 
 #[derive(Serialize, Deserialize)]
 struct PoolConfig {
@@ -141,9 +148,7 @@ pub fn open_pool_ledger(pool_name: &str, config: Option<&str>) -> Result<u32, u3
     }
 
     rtn_obj.receive().and_then(|handle|{
-        unsafe {
-            POOL_HANDLE = handle;
-        }
+        change_pool_handle(Some(handle));
         Ok(handle as u32)
     })
 }
@@ -203,11 +208,12 @@ pub fn delete(pool_name: &str) -> Result<(), u32> {
 }
 
 pub fn get_pool_handle() -> Result<i32, u32> {
-    unsafe {
-        if POOL_HANDLE == 0 {
-            return Err(error::NO_POOL_OPEN.code_num)
-        }
-        Ok(POOL_HANDLE)
+    let h = POOL_HANDLE.read().unwrap();
+    if h.is_none() {
+        Err(error::NO_POOL_OPEN.code_num)
+    }
+    else {
+        Ok(h.unwrap())
     }
 }
 

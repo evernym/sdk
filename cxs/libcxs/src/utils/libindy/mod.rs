@@ -1,5 +1,6 @@
 pub mod ledger;
 pub mod callback;
+//pub mod call;
 pub mod types;
 pub mod pool;
 mod error_codes;
@@ -51,6 +52,16 @@ fn check_str(str_opt: Option<String>) -> Result<String, u32>{
         None => {
             warn!("libindy did not return a string");
             return Err(error::UNKNOWN_LIBINDY_ERROR.code_num)
+        }
+    }
+}
+
+fn check_for_option<T>(rtn: Option<T>) -> Result<T, u32>{
+    match rtn {
+        Some(str) => Ok(str),
+        None => {
+            error!("libindy return a null string when building a get_txn");
+            Err(error::UNKNOWN_LIBINDY_ERROR.code_num)
         }
     }
 }

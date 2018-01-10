@@ -9,20 +9,18 @@ use utils::timeout::TimeoutUtils;
 use utils::error;
 use std::sync::mpsc::channel;
 use std::fmt::Display;
-use std::ffi::CString;
-use std::ptr;
-
+use std::time::Duration;
 
 fn log_error<T: Display>(e: T) {
     warn!("Unable to send through libindy callback in cxs: {}", e);
 }
 
+fn receive<T>(receiver: &Receiver<T>, timeout: Option<Duration>) -> Result<T, u32>{
+    let timeout_val = timeout.unwrap_or(TimeoutUtils::medium_timeout());
 
-
-fn receive<T>(receiver: &Receiver<T>) -> Result<T, u32>{
-    match receiver.recv_timeout(TimeoutUtils::medium_timeout()) {
+    match receiver.recv_timeout(timeout_val) {
         Ok(t) => Ok(t),
-        Err(e) => Err(error::UNKNOWN_ERROR.code_num)
+        Err(e) => Err(error::TIMEOUT_LIBINDY_ERROR.code_num)
     }
 }
 
@@ -71,7 +69,7 @@ impl Return_I32 {
     }
 
     pub fn receive(&self) -> Result<(), u32> {
-        let err = receive(&self.receiver)?;
+        let err = receive(&self.receiver, None)?;
 
         map_indy_error((), err)
     }
@@ -105,7 +103,7 @@ impl Return_I32_I32 {
     }
 
     pub fn receive(&self) -> Result<i32, u32> {
-        let (err, arg1) = receive(&self.receiver)?;
+        let (err, arg1) = receive(&self.receiver, None)?;
 
         map_indy_error(arg1, err)
     }
@@ -140,7 +138,7 @@ impl Return_I32_STR {
     }
 
     pub fn receive(&self) -> Result<Option<String>, u32> {
-        let (err, str1) = receive(&self.receiver)?;
+        let (err, str1) = receive(&self.receiver, None)?;
 
         map_indy_error(str1, err)
     }
@@ -150,6 +148,8 @@ impl Return_I32_STR {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::ffi::CString;
+    use std::ptr;
 
     fn cstring(str_val: &String) -> CString {
         CString::new(str_val.clone()).unwrap()

@@ -16,7 +16,7 @@ use std::thread;
 use std::time::Duration;
 use std::ffi::CString;
 use cxs::api;
-use cxs::utils::pool;
+use cxs::utils::libindy::pool;
 use std::sync::mpsc::channel;
 use cxs::utils::wallet::get_wallet_handle;
 use std::path::Path;

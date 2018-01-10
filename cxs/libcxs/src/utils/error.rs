@@ -42,6 +42,7 @@ pub static INVALID_SCHEMA: Error = Error{code_num: 1031, message: "Schema was in
 pub static FAILED_PROOF_COMPLIANCE: Error = Error{code_num: 1032, message: "Proof is not compliant to proof request"};
 pub static INVALID_HTTP_RESPONSE: Error = Error{code_num: 1033, message: "Invalid HTTP response."};
 pub static UNKNOWN_LIBINDY_ERROR: Error = Error{code_num: 1034, message: "Unknown libindy error"};
+pub static TIMEOUT_LIBINDY_ERROR: Error = Error{code_num: 1035, message: "Waiting for callback timed out"};
 
 lazy_static! {
     static ref ERROR_MESSAGES: HashMap<u32, &'static str> = {
@@ -81,6 +82,7 @@ lazy_static! {
         insert_message(&mut m, &FAILED_PROOF_COMPLIANCE);
         insert_message(&mut m, &INVALID_HTTP_RESPONSE);
         insert_message(&mut m, &UNKNOWN_LIBINDY_ERROR);
+        insert_message(&mut m, &TIMEOUT_LIBINDY_ERROR);
         m
     };
 }
@@ -241,4 +243,10 @@ mod tests {
     fn test_unknown_libindy_error() {
         assert_eq!(error_message(&UNKNOWN_LIBINDY_ERROR.code_num), UNKNOWN_LIBINDY_ERROR.message);
     }
+
+    #[test]
+    fn test_timeout_libindy_error() {
+        assert_eq!(error_message(&TIMEOUT_LIBINDY_ERROR.code_num), TIMEOUT_LIBINDY_ERROR.message);
+    }
 }
+
