@@ -157,6 +157,7 @@ impl CreateClaimDef {
                                         wallet_handle,
                                         self.claim_def.issuer_did.to_string(),
                                         request.to_string())
+            .or(Err(error::CREATE_CLAIM_DEF_ERR.code_num))
     }
 
     pub fn build_create_txn(&self, claim_def_json: &str) -> Result<String, u32> {
@@ -164,6 +165,7 @@ impl CreateClaimDef {
                                            self.claim_def.schema_seq_no as i32,
                                            Some(SigTypes::CL),
                                            claim_def_json.to_string())
+            .or(Err(error::CREATE_CLAIM_DEF_ERR.code_num))
     }
 
     fn claim_def_on_ledger(&mut self,
@@ -282,6 +284,7 @@ fn create_and_store_claim_def(schema_json: &str,
                                        schema_json.to_string(),
                                        sig_type,
                                        create_non_revoc)
+        .or(Err(error::CREATE_CLAIM_DEF_ERR.code_num))
 }
 
 pub fn get_schema_data(schema_seq_no: u32) -> Result<String, u32> {
