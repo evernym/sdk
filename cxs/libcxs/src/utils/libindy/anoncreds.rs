@@ -1,10 +1,11 @@
 extern crate libc;
 use self::libc::c_char;
 use std::ffi::CString;
-use utils::libindy::{map_string_error, indy_function_eval, check_str};
-use utils::libindy::types::Return_I32_STR;
+use utils::error;
+use utils::libindy::{indy_function_eval};
+use utils::libindy::return_types::Return_I32_STR;
 use utils::libindy::SigTypes;
-use utils::libindy::error_codes::map_indy_error_code;
+use utils::libindy::error_codes::{map_indy_error_code, map_string_error};
 
 extern {
     fn indy_issuer_create_and_store_claim_def(command_handle: i32,
@@ -17,6 +18,17 @@ extern {
                                                                    err: i32,
                                                                    claim_def_json: *const c_char)>) -> i32;
 }
+
+fn check_str(str_opt: Option<String>) -> Result<String, u32>{
+    match str_opt {
+        Some(str) => Ok(str),
+        None => {
+            warn!("libindy did not return a string");
+            return Err(error::UNKNOWN_LIBINDY_ERROR.code_num)
+        }
+    }
+}
+
 
 pub fn libindy_create_and_store_claim_def(wallet_handle: i32,
                                           issuer_did: String,
@@ -57,7 +69,7 @@ mod tests {
                                                         SCHEMAS_JSON.to_string(),
                                                         None,
                                                         false);
-        delete_wallet("wallet_simple");
+        delete_wallet("wallet_simple").unwrap();
         assert!(result.is_ok());
         println!("{}", result.unwrap());
     }

@@ -5,7 +5,6 @@ extern crate libc;
 use std::sync::Mutex;
 use std::collections::HashMap;
 use rand::Rng;
-use std::fmt;
 use utils::libindy::pool;
 use utils::error;
 use settings;
@@ -387,7 +386,7 @@ pub mod tests {
         settings::set_defaults();
         assert!(init_wallet(&settings::CONFIG_WALLET_NAME).unwrap() > 0);
         let wallet_handle = get_wallet_handle();
-        let mut claim_def = RetrieveClaimDef::new();
+        let claim_def = RetrieveClaimDef::new();
         let claim_def_response = claim_def.extract_result(CLAIM_DEF_EX).unwrap();
         let claim_def_obj: serde_json::Value = serde_json::from_str(&claim_def_response).unwrap();
         assert_eq!(claim_def_obj["identifier"], json!("GGBDg1j8bsKmr4h5T9XqYf"));
@@ -462,7 +461,7 @@ pub mod tests {
         info!("ClaimDef TXN:  {:?}", claim_def_txn);
         let claim_def_result = create_claim_def.sign_and_send_request(&claim_def_txn).unwrap();
         info!("ClaimDef Result:  {:?}", claim_def_result);
-        delete_wallet("wallet1");
+        delete_wallet("wallet1").unwrap();
     }
 
     #[test]
