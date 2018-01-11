@@ -8,12 +8,13 @@ use std::io::Write;
 use std::ptr::null;
 use std::path::{Path, PathBuf};
 use utils::error;
-use utils::libindy::{map_string_error, indy_function_eval};
-use utils::libindy::types::{Return_I32, Return_I32_I32};
+use utils::libindy::{indy_function_eval};
+use utils::libindy::return_types::{Return_I32, Return_I32_I32};
 use utils::json::JsonEncodable;
-use utils::libindy::error_codes::map_indy_error_code;
-//use utils::libindy::call::{call_i32_r_i32, call_str_r_i32};
+use utils::libindy::error_codes::{map_indy_error_code, map_string_error};
 use std::sync::RwLock;
+use std::time::Duration;
+use utils::timeout::TimeoutUtils;
 
 lazy_static! {
     static ref POOL_HANDLE: RwLock<Option<i32>> = RwLock::new(None);
@@ -121,7 +122,7 @@ pub fn create_pool_ledger_config(pool_name: &str, path: Option<&Path>) -> Result
         ).map_err(map_indy_error_code)?;
     }
 
-    match rtn_obj.receive() {
+    match rtn_obj.receive(None) {
         Ok(()) => Ok(0),
         Err(e) => Err(error::CREATE_POOL_CONFIG.code_num)
     }
@@ -147,13 +148,13 @@ pub fn open_pool_ledger(pool_name: &str, config: Option<&str>) -> Result<u32, u3
         ).map_err(map_indy_error_code)?;
     }
 
-    rtn_obj.receive().and_then(|handle|{
+    rtn_obj.receive(TimeoutUtils::some_long()).and_then(|handle|{
         change_pool_handle(Some(handle));
         Ok(handle as u32)
     })
 }
 
-pub fn call(pool_handle: i32, func: unsafe extern "C" fn(i32, i32, Option<extern "C" fn(i32, i32)>) -> i32) -> Result<(), u32> {
+pub fn call(pool_handle: i32, timeout: Option<Duration>, func: unsafe extern "C" fn(i32, i32, Option<extern "C" fn(i32, i32)>) -> i32) -> Result<(), u32> {
     let rtn_obj = Return_I32::new()?;
     unsafe {
         indy_function_eval(func(rtn_obj.command_handle,
@@ -162,15 +163,20 @@ pub fn call(pool_handle: i32, func: unsafe extern "C" fn(i32, i32, Option<extern
         ).map_err(map_indy_error_code)?;
     }
 
-    rtn_obj.receive()
+    rtn_obj.receive(timeout)
 }
 
 pub fn refresh(pool_handle: i32) -> Result<(), u32> {
-    call(pool_handle, indy_refresh_pool_ledger)
+    call(pool_handle,
+         TimeoutUtils::some_long(),
+         indy_refresh_pool_ledger)
 }
 
 pub fn close(pool_handle: i32) -> Result<(), u32> {
-    call(pool_handle, indy_close_pool_ledger)
+
+    call(pool_handle,
+         TimeoutUtils::some_long(),
+         indy_close_pool_ledger)
 }
 
 pub fn delete(pool_name: &str) -> Result<(), u32> {
@@ -186,7 +192,7 @@ pub fn delete(pool_name: &str) -> Result<(), u32> {
         ).map_err(map_indy_error_code)?;
     }
 
-    rtn_obj.receive()
+    rtn_obj.receive(None)
 }
 
 pub fn get_pool_handle() -> Result<i32, u32> {

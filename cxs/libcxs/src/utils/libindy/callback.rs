@@ -8,6 +8,8 @@ use std::slice;
 use std::ops::Deref;
 use utils::libindy::next_command_handle;
 
+pub const POISON_MSG: &str = "FAILED TO LOCK CALLBACK MAP!";
+
 lazy_static! {
     pub static ref CALLBACKS_I32: Mutex<HashMap<i32, Box<FnMut(i32) + Send>>> = Default::default();
     pub static ref CALLBACKS_I32_I32: Mutex<HashMap<i32, Box<FnMut(i32, i32) + Send>>> = Default::default();
@@ -18,7 +20,6 @@ lazy_static! {
     pub static ref CALLBACKS_I32_OPTSTR_BIN: Mutex<HashMap<i32,Box<FnMut(i32, Option<String>, Vec<u8>) + Send>>> = Default::default();
     pub static ref CALLBACKS_I32_BIN_BIN: Mutex<HashMap<i32, Box<FnMut(i32, Vec<u8>, Vec<u8>) + Send>>> = Default::default();
 }
-
 
 pub extern "C" fn call_cb_i32(command_handle: i32, arg1: i32) {
     let cb = get_cb(command_handle, CALLBACKS_I32.deref());
@@ -113,8 +114,9 @@ fn build_buf(ptr: *const u8, len: u32) -> Vec<u8>{
 }
 
 fn get_cb<T>(command_handle: i32, map: &Mutex<HashMap<i32, T>>) -> Option<T> {
-    //TODO Error case, what should we do if the static map can't be locked?
-    let mut locked_map = map.lock().unwrap();
+    //TODO Error case, what should we do if the static map can't be locked? Some what
+    //TODO general question for all of our Mutexes.
+    let mut locked_map = map.lock().expect(POISON_MSG);
     match locked_map.remove(&command_handle){
         Some(t) => Some(t),
         None => {
@@ -142,6 +144,19 @@ mod tests {
         assert_eq!(test_str, test.unwrap());
     }
 
+    #[test]
+    fn test_get_cb(){
+        let mutex_map: Mutex<HashMap<i32, Box<FnMut(i32) + Send>>> = Default::default();
+        assert!(get_cb(2123, &mutex_map).is_none());
+
+        let closure: Box<FnMut(i32) + Send> = Box::new(move |err | {
+
+        });
+
+        mutex_map.lock().unwrap().insert(2123,closure);
+        let cb = get_cb(2123, &mutex_map);
+        assert!(cb.is_some());
+    }
 
 
 }
