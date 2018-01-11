@@ -19,10 +19,10 @@ describe('A ClaimDef', function () {
     assert(claimDef)
   })
 
-  it('has a state of 0 after instanstiated', async () => {
+  it('has a name of test after instanstiated', async () => {
     const claimDef = await ClaimDef.create(CLAIM_DEF)
-    const state = await claimDef.state
-    assert.equal(state, 2)
+    const name = await claimDef._name
+    assert.equal(name, 'test')
   })
 
   it('can be created, then serialized, then deserialized and have the same sourceId, name, and handle', async () => {
@@ -35,7 +35,7 @@ describe('A ClaimDef', function () {
     assert.equal(claimDef.source_id, claimDef2.source_id)
   })
 
-  it.only('will throw error on serialize when claimDef has been released', async () => {
+  it('will throw error on serialize when claimDef has been released', async () => {
     const sourceId = 'SerializeDeserialize'
     const claimDef = await ClaimDef.create(CLAIM_DEF)
     const jsonDef = await claimDef.serialize()

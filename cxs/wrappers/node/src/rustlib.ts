@@ -72,7 +72,6 @@ export interface IFFIEntryPoint {
   cxs_claimdef_deserialize: (commandId: number, data: string, cb: any) => number,
   cxs_claimdef_serialize: (commandId: number, handle: string, cb: any) => number,
   cxs_claimdef_release: (handle: string) => number,
-  cxs_claimdef_update_state: (commandId: number, handle: string, cb: any) => number,
 
   free: any
 }
@@ -116,7 +115,6 @@ export const FFIConfiguration: { [ Key in keyof IFFIEntryPoint ]: any } = {
   cxs_claimdef_deserialize: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_STRING_DATA, FFI_CALLBACK_PTR]],
   cxs_claimdef_release: [FFI_ERROR_CODE, [FFI_CLAIMDEF_HANDLE]],
   cxs_claimdef_serialize: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CLAIMDEF_HANDLE, FFI_CALLBACK_PTR]],
-  cxs_claimdef_update_state: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CLAIMDEF_HANDLE, FFI_CALLBACK_PTR]],
   // mock
   cxs_set_next_agency_response: [FFI_VOID, [FFI_UNSIGNED_INT]],
 

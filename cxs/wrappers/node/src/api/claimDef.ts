@@ -2,7 +2,6 @@ import { Callback } from 'ffi'
 import { CXSInternalError } from '../errors'
 import { rustAPI } from '../rustlib'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
-import { StateType } from './common'
 import { Connection } from './connection'
 import { CXSBase } from './CXSBase'
 
@@ -17,7 +16,6 @@ export interface IClaimDefinition {
 export interface IClaimDefObj {
   source_id: string,
   handle: number
-  state: StateType
   name: string
   claim_def: IClaimDefData
 }
@@ -31,7 +29,6 @@ export interface IClaimDefData {
 
 export class ClaimDef extends CXSBase {
   protected _releaseFn = rustAPI().cxs_claimdef_release
-  protected _updateStFn = rustAPI().cxs_claimdef_update_state
   protected _serializeFn = rustAPI().cxs_claimdef_serialize
   protected _deserializeFn = rustAPI().cxs_claimdef_deserialize
   private _name: string
@@ -74,14 +71,6 @@ export class ClaimDef extends CXSBase {
       return data
     } catch (err) {
       throw new CXSInternalError(`cxs_claimdef_serialize -> ${err}`)
-    }
-  }
-
-  async updateState (): Promise<void> {
-    try {
-      await this._updateState()
-    } catch (error) {
-      throw new CXSInternalError(`cxs_claimdef_updateState -> ${error}`)
     }
   }
 }
