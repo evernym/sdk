@@ -71,8 +71,8 @@ impl Return_I32 {
         callback::call_cb_i32
     }
 
-    pub fn receive(&self) -> Result<(), u32> {
-        let err = receive(&self.receiver, None)?;
+    pub fn receive(&self, timeout: Option<Duration>) -> Result<(), u32> {
+        let err = receive(&self.receiver, timeout)?;
 
         map_indy_error((), err)
     }
@@ -102,8 +102,8 @@ impl Return_I32_I32 {
         callback::call_cb_i32_i32
     }
 
-    pub fn receive(&self) -> Result<i32, u32> {
-        let (err, arg1) = receive(&self.receiver, None)?;
+    pub fn receive(&self, timeout: Option<Duration>) -> Result<i32, u32> {
+        let (err, arg1) = receive(&self.receiver, timeout)?;
 
         map_indy_error(arg1, err)
     }
@@ -134,8 +134,8 @@ impl Return_I32_STR {
         callback::call_cb_i32_str
     }
 
-    pub fn receive(&self) -> Result<Option<String>, u32> {
-        let (err, str1) = receive(&self.receiver, None)?;
+    pub fn receive(&self, timeout: Option<Duration>) -> Result<Option<String>, u32> {
+        let (err, str1) = receive(&self.receiver, timeout)?;
 
         map_indy_error(str1, err)
     }
@@ -156,12 +156,12 @@ mod tests {
     fn test_return_i32() {
         let rtn = Return_I32::new().unwrap();
         rtn.get_callback()(rtn.command_handle, 0);
-        let val = rtn.receive();
+        let val = rtn.receive(None);
         assert!(val.is_ok());
 
         let rtn = Return_I32::new().unwrap();
         rtn.get_callback()(rtn.command_handle, 123);
-        let val = rtn.receive();
+        let val = rtn.receive(None);
         assert!(val.is_err());
     }
 
@@ -171,13 +171,13 @@ mod tests {
 
         let rtn = Return_I32_I32::new().unwrap();
         rtn.get_callback()(rtn.command_handle, 0, test_val);
-        let val = rtn.receive();
+        let val = rtn.receive(None);
         assert!(val.is_ok());
         assert_eq!(val.unwrap(), test_val);
 
         let rtn = Return_I32_I32::new().unwrap();
         rtn.get_callback()(rtn.command_handle, 123, test_val);
-        let val = rtn.receive();
+        let val = rtn.receive(None);
         assert!(val.is_err());
     }
 
@@ -187,19 +187,19 @@ mod tests {
 
         let rtn = Return_I32_STR::new().unwrap();
         rtn.get_callback()(rtn.command_handle, 0, cstring(&test_str).as_ptr());
-        let val = rtn.receive();
+        let val = rtn.receive(None);
         assert!(val.is_ok());
         assert_eq!(val.unwrap(), Some(test_str.clone()));
 
         let rtn = Return_I32_STR::new().unwrap();
         rtn.get_callback()(rtn.command_handle, 0, ptr::null());
-        let val = rtn.receive();
+        let val = rtn.receive(None);
         assert!(val.is_ok());
         assert_eq!(val.unwrap(), None);
 
         let rtn = Return_I32_STR::new().unwrap();
         rtn.get_callback()(rtn.command_handle, 123, cstring(&test_str).as_ptr());
-        let val = rtn.receive();
+        let val = rtn.receive(None);
         assert!(val.is_err());
     }
 

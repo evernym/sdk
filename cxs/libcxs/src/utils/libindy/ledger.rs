@@ -6,6 +6,7 @@ use utils::libindy::SigTypes;
 use utils::libindy::return_types::Return_I32_STR;
 use utils::libindy::error_codes::{map_indy_error_code, map_string_error};
 use utils::error;
+use utils::timeout::TimeoutUtils;
 
 
 
@@ -71,7 +72,7 @@ pub fn libindy_sign_and_submit_request(pool_handle: i32,
         ).map_err(map_indy_error_code)?;
     }
 
-    rtn_obj.receive().and_then(check_str)
+    rtn_obj.receive(TimeoutUtils::some_long()).and_then(check_str)
 }
 
 fn check_str(str_opt: Option<String>) -> Result<String, u32>{
@@ -99,7 +100,7 @@ pub fn libindy_submit_request(pool_handle: i32, request_json: String) -> Result<
         ).map_err(map_indy_error_code)?;
     }
 
-    rtn_obj.receive().and_then(check_str)
+    rtn_obj.receive(TimeoutUtils::some_long()).and_then(check_str)
 }
 
 pub fn libindy_build_get_txn_request(submitter_did: String, sequence_num: i32) -> Result<String, u32>
@@ -115,7 +116,7 @@ pub fn libindy_build_get_txn_request(submitter_did: String, sequence_num: i32) -
         ).map_err(map_indy_error_code)?;
     }
 
-    rtn_obj.receive().and_then(check_str)
+    rtn_obj.receive(None).and_then(check_str)
 }
 
 pub fn libindy_build_get_claim_def_txn(submitter_did: String,
@@ -138,7 +139,7 @@ pub fn libindy_build_get_claim_def_txn(submitter_did: String,
         ).map_err(map_indy_error_code)?;
     }
 
-    rtn_obj.receive().and_then(check_str)
+    rtn_obj.receive(None).and_then(check_str)
 }
 
 pub fn libindy_build_create_claim_def_txn(submitter_did: String,
@@ -161,7 +162,7 @@ pub fn libindy_build_create_claim_def_txn(submitter_did: String,
         ).map_err(map_indy_error_code)?;
     }
 
-    rtn_obj.receive().and_then(check_str)
+    rtn_obj.receive(None).and_then(check_str)
 }
 
 #[cfg(test)]

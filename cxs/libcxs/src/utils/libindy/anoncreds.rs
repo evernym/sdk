@@ -6,6 +6,7 @@ use utils::libindy::{indy_function_eval};
 use utils::libindy::return_types::Return_I32_STR;
 use utils::libindy::SigTypes;
 use utils::libindy::error_codes::{map_indy_error_code, map_string_error};
+use utils::timeout::TimeoutUtils;
 
 extern {
     fn indy_issuer_create_and_store_claim_def(command_handle: i32,
@@ -52,7 +53,7 @@ pub fn libindy_create_and_store_claim_def(wallet_handle: i32,
         ).map_err(map_indy_error_code)?;
     }
 
-    rtn_obj.receive().and_then(check_str)
+    rtn_obj.receive(TimeoutUtils::some_long()).and_then(check_str)
 }
 
 #[cfg(test)]
