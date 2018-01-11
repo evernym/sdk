@@ -35,7 +35,7 @@ static ENTRIES: &[[&str;3];6] = &[
         "2018-01-04 22:46:18"
     ]
 ];
-//#[ignore]
+#[ignore]
 #[test]
 fn test_putting_claim_def_dependencies() {
     use std::path::Path;
