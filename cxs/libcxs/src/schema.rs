@@ -70,7 +70,7 @@ impl LedgerSchema {
         let txn = LedgerSchema::retrieve_from_ledger(sequence_num)?;
         let data: SchemaTransaction = match LedgerSchema::process_ledger_txn(txn){
             Ok(data) => data,
-            Err(code) => return Err(code)
+            Err(code) => return Err(error::INVALID_SCHEMA_SEQ_NO.code_num)
         };
         Ok(LedgerSchema{
             sequence_num: sequence_num,

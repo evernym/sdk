@@ -59,11 +59,13 @@ pub fn libindy_create_and_store_claim_def(wallet_handle: i32,
 #[cfg(test)]
 mod tests {
     use super::*;
+    use settings;
     use utils::constants::{SCHEMAS_JSON};
     use utils::wallet::{ init_wallet, get_wallet_handle, delete_wallet };
 
     #[test]
     fn simple_libindy_create_and_store_claim_def_test() {
+        settings::set_defaults();
         init_wallet("wallet_simple").unwrap();
         let result = libindy_create_and_store_claim_def(get_wallet_handle(),
                                                         "GGBDg1j8bsKmr4h5T9XqYf".to_string(),

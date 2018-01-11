@@ -12,7 +12,6 @@ use schema::LedgerSchema;
 use utils::constants::{ SCHEMAS_JSON, CLAIM_DEF_JSON };
 use utils::wallet::{ get_wallet_handle };
 use utils::libindy::SigTypes;
-use api::{ CxsStateType };
 use utils::libindy::anoncreds::{libindy_create_and_store_claim_def};
 use utils::libindy::ledger::{libindy_submit_request,
                              libindy_build_get_claim_def_txn,
@@ -34,7 +33,6 @@ pub struct CreateClaimDef {
     handle: u32,
     name: String,
     source_id: String,
-    state: u32,
 }
 
 #[derive(Deserialize, Debug, Serialize, PartialEq, Clone)]
@@ -146,7 +144,6 @@ impl ClaimDefCommon for CreateClaimDef {
             claim_def: ClaimDefinition::new(),
             name: String::new(),
             source_id: String::new(),
-            state: CxsStateType::CxsStateNone as u32,
         }
     }
 }
@@ -169,9 +166,25 @@ impl CreateClaimDef {
                                            claim_def_json.to_string())
     }
 
-    pub fn set_handle(&mut self, handle: u32) { self.handle = handle; }
+    fn claim_def_on_ledger(&mut self,
+                           submitter_did: Option<&str>,
+                           schema_no: u32,
+                           issuer_did: &str,
+                           sig_type: Option<SigTypes>) -> bool {
+        let claim_def_str = match self.retrieve_claim_def(submitter_did.unwrap_or(""),
+                                                          schema_no,
+                                                          sig_type,
+                                                          issuer_did) {
+            Ok(x) => x,
+            Err(_) => return false,
+        };
+        match ClaimDefinition::from_str(&claim_def_str) {
+            Ok(x) => true,
+            Err(_) => false,
+        }
+    }
 
-    pub fn set_state(&mut self, state: u32) { self.state = state; }
+    pub fn set_handle(&mut self, handle: u32) { self.handle = handle; }
 
     pub fn set_claim_def(&mut self, claim_def: ClaimDefinition) { self.claim_def = claim_def.clone(); }
 
@@ -222,7 +235,14 @@ pub fn create_new_claimdef(source_id: String,
 
     let mut new_claimdef = Box::new(CreateClaimDef::new());
     let schema_data = get_schema_data(schema_seq_no)?;
-    //Todo: check to see if on ledger
+    //Todo: Libindy should provide ways to manage duplicate claim_defs and access to wallet
+    if new_claimdef.claim_def_on_ledger(Some(&issuer_did),
+                                        schema_seq_no,
+                                        &issuer_did,
+                                        Some(SigTypes::CL)) {
+        warn!("Claim Definition already on Ledger");
+        return Err(error::CLAIM_DEF_ALREADY_CREATED.code_num)
+    }
     let claim_def_json = create_and_store_claim_def(&schema_data,
                                                     &issuer_did,
                                                     Some(SigTypes::CL),
@@ -241,7 +261,6 @@ pub fn create_new_claimdef(source_id: String,
     let new_handle = rand::thread_rng().gen::<u32>();
     new_claimdef.set_name(claimdef_name);
     new_claimdef.set_handle(new_handle);
-    new_claimdef.set_state(CxsStateType::CxsStateOfferSent as u32);
     new_claimdef.set_source_id(source_id);
     {
         let mut m = CLAIMDEF_MAP.lock().unwrap();
@@ -303,22 +322,6 @@ pub fn from_string(claimdef_data: &str) -> Result<u32, u32> {
     Ok(new_handle)
 }
 
-pub fn update_state(handle: u32) {
-    //Todo: don't know if claimdef needs state changes
-    match CLAIMDEF_MAP.lock().unwrap().get_mut(&handle) {
-        Some(t) => {},
-        None => {}
-    };
-}
-
-pub fn get_state(handle: u32) -> u32 {
-    //Todo: don't know if claimdef needs state changes
-    match CLAIMDEF_MAP.lock().unwrap().get(&handle) {
-        Some(t) => CxsStateType::CxsStateOfferSent as u32,
-        None => CxsStateType::CxsStateNone as u32,
-    }
-}
-
 pub fn release(handle: u32) -> u32 {
     match CLAIMDEF_MAP.lock().unwrap().remove(&handle) {
         Some(t) => error::SUCCESS.code_num,
@@ -329,7 +332,7 @@ pub fn release(handle: u32) -> u32 {
 #[cfg(test)]
 pub mod tests {
     use utils::signus::SignusUtils;
-    use utils::wallet::{ init_wallet };
+    use utils::wallet::{ init_wallet, delete_wallet };
     use utils::constants::{ MY1_SEED };
     use std::path::{Path};
     use super::*;
@@ -378,19 +381,21 @@ pub mod tests {
                                                     15,
                                                     Some(SigTypes::CL),
                                                     "4fUDR9R7fjwELRvH9JT6HH").unwrap();
+        delete_wallet("wallet1").unwrap();
         assert!(claim_def_req.contains("\"identifier\":\"GGBDg1j8bsKmr4h5T9XqYf\",\"operation\":{\"type\":\"108\",\"ref\":15,\"signature_type\":\"CL\",\"origin\":\"4fUDR9R7fjwELRvH9JT6HH\"}"));
     }
 
     #[test]
     fn test_get_claim_def_by_extract_result() {
         settings::set_defaults();
-        assert!(init_wallet(&settings::CONFIG_WALLET_NAME).unwrap() > 0);
+        assert!(init_wallet("wallet1").unwrap() > 0);
         let wallet_handle = get_wallet_handle();
         let claim_def = RetrieveClaimDef::new();
         let claim_def_response = claim_def.extract_result(CLAIM_DEF_EX).unwrap();
         let claim_def_obj: serde_json::Value = serde_json::from_str(&claim_def_response).unwrap();
         assert_eq!(claim_def_obj["identifier"], json!("GGBDg1j8bsKmr4h5T9XqYf"));
         assert_eq!(claim_def_obj["data"]["revocation"], serde_json::Value::Null);
+        delete_wallet("wallet1").unwrap();
     }
 
     #[ignore] /* on some systems the pool may be open */
@@ -408,8 +413,6 @@ pub mod tests {
     #[ignore]
     #[test]
     fn test_get_claim_def() {
-        use utils::wallet::delete_wallet;
-
         settings::set_defaults();
         open_sandbox_pool();
         assert!(init_wallet("test_wallet").unwrap() > 0);
@@ -432,9 +435,10 @@ pub mod tests {
     #[test]
     fn test_create_claim_def_and_store_in_wallet() {
         settings::set_defaults();
-        assert!(init_wallet(&settings::CONFIG_WALLET_NAME).unwrap() > 0);
+        assert!(init_wallet("wallet1").unwrap() > 0);
         let wallet_handle = get_wallet_handle();
         let claim_def_json = create_and_store_claim_def(SCHEMAS_JSON, ISSUER_DID, Some(SigTypes::CL), false).unwrap();
+        delete_wallet("wallet1").unwrap();
         let claim_def_obj = ClaimDefinition::from_str(&claim_def_json).unwrap();
         assert_eq!(claim_def_obj.schema_seq_no, 15);
         assert_eq!(claim_def_obj.issuer_did, ISSUER_DID.to_string());
@@ -445,7 +449,6 @@ pub mod tests {
     #[ignore]
     #[test]
     fn test_create_claim_def_txn_and_submit_req() {
-        use utils::wallet::delete_wallet;
         settings::set_defaults();
         open_sandbox_pool();
         let wallet_handle = init_wallet("wallet1").unwrap();
@@ -464,6 +467,28 @@ pub mod tests {
         delete_wallet("wallet1").unwrap();
     }
 
+    #[ignore]
+    #[test]
+    fn test_create_claim_def_fails_with_already_created_claim_def() {
+        settings::set_defaults();
+        open_sandbox_pool();
+        let wallet_handle = init_wallet("wallet1").unwrap();
+        let (my_did, my_vk) = SignusUtils::create_and_store_my_did(wallet_handle, Some(MY1_SEED)).unwrap();
+        assert_eq!(Err(error::CLAIM_DEF_ALREADY_CREATED.code_num),
+                   create_new_claimdef("1".to_string(), "name".to_string(), 15, my_did, false));
+
+    }
+
+    #[ignore]
+    #[test]
+    fn test_get_schema_fails_with_invalid_seq_no() {
+        settings::set_defaults();
+        open_sandbox_pool();
+        let wallet_handle = init_wallet("wallet1").unwrap();
+    // Needs to be invalid schema_seq_no
+        assert_eq!(Err(error::INVALID_SCHEMA_SEQ_NO.code_num),
+                   get_schema_data(998897));
+    }
     #[test]
     fn test_create_claimdef_success() {
         set_default_and_enable_test_mode();
