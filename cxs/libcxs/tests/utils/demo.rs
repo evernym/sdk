@@ -14,40 +14,11 @@ use std::ffi::CString;
 use cxs::api;
 use std::sync::Mutex;
 use std::sync::mpsc::channel;
-use ::cxs::utils::callback::CallbackUtils;
-use ::cxs::utils::error;
-use ::cxs::utils::libindy::ledger::{libindy_build_get_claim_def_txn};
-use ::cxs::utils::libindy::SigTypes;
 
 lazy_static! {
     static ref COMMAND_HANDLE_COUNTER: AtomicUsize = ATOMIC_USIZE_INIT;
 }
 
-extern {
-    pub fn indy_build_nym_request(command_handle: i32,
-                                  submitter_did: *const c_char,
-                                  target_did: *const c_char,
-                                  verkey: *const c_char,
-                                  alias: *const c_char,
-                                  role: *const c_char,
-                                  cb: Option<extern fn(xcommand_handle: i32, err: i32,
-                                                       request_json: *const c_char)>) -> i32;
-    pub fn indy_build_claim_def_txn(command_handle: i32,
-                                    submitter_did: *const c_char,
-                                    xref: i32,
-                                    signature_type: *const c_char,
-                                    data: *const c_char,
-                                    cb: Option<extern fn(xcommand_handle: i32, err: i32,
-                                                         request_result_json: *const c_char)>) -> i32;
-
-    pub fn indy_sign_and_submit_request(command_handle: i32,
-                                        pool_handle: i32,
-                                        wallet_handle: i32,
-                                        submitter_did: *const c_char,
-                                        request_json: *const c_char,
-                                        cb: Option<extern fn(xcommand_handle: i32, err: i32,
-                                                             request_result_json: *const c_char)>) -> i32;
-}
 #[allow(unused_assignments)]
 #[allow(unused_variables)]
 #[allow(dead_code)]
@@ -56,48 +27,6 @@ pub extern "C" fn generic_cb(command_handle:u32, err:u32) {
     println!("connection established!");
 }
 
-pub fn build_claim_def_txn(submitter_did: &str,
-                           xref:u32,
-                           sig_type:&str,
-                           data:&str) -> Result<String, u32> {
-    libindy_build_get_claim_def_txn(submitter_did.to_string(),
-                                    xref as i32,
-                                    Some(SigTypes::CL),
-                                    data.to_string())
-        .or(Err(error::BUILD_CLAIM_DEF_REQ_ERR.code_num))
-}
-
-//pub fn sign_and_send_request(pool_handle:u32,
-//                             wallet_handle:u32,
-//                             submitter_did:u32,
-//                             request_json: &str) ->  Result<String, u32> {
-//    let pool_handle = ::cxs::utils::pool::get_pool_handle()?;
-//
-//    let (sender, receiver) = channel();
-//    let cb = Box::new(move |err, valid | {
-//        sender.send((err, valid)).unwrap();
-//    });
-//
-//    let (command_handle, cb) = CallbackUtils::closure_to_build_request_cb(cb);
-//    unsafe {
-//        let indy_err = indy_sign_and_submit_request(command_handle,
-//                                           pool_handle as i32,
-//                                           wallet_handle as i32,
-//                                           CString::new(submitter_did).unwrap().as_ptr(),
-//                                           CString::new(request_json).unwrap().as_ptr(),
-//                                           cb);
-//        if indy_err != 0 {
-//            return Err(error::INDY_SUBMIT_REQUEST_ERR.code_num)
-//        }
-//    }
-//
-//    let (err, claim_def) = receiver.recv_timeout(TimeoutUtils::long_timeout()).unwrap();
-//
-//    if err != 0{
-//        return Err(error::INDY_SUBMIT_REQUEST_ERR.code_num)
-//    }
-//    Ok(claim_def)
-//}
 
 #[allow(dead_code)]
 pub fn create_claim_offer(claim_name: &str, source_id: &str, claim_data_value: serde_json::Value, issuer_did: &str, schema_seq_no: u32) -> (u32, u32){

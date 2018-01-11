@@ -375,6 +375,7 @@ pub mod tests {
     #[test]
     fn test_get_claim_def_request() {
         settings::set_defaults();
+
         let wallet_name = String::from("wallet1");
         assert!(init_wallet(&wallet_name).unwrap() > 0);
         let wallet_handle = get_wallet_handle();
