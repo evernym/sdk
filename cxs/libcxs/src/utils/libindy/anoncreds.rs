@@ -59,7 +59,7 @@ mod tests {
                                                         SCHEMAS_JSON.to_string(),
                                                         None,
                                                         false);
-        delete_wallet("wallet_simple");
+        delete_wallet("wallet_simple").unwrap();
         assert!(result.is_ok());
         println!("{}", result.unwrap());
     }

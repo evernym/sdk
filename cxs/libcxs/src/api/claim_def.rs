@@ -5,9 +5,7 @@ use utils::cstring::CStringUtils;
 use utils::error;
 use std::thread;
 use std::ptr;
-use api::CxsStatus;
 use claim_def;
-use schema::LedgerSchema;
 
 #[no_mangle]
 pub extern fn cxs_claimdef_create(command_handle: u32,
@@ -103,12 +101,10 @@ mod tests {
 
     use super::*;
     use std::ffi::CString;
-    use std::ptr;
     use std::str;
     use std::thread;
     use std::time::Duration;
     use settings;
-    use api::CxsStateType;
 
     extern "C" fn create_cb(command_handle: u32, err: u32, claimdef_handle: u32) {
         assert_eq!(err, 0);
