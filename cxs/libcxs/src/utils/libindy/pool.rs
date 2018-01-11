@@ -8,11 +8,10 @@ use std::io::Write;
 use std::ptr::null;
 use std::path::{Path, PathBuf};
 use utils::error;
-use utils::libindy::{map_string_error, indy_function_eval};
-use utils::libindy::types::{Return_I32, Return_I32_I32};
+use utils::libindy::{indy_function_eval};
+use utils::libindy::return_types::{Return_I32, Return_I32_I32};
 use utils::json::JsonEncodable;
-use utils::libindy::error_codes::map_indy_error_code;
-//use utils::libindy::call::{call_i32_r_i32, call_str_r_i32};
+use utils::libindy::error_codes::{map_indy_error_code, map_string_error};
 use std::sync::RwLock;
 
 lazy_static! {

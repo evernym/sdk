@@ -1,10 +1,12 @@
 extern crate libc;
 use self::libc::c_char;
 use std::ffi::CString;
-use utils::libindy::{map_string_error, indy_function_eval, check_str};
-use utils::libindy::types::Return_I32_STR;
-use utils::libindy::SigTypes;
-use utils::libindy::error_codes::map_indy_error_code;
+use utils::libindy::indy_function_eval;
+use utils::libindy::return_types::Return_I32_STR;
+use utils::libindy::error_codes::{map_indy_error_code, map_string_error};
+use std::fmt;
+use utils::error;
+
 
 extern {
 
@@ -32,6 +34,31 @@ extern {
                                     cb: Option<extern fn(xcommand_handle: i32, err: i32,
                                                          request_json: *const c_char)>) -> i32;
 }
+
+
+pub enum SigTypes {
+    CL
+}
+
+impl fmt::Display for SigTypes {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let str_val = match *self {
+            SigTypes::CL => "CL"
+        };
+        write!(f, "{}", str_val)
+    }
+}
+
+fn check_str(str_opt: Option<String>) -> Result<String, u32>{
+    match str_opt {
+        Some(str) => Ok(str),
+        None => {
+            warn!("libindy did not return a string");
+            return Err(error::UNKNOWN_LIBINDY_ERROR.code_num)
+        }
+    }
+}
+
 
 
 pub fn libindy_submit_request(pool_handle: i32, request_json: String) -> Result<String, u32>
