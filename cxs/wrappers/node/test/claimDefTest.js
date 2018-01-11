@@ -3,8 +3,13 @@ const cxs = require('../dist/index')
 const { stubInitCXS } = require('./helpers')
 const { ClaimDef, Error } = cxs
 
-const CLAIM_DEF = {issuerDid: '8XFh8yBzrpJQmNyZzgoTqB', name: 'test', revocation: false, schemaSeqNo: 1,
-  sourceId: 'sourceId'}
+const CLAIM_DEF = {
+  issuerDid: '8XFh8yBzrpJQmNyZzgoTqB',
+  name: 'test',
+  revocation: false,
+  schemaSeqNo: 1,
+  sourceId: 'sourceId'
+}
 
 describe('A ClaimDef', function () {
   this.timeout(30000)
@@ -36,7 +41,6 @@ describe('A ClaimDef', function () {
   })
 
   it('will throw error on serialize when claimDef has been released', async () => {
-    const sourceId = 'SerializeDeserialize'
     const claimDef = await ClaimDef.create(CLAIM_DEF)
     const jsonDef = await claimDef.serialize()
     let data = await claimDef.serialize()
