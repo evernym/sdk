@@ -112,19 +112,19 @@ def updateVersions(app) {
 // Creates the debian package for the library, as well as gzips the libcxs.so.<version> file
 // Publishes both artifacts.
 def createDeb(envn) {
-    stage('Build Libcxs Debian') {
-        dir ('cxs/libcxs') {
-            envn.inside {
-                SCRIPT = '../../ci/scripts/gzip_so_file.py'
-                SO_FILE = 'target/release/libcxs.so'
-                sh 'cargo deb'
-                archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs/target/debian/libcxs_*_amd64.deb"
-                sh "python ${script} ${SO_FILE}"
-                archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs/target/release/libcxs.so.*"
-        }
+  stage('Build Libcxs Debian') {
+    dir ('cxs/libcxs') {
+      envn.inside {
+        SCRIPT = '../../ci/scripts/gzip_so_file.py'
+        SO_FILE = 'target/release/libcxs.so'
+        sh 'cargo deb'
+        archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs/target/debian/libcxs_*_amd64.deb"
+        sh "python ${script} ${SO_FILE}"
+        archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs/target/release/libcxs.so.*"
+      }
     }
+  }
 }
-
 
 def testNodeWrapper(envn) {
     dir ('cxs/wrappers/node'){
