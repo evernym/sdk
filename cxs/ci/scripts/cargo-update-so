@@ -9,7 +9,7 @@ import re
 # This must be run from the ./libcxs directory
 
 TOML = 'Cargo.toml'
-SO_DIR = './target/release/'
+SO_DIR = './target/debug/'
 
 
 def remove_old_so(d):

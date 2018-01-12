@@ -7,7 +7,6 @@ import json
 from toml_utils import get_version_from_file
 import tarfile
 
-# Assumes you are in the sdk/cxs/libcxs directory
 # Packs the npm project into .tgz
 # Then creates a debian package of it.
 

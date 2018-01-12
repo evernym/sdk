@@ -1,7 +1,7 @@
 [package]
 
 name = "libcxs"
-version = "0.1.225104"
+version = "0.1.296161"
 authors = [ "Mark Hadley <mark.hadley@evernym.com>" ]
 publish = false
 description = "C callable library for libcxs"
@@ -42,9 +42,9 @@ depends = "$auto, systemd"
 extended-description = """\
 "TODO DESCRIPTION"""
 section = "admin"
-revision = "b976abc"
+revision = "44bd27c"
 priority = "optional"
 assets = [
-    ["target/release/libcxs.so.*", "usr/lib/", "644"]
+    ["target/debug/libcxs.so.*", "usr/lib/", "644"]
 ]
 
