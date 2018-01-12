@@ -1,9 +1,5 @@
 #!/usr/bin/python3
 
-# Assumes you are in the sdk/cxs/libcxs directory
-# Packs the npm project into .tgz
-# Then creates a debian package of it.
-
 import os
 import sys
 import shutil
@@ -11,6 +7,9 @@ import json
 from toml_utils import get_version_from_file
 import tarfile
 
+# Assumes you are in the sdk/cxs/libcxs directory
+# Packs the npm project into .tgz
+# Then creates a debian package of it.
 
 def create_deb(filename):
     cur_dir = os.getcwd()

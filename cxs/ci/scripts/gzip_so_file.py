@@ -1,8 +1,11 @@
+#1/usr/bin/env python
 
 import sys
 import gzip
 import shutil
 import os
+
+# will gzip the so file
 
 def gz(source, dest_dir):
     src_file = os.path.basename(source)

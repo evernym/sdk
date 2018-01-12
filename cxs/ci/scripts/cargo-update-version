@@ -9,6 +9,14 @@ from subprocess import Popen, PIPE
 import buildnum
 import json
 
+# This will generate new build number, and get the
+# revision number from a git commit has.
+# Then it writes the new numbers to the Cargo.toml
+# and also to the package.json for the wrapper.
+
+# This requires that you are in the ./libcxs 
+# directory.
+
 
 TOML_FILENAME = 'Cargo.toml'
 LIBCXS_DIR = 'libcxs'
@@ -26,10 +34,6 @@ def verify_cwd(target_dir, toml_file):
             return True
     print(toml_file + ' not found in cwd')
     sys.exit(1)
-
-
-# open the toml file and write the version 
-# and revision numbers
 
 
 def main():
@@ -57,11 +61,6 @@ def update_npm_package(package, version):
     except IOError:
         print(str(IOError)+ ' ' + package)
 
-
-# get the cargo.toml file.
-# open the file
-# write to the file
-# close the file
     sys.exit(0)
     
 if __name__ == '__main__':

@@ -16,7 +16,7 @@ Cargo.lock
 .vscode/
 
 #debian files
-.deb
+*.deb
 
 
 #python

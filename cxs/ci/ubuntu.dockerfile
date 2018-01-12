@@ -22,11 +22,12 @@ RUN apt-get update -y && apt-get install -y \
     debhelper \
     wget \
     git \
-    curl
-
+    curl \
+    ruby \
+    ruby-dev \ 
+    rubygems 
 
 # Install Nodejs 
-
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - \
     && apt-get install -y nodejs
 
@@ -56,9 +57,15 @@ RUN curl -fsOSL $RUST_DOWNLOAD_URL \
     && rm $RUST_ARCHIVE \
     && ./install.sh
 
+# cargo deb for debian packaging of libcxs
+RUN cargo install cargo-deb
+
+# fpm for deb packaging of npm
+RUN gem install fpm
+RUN apt-get install rpm -y
 
 RUN useradd -ms /bin/bash -u $uid cxs
 USER cxs
 
-RUN cargo install cargo-deb
+WORKDIR /
 

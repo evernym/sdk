@@ -1,8 +1,16 @@
 #!/usr/bin/env python
-
 import os
 import toml_utils
 import re
+
+# this will update the so file with version and 
+# revision number from the Cargo.toml file.
+
+# This must be run from the ./libcxs directory
+
+TOML = 'Cargo.toml'
+SO_DIR = './target/release/'
+
 
 def remove_old_so(d):
     cur_path = os.getcwd()
@@ -16,10 +24,8 @@ def remove_old_so(d):
         print("removing file: %s " % f)
         os.remove(d + "/" + f)
 
-TOML = 'Cargo.toml'
-SO_DIR = './target/release/'
+
 def main():
-    # Verify that the so exists
     dir_path = os.getcwd()
     full_path_file = dir_path + '/' + SO_DIR
     if os.path.isdir(full_path_file) is True:
