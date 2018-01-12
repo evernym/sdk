@@ -16,11 +16,14 @@ node('ubuntu') {
             checkout scm
         }
         app = buildDocker()
+        updatePath(app)
         buildRust(app)
-        //testRust(app) 
-        //testNodeWrapper(app)
+        testRust(app) 
+        testNodeWrapper(app)
+        udpdateVersions(app)
+        createDeb(app)
         //createZip(app)
-        //createDeb(app)
+        //createNpmDeb(app) 
     } catch (Exception ex) {
         currentBuild.result = "FAILED"
         if (env.BRANCH_NAME == "master") {
@@ -81,16 +84,47 @@ def createZip(envn) {
     }
 }
 
-def createDeb(envn) {
-    stage('Build Libcxs Debian') {
-        envn.inside {
-            sh 'pwd'
-            sh 'ls'
-            sh 'cd cxs/libcxs; pwd; ls; cargo package; cargo deb'
-            archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs/target/debian/libcxs_${version}_amd64.deb"
+
+// updates the path to include the scripts, 
+// needed for cargo commands
+def updatePath(app) {
+    dir ('cxs/ci/scripts') {
+        app.inside {
+            sh 'export PATH=$PATH:`pwd`'
         }
     }
 }
+
+
+// Update the version and revision in the Cargo.toml file, also the so file .
+def updateVersions(app) {
+    dir ('cxs/libcxs') {
+        stage('Updating Versions') {
+            app.inside {
+                sh 'cargo update-version'
+                sh 'cargo update-so'
+            }
+        }
+    }
+}
+
+
+// Creates the debian package for the library, as well as gzips the libcxs.so.<version> file
+// Publishes both artifacts.
+def createDeb(envn) {
+    stage('Build Libcxs Debian') {
+        dir ('cxs/libcxs') {
+            envn.inside {
+                SCRIPT = '../../ci/scripts/gzip_so_file.py'
+                SO_FILE = 'target/release/libcxs.so'
+                sh 'cargo deb'
+                archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs/target/debian/libcxs_*_amd64.deb"
+                sh "python ${script} ${SO_FILE}"
+                archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs/target/release/libcxs.so.*"
+        }
+    }
+}
+
 
 def testNodeWrapper(envn) {
     dir ('cxs/wrappers/node'){
@@ -104,16 +138,16 @@ def testNodeWrapper(envn) {
                 sh 'npm test'
             }
         }
-        stage ('Build Npm Tar'){
-            envn.inside {
-                //if (env.BRANCH_NAME == "master") {
-                    sh 'npm pack'
-                    sh 'ls'
-                    sh "test -f cxs-${version}.tgz"
-                    archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
-                //}
-            }
-        }
+//        stage ('Build Npm Tar'){
+//            envn.inside {
+//                if (env.BRANCH_NAME == "master") {
+//                    sh 'npm pack'
+//                    sh 'ls'
+//                    sh "test -f cxs-${version}.tgz"
+//                    archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
+//                }
+//            }
+//        }
     }
 }
 
