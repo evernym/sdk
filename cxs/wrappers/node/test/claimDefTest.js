@@ -6,7 +6,7 @@ const { ClaimDef, Error } = cxs
 const CLAIM_DEF = {
   name: 'test',
   revocation: false,
-  schemaNo: '22',
+  schemaNo: 15,
   sourceId: 'sourceId'
 }
 
