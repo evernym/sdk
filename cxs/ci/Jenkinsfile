@@ -47,13 +47,15 @@ def buildDocker(){
 def buildRust(envn){
     stage ('Building Rust Library'){
         envn.inside {
+            sh "ls -l"
             sh "rustc --version"
             sh "gcc --version"
-            sh "mkdir -p sdk/cxs/wrappers/node/lib"
-            sh "cd sdk/cxs/libcxs; cargo build --release"
-            sh "ls -l sdk/cxs/libcxs/target/release"
-            sh "cp sdk/cxs/libcxs/target/release/libcxs.so sdk/cxs/wrappers/node/lib/"
-            sh "ls sdk/cxs/wrappers/node/lib"
+            sh "mkdir -p cxs/wrappers/node/lib"
+            sh "ls -l"
+            sh "cd cxs/libcxs; cargo build --release"
+            sh "ls -l cxs/libcxs/target/release"
+            sh "cp cxs/libcxs/target/release/libcxs.so cxs/wrappers/node/lib/"
+            sh "ls cxs/wrappers/node/lib"
         }
     }
 }
