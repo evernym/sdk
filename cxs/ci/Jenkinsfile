@@ -16,7 +16,6 @@ node('ubuntu') {
             checkout scm
         }
         app = buildDocker()
-        updatePath(app)
         buildRust(app)
 //        testRust(app) 
         testNodeWrapper(app)
@@ -100,8 +99,8 @@ def updateVersions(app) {
     dir ('cxs/libcxs') {
         stage('Updating Versions') {
             app.inside {
-                sh 'cargo update-version'
-                sh 'cargo update-so'
+                sh 'python ../ci/scripts/cargo-update-version'
+                sh 'python ../ci/scripts/cargo update-so'
             }
         }
     }
