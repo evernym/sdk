@@ -18,7 +18,7 @@ node('ubuntu') {
         app = buildDocker()
         updatePath(app)
         buildRust(app)
-        testRust(app) 
+//        testRust(app) 
         testNodeWrapper(app)
         udpdateVersions(app)
         createDeb(app)
@@ -48,16 +48,15 @@ def buildDocker(){
 }
 
 def buildRust(envn){
-    stage ('Building Rust Library'){
+    stage ('Building and Testing Rust Library'){
         envn.inside {
             sh "ls -l"
             sh "rustc --version"
             sh "gcc --version"
             sh "mkdir -p cxs/wrappers/node/lib"
             sh "ls -l"
-            sh "cd cxs/libcxs; cargo build --release"
-            sh "ls -l cxs/libcxs/target/release"
-            sh "cp cxs/libcxs/target/release/libcxs.so cxs/wrappers/node/lib/"
+            sh "cd cxs/libcxs; cargo test"
+            sh "cp cxs/libcxs/target/debug/libcxs.so cxs/wrappers/node/lib/"
             sh "ls cxs/wrappers/node/lib"
         }
     }
