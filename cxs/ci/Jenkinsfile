@@ -130,6 +130,7 @@ def testNodeWrapper(envn) {
     dir ('cxs/wrappers/node'){
         stage ('Test Node Wrapper'){
             envn.inside {
+                sh 'ls -l lib'
                 sh 'npm -v'
                 sh 'npm install'
                 sh 'npm rebuild'
