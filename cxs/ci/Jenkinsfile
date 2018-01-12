@@ -49,11 +49,11 @@ def buildRust(envn){
         envn.inside {
             sh "rustc --version"
             sh "gcc --version"
-            sh "mkdir -p /sdk/cxs/wrappers/node/lib"
-            sh "cd /sdk/cxs/libcxs; cargo build --release"
-            sh "ls -l /sdk/cxs/libcxs/target/release"
-            sh "cp /sdk/cxs/libcxs/target/release/libcxs.so /sdk/cxs/wrappers/node/lib/"
-            sh "ls /sdk/cxs/wrappers/node/lib"
+            sh "mkdir -p sdk/cxs/wrappers/node/lib"
+            sh "cd sdk/cxs/libcxs; cargo build --release"
+            sh "ls -l sdk/cxs/libcxs/target/release"
+            sh "cp sdk/cxs/libcxs/target/release/libcxs.so sdk/cxs/wrappers/node/lib/"
+            sh "ls sdk/cxs/wrappers/node/lib"
         }
     }
 }

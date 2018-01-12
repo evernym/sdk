@@ -67,5 +67,4 @@ RUN apt-get install rpm -y
 RUN useradd -ms /bin/bash -u $uid cxs
 USER cxs
 
-WORKDIR /
 
