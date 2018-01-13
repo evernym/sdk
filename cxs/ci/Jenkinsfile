@@ -117,7 +117,6 @@ def createDeb(envn) {
         archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs/target/debian/libcxs_*_amd64.deb"
         sh "cd cxs/libcxs/; python ${SCRIPT} ${SO_FILE}"
         archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs/target/debug/libcxs.so.*"
-        sh 'echo "artfact archive success' // debug
       }
   }
 }
