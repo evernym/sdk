@@ -112,7 +112,7 @@ def createDeb(envn) {
   stage('Build Libcxs Debian') {
       envn.inside {
         SCRIPT = '../../ci/scripts/gzip_so_file.py'
-        SO_FILE = 'target/release/libcxs.so'
+        SO_FILE = 'target/debug/libcxs.so'
         sh 'cd cxs/libcxs/; cargo deb --no-build'
         archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs/target/debian/libcxs_*_amd64.deb"
         sh "cd cxs/libcxs/; python ${script} ${SO_FILE}"
