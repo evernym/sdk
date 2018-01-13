@@ -20,8 +20,8 @@ node('ubuntu') {
         updateVersions(app)
         testNodeWrapper(app)
         createDeb(app)
-        createZip(app)
-        createNpmDeb(app) 
+        // // createZip(app)
+        // createNpmDeb(app) 
     } catch (Exception ex) {
         currentBuild.result = "FAILED"
         if (env.BRANCH_NAME == "master") {
