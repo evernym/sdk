@@ -115,29 +115,28 @@ def createDeb(envn) {
 }
 
 def testNodeWrapper(envn) {
-    dir ('cxs/wrappers/node'){
-        stage ('Test Node Wrapper'){
-            envn.inside {
-                sh 'ls -l lib'
-                sh 'npm -v'
-                sh 'npm install'
-                sh 'npm rebuild'
-                sh 'npm run lint'
-                sh 'npm run compile'
-                sh 'npm test'
-            }
-        }
+  dir ('cxs/wrappers/node'){
+    stage ('Test Node Wrapper'){
+      envn.inside {
+        sh 'ls -l lib'
+        sh 'npm -v'
+        sh 'npm install'
+        sh 'npm rebuild'
+        sh 'npm run lint'
+        sh 'npm run compile'
+        sh 'npm test'
+      }
     }
-    dir ('cxs/wrappers/node') {
-       stage ('Build Npm Tar'){
-            sh 'ls -l'
-            sh 'npm pack'
-            sh 'ls'
-            sh "test -f cxs-*.tgz"
-            archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
-          }
-       }
+  }
+  dir ('cxs/wrappers/node') {
+    stage ('Build Npm Tar'){
+      sh 'ls -l'
+      sh 'npm pack'
+      sh 'ls'
+      sh "test -f cxs-*.tgz"
+      archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
     }
+  }
 }
 
 def fail() {
