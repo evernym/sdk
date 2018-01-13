@@ -99,11 +99,9 @@ def updateVersions(app) {
         stage('Updating Versions') {
             app.inside {
                 sh 'ls -l'
-                sh 'cd cxs/libcxs'
-                sh 'ls -l'
-                sh 'ls ../ci/scripts'
-                sh 'python ../ci/scripts/cargo-update-version'
-                sh 'python ../ci/scripts/cargo update-so'
+                sh 'cd cxs/libcxs; ls -l; ls ../ci/scripts'
+                sh 'cd cxs/libcxs; python ../ci/scripts/cargo-update-version'
+                sh 'cd cxs/libcxs; python ../ci/scripts/cargo update-so'
             }
         }
 }
