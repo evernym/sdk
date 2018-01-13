@@ -16,9 +16,9 @@ node('ubuntu') {
             checkout scm
         }
         app = buildDocker()
-        updateVersions(app)
         buildRust(app)
 //        testRust(app) 
+        updateVersions(app)
         testNodeWrapper(app)
         createDeb(app)
         createZip(app)
@@ -101,7 +101,7 @@ def updateVersions(app) {
                 sh 'ls -l'
                 sh 'cd cxs/libcxs; ls -l; ls ../ci/scripts'
                 sh 'cd cxs/libcxs; python ../ci/scripts/cargo-update-version'
-                sh 'cd cxs/libcxs; python ../ci/scripts/cargo update-so'
+                sh 'cd cxs/libcxs; python ../ci/scripts/cargo-update-so'
             }
         }
 }
@@ -111,16 +111,14 @@ def updateVersions(app) {
 // Publishes both artifacts.
 def createDeb(envn) {
   stage('Build Libcxs Debian') {
-    dir ('cxs/libcxs') {
       envn.inside {
         SCRIPT = '../../ci/scripts/gzip_so_file.py'
         SO_FILE = 'target/release/libcxs.so'
-        sh 'cargo deb'
+        sh 'cd cxs/libcxs/; cargo deb'
         archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs/target/debian/libcxs_*_amd64.deb"
-        sh "python ${script} ${SO_FILE}"
+        sh "cd cxs/libcxs/; python ${script} ${SO_FILE}"
         archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs/target/release/libcxs.so.*"
       }
-    }
   }
 }
 
