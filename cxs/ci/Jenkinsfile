@@ -125,16 +125,12 @@ def testNodeWrapper(envn) {
         sh 'npm run lint'
         sh 'npm run compile'
         sh 'npm test'
+        sh 'ls -l'
+        sh 'npm pack'
+        sh 'ls'
+        sh "test -f cxs-*.tgz"
+        archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
       }
-    }
-  }
-  dir ('cxs/wrappers/node') {
-    stage ('Build Npm Tar'){
-      sh 'ls -l'
-      sh 'npm pack'
-      sh 'ls'
-      sh "test -f cxs-*.tgz"
-      archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
     }
   }
 }
