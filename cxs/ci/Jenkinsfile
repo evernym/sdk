@@ -16,10 +16,10 @@ node('ubuntu') {
             checkout scm
         }
         app = buildDocker()
+        updateVersions(app)
         buildRust(app)
 //        testRust(app) 
         testNodeWrapper(app)
-        updateVersions(app)
         createDeb(app)
         createZip(app)
         createNpmDeb(app) 
@@ -96,9 +96,10 @@ def updatePath(app) {
 
 // Update the version and revision in the Cargo.toml file, also the so file .
 def updateVersions(app) {
-    dir ('cxs/libcxs') {
+    dir ('sdk/') {
         stage('Updating Versions') {
             app.inside {
+                sh 'cd cxs/libcxs'
                 sh 'python ../ci/scripts/cargo-update-version'
                 sh 'python ../ci/scripts/cargo update-so'
             }
