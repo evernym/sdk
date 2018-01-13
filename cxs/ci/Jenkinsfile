@@ -96,15 +96,16 @@ def updatePath(app) {
 
 // Update the version and revision in the Cargo.toml file, also the so file .
 def updateVersions(app) {
-    dir ('sdk/') {
         stage('Updating Versions') {
             app.inside {
-                sh 'cd cxs/libcxs'
+                sh 'ls -l'
+                sh 'cd sdk/cxs/libcxs'
+                sh 'ls -l'
+                sh 'ls ../ci/scripts'
                 sh 'python ../ci/scripts/cargo-update-version'
                 sh 'python ../ci/scripts/cargo update-so'
             }
         }
-    }
 }
 
 
