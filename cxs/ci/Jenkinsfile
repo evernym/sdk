@@ -17,7 +17,6 @@ node('ubuntu') {
         }
         app = buildDocker()
         buildRust(app)
-//        testRust(app) 
         updateVersions(app)
         testNodeWrapper(app)
         createDeb(app)
@@ -75,7 +74,7 @@ def createZip(envn) {
     dir ('cxs/libcxs/target/debug'){
         stage ('Create TAR.GZ File') {
             envn.inside {
-                sh 'tar -zvcf libcxs.tar.gz libcxs.so'
+                sh 'cd cxs/libcxs/target/debug; tar -zvcf libcxs.tar.gz libcxs.so'
                 archiveArtifacts allowEmptyArchive: true, artifacts: 'libcxs.tar.gz'
             }
         }
@@ -114,10 +113,11 @@ def createDeb(envn) {
       envn.inside {
         SCRIPT = '../../ci/scripts/gzip_so_file.py'
         SO_FILE = 'target/release/libcxs.so'
-        sh 'cd cxs/libcxs/; cargo deb'
+        sh 'cd cxs/libcxs/; cargo deb --no-build'
         archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs/target/debian/libcxs_*_amd64.deb"
         sh "cd cxs/libcxs/; python ${script} ${SO_FILE}"
         archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs/target/release/libcxs.so.*"
+        sh 'echo "artfact archive success' // debug
       }
   }
 }
