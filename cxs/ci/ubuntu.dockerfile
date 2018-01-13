@@ -57,15 +57,15 @@ RUN curl -fsOSL $RUST_DOWNLOAD_URL \
     && rm $RUST_ARCHIVE \
     && ./install.sh
 
-RUN useradd -ms /bin/bash -u $uid cxs
-USER cxs
-#
-# cargo deb for debian packaging of libcxs
-RUN cargo install cargo-deb
-
 # fpm for deb packaging of npm
 RUN gem install fpm
 RUN apt-get install rpm -y
+
+RUN useradd -ms /bin/bash -u $uid cxs
+USER cxs
+
+# cargo deb for debian packaging of libcxs
+RUN cargo install cargo-deb
 
 
 
