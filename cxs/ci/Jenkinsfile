@@ -24,9 +24,10 @@ node('ubuntu') {
         testNodeWrapper(app)
         // create the debian of the library
         createDeb(app)
-        // create the npm tar and npm debian
+        // create the npm tar 
         createNpmTar(app)
-        // createNpmDeb(app) 
+        // create the npm deb 
+        createNpmDeb(app) 
     } catch (Exception ex) {
         currentBuild.result = "FAILED"
         if (env.BRANCH_NAME == "master") {
