@@ -146,7 +146,7 @@ def createNpmDeb(app){
         // TODO make this a version number from the script somehow.
         sh 'python ci/scripts/create_npm_deb.py wrappers/node/cxs-*.tgz'
         sh 'ls'
-        archiveArtifacts allowEmptyArchive: true, artifacts: 'cxs/cxs*.deb'
+        archiveArtifacts allowEmptyArchive: true, artifacts: 'cxs*.deb'
       }
     }
   }
