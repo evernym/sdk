@@ -114,6 +114,8 @@ def createDeb(envn) {
   }
 }
 
+
+// Creates the tgz file that can be 'npm install'-ed.
 def testNodeWrapper(envn) {
   dir ('cxs/wrappers/node'){
     stage ('Test Node Wrapper'){
@@ -135,13 +137,25 @@ def testNodeWrapper(envn) {
   }
 }
 
-def fail() {
 
+// Creates debian that can install through npm.
+def createNpmDeb(app){
+  dir('cxs') {
+    stage ('Create Npm Deb') {
+      app.inside {
+        // TODO make this a version number from the script somehow.
+        sh 'python ci/scripts/createNpmDeb wrappers/node/cxs-*.tgz'
+        sh 'ls'
+        archiveArtifacts allowEmptyArchive: true, artifacts: 'cxs/node*.deb'
+      }
+    }
+  }
+}
+
+def fail() {
     def message = [
         message: "$JOB_NAME - Build # $BUILD_NUMBER - fail: Check console output at $BUILD_URL to view the results."
     ]
-
     slackSend message
-
 }
 
