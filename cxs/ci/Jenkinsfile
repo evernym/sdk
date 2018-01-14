@@ -144,7 +144,7 @@ def createNpmDeb(app){
     stage ('Create Npm Deb') {
       app.inside {
         // TODO make this a version number from the script somehow.
-        sh 'python ci/scripts/createNpmDeb wrappers/node/cxs-*.tgz'
+        sh 'python ci/scripts/create_npm_deb wrappers/node/cxs-*.tgz'
         sh 'ls'
         archiveArtifacts allowEmptyArchive: true, artifacts: 'cxs/node*.deb'
       }
