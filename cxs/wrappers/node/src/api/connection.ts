@@ -154,11 +154,11 @@ export class Connection extends CXSBaseWithState {
   }
 
   protected async _inviteDetails (abbr: boolean = false): Promise<string> {
-    const handle = this._handle
+    const connHandle = this._handle
     let rc = null
     const data = await createFFICallbackPromise<string>(
         (resolve, reject, cb) => {
-          rc = this._inviteDetailFn(0, handle, abbr, cb)
+          rc = this._inviteDetailFn(0, connHandle, abbr, cb)
           if (rc) {
             // TODO: handle correct exception
             reject(rc)

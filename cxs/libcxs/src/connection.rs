@@ -536,30 +536,19 @@ fn abbrv_event_detail(val: Value) -> Result<Value, u32> {
     if let Value::Object(mut map) = val {
         let mut keys:Vec<String> = collect_keys(&map);
 
-        let mut key = keys.pop();
-        while key.is_some() {
-            match key {
-                Some(mut k) => {
-                    let mut value = map.remove(&k).ok_or_else(||{
-                        warn!("Unexpected key value mutation");
-                        error::UNKNOWN_ERROR.code_num
-                    })?;
+        while let Some(k) = keys.pop() {
+            let mut value = map.remove(&k).ok_or_else(||{
+                warn!("Unexpected key value mutation");
+                error::UNKNOWN_ERROR.code_num
+            })?;
 
-                    value = abbrv_event_detail(value)?;
-                    k = match ABBREVIATIONS.get(k.as_str()) {
-                        Some(s) => s.to_string(),
-                        None => k
-                    };
+            value = abbrv_event_detail(value)?;
+            let new_k = match ABBREVIATIONS.get(k.as_str()) {
+                Some(s) => s.to_string(),
+                None => k
+            };
 
-                    map.insert(k, value);
-                }
-                None => {
-                    warn!("Unexpected None after test for None");
-                    return Err(error::UNKNOWN_ERROR.code_num)
-                }
-            }
-
-            key = keys.pop();
+            map.insert(new_k, value);
         }
         Ok(Value::Object(map))
     }
