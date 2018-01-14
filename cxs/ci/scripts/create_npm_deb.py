@@ -33,7 +33,7 @@ def create_deb(filename):
 
 
 def print_usage():
-    print("USAGE: python npm_utils.py TARFILE")
+    print("USAGE: python create_npm_deb.py TARFILE")
 
 
 def get_info(dirname):
