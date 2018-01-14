@@ -109,7 +109,7 @@ def createDeb(envn) {
         sh 'cd cxs/libcxs/; cargo deb --no-build'
         archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs/target/debian/libcxs_*_amd64.deb"
         sh "python ${SCRIPT} ${SO_FILE} ${DEST}"
-        archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs/target/debug/libcxs.so.*.tgz"
+        archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs/target/debug/libcxs.so.*.gz"
       }
   }
 }
@@ -144,7 +144,7 @@ def createNpmDeb(app){
     stage ('Create Npm Deb') {
       app.inside {
         // TODO make this a version number from the script somehow.
-        sh 'python ci/scripts/create_npm_deb.py wrappers/node/cxs-*.gz'
+        sh 'python ci/scripts/create_npm_deb.py wrappers/node/cxs-*.tgz'
         sh 'ls'
         archiveArtifacts allowEmptyArchive: true, artifacts: 'cxs/cxs*.deb'
       }
