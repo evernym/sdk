@@ -48,3 +48,4 @@ assets = [
     ["target/debug/libcxs.so.*", "usr/lib/", "644"]
 ]
 
+#rusqlcipher = "0.14.6"
