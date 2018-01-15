@@ -47,6 +47,6 @@ priority = "optional"
 assets = [
     ["target/debug/libcxs.so.*", "usr/lib/", "644"]
 ]
-maintainer-scripts = "../ci/scripts"
+maintainer-scripts = "./scripts"
 
 #rusqlcipher = "0.14.6"
