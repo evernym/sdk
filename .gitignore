@@ -14,3 +14,11 @@ Cargo.lock
 
 # vscode files
 .vscode/
+
+#debian files
+*.deb
+
+
+#python
+__pycache__/
+*.pyc
