@@ -32,4 +32,6 @@ pub const MY2_SEED: &'static str = "00000000000000000000000000000My2";
 #[cfg(test)]
 pub const MY3_SEED: &'static str = "00000000000000000000000000000My3";
 #[cfg(test)]
+pub const MY4_SEED: &'static str = "00000000000000000000000000000My4";
+#[cfg(test)]
 pub const DEMO_AGENT_PW_SEED: &'static str = "00000000000000000000001DIRECTION";

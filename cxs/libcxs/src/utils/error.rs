@@ -48,6 +48,7 @@ pub static INVALID_CLAIM_DEF_HANDLE: Error = Error{code_num: 1037, message: "Cla
 pub static TIMEOUT_LIBINDY_ERROR: Error = Error{code_num: 1038, message: "Waiting for callback timed out"};
 pub static CLAIM_DEF_ALREADY_CREATED: Error = Error{code_num: 1039, message: "Can't create, Claim Def already on ledger"};
 pub static INVALID_SCHEMA_SEQ_NO: Error = Error{code_num: 1040, message: "No Schema for that schema sequence number"};
+pub static INVALID_SCHEMA_CREATION: Error = Error{code_num: 1041, message: "Could not create schema"};
 
 lazy_static! {
     static ref ERROR_MESSAGES: HashMap<u32, &'static str> = {
@@ -93,6 +94,7 @@ lazy_static! {
         insert_message(&mut m, &INVALID_CLAIM_DEF_HANDLE);
         insert_message(&mut m, &CLAIM_DEF_ALREADY_CREATED);
         insert_message(&mut m, &INVALID_SCHEMA_SEQ_NO);
+        insert_message(&mut m, &INVALID_SCHEMA_CREATION);
         m
     };
 }
@@ -241,10 +243,6 @@ mod tests {
         assert_eq!(error_message(&INVALID_PROOF_CLAIM_DATA.code_num), INVALID_PROOF_CLAIM_DATA.message);
     }
     #[test]
-    fn test_error_invalid_schema() {
-        assert_eq!(error_message(&INVALID_SCHEMA.code_num), INVALID_SCHEMA.message);
-    }
-    #[test]
     fn test_failed_proof_compliance() {
         assert_eq!(error_message(&FAILED_PROOF_COMPLIANCE.code_num), FAILED_PROOF_COMPLIANCE.message);
     }
@@ -279,8 +277,10 @@ mod tests {
     }
 
     #[test]
-    fn test_no_schema_no() {
+    fn test_schema_err() {
+        assert_eq!(error_message(&INVALID_SCHEMA.code_num), INVALID_SCHEMA.message);
         assert_eq!(error_message(&INVALID_SCHEMA_SEQ_NO.code_num), INVALID_SCHEMA_SEQ_NO.message);
+        assert_eq!(error_message(&INVALID_SCHEMA_CREATION.code_num), INVALID_SCHEMA_CREATION.message);
     }
 }
 
