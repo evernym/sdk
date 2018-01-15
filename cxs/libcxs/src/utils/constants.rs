@@ -32,8 +32,10 @@ pub const MY2_SEED: &'static str = "00000000000000000000000000000My2";
 #[cfg(test)]
 pub const MY3_SEED: &'static str = "00000000000000000000000000000My3";
 #[cfg(test)]
-pub const DEMO_AGENT_PW_SEED: &'static str = "00000000000000000000001DIRECTION";
+pub const MY4_SEED: &'static str = "00000000000000000000000000000My4";
 #[cfg(test)]
 pub const DID: &'static str = "FhrSrYtQcw3p9xwf7NYemf";
 #[cfg(test)]
 pub const VERKEY: &'static str = "91qMFrZjXDoi2Vc8Mm14Ys112tEZdDegBZZoembFEATE";
+#[cfg(test)]
+pub const DEMO_AGENT_PW_SEED: &'static str = "00000000000000000000001DIRECTION";

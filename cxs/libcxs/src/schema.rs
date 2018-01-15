@@ -1,11 +1,18 @@
 use serde_json;
 use serde_json::Value;
 
+use settings;
 use utils::error;
-use utils::libindy::ledger::{libindy_build_get_txn_request, libindy_submit_request};
-use utils::libindy::pool::get_pool_handle;
 use std::string::ToString;
 use std::fmt;
+use utils::libindy::pool::{ get_pool_handle };
+use utils::wallet::{ get_wallet_handle };
+use utils::libindy::ledger::{
+    libindy_build_get_txn_request,
+    libindy_build_schema_request,
+    libindy_submit_request,
+    libindy_sign_and_submit_request
+};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SchemaTransaction {
@@ -34,15 +41,110 @@ pub struct LedgerSchema {
     pub data: Option<SchemaTransaction>
 }
 
-pub trait Schema: ToString {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CreateSchema {
+    data: Option<SchemaData>,
+    handle: u32,
+    name: String,
+    source_id: String,
+}
 
+pub trait Schema: ToString {
+    type SchemaType;
+    fn retrieve_schema(sequence_num: i32) -> Result<SchemaTransaction, u32>
+    {
+        let txn = Self::retrieve_from_ledger(sequence_num)?;
+        match Self::process_ledger_txn(txn){
+            Ok(data) => Ok(data),
+            Err(code) => return Err(error::INVALID_SCHEMA_SEQ_NO.code_num)
+        }
+    }
+
+    fn process_ledger_txn(txn: String) -> Result<SchemaTransaction, u32>
+    {
+
+        let result = Self::extract_result_from_txn(&txn)?;
+        match result.get("data") {
+            Some(d) => {
+                let schema: SchemaTransaction = match serde_json::from_value(d.clone()) {
+                    Ok(parsed) => parsed,
+                    Err(e) => {
+                        warn!("{}: {:?}","Parse from value error", e);
+                        return Err(error::INVALID_JSON.code_num)
+                    }
+                };
+                Ok(schema)
+            },
+            None => {
+                warn!("{}","'data' not found in json");
+                Err(error::INVALID_JSON.code_num)
+            }
+        }
+    }
+
+    fn extract_result_from_txn(txn:&str) -> Result<serde_json::Value, u32> {
+        let txn_struct: Value = match serde_json::from_str(txn) {
+            Ok(stc) => stc,
+            Err(e) => {
+                warn!("{}: {:?}","Parse from json error", e);
+                return Err(error::INVALID_JSON.code_num)
+            }
+        };
+        match txn_struct.get("result"){
+            Some(result) => Ok(result.clone()),
+            None => {
+                warn!("{}","'result' not found in json");
+                return Err(error::INVALID_JSON.code_num)
+            }
+        }
+    }
+
+    fn retrieve_from_ledger(sequence_num: i32) -> Result<String, u32>
+    {
+        let txn = Self::build_get_txn(sequence_num)?;
+        let pool_handle = get_pool_handle()?;
+
+        libindy_submit_request(pool_handle, txn)
+    }
+
+    fn build_get_txn(sequence_num: i32) -> Result<String, u32>
+    {
+        let submitter_did = "GGBDg1j8bsKmr4h5T9XqYf".to_string();
+
+        libindy_build_get_txn_request(submitter_did, sequence_num)
+    }
 }
 
 impl Schema for LedgerSchema {
+    type SchemaType = LedgerSchema;
+}
 
+impl Schema for CreateSchema {
+    type SchemaType = CreateSchema;
 }
 
 impl fmt::Display for LedgerSchema {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        let data = &self.data;
+        if data.is_some() {
+            match serde_json::to_string(data){
+                Ok(s) => {
+                    write!(f, "{}", s)
+                },
+                Err(e) => {
+                    error!("{}: {:?}",error::INVALID_SCHEMA.message, e);
+                    write!(f, "null")
+                }
+
+            }
+        }
+            else {
+                write!(f, "null")
+            }
+    }
+}
+
+impl fmt::Display for CreateSchema {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let data = &self.data;
         if data.is_some() {
@@ -63,48 +165,39 @@ impl fmt::Display for LedgerSchema {
     }
 }
 
-
 impl LedgerSchema {
     pub fn new_from_ledger(sequence_num: i32) -> Result<LedgerSchema, u32>
     {
-        let txn = LedgerSchema::retrieve_from_ledger(sequence_num)?;
-        let data: SchemaTransaction = match LedgerSchema::process_ledger_txn(txn){
-            Ok(data) => data,
-            Err(code) => return Err(error::INVALID_SCHEMA_SEQ_NO.code_num)
-        };
         Ok(LedgerSchema{
             sequence_num: sequence_num,
-            data: Some(data)
+            data: Some(LedgerSchema::retrieve_schema(sequence_num)?)
 
         })
     }
+}
 
-    fn process_ledger_txn(txn: String) -> Result<SchemaTransaction, u32>
-    {
-        let txn_struct: Value = match serde_json::from_str(txn.as_str()) {
-            Ok(stc) => stc,
-            Err(e) => {
-                warn!("{}: {:?}","Parse from json error", e);
-                return Err(error::INVALID_JSON.code_num)
-            }
-        };
-        let result = match txn_struct.get("result"){
-            Some(result) => result,
-            None => {
-                warn!("{}","'result' not found in json");
-                return Err(error::INVALID_JSON.code_num)
-            }
-        };
+impl CreateSchema {
+    pub fn create_schema_req(submitter_did: String, data: String) -> Result<String, u32> {
+        libindy_build_schema_request(submitter_did, data)
+            .or(Err(error::INVALID_SCHEMA_CREATION.code_num))
+    }
+
+    pub fn sign_and_send_request(submitter_did: &str, request: &str) ->  Result<String, u32> {
+        if settings::test_indy_mode_enabled() { return Ok("{}".to_string()); }
+        let pool_handle = get_pool_handle()?;
+        let wallet_handle = get_wallet_handle();
+        libindy_sign_and_submit_request(pool_handle,
+                                        wallet_handle,
+                                        submitter_did.to_string(),
+                                        request.to_string())
+            .or(Err(error::INVALID_SCHEMA_CREATION.code_num))
+    }
+
+    pub fn set_data(&self, data: &str) -> Result<u32, u32> {
+        let result = CreateSchema::extract_result_from_txn(data)?;
         match result.get("data") {
             Some(d) => {
-                let schema: SchemaTransaction = match serde_json::from_value(d.clone()) {
-                    Ok(parsed) => parsed,
-                    Err(e) => {
-                        warn!("{}: {:?}","Parse from value error", e);
-                        return Err(error::INVALID_JSON.code_num)
-                    }
-                };
-                Ok(schema)
+                
             },
             None => {
                 warn!("{}","'data' not found in json");
@@ -112,28 +205,23 @@ impl LedgerSchema {
             }
         }
     }
-
-    fn retrieve_from_ledger(sequence_num: i32) -> Result<String, u32>
-    {
-        let txn = LedgerSchema::build_get_txn(sequence_num)?;
-        let pool_handle = get_pool_handle()?;
-
-        libindy_submit_request(pool_handle, txn)
-    }
-
-    fn build_get_txn(sequence_num: i32) -> Result<String, u32>
-    {
-        let submitter_did = "GGBDg1j8bsKmr4h5T9XqYf".to_string();
-
-        libindy_build_get_txn_request(submitter_did, sequence_num)
-    }
 }
 
+pub fn create_new_schema(source_id: String,
+                         schema_name: String,
+                         issuer_did: String,
+                         data: String) -> Result<u32, u32> {
+
+    Ok(0)
+}
 #[cfg(test)]
 mod tests {
     use settings;
     use super::*;
     use utils::libindy::pool;
+    use utils::signus::SignusUtils;
+    use utils::wallet::{ delete_wallet, init_wallet };
+    use utils::constants::{ MY1_SEED };
     use std::path::Path;
     use std::str::FromStr;
 
@@ -222,6 +310,7 @@ mod tests {
     static  EXAMPLE_OPTIONAL: &str = r#"{
 }"#;
 
+    static SCHEMA_REQ: &str = r#"{"reqId":1515793573521242947,"identifier":"4fUDR9R7fjwELRvH9JT6HH","operation":{"type":"101","data":{"name":"name","version":"1.0","attr_names":["name","male"]}}}"#;
 
     #[test]
     fn test_schema_transaction(){
@@ -266,6 +355,13 @@ mod tests {
     }
 
     #[test]
+    fn test_schema_request(){
+        let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#.to_string();
+        let test = CreateSchema::create_schema_req("4fUDR9R7fjwELRvH9JT6HH".to_string(), data).unwrap();
+        assert!(test.contains("{\"type\":\"101\",\"data\":{\"name\":\"name\",\"version\":\"1.0\",\"attr_names\":[\"name\",\"male\"]}"));
+    }
+
+    #[test]
     fn test_to_string(){
         ::utils::logger::LoggerUtils::init();
         let test = LedgerSchema::process_ledger_txn(String::from_str(LEDGER_SAMPLE).unwrap()).unwrap();
@@ -284,7 +380,37 @@ mod tests {
 
     #[ignore]
     #[test]
+    fn test_sign_and_submit_create_schema(){
+        open_sandbox_pool();
+        let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#.to_string();
+        let wallet_handle = init_wallet("wallet1").unwrap();
+        let (my_did, my_vk) = SignusUtils::create_and_store_my_did(wallet_handle, Some(MY1_SEED)).unwrap();
+        let req = CreateSchema::create_schema_req(my_did.to_string(), data).unwrap();
+        let sign_response = CreateSchema::sign_and_send_request(&my_did, &req).unwrap();
+        println!("Create response: \n{:?}", sign_response);
+        delete_wallet("wallet1").unwrap();
+        assert_eq!(0, 1);
+    }
+
+    #[test]
+    fn test_parse() {
+        let entire_str = r#"{"op":"REPLY","result":{"rootHash":"C98M4qjp4zzHw6APDWwGxTBHkEdAhjUQepi3Bxz2auna","type":"101","signature":"4iFhpLknpRiCU6Axrj8HcFxMaxGaMmnzwJ1WMKndK653k4B7LYGZD2PNHEEGZQEBVXwhgDxPFe1t9bSzdVcEQ3eL","reqId":1515795761424583710,"auditPath":["7hRA1eWgHDmqFfXQHmHLzCE1ZeXvvkq5VaJEpb6NWz74","4QvchQ6JGxvU57kyzHzKJvUV7rb12jpFX7FBP9LrN9qA","G14qswNCM1mxhRHPMLx4h5qmbLEDQkczjJUVUEedUGxQ","4B6hCrJc2TubiFE1rgxjM1Hj7zvTTjxkzo9Gikhy4MVZ"],"data":{"name":"name","version":"1.0","attr_names":["name","male"]},"seqNo":299,"identifier":"VsKV7grR1BUE29mG2Fm2kX","txnTime":1515795761}}"#;
+        let schema: SchemaTransaction = serde_json::from_str(entire_str).unwrap();
+        println!("Schema: {:?}", schema);
+        println!("seqNo: {:?}", schema.sequence_num);
+    }
+
+    #[ignore]
+    #[test]
     fn from_ledger(){
+        open_sandbox_pool();
+        let test: LedgerSchema = LedgerSchema::new_from_ledger(15).unwrap();
+        print!("{}", test.to_string());
+    }
+
+    #[ignore]
+    #[test]
+    fn create_schema(){
         open_sandbox_pool();
         let test: LedgerSchema = LedgerSchema::new_from_ledger(15).unwrap();
         print!("{}", test.to_string());
@@ -296,12 +422,11 @@ mod tests {
             r#"{"data":{"alias":"Node2","blskey":"37rAPpXVoxzKhz7d9gkUe52XuXryuLXoM6P6LbWDB7LSbG62Lsb33sfG7zqS8TK1MXwuCHj1FKNzVpsnafmqLG1vXN88rt38mNFs9TENzm4QHdBzsvCuoBnPH7rpYYDo9DZNJePaDvRvqJKByCabubJz3XXKbEeshzpz4Ma5QYpJqjk","client_ip":"34.212.206.9","client_port":9704,"node_ip":"34.212.206.9","node_port":9703,"services":["VALIDATOR"]},"dest":"8ECVSk179mjsjKRLWiQtssMLgp6EPhWXtaYyStWPSGAb","identifier":"EbP4aYNeTHL6q385GuVpRV","txnId":"1ac8aece2a18ced660fef8694b61aac3af08ba875ce3026a160acbc3a3af35fc","type":"0"}"#,
             r#"{"data":{"alias":"Node3","blskey":"3WFpdbg7C5cnLYZwFZevJqhubkFALBfCBBok15GdrKMUhUjGsk3jV6QKj6MZgEubF7oqCafxNdkm7eswgA4sdKTRc82tLGzZBd6vNqU8dupzup6uYUf32KTHTPQbuUM8Yk4QFXjEf2Usu2TJcNkdgpyeUSX42u5LqdDDpNSWUK5deC5","client_ip":"34.212.206.9","client_port":9706,"node_ip":"34.212.206.9","node_port":9705,"services":["VALIDATOR"]},"dest":"DKVxG2fXXTU8yT5N7hGEbXB3dfdAnYv1JczDUHpmDxya","identifier":"4cU41vWW82ArfxJxHkzXPG","txnId":"7e9f355dffa78ed24668f0e0e369fd8c224076571c51e2ea8be5f26479edebe4","type":"0"}"#,
             r#"{"data":{"alias":"Node4","blskey":"2zN3bHM1m4rLz54MJHYSwvqzPchYp8jkHswveCLAEJVcX6Mm1wHQD1SkPYMzUDTZvWvhuE6VNAkK3KxVeEmsanSmvjVkReDeBEMxeDaayjcZjFGPydyey1qxBHmTvAnBKoPydvuTAqx5f7YNNRAdeLmUi99gERUU7TD8KfAa6MpQ9bw","client_ip":"34.212.206.9","client_port":9708,"node_ip":"34.212.206.9","node_port":9707,"services":["VALIDATOR"]},"dest":"4PS3EDQ3dW1tci1Bp6543CfuuebjFrg36kLAUcskGfaA","identifier":"TWwCRQRZ2ZHMJFn9TzLp7W","txnId":"aa5e817d7cc626170eca175822029339a444eb0ee8f0bd20d3b0b76e566fb008","type":"0"}"#];
-        let pool_name = settings::CONFIG_POOL_NAME;
+        let pool_name = "pool1";
         let config_string = format!("{{\"genesis_txn\":\"/tmp/{}.txn\"}}", &pool_name);
         let nodes_count = 4;
-        let pool_name = settings::CONFIG_POOL_NAME;
         let txn_file_data = node_txns[0..(nodes_count as usize)].join("\n");
-        let txn_file_path = "/tmp/pool_name.txn";
+        let txn_file_path = "/tmp/pool1.txn";
         pool::create_genesis_txn_file(&pool_name, &txn_file_data, Some(Path::new(txn_file_path)));
         assert_eq!(pool::pool_config_json(Path::new(txn_file_path)),config_string);
         assert_eq!(pool::create_pool_ledger_config(&pool_name, Some(Path::new(&txn_file_path))),Ok(error::SUCCESS.code_num));
@@ -309,7 +434,7 @@ mod tests {
     }
 
     pub fn open_sandbox_pool() -> u32 {
-        let pool_name = settings::CONFIG_POOL_NAME;
+        let pool_name = "pool1".to_string();
         sandbox_pool_setup();
         let config = r#"{"refresh_on_open": true}"#;
         pool::open_pool_ledger(&pool_name, Some(config)).unwrap()
