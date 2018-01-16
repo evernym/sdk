@@ -485,7 +485,8 @@ mod tests {
     #[test]
     fn test_create_schema_fails(){
         ::utils::logger::LoggerUtils::init();
-        settings::set_config_value(settings::CONFIG_POOL_NAME, "false");
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         assert_eq!(create_new_schema("1".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), "".to_string()),
         Err(error::INVALID_SCHEMA_CREATION.code_num));
     }
