@@ -219,7 +219,6 @@ pub fn create_new_schema(source_id: String,
     info!("created schema on ledger");
 
     let new_handle = rand::thread_rng().gen::<u32>();
-
     let mut new_schema = Box::new(CreateSchema {
         source_id,
         handle: new_handle,
@@ -282,6 +281,13 @@ pub fn from_string(schema_data: &str) -> Result<u32, u32> {
         m.insert(new_handle, schema);
     }
     Ok(new_handle)
+}
+
+pub fn release(handle: u32) -> u32 {
+    match SCHEMA_MAP.lock().unwrap().remove(&handle) {
+        Some(t) => error::SUCCESS.code_num,
+        None => error::INVALID_SCHEMA_HANDLE.code_num,
+    }
 }
 
 #[cfg(test)]
