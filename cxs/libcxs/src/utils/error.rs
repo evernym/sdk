@@ -49,6 +49,7 @@ pub static TIMEOUT_LIBINDY_ERROR: Error = Error{code_num: 1038, message: "Waitin
 pub static CLAIM_DEF_ALREADY_CREATED: Error = Error{code_num: 1039, message: "Can't create, Claim Def already on ledger"};
 pub static INVALID_SCHEMA_SEQ_NO: Error = Error{code_num: 1040, message: "No Schema for that schema sequence number"};
 pub static INVALID_SCHEMA_CREATION: Error = Error{code_num: 1041, message: "Could not create schema"};
+pub static INVALID_SCHEMA_HANDLE: Error = Error{code_num: 1042, message: "Schema handle not found"};
 
 lazy_static! {
     static ref ERROR_MESSAGES: HashMap<u32, &'static str> = {
@@ -95,6 +96,7 @@ lazy_static! {
         insert_message(&mut m, &CLAIM_DEF_ALREADY_CREATED);
         insert_message(&mut m, &INVALID_SCHEMA_SEQ_NO);
         insert_message(&mut m, &INVALID_SCHEMA_CREATION);
+        insert_message(&mut m, &INVALID_SCHEMA_HANDLE);
         m
     };
 }
@@ -281,6 +283,7 @@ mod tests {
         assert_eq!(error_message(&INVALID_SCHEMA.code_num), INVALID_SCHEMA.message);
         assert_eq!(error_message(&INVALID_SCHEMA_SEQ_NO.code_num), INVALID_SCHEMA_SEQ_NO.message);
         assert_eq!(error_message(&INVALID_SCHEMA_CREATION.code_num), INVALID_SCHEMA_CREATION.message);
+        assert_eq!(error_message(&INVALID_SCHEMA_HANDLE.code_num), INVALID_SCHEMA_HANDLE.message);
     }
 }
 

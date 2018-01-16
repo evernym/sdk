@@ -1,10 +1,15 @@
 use serde_json;
 use serde_json::Value;
+extern crate rand;
 
 use settings;
-use utils::error;
-use std::string::ToString;
+use rand::Rng;
 use std::fmt;
+use std::sync::Mutex;
+use std::string::ToString;
+use std::collections::HashMap;
+use utils::error;
+use utils::constants::{ SCHEMA_REQ, CREATE_SCHEMA_RESULT };
 use utils::libindy::pool::{ get_pool_handle };
 use utils::wallet::{ get_wallet_handle };
 use utils::libindy::ledger::{
@@ -13,6 +18,10 @@ use utils::libindy::ledger::{
     libindy_submit_request,
     libindy_sign_and_submit_request
 };
+
+lazy_static! {
+    static ref SCHEMA_MAP: Mutex<HashMap<u32, Box<CreateSchema>>> = Default::default();
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct SchemaTransaction {
@@ -43,10 +52,11 @@ pub struct LedgerSchema {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateSchema {
-    data: Option<SchemaData>,
+    data: SchemaTransaction,
     handle: u32,
     name: String,
     source_id: String,
+    sequence_num: u32,
 }
 
 pub trait Schema: ToString {
@@ -62,7 +72,6 @@ pub trait Schema: ToString {
 
     fn process_ledger_txn(txn: String) -> Result<SchemaTransaction, u32>
     {
-
         let result = Self::extract_result_from_txn(&txn)?;
         match result.get("data") {
             Some(d) => {
@@ -146,21 +155,14 @@ impl fmt::Display for LedgerSchema {
 
 impl fmt::Display for CreateSchema {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        let data = &self.data;
-        if data.is_some() {
-            match serde_json::to_string(data){
-                Ok(s) => {
-                    write!(f, "{}", s)
-                },
-                Err(e) => {
-                    error!("{}: {:?}",error::INVALID_SCHEMA.message, e);
-                    write!(f, "null")
-                }
-
+        match serde_json::to_string(&self){
+            Ok(s) => {
+                write!(f, "{}", s)
+            },
+            Err(e) => {
+                error!("{}: {:?}",error::INVALID_SCHEMA.message, e);
+                write!(f, "null")
             }
-        }
-        else {
-            write!(f, "null")
         }
     }
 }
@@ -177,13 +179,14 @@ impl LedgerSchema {
 }
 
 impl CreateSchema {
-    pub fn create_schema_req(submitter_did: String, data: String) -> Result<String, u32> {
-        libindy_build_schema_request(submitter_did, data)
+    pub fn create_schema_req(submitter_did: &str, data: String) -> Result<String, u32> {
+        if settings::test_indy_mode_enabled() { return Ok(SCHEMA_REQ.to_string()); }
+        libindy_build_schema_request(submitter_did.to_string(), data)
             .or(Err(error::INVALID_SCHEMA_CREATION.code_num))
     }
 
     pub fn sign_and_send_request(submitter_did: &str, request: &str) ->  Result<String, u32> {
-        if settings::test_indy_mode_enabled() { return Ok("{}".to_string()); }
+        if settings::test_indy_mode_enabled() { return Ok(CREATE_SCHEMA_RESULT.to_string()); }
         let pool_handle = get_pool_handle()?;
         let wallet_handle = get_wallet_handle();
         libindy_sign_and_submit_request(pool_handle,
@@ -193,27 +196,94 @@ impl CreateSchema {
             .or(Err(error::INVALID_SCHEMA_CREATION.code_num))
     }
 
-    pub fn set_data(&self, data: &str) -> Result<u32, u32> {
+    pub fn parse_schema_data(data: &str) -> Result<SchemaTransaction, u32> {
         let result = CreateSchema::extract_result_from_txn(data)?;
-        match result.get("data") {
-            Some(d) => {
-                
-            },
-            None => {
-                warn!("{}","'data' not found in json");
-                Err(error::INVALID_JSON.code_num)
-            }
+        match serde_json::from_str(&result.to_string()) {
+            Ok(x) => Ok(x),
+            Err(x) => Err(error::INVALID_SCHEMA_CREATION.code_num),
         }
     }
+
+    pub fn set_sequence_num(&mut self, sequence_num: u32) {self.sequence_num = sequence_num;}
+
+    pub fn get_sequence_num(&self) -> u32 {let sequence_num = self.sequence_num as u32; sequence_num}
+
 }
 
 pub fn create_new_schema(source_id: String,
                          schema_name: String,
                          issuer_did: String,
                          data: String) -> Result<u32, u32> {
+    let req = CreateSchema::create_schema_req(&issuer_did, data)?;
+    let sign_response = CreateSchema::sign_and_send_request(&issuer_did, &req)?;
+    info!("created schema on ledger");
 
-    Ok(0)
+    let new_handle = rand::thread_rng().gen::<u32>();
+
+    let mut new_schema = Box::new(CreateSchema {
+        source_id,
+        handle: new_handle,
+        name: schema_name,
+        data: CreateSchema::parse_schema_data(&sign_response)?,
+        sequence_num: 0,
+    });
+
+    match new_schema.data.sequence_num {
+        Some(x) => {
+            new_schema.set_sequence_num(x as u32);
+            info!("created schema object with sequence_num: {}", new_schema.sequence_num);
+        },
+        None => return Err(error::INVALID_SCHEMA_CREATION.code_num),
+    };
+
+    {
+        let mut m = SCHEMA_MAP.lock().unwrap();
+        info!("inserting handle {} into schema table", new_handle);
+        m.insert(new_handle, new_schema);
+    }
+
+    Ok(new_handle)
 }
+
+pub fn is_valid_handle(handle: u32) -> bool {
+    match SCHEMA_MAP.lock().unwrap().get(&handle) {
+        Some(_) => true,
+        None => false,
+    }
+}
+
+pub fn get_sequence_num(handle: u32) -> Result<u32, u32> {
+    match SCHEMA_MAP.lock().unwrap().get(&handle) {
+        Some(x) => Ok(x.get_sequence_num()),
+        None => Err(error::INVALID_SCHEMA_HANDLE.code_num)
+    }
+}
+
+pub fn to_string(handle: u32) -> Result<String, u32> {
+    match SCHEMA_MAP.lock().unwrap().get(&handle) {
+        Some(p) => Ok(p.to_string().to_owned()),
+        None => Err(error::INVALID_SCHEMA_HANDLE.code_num)
+    }
+}
+
+pub fn from_string(schema_data: &str) -> Result<u32, u32> {
+    let derived_schema: CreateSchema = match serde_json::from_str(schema_data) {
+        Ok(x) => x,
+        Err(y) => return Err(error::UNKNOWN_ERROR.code_num),
+    };
+    let new_handle = derived_schema.handle;
+
+    if is_valid_handle(new_handle) {return Ok(new_handle);}
+    let schema = Box::from(derived_schema);
+
+    {
+        let mut m = SCHEMA_MAP.lock().unwrap();
+        info!("inserting handle {} into schema table", new_handle);
+        m.insert(new_handle, schema);
+    }
+    Ok(new_handle)
+}
+
 #[cfg(test)]
 mod tests {
     use settings;
@@ -310,8 +380,6 @@ mod tests {
     static  EXAMPLE_OPTIONAL: &str = r#"{
 }"#;
 
-    static SCHEMA_REQ: &str = r#"{"reqId":1515793573521242947,"identifier":"4fUDR9R7fjwELRvH9JT6HH","operation":{"type":"101","data":{"name":"name","version":"1.0","attr_names":["name","male"]}}}"#;
-
     #[test]
     fn test_schema_transaction(){
         let data: SchemaTransaction = serde_json::from_str(EXAMPLE).unwrap();
@@ -357,18 +425,63 @@ mod tests {
     #[test]
     fn test_schema_request(){
         let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#.to_string();
-        let test = CreateSchema::create_schema_req("4fUDR9R7fjwELRvH9JT6HH".to_string(), data).unwrap();
+        let test = CreateSchema::create_schema_req("4fUDR9R7fjwELRvH9JT6HH", data).unwrap();
         assert!(test.contains("{\"type\":\"101\",\"data\":{\"name\":\"name\",\"version\":\"1.0\",\"attr_names\":[\"name\",\"male\"]}"));
     }
 
     #[test]
-    fn test_to_string(){
+    fn test_extract_result_from_txn(){
+        let test = CreateSchema::extract_result_from_txn(CREATE_SCHEMA_RESULT).unwrap();
+        assert_eq!(test.get("type").unwrap(), "101");
+        assert_eq!(test.get("reqId").unwrap().to_string(), "1515795761424583710".to_string());
+    }
+
+    #[test]
+    fn test_ledger_schema_to_string(){
         ::utils::logger::LoggerUtils::init();
         let test = LedgerSchema::process_ledger_txn(String::from_str(LEDGER_SAMPLE).unwrap()).unwrap();
 
         let schema = LedgerSchema {sequence_num:15, data:Some(test)};
 
         println!("{}", schema.to_string())
+    }
+
+    #[test]
+    fn test_parse_schema_data() {
+        let schema_txn = CreateSchema::parse_schema_data(CREATE_SCHEMA_RESULT).unwrap();
+        assert_eq!(schema_txn.sequence_num, Some(299));
+        assert_eq!(schema_txn.txn_type, Some("101".to_string()));
+        assert_eq!(schema_txn.sponsor, Some("VsKV7grR1BUE29mG2Fm2kX".to_string()));
+    }
+
+    #[test]
+    fn test_create_schema_to_string(){
+        ::utils::logger::LoggerUtils::init();
+        let create_schema = CreateSchema {
+            data: serde_json::from_str(DIRTY_EXAMPLE).unwrap(),
+            source_id: "testId".to_string(),
+            handle: 1,
+            name: "schema_name".to_string(),
+            sequence_num: 306,
+        };
+        let create_schema_str = r#"{"data":{"seqNo":15,"identifier":"4fUDR9R7fjwELRvH9JT6HH","txnTime":1510246647,"type":"101","data":{"name":"Home Address","version":"0.1","attr_names":["address1","address2","city","state","zip"]}},"handle":1,"name":"schema_name","source_id":"testId","sequence_num":306}"#;
+        assert_eq!(create_schema.to_string(), create_schema_str.to_string());
+    }
+
+    #[test]
+    fn test_create_schema_success(){
+        let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#.to_string();
+        ::utils::logger::LoggerUtils::init();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
+        assert!(create_new_schema("1".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data).is_ok());
+    }
+
+    #[test]
+    fn test_create_schema_fails(){
+        ::utils::logger::LoggerUtils::init();
+        settings::set_config_value(settings::CONFIG_POOL_NAME, "false");
+        assert_eq!(create_new_schema("1".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), "".to_string()),
+        Err(error::INVALID_SCHEMA_CREATION.code_num));
     }
 
     #[test]
@@ -381,24 +494,29 @@ mod tests {
     #[ignore]
     #[test]
     fn test_sign_and_submit_create_schema(){
+        settings::set_defaults();
         open_sandbox_pool();
         let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#.to_string();
         let wallet_handle = init_wallet("wallet1").unwrap();
         let (my_did, my_vk) = SignusUtils::create_and_store_my_did(wallet_handle, Some(MY1_SEED)).unwrap();
-        let req = CreateSchema::create_schema_req(my_did.to_string(), data).unwrap();
+        let req = CreateSchema::create_schema_req(&my_did, data).unwrap();
         let sign_response = CreateSchema::sign_and_send_request(&my_did, &req).unwrap();
-        println!("Create response: \n{:?}", sign_response);
+        assert!(sign_response.contains("\"data\":{\"version\":\"1.0\",\"attr_names\":[\"name\",\"male\"],\"name\":\"name\"}"));
         delete_wallet("wallet1").unwrap();
-        assert_eq!(0, 1);
     }
 
+    #[ignore]
     #[test]
-    fn test_parse() {
-        let entire_str = r#"{"op":"REPLY","result":{"rootHash":"C98M4qjp4zzHw6APDWwGxTBHkEdAhjUQepi3Bxz2auna","type":"101","signature":"4iFhpLknpRiCU6Axrj8HcFxMaxGaMmnzwJ1WMKndK653k4B7LYGZD2PNHEEGZQEBVXwhgDxPFe1t9bSzdVcEQ3eL","reqId":1515795761424583710,"auditPath":["7hRA1eWgHDmqFfXQHmHLzCE1ZeXvvkq5VaJEpb6NWz74","4QvchQ6JGxvU57kyzHzKJvUV7rb12jpFX7FBP9LrN9qA","G14qswNCM1mxhRHPMLx4h5qmbLEDQkczjJUVUEedUGxQ","4B6hCrJc2TubiFE1rgxjM1Hj7zvTTjxkzo9Gikhy4MVZ"],"data":{"name":"name","version":"1.0","attr_names":["name","male"]},"seqNo":299,"identifier":"VsKV7grR1BUE29mG2Fm2kX","txnTime":1515795761}}"#;
-        let schema: SchemaTransaction = serde_json::from_str(entire_str).unwrap();
-        println!("Schema: {:?}", schema);
-        println!("seqNo: {:?}", schema.sequence_num);
-    }
+    fn test_create_schema(){
+        settings::set_defaults();
+        open_sandbox_pool();
+        let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#.to_string();
+        let wallet_handle = init_wallet("wallet1").unwrap();
+        let (my_did, my_vk) = SignusUtils::create_and_store_my_did(wallet_handle, Some(MY1_SEED)).unwrap();
+        let rc = create_new_schema("id".to_string(), "name".to_string(), my_did, data).unwrap();
+        delete_wallet("wallet1").unwrap();
+        assert_eq!(rc, 0);
+}
 
     #[ignore]
     #[test]
