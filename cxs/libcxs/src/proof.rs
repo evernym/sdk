@@ -133,9 +133,9 @@ impl Proof {
 
     fn build_schemas_json(&mut self, claim_data:&Vec<ClaimData>) -> Result<String, u32> {
         if settings::test_indy_mode_enabled() { return Ok("{}".to_string()); }
+        //Todo: Need to handle multiple schemas
         //get schema #
         let schema_obj = LedgerSchema::new_from_ledger(claim_data[0].schema_seq_no as i32)?;
-//      Ok(schema_obj.to_string())
         let data = match schema_obj.data {
             Some(x) => x,
             None => return Err(error::INVALID_PROOF.code_num)
