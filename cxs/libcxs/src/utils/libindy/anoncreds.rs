@@ -3,7 +3,7 @@ use self::libc::c_char;
 use std::ffi::CString;
 use utils::error;
 use utils::libindy::{indy_function_eval};
-use utils::libindy::return_types::Return_I32_STR;
+use utils::libindy::return_types::{ Return_I32_STR, Return_I32_BOOL };
 use utils::libindy::SigTypes;
 use utils::libindy::error_codes::{map_indy_error_code, map_string_error};
 use utils::timeout::TimeoutUtils;
@@ -18,6 +18,15 @@ extern {
                                               cb: Option<extern fn(xcommand_handle: i32,
                                                                    err: i32,
                                                                    claim_def_json: *const c_char)>) -> i32;
+
+    fn indy_verifier_verify_proof(command_handle: i32,
+                                  proof_request_json: *const c_char,
+                                  proof_json: *const c_char,
+                                  schemas_json: *const c_char,
+                                  claim_defs_jsons: *const c_char,
+                                  revoc_regs_json: *const c_char,
+                                  cb: Option<extern fn(xcommand_handle: i32, err: i32,
+                                                       valid: bool)>) -> i32;
 }
 
 fn check_str(str_opt: Option<String>) -> Result<String, u32>{
@@ -30,6 +39,33 @@ fn check_str(str_opt: Option<String>) -> Result<String, u32>{
     }
 }
 
+
+pub fn libindy_verifier_verify_proof(proof_req_json: &str,
+                                     proof_json: &str,
+                                     schemas_json: &str,
+                                     claim_defs_json: &str,
+                                     revoc_regs_json: &str)  -> Result<bool, u32>{
+
+    let rtn_obj = Return_I32_BOOL::new()?;
+    let proof_req_json = CString::new(proof_req_json.to_string()).map_err(map_string_error)?;
+    let proof_json = CString::new(proof_json.to_string()).map_err(map_string_error)?;
+    let schemas_json = CString::new(schemas_json.to_string()).map_err(map_string_error)?;
+    let claim_defs_json = CString::new(claim_defs_json.to_string()).map_err(map_string_error)?;
+    let revoc_regs_json = CString::new(revoc_regs_json.to_string()).map_err(map_string_error)?;
+    unsafe {
+        indy_function_eval(
+        indy_verifier_verify_proof(rtn_obj.command_handle,
+                                   proof_request_json.as_ptr(),
+                                   proof_json.as_ptr(),
+                                   schemas_json.as_ptr(),
+                                   claim_defs_jsons.as_ptr(),
+                                   revoc_regs_json.as_ptr(),
+                                   Some(rtn_obj.get_callback()))
+        ).map_err(map_indy_error_code)?;
+    }
+
+    rtn_obj.receive(TimeoutUtils::some_long())
+}
 
 pub fn libindy_create_and_store_claim_def(wallet_handle: i32,
                                           issuer_did: String,

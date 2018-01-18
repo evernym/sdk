@@ -22,6 +22,7 @@ use self::libc::c_char;
 use std::ffi::CString;
 use utils::timeout::TimeoutUtils;
 use utils::libindy::SigTypes;
+use utils::libindy::anoncreds::libindy_verifier_verify_proof;
 use claim_def::{ RetrieveClaimDef, ClaimDefCommon };
 use utils::constants::*;
 use schema::LedgerSchema;
@@ -71,32 +72,20 @@ impl Proof {
         Ok(error::SUCCESS.code_num)
     }
 
-    fn validate_proof_indy(&mut self, proof_req_json: &str, proof_json: &str, schemas_json: &str, claim_defs_json: &str, revoc_regs_json: &str) -> Result<u32, u32> {
+    fn validate_proof_indy(&mut self,
+                           proof_req_json: &str,
+                           proof_json: &str,
+                           schemas_json: &str,
+                           claim_defs_json: &str,
+                           revoc_regs_json: &str) -> Result<u32, u32> {
         if settings::test_indy_mode_enabled() {return Ok(error::SUCCESS.code_num);}
 
-        let (sender, receiver) = channel();
-        let cb = Box::new(move |err, valid | {
-            sender.send((err, valid)).unwrap();
-        });
 
-
-        let schema_seq_no = 1;
-        let (command_handle, cb) = CallbackUtils::closure_to_verifier_verify_proof_cb(cb);
-
-        unsafe {
-            let indy_err = indy_verifier_verify_proof(command_handle,
-                                                      CString::new(proof_req_json).unwrap().as_ptr(),
-                                                      CString::new(proof_json).unwrap().as_ptr(),
-                                                      CString::new(schemas_json).unwrap().as_ptr(),
-                                                      CString::new(claim_defs_json).unwrap().as_ptr(),
-                                                      CString::new(revoc_regs_json).unwrap().as_ptr(),
-                                                      cb);
-            if indy_err != 0 {
-                return Err(self.set_invalid_proof_state(indy_err))
-            }
-        }
-
-        let (err, valid) = receiver.recv_timeout(TimeoutUtils::long_timeout()).unwrap();
+        let (valid, err) = libindy_verifier_verify_proof(proof_req_json: &str,
+                                                                            proof_json: &str,
+                                                                            schemas_json: &str,
+                                                                            claim_defs_json: &str,
+                                                                            revoc_regs_json: &str)?;
 
         if err != 0 {
             return Err(self.set_invalid_proof_state(err))
