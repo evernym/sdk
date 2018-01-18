@@ -110,9 +110,7 @@ pub extern fn cxs_schema_get_sequence_no(command_handle: u32,
     error::SUCCESS.code_num
 }
 
-#[allow(unused_variables, unused_mut)]
-pub extern fn cxs_schema_commit(schema_handle: u32) -> u32 { error::SUCCESS.code_num }
-#[allow(unused_variables)]
+#[no_mangle]
 pub extern fn cxs_schema_get_attributes(command_handle: u32,
                                         source_id: *const c_char,
                                         sequence_no: u32,
@@ -137,6 +135,10 @@ pub extern fn cxs_schema_get_attributes(command_handle: u32,
 
     error::SUCCESS.code_num
 }
+
+#[allow(unused_variables, unused_mut)]
+pub extern fn cxs_schema_commit(schema_handle: u32) -> u32 { error::SUCCESS.code_num }
+
 
 #[cfg(test)]
 mod tests {
