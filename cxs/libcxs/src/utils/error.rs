@@ -100,12 +100,9 @@ lazy_static! {
         insert_message(&mut m, &INVALID_SCHEMA_SEQ_NO);
         insert_message(&mut m, &INVALID_SCHEMA_CREATION);
         insert_message(&mut m, &INVALID_SCHEMA_HANDLE);
-<<<<<<< HEAD
-=======
         insert_message(&mut m, &ALREADY_INITIALIZED);
         insert_message(&mut m, &INVALID_INVITE_DETAILS);
         insert_message(&mut m, &INVALID_MASTER_SECRET);
->>>>>>> master
         m
     };
 }
