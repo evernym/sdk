@@ -25,6 +25,7 @@ use utils::libindy::SigTypes;
 use claim_def::{ RetrieveClaimDef, ClaimDefCommon };
 use utils::constants::*;
 use schema::LedgerSchema;
+use proof_compliance::{ proof_compliance };
 
 lazy_static! {
     static ref PROOF_MAP: Mutex<HashMap<u32, Box<Proof>>> = Default::default();
@@ -153,10 +154,15 @@ impl Proof {
     }
 
     fn proof_validation(&mut self) -> Result<u32, u32> {
-        let claim_data = match self.proof {
-            Some(ref x) => x.get_claim_schema_info()?,
+        let proof_req_msg = match self.proof_request.clone() {
+            Some(x) => x,
             None => return Err(error::INVALID_PROOF.code_num),
         };
+        let proof_msg = match self.proof.clone() {
+            Some(x) => x,
+            None => return Err(error::INVALID_PROOF.code_num),
+        };
+        let claim_data = proof_msg.get_claim_schema_info()?;
 
         if claim_data.len() == 0 {
             return Err(error::INVALID_PROOF_CLAIM_DATA.code_num)
@@ -169,6 +175,7 @@ impl Proof {
         info!("*******\n{}\n********", proof_json);
         info!("*******\n{}\n********", schemas_json);
         info!("*******\n{}\n********", proof_req_json);
+        proof_compliance(&proof_req_msg.proof_request_data, &proof_msg)?;
         Ok(self.validate_proof_indy(&proof_req_json, &proof_json, &schemas_json, &claim_def_msg, REVOC_REGS_JSON)?)
     }
 
@@ -373,7 +380,7 @@ pub fn to_string(handle: u32) -> Result<String, u32> {
 pub fn from_string(proof_data: &str) -> Result<u32, u32> {
     let derived_proof: Proof = match serde_json::from_str(proof_data) {
         Ok(x) => x,
-        Err(y) => return Err(error::UNKNOWN_ERROR.code_num),
+        Err(y) => return Err(error::INVALID_JSON.code_num),
     };
     let new_handle = derived_proof.handle;
 
@@ -410,7 +417,7 @@ fn get_proof_details(response: &str) -> Result<String, u32> {
         },
         Err(_) => {
             info!("Proof called without a valid response from server");
-            Err(error::UNKNOWN_ERROR.code_num)
+            Err(error::INVALID_JSON.code_num)
         },
     }
 }
