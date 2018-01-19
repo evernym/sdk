@@ -16,7 +16,7 @@ export interface ISchema {
 export interface ISchemaAttrs {
   name: string,
   version: string,
-  attrNames: [string]
+  attrNames: string[]
 }
 
 export interface ISchemaObj {
@@ -35,7 +35,7 @@ export interface ISchemaTxn {
   data?: {
     name: string,
     version: string,
-    attr_names: [string]
+    attr_names: string[]
   }
 }
 
