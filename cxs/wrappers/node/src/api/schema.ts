@@ -9,14 +9,13 @@ import { CXSBase } from './CXSBase'
 
 export interface ISchema {
   sourceId: string,
-  name: string,
   data: ISchemaAttrs
 }
 
 export interface ISchemaAttrs {
   name: string,
   version: string,
-  attrNames: [string]
+  attrNames: string[]
 }
 
 export interface ISchemaObj {
