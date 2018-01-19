@@ -9,7 +9,6 @@ import { CXSBase } from './CXSBase'
 
 export interface ISchema {
   sourceId: string,
-  name: string,
   data: ISchemaAttrs
 }
 
@@ -61,7 +60,7 @@ export class Schema extends CXSBase {
   }
 
   static async create (data: ISchema): Promise<Schema> {
-    const schema = new Schema(data.sourceId, { name: data.name, schemaNo: 0, schemaAttrs: data.data })
+    const schema = new Schema(data.sourceId, { name: data.data.name, schemaNo: 0, schemaAttrs: data.data })
     const commandHandle = 0
     try {
       await schema._create((cb) => rustAPI().cxs_schema_create(
