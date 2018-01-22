@@ -97,7 +97,7 @@ pub extern fn cxs_claimdef_get_sequence_no(claimdef_handle: u32, sequence_no: *m
 pub extern fn cxs_claimdef_get(claimdef_handle: u32, data: *mut c_char) -> u32 { error::SUCCESS.code_num }
 
 #[cfg(test)]
-pub mod tests {
+mod tests {
     extern crate serde_json;
 
     use super::*;
