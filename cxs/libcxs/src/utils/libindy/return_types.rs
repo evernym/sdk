@@ -146,7 +146,8 @@ pub struct Return_I32_BOOL {
     pub command_handle: i32,
     receiver: Receiver<(i32, bool)>,
 }
-impl Return_I32_I32 {
+
+impl Return_I32_BOOL {
     pub fn new() -> Result<Return_I32_BOOL, u32> {
         let (sender, receiver) = channel();
         let closure: Box<FnMut(i32, bool) + Send> = Box::new(move |err, arg1 | {
@@ -165,11 +166,11 @@ impl Return_I32_I32 {
         callback::call_cb_i32_bool
     }
 
-    pub fn receive(&self, timeout: Option<Duration>) -> Result<(bool, i32), u32> {
+    pub fn receive(&self, timeout: Option<Duration>) -> Result<bool, u32> {
         let (err, arg1) = receive(&self.receiver, timeout)?;
 
         map_indy_error(arg1, err)?;
-        Ok((arg1, err))
+        Ok(arg1)
     }
 }
 

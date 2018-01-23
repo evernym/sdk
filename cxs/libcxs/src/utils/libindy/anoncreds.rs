@@ -55,10 +55,10 @@ pub fn libindy_verifier_verify_proof(proof_req_json: &str,
     unsafe {
         indy_function_eval(
         indy_verifier_verify_proof(rtn_obj.command_handle,
-                                   proof_request_json.as_ptr(),
+                                   proof_req_json.as_ptr(),
                                    proof_json.as_ptr(),
                                    schemas_json.as_ptr(),
-                                   claim_defs_jsons.as_ptr(),
+                                   claim_defs_json.as_ptr(),
                                    revoc_regs_json.as_ptr(),
                                    Some(rtn_obj.get_callback()))
         ).map_err(map_indy_error_code)?;
@@ -96,8 +96,14 @@ pub fn libindy_create_and_store_claim_def(wallet_handle: i32,
 mod tests {
     use super::*;
     use settings;
-    use utils::constants::{SCHEMAS_JSON};
     use utils::wallet::{ init_wallet, get_wallet_handle, delete_wallet };
+    use utils::constants::{ INDY_PROOF_REQ_JSON,
+                            INDY_PROOF_JSON,
+                            INDY_SCHEMAS_JSON,
+                            INDY_CLAIM_DEFS_JSON,
+                            INDY_REVOC_REGS_JSON,
+                            SCHEMAS_JSON,
+    };
 
     #[test]
     fn simple_libindy_create_and_store_claim_def_test() {
@@ -108,6 +114,20 @@ mod tests {
                                                         SCHEMAS_JSON.to_string(),
                                                         None,
                                                         false);
+        delete_wallet("wallet_simple").unwrap();
+        assert!(result.is_ok());
+        println!("{}", result.unwrap());
+    }
+
+    #[test]
+    fn simple_libindy_verifier_verify_proof() {
+        settings::set_defaults();
+        init_wallet("wallet_simple").unwrap();
+        let result = libindy_verifier_verify_proof(INDY_PROOF_REQ_JSON,
+                                                   INDY_PROOF_JSON,
+                                                   INDY_SCHEMAS_JSON,
+                                                   INDY_CLAIM_DEFS_JSON,
+                                                   INDY_REVOC_REGS_JSON);
         delete_wallet("wallet_simple").unwrap();
         assert!(result.is_ok());
         println!("{}", result.unwrap());

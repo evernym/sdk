@@ -26,9 +26,20 @@ use cxs::utils::error;
 static SERIALIZED_CONNECTION: &str = r#"{"source_id":"test_cxs_connection_connect","handle":2608616713,"pw_did":"62LeFLkN9ZeCr32j73PUyD","pw_verkey":"3jnnnL65mTW786LaTJSwEKENEMwmMowuJTYmVho23qNU","did_endpoint":"","state":4,"uuid":"","endpoint":"","invite_detail":{"e":"34.210.228.152:80","rid":"6oHwpBN","sakdp":"key","sn":"enterprise","sD":"62LeFLkN9ZeCr32j73PUyD","lu":"https://s19.postimg.org/ykyz4x8jn/evernym.png","sVk":"3jnnnL65mTW786LaTJSwEKENEMwmMowuJTYmVho23qNU","tn":"there"}}"#;
 #[allow(dead_code)]
 static SERIALIZED_CLAIM: &str = r#"{"source_id":"Claim For Driver's License","handle":3664805180,"claim_attributes":"{\"age\":[\"28\",\"28\"],\"height\":[\"175\",\"175\"],\"name\":[\"Alex\",\"1139481716457488690172217916278103335\"],\"sex\":[\"male\",\"5944657099558967239210949258394887428692050081607692519917050011144233115103\"]}","msg_uid":"7TKyPLr","schema_seq_no":12,"issuer_did":"Niaxv2v4mPr1HdTeJkQxuU","issued_did":"62LeFLkN9ZeCr32j73PUyD","state":2,"claim_request":null}"#;
-static CLAIM_DATA: &str = r#"{"address1": ["123 Main St"], "address2": ["Suite 3"], "city": ["Draper"], "state": ["UT"], "zip": ["84000"]}"#;
-static CLAIM_DEF_ISSUER_DID: &str = "DunkM3x1y7S4ECgSL4Wkru";
-static CLAIM_DEF_SCHEMA_SEQ_NUM: u32 = 38;
+static CLAIM_DATA1: &str = r#"{"address1": ["Claim1 address1"], "address2": ["Claim1 address2"], "city": ["Claim1 New York"], "state": ["New York"], "zip": ["888888"]}"#;
+static CLAIM_DATA2: &str = r#"{"claim2": ["Claim2 Value"], "a2": ["Claim2 a2"], "b2": ["Claim2 b2"], "c2": ["Claim2 c2"], "d2": ["Claim2 d2"]}"#;
+static CLAIM_DATA3: &str = r#"{"claim3": ["Claim3 Value"], "a3": ["Claim3 a3"], "b3": ["Claim3 b3"], "c3": ["Claim3 c3"], "d3": ["Claim3 d3"]}"#;
+static CLAIM_DATA4: &str = r#"{"address1": ["Claim4 address1"], "address2": ["Claim4 address2"], "city": ["Claim4 SLC"], "state": ["UT"], "zip": ["222222"]}"#;
+static CLAIM_DATA5: &str = r#"{"New Claim": ["New Claim-Claim5"], "claim5": ["Claim5 Val"], "a5": ["Claim5 a5"], "b5": ["Claim5 b5"], "c5": ["Claim5 c5"], "d5": ["Claim5 d5"]}"#;
+static CLAIM_DEF_ISSUER_DID1: &str = "DunkM3x1y7S4ECgSL4Wkru";
+static CLAIM_DEF_ISSUER_DID2: &str = "DunkM3x1y7S4ECgSL4Wkru";
+static CLAIM_DEF_ISSUER_DID3: &str = "EmapZ8H9S2qPp3JKyfr5z1";
+static CLAIM_DEF_ISSUER_DID4: &str = "2hoqvcwupRTUNkXn6ArYzs";
+static CLAIM_DEF_ISSUER_DID5: &str = "2hoqvcwupRTUNkXn6ArYzs";
+static CLAIM_DEF_SCHEMA_SEQ_NUM1: u32 = 38;
+static CLAIM_DEF_SCHEMA_SEQ_NUM2: u32 = 72;
+static CLAIM_DEF_SCHEMA_SEQ_NUM3: u32 = 74;
+static CLAIM_DEF_SCHEMA_SEQ_NUM4: u32 = 22;
 
 fn sandbox_pool_setup() {
     let node_txns = vec![
@@ -53,15 +64,15 @@ pub fn open_sandbox_pool() {
 }
 
 #[test]
-fn test_demo(){
+fn test_demo_full(){
     use std::env;
-    match env::var("RUST_TEST_DEMO"){
-        Ok(_) => demo(),
+    match env::var("RUST_TEST_DEMO_FULL"){
+        Ok(_) => demo_full(),
         Err(_) => {},
     }
 }
 
-fn demo(){
+fn demo_full(){
     let serialize_connection_fn = api::connection::cxs_connection_serialize;
     let serialize_claim_fn = api::issuer_claim::cxs_issuer_claim_serialize;
     let invite_details = api::connection::cxs_connection_invite_details;
@@ -77,7 +88,7 @@ fn demo(){
      "enterprise_did_agent": "5bJqPo8aCWyBwLQosZkJcB",
      "agent_pairwise_did": "GkYnFwrAaMMRPaBUYF9jT2",
      "wallet_name": "COMPOSITE",
-     "enterprise_did": "6vkhW3L28AophhA68SSzRS",
+     "enterprise_did": "2hoqvcwupRTUNkXn6ArYzs",
      "agent_endpoint": "https://enym-eagency.pdev.evernym.com",
      "agency_pairwise_verkey": "4hmBc54YanNhQHTD66u6XDp1NSgQm1BacPFbE7b5gtat",
      "agent_enterprise_verkey": "3W9WGtRowAanh5q6giQrGncZVMvRwPedB9fJAJkAN5Gk",
@@ -103,15 +114,74 @@ fn demo(){
 //    let (trustee_did, trustee_verkey) = signus::SignusUtils::create_and_store_my_did(get_wallet_handle(), Some(r#"{"seed":"000000000000000000000000Trustee1"}"#))?;
 //    let (issuer_did, issuer_verkey) = signus::SignusUtils::create_and_store_my_did(get_wallet_handle(), Some(r#"{"seed":"000000000000000000000000Issuer01"}"#))?;
 
-    // Create Claim Offer ***************************************************************
-    let source_id = "Name and Sex";
-    let claim_name = "Name and Sex";
-    let claim_data:serde_json::Value = serde_json::from_str(CLAIM_DATA).unwrap(); // this format will make it easier to modify in the futre
-    let ledger_issuer_did = CLAIM_DEF_ISSUER_DID.clone();
-    let ledger_schema_seq_num = CLAIM_DEF_SCHEMA_SEQ_NUM;
+
+    //Create New Schema ******************************************************************
+    let new_schema_data = r#"{"name":"New Claim - Claim5","version":"1.0","attr_names":["New Claim", "claim5", "a5","b5","c5","d5"]}"#.to_string();
+
+    let source_id = "New Claim - Claim5";
+    let claim_name = "New Claim - Claim5";
+    let (err, schema_handle, schema_no) = create_schema(source_id, claim_name, &new_schema_data);
+    assert_eq!(err, 0);
+    assert!(schema_handle > 0);
+    assert!(schema_no > 0);
+    println!("\nSchema Created with SeqNO: {}\n", schema_no);
+
+    //Create New ClaimDef ******************************************************************
+    let (err, schema_handle) = create_claimdef(source_id, claim_name, schema_no);
+    assert_eq!(err, 0);
+    assert!(schema_handle > 0);
+    println!("\nClaimDef Created\n");
+
+
+    // Create Claim Offer1 ***************************************************************
+    let source_id = "Claim1";
+    let claim_name = "Claim1";
+    let claim_data:serde_json::Value = serde_json::from_str(CLAIM_DATA1).unwrap(); // this format will make it easier to modify in the futre
+    let ledger_issuer_did = CLAIM_DEF_ISSUER_DID1.clone();
+    let ledger_schema_seq_num = CLAIM_DEF_SCHEMA_SEQ_NUM1;
     let (err, claim_handle) = create_claim_offer(claim_name, source_id, claim_data, ledger_issuer_did, ledger_schema_seq_num);
     assert_eq!(err, 0);
     assert!(claim_handle>0);
+
+    // Create Claim Offer2 ***************************************************************
+    let source_id2 = "Claim2";
+    let claim_name2 = "Claim2";
+    let claim_data2 = serde_json::from_str(CLAIM_DATA2).unwrap(); // this format will make it easier to modify in the futre
+    let ledger_issuer_did2 = CLAIM_DEF_ISSUER_DID2.clone();
+    let ledger_schema_seq_num2 = CLAIM_DEF_SCHEMA_SEQ_NUM2;
+    let (err2, claim_handle2) = create_claim_offer(claim_name2, source_id2, claim_data2, ledger_issuer_did2, ledger_schema_seq_num2);
+    assert_eq!(err2, 0);
+    assert!(claim_handle2>0);
+
+    // Create Claim Offer3 ***************************************************************
+    let source_id3 = "Claim3";
+    let claim_name3 = "Claim3";
+    let claim_data3 = serde_json::from_str(CLAIM_DATA3).unwrap(); // this format will make it easier to modify in the futre
+    let ledger_issuer_did3 = CLAIM_DEF_ISSUER_DID3.clone();
+    let ledger_schema_seq_num3 = CLAIM_DEF_SCHEMA_SEQ_NUM3;
+    let (err3, claim_handle3) = create_claim_offer(claim_name3, source_id3, claim_data3, ledger_issuer_did3, ledger_schema_seq_num3);
+    assert_eq!(err3, 0);
+    assert!(claim_handle3>0);
+
+    // Create Claim Offer4 ***************************************************************
+    let source_id4 = "Claim4";
+    let claim_name4 = "Claim4";
+    let claim_data4 = serde_json::from_str(CLAIM_DATA4).unwrap(); // this format will make it easier to modify in the futre
+    let ledger_issuer_did4 = CLAIM_DEF_ISSUER_DID4.clone();
+    let ledger_schema_seq_num4 = CLAIM_DEF_SCHEMA_SEQ_NUM4;
+    let (err4, claim_handle4) = create_claim_offer(claim_name4, source_id4, claim_data4, ledger_issuer_did4, ledger_schema_seq_num4);
+    assert_eq!(err4, 0);
+    assert!(claim_handle4>0);
+
+    // Create Claim Offer5 ***************************************************************
+    let source_id5 = "Claim5";
+    let claim_name5 = "Claim5";
+    let claim_data5 = serde_json::from_str(CLAIM_DATA5).unwrap(); // this format will make it easier to modify in the futre
+    let ledger_issuer_did5 = CLAIM_DEF_ISSUER_DID5.clone();
+    let ledger_schema_seq_num5 = schema_no;
+    let (err5, claim_handle5) = create_claim_offer(claim_name5, source_id5, claim_data5, ledger_issuer_did5, ledger_schema_seq_num5);
+    assert_eq!(err5, 0);
+    assert!(claim_handle5>0);
 
     // Create Proof **************************************************************
     let requested_attrs = json!([
@@ -120,26 +190,35 @@ fn demo(){
           "name":"address1",
           "issuer_did":ledger_issuer_did
        },
+//       {
+//          "name":"claim2",
+//       },
+//       {
+//          "schema_seq_no":ledger_schema_seq_num2,
+//          "name":"d2",
+//          "issuer_did":ledger_issuer_did2
+//       },
        {
-          "schema_seq_no":ledger_schema_seq_num,
-          "name":"address2",
-          "issuer_did":ledger_issuer_did
+          "schema_seq_no":ledger_schema_seq_num3,
+          "name":"claim3",
+          "issuer_did":ledger_issuer_did3
        },
        {
-          "schema_seq_no":ledger_schema_seq_num,
-          "name":"city",
-          "issuer_did":ledger_issuer_did
+          "name":"a3",
        },
        {
-          "schema_seq_no":ledger_schema_seq_num,
+          "schema_seq_no":ledger_schema_seq_num4,
           "name":"state",
-          "issuer_did":ledger_issuer_did
+          "issuer_did":ledger_issuer_did4
        },
        {
-          "schema_seq_no":ledger_schema_seq_num,
-          "name":"zip",
-          "issuer_did":ledger_issuer_did
-       }
+          "schema_seq_no":ledger_schema_seq_num5,
+          "name":"New Claim",
+          "issuer_did":ledger_issuer_did5
+       },
+       {
+          "name":"claim5",
+       },
     ]).to_string();
     let (err, proof_handle) = create_proof_request(source_id, requested_attrs.as_str());
     assert_eq!(err, 0);
@@ -169,8 +248,8 @@ fn demo(){
 //    let pphone_number = "8014710072";
 //    let lphone_number = "8017900625";
 //    let phone_number = "3858814106";
-//    let phone_number = "2053863441";
-    let phone_number = "2182578533";
+    let phone_number = "2053863441";
+//    let phone_number = "2182578533";
     let connection_opt = json!({"phone":phone_number});
     //let connection_opt = String::from("");
     let rc = api::connection::cxs_connection_connect(command_handle,
@@ -191,16 +270,14 @@ fn demo(){
     let connection_state = wait_for_updated_state(connection_handle, 4, api::connection::cxs_connection_update_state);
     assert_eq!(connection_state, 4);
 
-    // update claim *******************************************************************
+    // update claim1 *******************************************************************
     let target_claim_state = 1;
     let claim_state = wait_for_updated_state(claim_handle, target_claim_state, api::issuer_claim::cxs_issuer_claim_update_state);
     assert_eq!(claim_state, target_claim_state);
 
-
-
-    // Send Claim Offer ***************************************************************
-    println!("ABOUT TO SEND CLAIM OFFER");
-    std::thread::sleep(Duration::from_millis(5000));
+    // Send Claim Offer1 ***************************************************************
+    println!("ABOUT TO SEND CLAIM OFFER1");
+    std::thread::sleep(Duration::from_millis(1000));
     let err = send_claim_offer(claim_handle, connection_handle);
     assert_eq!(err,0);
 
@@ -213,7 +290,102 @@ fn demo(){
     assert_eq!(err,0);
 
     receive_request_send_claim(connection_handle,claim_handle);
+//    std::thread::sleep(Duration::from_millis(3));
 
+
+
+    // update claim2 *******************************************************************
+    let target_claim_state = 1;
+    let claim_state = wait_for_updated_state(claim_handle2, target_claim_state, api::issuer_claim::cxs_issuer_claim_update_state);
+    assert_eq!(claim_state, target_claim_state);
+
+    // Send Claim Offer2 ***************************************************************
+    println!("ABOUT TO SEND CLAIM OFFER2");
+    std::thread::sleep(Duration::from_millis(1000));
+    let err = send_claim_offer(claim_handle2, connection_handle);
+    assert_eq!(err,0);
+
+    // Serialize again ****************************************************************
+    let err = serialize_cxs_object(connection_handle, serialize_connection_fn);
+    assert_eq!(err,0);
+
+    // Serialize claim ****************************************************************
+    let err = serialize_cxs_object(claim_handle2, serialize_claim_fn);
+    assert_eq!(err,0);
+    receive_request_send_claim(connection_handle,claim_handle2);
+//    std::thread::sleep(Duration::from_millis(3));
+
+
+
+    // update claim3 *******************************************************************
+    let target_claim_state = 1;
+    let claim_state = wait_for_updated_state(claim_handle3, target_claim_state, api::issuer_claim::cxs_issuer_claim_update_state);
+    assert_eq!(claim_state, target_claim_state);
+
+    // Send Claim Offer3 ***************************************************************
+    println!("ABOUT TO SEND CLAIM OFFER3");
+    std::thread::sleep(Duration::from_millis(1000));
+    let err = send_claim_offer(claim_handle3, connection_handle);
+    assert_eq!(err,0);
+
+    // Serialize again ****************************************************************
+    let err = serialize_cxs_object(connection_handle, serialize_connection_fn);
+    assert_eq!(err,0);
+
+    // Serialize claim ****************************************************************
+    let err = serialize_cxs_object(claim_handle3, serialize_claim_fn);
+    assert_eq!(err,0);
+    receive_request_send_claim(connection_handle,claim_handle3);
+    std::thread::sleep(Duration::from_millis(3));
+
+
+
+    // update claim4 *******************************************************************
+    let target_claim_state = 1;
+    let claim_state = wait_for_updated_state(claim_handle4, target_claim_state, api::issuer_claim::cxs_issuer_claim_update_state);
+    assert_eq!(claim_state, target_claim_state);
+
+    // Send Claim Offer4 ***************************************************************
+    println!("ABOUT TO SEND CLAIM OFFER4");
+    std::thread::sleep(Duration::from_millis(1000));
+    let err = send_claim_offer(claim_handle4, connection_handle);
+    assert_eq!(err,0);
+
+    // Serialize again ****************************************************************
+    let err = serialize_cxs_object(connection_handle, serialize_connection_fn);
+    assert_eq!(err,0);
+
+    // Serialize claim ****************************************************************
+    let err = serialize_cxs_object(claim_handle4, serialize_claim_fn);
+    assert_eq!(err,0);
+
+    receive_request_send_claim(connection_handle,claim_handle4);
+
+
+
+    // update claim5 *******************************************************************
+    let target_claim_state = 1;
+    let claim_state = wait_for_updated_state(claim_handle5, target_claim_state, api::issuer_claim::cxs_issuer_claim_update_state);
+    assert_eq!(claim_state, target_claim_state);
+
+    // Send Claim Offer5 ***************************************************************
+    println!("ABOUT TO SEND CLAIM OFFER5");
+    std::thread::sleep(Duration::from_millis(1000));
+    let err = send_claim_offer(claim_handle5, connection_handle);
+    assert_eq!(err,0);
+
+    // Serialize again ****************************************************************
+    let err = serialize_cxs_object(connection_handle, serialize_connection_fn);
+    assert_eq!(err,0);
+
+    // Serialize claim ****************************************************************
+    let err = serialize_cxs_object(claim_handle5, serialize_claim_fn);
+    assert_eq!(err,0);
+
+    receive_request_send_claim(connection_handle,claim_handle5);
+
+
+    // Send Proof Request
     send_proof_request_and_receive_proof(connection_handle, proof_handle);
 }
 
