@@ -9,19 +9,18 @@ import { CXSBase } from './CXSBase'
 
 export interface ISchema {
   sourceId: string,
-  name: string,
   data: ISchemaAttrs
 }
 
 export interface ISchemaAttrs {
   name: string,
   version: string,
-  attrNames: [string]
+  attrNames: string[]
 }
 
 export interface ISchemaObj {
   source_id: string,
-  handle: number,
+  handle: string,
   name: string,
   data: ISchemaTxn,
   sequence_num: number,
@@ -35,7 +34,7 @@ export interface ISchemaTxn {
   data?: {
     name: string,
     version: string,
-    attr_names: [string]
+    attr_names: string[]
   }
 }
 
@@ -61,7 +60,7 @@ export class Schema extends CXSBase {
   }
 
   static async create (data: ISchema): Promise<Schema> {
-    const schema = new Schema(data.sourceId, { name: data.name, schemaNo: 0, schemaAttrs: data.data })
+    const schema = new Schema(data.sourceId, { name: data.data.name, schemaNo: 0, schemaAttrs: data.data })
     const commandHandle = 0
     try {
       await schema._create((cb) => rustAPI().cxs_schema_create(
@@ -119,7 +118,9 @@ export class Schema extends CXSBase {
         schemaAttrs: {name: schemaAttrs.name, version: schemaAttrs.version, attrNames: schemaAttrs.attr_names},
         schemaNo: schemaObj.sequence_num
       }
-      return new Schema(data.sourceId, schemaParams)
+      const newSchema = new Schema(data.sourceId, schemaParams)
+      newSchema._handle = JSON.stringify(schemaObj.handle)
+      return newSchema
     } catch (err) {
       throw new CXSInternalError(`cxs_schema_get_attributes -> ${err}`)
     }
