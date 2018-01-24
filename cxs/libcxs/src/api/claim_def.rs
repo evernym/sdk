@@ -174,7 +174,7 @@ mod tests {
                                        CString::new("Test Source ID").unwrap().into_raw(),
                                        CString::new("Test Claim Def").unwrap().into_raw(),
                                        15,
-                                       ptr::null(),
+                                       CString::new("6vkhW3L28AophhA68SSzRS").unwrap().into_raw(),
                                        false,
                                        Some(create_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
