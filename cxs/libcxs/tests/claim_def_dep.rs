@@ -44,7 +44,7 @@ mod tests {
         ]
     ];
 
-//    #[ignore]
+    #[ignore]
     #[test]
     fn test_creating_claim_def_dependencies() {
         let wallet_name = "a_test_wallet";
