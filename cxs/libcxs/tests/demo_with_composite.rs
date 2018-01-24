@@ -19,8 +19,6 @@ use std::ffi::CString;
 use cxs::api;
 use cxs::utils::libindy::pool;
 use std::sync::mpsc::channel;
-use std::path::Path;
-use cxs::utils::error;
 
 #[allow(dead_code)]
 static SERIALIZED_CONNECTION: &str = r#"{"source_id":"test_cxs_connection_connect","handle":2608616713,"pw_did":"62LeFLkN9ZeCr32j73PUyD","pw_verkey":"3jnnnL65mTW786LaTJSwEKENEMwmMowuJTYmVho23qNU","did_endpoint":"","state":4,"uuid":"","endpoint":"","invite_detail":{"e":"34.210.228.152:80","rid":"6oHwpBN","sakdp":"key","sn":"enterprise","sD":"62LeFLkN9ZeCr32j73PUyD","lu":"https://s19.postimg.org/ykyz4x8jn/evernym.png","sVk":"3jnnnL65mTW786LaTJSwEKENEMwmMowuJTYmVho23qNU","tn":"there"}}"#;
@@ -30,38 +28,18 @@ static CLAIM_DATA1: &str = r#"{"address1": ["Claim1 address1"], "address2": ["Cl
 static CLAIM_DATA2: &str = r#"{"claim2": ["Claim2 Value"], "a2": ["Claim2 a2"], "b2": ["Claim2 b2"], "c2": ["Claim2 c2"], "d2": ["Claim2 d2"]}"#;
 static CLAIM_DATA3: &str = r#"{"claim3": ["Claim3 Value"], "a3": ["Claim3 a3"], "b3": ["Claim3 b3"], "c3": ["Claim3 c3"], "d3": ["Claim3 d3"]}"#;
 static CLAIM_DATA4: &str = r#"{"address1": ["Claim4 address1"], "address2": ["Claim4 address2"], "city": ["Claim4 SLC"], "state": ["UT"], "zip": ["222222"]}"#;
-static CLAIM_DATA5: &str = r#"{"New Claim": ["New Claim-Claim5"], "claim5": ["Claim5 Val"], "a5": ["Claim5 a5"], "b5": ["Claim5 b5"], "c5": ["Claim5 c5"], "d5": ["Claim5 d5"]}"#;
+#[allow(dead_code)]
+static CLAIM_DATA5: &str = r#"{"NewClaim": ["New Claim-Claim5"], "claim5": ["Claim5 Val"], "a5": ["Claim5 a5"], "b5": ["Claim5 b5"], "c5": ["Claim5 c5"], "d5": ["Claim5 d5"]}"#;
 static CLAIM_DEF_ISSUER_DID1: &str = "DunkM3x1y7S4ECgSL4Wkru";
 static CLAIM_DEF_ISSUER_DID2: &str = "DunkM3x1y7S4ECgSL4Wkru";
 static CLAIM_DEF_ISSUER_DID3: &str = "EmapZ8H9S2qPp3JKyfr5z1";
+#[allow(dead_code)]
 static CLAIM_DEF_ISSUER_DID4: &str = "2hoqvcwupRTUNkXn6ArYzs";
 static CLAIM_DEF_ISSUER_DID5: &str = "2hoqvcwupRTUNkXn6ArYzs";
 static CLAIM_DEF_SCHEMA_SEQ_NUM1: u32 = 38;
 static CLAIM_DEF_SCHEMA_SEQ_NUM2: u32 = 72;
 static CLAIM_DEF_SCHEMA_SEQ_NUM3: u32 = 74;
 static CLAIM_DEF_SCHEMA_SEQ_NUM4: u32 = 22;
-
-fn sandbox_pool_setup() {
-    let node_txns = vec![
-        r#"{"data":{"alias":"Node1","blskey":"4N8aUNHSgjQVgkpm8nhNEfDf6txHznoYREg9kirmJrkivgL4oSEimFF6nsQ6M41QvhM2Z33nves5vfSn9n1UwNFJBYtWVnHYMATn76vLuL3zU88KyeAYcHfsih3He6UHcXDxcaecHVz6jhCYz1P2UZn2bDVruL5wXpehgBfBaLKm3Ba","client_ip":"35.164.240.131","client_port":9702,"node_ip":"35.164.240.131","node_port":9701,"services":["VALIDATOR"]},"dest":"Gw6pDLhcBcoQesN72qfotTgFa7cbuqZpkX3Xo6pLhPhv","identifier":"Th7MpTaRZVRYnPiabds81Y","txnId":"fea82e10e894419fe2bea7d96296a6d46f50f93f9eeda954ec461b2ed2950b62","type":"0"}"#,
-        r#"{"data":{"alias":"Node2","blskey":"37rAPpXVoxzKhz7d9gkUe52XuXryuLXoM6P6LbWDB7LSbG62Lsb33sfG7zqS8TK1MXwuCHj1FKNzVpsnafmqLG1vXN88rt38mNFs9TENzm4QHdBzsvCuoBnPH7rpYYDo9DZNJePaDvRvqJKByCabubJz3XXKbEeshzpz4Ma5QYpJqjk","client_ip":"35.164.240.131","client_port":9704,"node_ip":"35.164.240.131","node_port":9703,"services":["VALIDATOR"]},"dest":"8ECVSk179mjsjKRLWiQtssMLgp6EPhWXtaYyStWPSGAb","identifier":"EbP4aYNeTHL6q385GuVpRV","txnId":"1ac8aece2a18ced660fef8694b61aac3af08ba875ce3026a160acbc3a3af35fc","type":"0"}"#,
-        r#"{"data":{"alias":"Node3","blskey":"3WFpdbg7C5cnLYZwFZevJqhubkFALBfCBBok15GdrKMUhUjGsk3jV6QKj6MZgEubF7oqCafxNdkm7eswgA4sdKTRc82tLGzZBd6vNqU8dupzup6uYUf32KTHTPQbuUM8Yk4QFXjEf2Usu2TJcNkdgpyeUSX42u5LqdDDpNSWUK5deC5","client_ip":"35.164.240.131","client_port":9706,"node_ip":"35.164.240.131","node_port":9705,"services":["VALIDATOR"]},"dest":"DKVxG2fXXTU8yT5N7hGEbXB3dfdAnYv1JczDUHpmDxya","identifier":"4cU41vWW82ArfxJxHkzXPG","txnId":"7e9f355dffa78ed24668f0e0e369fd8c224076571c51e2ea8be5f26479edebe4","type":"0"}"#,
-        r#"{"data":{"alias":"Node4","blskey":"2zN3bHM1m4rLz54MJHYSwvqzPchYp8jkHswveCLAEJVcX6Mm1wHQD1SkPYMzUDTZvWvhuE6VNAkK3KxVeEmsanSmvjVkReDeBEMxeDaayjcZjFGPydyey1qxBHmTvAnBKoPydvuTAqx5f7YNNRAdeLmUi99gERUU7TD8KfAa6MpQ9bw","client_ip":"35.164.240.131","client_port":9708,"node_ip":"35.164.240.131","node_port":9707,"services":["VALIDATOR"]},"dest":"4PS3EDQ3dW1tci1Bp6543CfuuebjFrg36kLAUcskGfaA","identifier":"TWwCRQRZ2ZHMJFn9TzLp7W","txnId":"aa5e817d7cc626170eca175822029339a444eb0ee8f0bd20d3b0b76e566fb008","type":"0"}"#];
-    let pool_name = "PoolForDemo";
-    let config_string = format!("{{\"genesis_txn\":\"/tmp/{}.txn\"}}", &pool_name);
-    let nodes_count = 4;
-    let pool_name = "PoolForDemo";
-    let txn_file_data = node_txns[0..(nodes_count as usize)].join("\n");
-    let txn_file_path = "/tmp/PoolForDemo.txn";
-    pool::create_genesis_txn_file(&pool_name, &txn_file_data, Some(Path::new(txn_file_path)));
-    assert_eq!(pool::pool_config_json(Path::new(txn_file_path)),config_string);
-    assert_eq!(pool::create_pool_ledger_config(&pool_name, Some(Path::new(&txn_file_path))),Ok(error::SUCCESS.code_num));
-
-}
-
-pub fn open_sandbox_pool() {
-    sandbox_pool_setup();
-}
 
 #[test]
 fn test_demo_full(){
@@ -78,22 +56,22 @@ fn demo_full(){
     let invite_details = api::connection::cxs_connection_invite_details;
 
     let random_int: u32 = rand::random();
-    let log_url = format!("https://robohash.org/{}?set=set3", random_int);
+    let logo_url = format!("https://robohash.org/{}?set=set3", random_int);
 
     // Init SDK  *********************************************************************
-    let config_string: String = json!({
-     "enterprise_verkey": "4EMiwyMpqAQEkNEoXW3tYsVukZkwdLdd9B8rnnmud7hD",
-     "logo_url":"https://robohash.org/1670331821?set=set3 (48 kB) ",
-     "agent_pairwise_verkey": "9av3yK654Zzc25xe7mQMcUQoUMouwuLcne322eLMfUbq",
-     "enterprise_did_agent": "5bJqPo8aCWyBwLQosZkJcB",
-     "agent_pairwise_did": "GkYnFwrAaMMRPaBUYF9jT2",
-     "wallet_name": "COMPOSITE",
-     "enterprise_did": "2hoqvcwupRTUNkXn6ArYzs",
-     "agent_endpoint": "https://enym-eagency.pdev.evernym.com",
-     "agency_pairwise_verkey": "4hmBc54YanNhQHTD66u6XDp1NSgQm1BacPFbE7b5gtat",
-     "agent_enterprise_verkey": "3W9WGtRowAanh5q6giQrGncZVMvRwPedB9fJAJkAN5Gk",
-     "agency_pairwise_did": "7o2xT9Qtp83cJUJMUBTF3M",
-     "enterprise_name": "doug",
+    let config_string: String = json!({"enterprise_verkey": "4EMiwyMpqAQEkNEoXW3tYsVukZkwdLdd9B8rnnmud7hD",
+        "logo_url":logo_url,
+        "agent_pairwise_verkey": "9av3yK654Zzc25xe7mQMcUQoUMouwuLcne322eLMfUbq",
+        "enterprise_did_agent": "5bJqPo8aCWyBwLQosZkJcB",
+        "agent_pairwise_did": "GkYnFwrAaMMRPaBUYF9jT2",
+        "wallet_name": "my_real_wallet",
+        "enterprise_did": "2hoqvcwupRTUNkXn6ArYzs",
+        "agent_endpoint": "https://enym-eagency.pdev.evernym.com",
+        "agency_pairwise_verkey": "4hmBc54YanNhQHTD66u6XDp1NSgQm1BacPFbE7b5gtat",
+        "agent_enterprise_verkey": "3W9WGtRowAanh5q6giQrGncZVMvRwPedB9fJAJkAN5Gk",
+        "agency_pairwise_did": "7o2xT9Qtp83cJUJMUBTF3M",
+        "enterprise_name": "Evernym",
+        "genesis_path":self::cxs::utils::constants::GENESIS_PATH
     }).to_string();
 
     let mut file = NamedTempFileOptions::new()
@@ -103,7 +81,8 @@ fn demo_full(){
 
     file.write_all(config_string.as_bytes()).unwrap();
 
-    open_sandbox_pool();
+    pool::open_sandbox_pool();
+    self::cxs::utils::libindy::pool::close().unwrap();
 
     let path = CString::new(file.path().to_str().unwrap()).unwrap();
     let r = api::cxs::cxs_init(0,path.as_ptr(),Some(generic_cb));
@@ -115,22 +94,8 @@ fn demo_full(){
 //    let (issuer_did, issuer_verkey) = signus::SignusUtils::create_and_store_my_did(get_wallet_handle(), Some(r#"{"seed":"000000000000000000000000Issuer01"}"#))?;
 
 
-    //Create New Schema ******************************************************************
-    let new_schema_data = r#"{"name":"New Claim - Claim5","version":"1.0","attr_names":["New Claim", "claim5", "a5","b5","c5","d5"]}"#.to_string();
-
-    let source_id = "New Claim - Claim5";
-    let claim_name = "New Claim - Claim5";
-    let (err, schema_handle, schema_no) = create_schema(source_id, claim_name, &new_schema_data);
-    assert_eq!(err, 0);
-    assert!(schema_handle > 0);
-    assert!(schema_no > 0);
-    println!("\nSchema Created with SeqNO: {}\n", schema_no);
-
-    //Create New ClaimDef ******************************************************************
-    let (err, schema_handle) = create_claimdef(source_id, claim_name, schema_no);
-    assert_eq!(err, 0);
-    assert!(schema_handle > 0);
-    println!("\nClaimDef Created\n");
+    //Create New Schema And ClaimDef ******************************************************************
+//    let schema_no = create_schema_and_claimdef();
 
 
     // Create Claim Offer1 ***************************************************************
@@ -173,15 +138,15 @@ fn demo_full(){
     assert_eq!(err4, 0);
     assert!(claim_handle4>0);
 
-    // Create Claim Offer5 ***************************************************************
-    let source_id5 = "Claim5";
-    let claim_name5 = "Claim5";
-    let claim_data5 = serde_json::from_str(CLAIM_DATA5).unwrap(); // this format will make it easier to modify in the futre
-    let ledger_issuer_did5 = CLAIM_DEF_ISSUER_DID5.clone();
-    let ledger_schema_seq_num5 = schema_no;
-    let (err5, claim_handle5) = create_claim_offer(claim_name5, source_id5, claim_data5, ledger_issuer_did5, ledger_schema_seq_num5);
-    assert_eq!(err5, 0);
-    assert!(claim_handle5>0);
+    // Create Claim Offer5 Only if Created Schema and ClaimDef ***************************************************************
+//    let source_id5 = "Claim5";
+//    let claim_name5 = "Claim5";
+//    let claim_data5 = serde_json::from_str(CLAIM_DATA5).unwrap(); // this format will make it easier to modify in the futre
+//    let ledger_issuer_did5 = CLAIM_DEF_ISSUER_DID5.clone();
+//    let ledger_schema_seq_num5 = schema_no;
+//    let (err5, claim_handle5) = create_claim_offer(claim_name5, source_id5, claim_data5, ledger_issuer_did5, ledger_schema_seq_num5);
+//    assert_eq!(err5, 0);
+//    assert!(claim_handle5>0);
 
     // Create Proof **************************************************************
     let requested_attrs = json!([
@@ -190,35 +155,67 @@ fn demo_full(){
           "name":"address1",
           "issuer_did":ledger_issuer_did
        },
-//       {
-//          "name":"claim2",
-//       },
-//       {
-//          "schema_seq_no":ledger_schema_seq_num2,
-//          "name":"d2",
-//          "issuer_did":ledger_issuer_did2
-//       },
+       {
+          "schema_seq_no":ledger_schema_seq_num,
+          "name":"address2",
+          "issuer_did":ledger_issuer_did
+       },
+       {
+          "schema_seq_no":ledger_schema_seq_num,
+          "name":"zip",
+          "issuer_did":ledger_issuer_did
+       },
+       {
+          "schema_seq_no":ledger_schema_seq_num,
+          "name":"city",
+          "issuer_did":ledger_issuer_did
+       },
+       {
+          "name":"claim2",
+       },
+       {
+          "schema_seq_no":ledger_schema_seq_num2,
+          "name":"d2",
+          "issuer_did":ledger_issuer_did2
+       },
+       {
+          "schema_seq_no":ledger_schema_seq_num2,
+          "name":"b2",
+          "issuer_did":ledger_issuer_did2
+       },
        {
           "schema_seq_no":ledger_schema_seq_num3,
           "name":"claim3",
           "issuer_did":ledger_issuer_did3
        },
        {
+          "schema_seq_no":ledger_schema_seq_num3,
+          "name":"b3",
+          "issuer_did":ledger_issuer_did3
+       },{
+          "schema_seq_no":ledger_schema_seq_num3,
+          "name":"d3",
+          "issuer_did":ledger_issuer_did3
+       },
+       {
           "name":"a3",
+       },
+       {
+          "name":"c3",
        },
        {
           "schema_seq_no":ledger_schema_seq_num4,
           "name":"state",
           "issuer_did":ledger_issuer_did4
        },
-       {
-          "schema_seq_no":ledger_schema_seq_num5,
-          "name":"New Claim",
-          "issuer_did":ledger_issuer_did5
-       },
-       {
-          "name":"claim5",
-       },
+//       {
+//          "schema_seq_no":ledger_schema_seq_num5,
+//          "name":"a5",
+//          "issuer_did":ledger_issuer_did5
+//       },
+//       {
+//          "name":"claim5",
+//       },
     ]).to_string();
     let (err, proof_handle) = create_proof_request(source_id, requested_attrs.as_str());
     assert_eq!(err, 0);
@@ -362,27 +359,27 @@ fn demo_full(){
     receive_request_send_claim(connection_handle,claim_handle4);
 
 
-
+    // Do only when creating new schema and claimdef
     // update claim5 *******************************************************************
-    let target_claim_state = 1;
-    let claim_state = wait_for_updated_state(claim_handle5, target_claim_state, api::issuer_claim::cxs_issuer_claim_update_state);
-    assert_eq!(claim_state, target_claim_state);
-
-    // Send Claim Offer5 ***************************************************************
-    println!("ABOUT TO SEND CLAIM OFFER5");
-    std::thread::sleep(Duration::from_millis(1000));
-    let err = send_claim_offer(claim_handle5, connection_handle);
-    assert_eq!(err,0);
-
-    // Serialize again ****************************************************************
-    let err = serialize_cxs_object(connection_handle, serialize_connection_fn);
-    assert_eq!(err,0);
-
-    // Serialize claim ****************************************************************
-    let err = serialize_cxs_object(claim_handle5, serialize_claim_fn);
-    assert_eq!(err,0);
-
-    receive_request_send_claim(connection_handle,claim_handle5);
+//    let target_claim_state = 1;
+//    let claim_state = wait_for_updated_state(claim_handle5, target_claim_state, api::issuer_claim::cxs_issuer_claim_update_state);
+//    assert_eq!(claim_state, target_claim_state);
+//
+//    // Send Claim Offer5 ***************************************************************
+//    println!("ABOUT TO SEND CLAIM OFFER5");
+//    std::thread::sleep(Duration::from_millis(1000));
+//    let err = send_claim_offer(claim_handle5, connection_handle);
+//    assert_eq!(err,0);
+//
+//    // Serialize again ****************************************************************
+//    let err = serialize_cxs_object(connection_handle, serialize_connection_fn);
+//    assert_eq!(err,0);
+//
+//    // Serialize claim ****************************************************************
+//    let err = serialize_cxs_object(claim_handle5, serialize_claim_fn);
+//    assert_eq!(err,0);
+//
+//    receive_request_send_claim(connection_handle,claim_handle5);
 
 
     // Send Proof Request
@@ -419,6 +416,26 @@ fn send_proof_request_and_receive_proof(connection_handle: u32, proof_handle:u32
     // Receive Proof
     let err = utils::demo::get_proof(proof_handle, connection_handle);
     assert_eq!(err, 0);
+}
+
+#[allow(dead_code)]
+fn create_schema_and_claimdef() -> u32 {
+    let new_schema_data = r#"{"name":"New Claim - Claim5","version":"1.0","attr_names":["NewClaim", "claim5", "a5","b5","c5","d5"]}"#.to_string();
+
+    let source_id = "New Claim - Claim5";
+    let claim_name = "New Claim - Claim5";
+    let (err, schema_handle, schema_no) = create_schema(source_id, claim_name, &new_schema_data);
+    assert_eq!(err, 0);
+    assert!(schema_handle > 0);
+    assert!(schema_no > 0);
+    println!("\nSchema Created with SeqNO: {}\n", schema_no);
+
+    //Create New ClaimDef ******************************************************************
+    let (err, schema_handle) = create_claimdef(source_id, claim_name, schema_no);
+    assert_eq!(err, 0);
+    assert!(schema_handle > 0);
+    println!("\nClaimDef Created\n");
+    schema_handle
 }
 
 #[allow(dead_code)]
