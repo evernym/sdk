@@ -11,7 +11,7 @@ mod tests {
     use self::cxs::utils::wallet;
     use self::cxs::utils::libindy::pool;
 
-    static ENTRIES: &[[&str;3];16] = &[
+    static ENTRIES: &[[&str;3];32] = &[
         // Claim 1
         [
             "claim_definition_private::DunkM3x1y7S4ECgSL4Wkru:38",
@@ -90,16 +90,105 @@ mod tests {
             r#"{"verkey":"8WFnbdyQkZ7pZDX9FRCLbtH4bjy3AacWKPYkpxHCxaVq","signkey":"xt19s1sp2UZCGhy9rNyb1FtxdKiDGZZPP7Uk7LfAi6PvimpyRHkzenYNbW6eLf5DKWU9mWHFQMWVpMQc7Bq3EL3"}"#,
             "2018-01-19 20:27:15"
         ],
+        //DID M7uZU89SUdsav7i4hVZtXp
         [
-            "my_did::5bJqPo8aCWyBwLQosZkJcB",
-            r#"{"did":"5bJqPo8aCWyBwLQosZkJcB","verkey":"3W9WGtRowAanh5q6giQrGncZVMvRwPedB9fJAJkAN5Gk"}"#,
-            "2018-01-04 22:46:18"
+            "my_did::M7uZU89SUdsav7i4hVZtXp",
+            r#"{"did":"M7uZU89SUdsav7i4hVZtXp","verkey":"By1CvKuLFRRdqMyGsmu8naVQQQfSH4MYna4K7d4KDvfy"}"#,
+            "2018-01-24 16:24:20"
         ],
         [
-            "key::3W9WGtRowAanh5q6giQrGncZVMvRwPedB9fJAJkAN5Gk",
-            r#"{"verkey":"3W9WGtRowAanh5q6giQrGncZVMvRwPedB9fJAJkAN5Gk","signkey":"xt19s1sp2UZCGhy9rNyb1FtxdKiDGZaRvDuYQ4AKCZCipe1dDms9sw66AKazbdzTSisr1CKjA1r1iDZcjw6pNUY"}"#,
-            "2018-01-04 22:46:18"
-        ]
+            "key::By1CvKuLFRRdqMyGsmu8naVQQQfSH4MYna4K7d4KDvfy",
+            r#"{"verkey":"By1CvKuLFRRdqMyGsmu8naVQQQfSH4MYna4K7d4KDvfy","signkey":"2X9g9MoQZszUqeWVR6mF2MfrFu8uCHQC74sbARGKbgYuxE1ejYWXxSFkdLM7HQgXwLGUoRc4h8KS39ehfKZXecmV"}"#,
+            "2018-01-24 16:24:20"
+        ],
+        //DID V4SGRU86Z58d6TV7PBUe6f
+        [
+            "my_did::V4SGRU86Z58d6TV7PBUe6f",
+            r#"{"did":"V4SGRU86Z58d6TV7PBUe6f","verkey":"GJ1SzoWzavQYfNL9XkaJdrQejfztN4XqdsiV4ct3LXKL"}"#,
+            "2018-01-19 20:27:14"
+        ],
+        [
+            "key::GJ1SzoWzavQYfNL9XkaJdrQejfztN4XqdsiV4ct3LXKL",
+            r#"{"verkey":"GJ1SzoWzavQYfNL9XkaJdrQejfztN4XqdsiV4ct3LXKL","signkey":"xt19s1sp2UZCGhy9rNyb1FtxdKiDGZZPQ4HE7gcnS8BV8xho5wQnCBjgpqBf522RWEYgPDL7rpn9GFz3XXgcaHk"}"#,
+            "2018-01-19 20:27:14"
+        ],
+        //DID 6pLgr11JDGqSiheutZiqH5
+        [
+            "my_did::6pLgr11JDGqSiheutZiqH5",
+            r#"{"did":"6pLgr11JDGqSiheutZiqH5","verkey":"4ArxwLx44BsoXYrjmhi3zykqVqegQZUCtmY6uS1Zme7W"}"#,
+            "2018-01-19 20:27:14"
+        ],
+        [
+            "key::4ArxwLx44BsoXYrjmhi3zykqVqegQZUCtmY6uS1Zme7W",
+            r#"{"verkey":"4ArxwLx44BsoXYrjmhi3zykqVqegQZUCtmY6uS1Zme7W","signkey":"xt19s1sp2UZCGhy9rNyb1FtxdKiDGZZPP7Uk7LfAi6PFvkGKYmCiC4zCmGriGpCDyPCYsuGzy5276S6xk4epPTA"}"#,
+            "2018-01-19 20:27:14"
+        ],
+        //DID 4QgA4TeP8cx6N6CbmydXgY
+        [
+            "my_did::4QgA4TeP8cx6N6CbmydXgY",
+            r#"{"did":"4QgA4TeP8cx6N6CbmydXgY","verkey":"2rjuC1MjXeRzD2HXZP7GbC2Jp94ejpfL9y5fa8vzh3k5"}"#,
+            "2018-01-19 20:27:15"
+        ],
+        [
+            "key::2rjuC1MjXeRzD2HXZP7GbC2Jp94ejpfL9y5fa8vzh3k5",
+            r#"{"verkey":"2rjuC1MjXeRzD2HXZP7GbC2Jp94ejpfL9y5fa8vzh3k5","signkey":"xt19s1sp2UZCGhy9rNyb1FtxdKiDGZZPP7Uk7LfAi6PXqwa4zvUyhMwTKV4j8Pi1QTC7fxa5SLErLvzVNQrFkL1"}"#,
+            "2018-01-19 20:27:15"
+        ],
+        //DID QMJEenHYEihhAYD9NX9QJA
+        [
+            "my_did::QMJEenHYEihhAYD9NX9QJA",
+            r#"{"did":"QMJEenHYEihhAYD9NX9QJA","verkey":"Dj91BVcEneik3XzUFECpVHi1JSWD8Sp5C1f9gwLF1ZBp"}"#,
+            "2018-01-19 20:27:15"
+        ],
+        [
+            "key::Dj91BVcEneik3XzUFECpVHi1JSWD8Sp5C1f9gwLF1ZBp",
+            r#"{"verkey":"Dj91BVcEneik3XzUFECpVHi1JSWD8Sp5C1f9gwLF1ZBp","signkey":"xt19s1sp2UZCGhy9rNyb1FtxdKiDGZZPP7Uk7LfAi6QKAyR44gBpo8ERzkqsKqrHwjw6xgmxUdArVR8L1fdcAGJ"}"#,
+            "2018-01-19 20:27:15"
+        ],
+        //DID FTdABb4y74p2eqZ2bkZtwy
+        [
+            "my_did::FTdABb4y74p2eqZ2bkZtwy",
+            r#"{"did":"FTdABb4y74p2eqZ2bkZtwy","verkey":"8t5YHzniLT1smCE4SBvvifdgFvY8MGFDrETCfZeMUpiH"}"#,
+            "2018-01-19 20:27:15"
+        ],
+        [
+            "key::8t5YHzniLT1smCE4SBvvifdgFvY8MGFDrETCfZeMUpiH",
+            r#"{"verkey":"8t5YHzniLT1smCE4SBvvifdgFvY8MGFDrETCfZeMUpiH","signkey":"xt19s1sp2UZCGhy9rNyb1FtxdKiDGZZPP7Uk7LfAi6QXZEKfMcGAeA8ijmrHTkFiYU8JwN1vW8QzmAWAZQWbP33"}"#,
+            "2018-01-19 20:27:15"
+        ],
+        //DID QMJEenHYEihhAYD9NX9QJA
+        [
+            "my_did::HqnbxWG5KbRN6DTnaTVRPi",
+            r#"{"did":"HqnbxWG5KbRN6DTnaTVRPi","verkey":"ABP94vkg6mLaYntBg1A4goAov5GfNXMCjonME3dmf8ge"}"#,
+            "2018-01-19 20:27:16"
+        ],
+        [
+            "key::ABP94vkg6mLaYntBg1A4goAov5GfNXMCjonME3dmf8ge",
+            r#"{"verkey":"ABP94vkg6mLaYntBg1A4goAov5GfNXMCjonME3dmf8ge","signkey":"xt19s1sp2UZCGhy9rNyb1FtxdKiDGZZPP7Uk7LfAi6Qr5rHw5Kpj1Dc5RDPkT9gstonDajsgyJVNPSyaxphHeFg"}"#,
+            "2018-01-19 20:27:16"
+        ],
+        //DID Bv16f26bC9siA4G69MBNzZ
+        [
+            "my_did::Bv16f26bC9siA4G69MBNzZ",
+            r#"{"did":"Bv16f26bC9siA4G69MBNzZ","verkey":"6x1RzzkXxN1zozTrzNRcdX6qMp9GvQxVr33FrDQFHbyy"}"#,
+            "2018-01-19 20:27:16"
+        ],
+        [
+            "key::6x1RzzkXxN1zozTrzNRcdX6qMp9GvQxVr33FrDQFHbyy",
+            r#"{"verkey":"6x1RzzkXxN1zozTrzNRcdX6qMp9GvQxVr33FrDQFHbyy","signkey":"xt19s1sp2UZCGhy9rNyb1FtxdKiDGZZPP7Uk7LfAi6R65nxMw5HNednuhaVHzbY1qYKupFoz4ysxffD541wS4oH"}"#,
+            "2018-01-19 20:27:16"
+        ],
+        //DID YQkSbpeC2PyycfLieXsaD5
+        [
+            "my_did::YQkSbpeC2PyycfLieXsaD5",
+            r#"{"did":"YQkSbpeC2PyycfLieXsaD5","verkey":"J7v5TnKnWaus5BFw8FHmcNs9RwWzAgw6Q9iK77PHuMxw"}"#,
+            "2018-01-19 20:27:16"
+        ],
+        [
+            "key::J7v5TnKnWaus5BFw8FHmcNs9RwWzAgw6Q9iK77PHuMxw",
+            r#"{"verkey":"J7v5TnKnWaus5BFw8FHmcNs9RwWzAgw6Q9iK77PHuMxw","signkey":"xt19s1sp2UZCGhy9rNyb1FtxdKiDGZZPP7Uk7LfAi6RaV1yKWQ8ivGRjy9yf3dzBv7AESGqyZ2ZzqHbBsRkZn2X"}"#,
+            "2018-01-19 20:27:16"
+        ],
     ];
 
     #[ignore]
@@ -125,7 +214,7 @@ mod tests {
         create_new_claimdef("anything".to_string(), "anything".to_string(), schema_seq_no, issuer_did, false).unwrap();
     }
 
-    #[ignore]
+//    #[ignore]
     #[test]
     fn test_putting_claim_def_dependencies() {
         use std::path::Path;
