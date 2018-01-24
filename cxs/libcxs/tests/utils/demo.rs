@@ -5,6 +5,7 @@ extern crate serde_json;
 
 use utils::timeout::TimeoutUtils;
 use utils::cstring::CStringUtils;
+use std::ptr;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
 use self::libc::c_char;
@@ -36,12 +37,13 @@ pub fn create_claim_offer(claim_name: &str, source_id: &str, claim_data_value: s
     let (command_handle, cb) = closure_to_create_claim(cb);
     let claim_data_str = serde_json::to_string(&claim_data_value).unwrap();
     let claim_data_cstring = CString::new(claim_data_str).unwrap();
+    #[allow(unused_variables)]
     let issuer_did_cstring = CString::new(issuer_did).unwrap();
     let claim_name_cstring = CString::new(claim_name).unwrap();
     let rc = api::issuer_claim::cxs_issuer_create_claim(command_handle,
                                                         source_id_cstring.as_ptr(),
                                                         schema_seq_no,
-                                                        issuer_did_cstring.as_ptr(),
+                                                        ptr::null(),
                                                         claim_data_cstring.as_ptr(),
                                                         claim_name_cstring.as_ptr(),
                                                         cb);

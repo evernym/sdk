@@ -320,7 +320,7 @@ mod tests {
         assert_eq!(cxs_issuer_create_claim(0,
                                            ptr::null(),
                                            32,
-                                           CString::new(DEFAULT_DID).unwrap().into_raw(),
+                                           ptr::null(),
                                            CString::new(DEFAULT_ATTR).unwrap().into_raw(),
                                            CString::new(DEFAULT_CLAIM_NAME).unwrap().into_raw(),
                                            Some(create_cb)), error::SUCCESS.code_num);
