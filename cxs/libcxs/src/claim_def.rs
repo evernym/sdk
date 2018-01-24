@@ -171,6 +171,7 @@ impl CreateClaimDef {
                            schema_no: u32,
                            issuer_did: &str,
                            sig_type: Option<SigTypes>) -> bool {
+        if settings::test_indy_mode_enabled() { return false }
         let claim_def_str = match self.retrieve_claim_def(submitter_did.unwrap_or(""),
                                                           schema_no,
                                                           sig_type,

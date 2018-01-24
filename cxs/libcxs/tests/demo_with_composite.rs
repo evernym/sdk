@@ -33,8 +33,8 @@ static CLAIM_DATA5: &str = r#"{"NewClaim": ["New Claim-Claim5"], "claim5": ["Cla
 static CLAIM_DEF_ISSUER_DID1: &str = "DunkM3x1y7S4ECgSL4Wkru";
 static CLAIM_DEF_ISSUER_DID2: &str = "DunkM3x1y7S4ECgSL4Wkru";
 static CLAIM_DEF_ISSUER_DID3: &str = "EmapZ8H9S2qPp3JKyfr5z1";
-#[allow(dead_code)]
 static CLAIM_DEF_ISSUER_DID4: &str = "2hoqvcwupRTUNkXn6ArYzs";
+#[allow(dead_code)]
 static CLAIM_DEF_ISSUER_DID5: &str = "2hoqvcwupRTUNkXn6ArYzs";
 static CLAIM_DEF_SCHEMA_SEQ_NUM1: u32 = 38;
 static CLAIM_DEF_SCHEMA_SEQ_NUM2: u32 = 72;
@@ -359,7 +359,7 @@ fn demo_full(){
     receive_request_send_claim(connection_handle,claim_handle4);
 
 
-    // Do only when creating new schema and claimdef
+    // **** Do only when creating new schema and claimdef
     // update claim5 *******************************************************************
 //    let target_claim_state = 1;
 //    let claim_state = wait_for_updated_state(claim_handle5, target_claim_state, api::issuer_claim::cxs_issuer_claim_update_state);
