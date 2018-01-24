@@ -548,7 +548,7 @@ mod tests {
     fn test_from_ledger_without_pool(){
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-        let test = LedgerSchema::new_from_ledger(15);
+        let test = LedgerSchema::new_from_ledger(22);
         assert!(test.is_err());
         assert_eq!(error::NO_POOL_OPEN.code_num, test.unwrap_err())
     }

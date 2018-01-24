@@ -354,30 +354,30 @@ pub mod tests {
     fn test_get_claim_def_request() {
         settings::set_defaults();
 
-        let wallet_name = String::from("wallet1");
+        let wallet_name = String::from("a_test_wallet");
         assert!(init_wallet(&wallet_name).unwrap() > 0);
         let wallet_handle = get_wallet_handle();
         assert!(wallet_handle > 0);
         let mut claim_def = RetrieveClaimDef::new();
         let claim_def_req = claim_def.build_get_txn("GGBDg1j8bsKmr4h5T9XqYf",
-                                                    15,
+                                                    22,
                                                     Some(SigTypes::CL),
-                                                    "4fUDR9R7fjwELRvH9JT6HH").unwrap();
-        delete_wallet("wallet1").unwrap();
-        assert!(claim_def_req.contains("\"identifier\":\"GGBDg1j8bsKmr4h5T9XqYf\",\"operation\":{\"type\":\"108\",\"ref\":15,\"signature_type\":\"CL\",\"origin\":\"4fUDR9R7fjwELRvH9JT6HH\"}"));
+                                                    "2hoqvcwupRTUNkXn6ArYzs").unwrap();
+        delete_wallet("a_test_wallet").unwrap();
+        assert!(claim_def_req.contains("\"identifier\":\"GGBDg1j8bsKmr4h5T9XqYf\",\"operation\":{\"type\":\"108\",\"ref\":22,\"signature_type\":\"CL\",\"origin\":\"2hoqvcwupRTUNkXn6ArYzs\"}"));
     }
 
     #[test]
     fn test_get_claim_def_by_extract_result() {
         settings::set_defaults();
-        assert!(init_wallet("wallet1").unwrap() > 0);
+        assert!(init_wallet("a_test_wallet").unwrap() > 0);
         let wallet_handle = get_wallet_handle();
         let claim_def = RetrieveClaimDef::new();
         let claim_def_response = claim_def.extract_result(CLAIM_DEF_EX).unwrap();
         let claim_def_obj: serde_json::Value = serde_json::from_str(&claim_def_response).unwrap();
         assert_eq!(claim_def_obj["identifier"], json!("GGBDg1j8bsKmr4h5T9XqYf"));
         assert_eq!(claim_def_obj["data"]["revocation"], serde_json::Value::Null);
-        delete_wallet("wallet1").unwrap();
+        delete_wallet("a_test_wallet").unwrap();
     }
 
     #[ignore] /* on some systems the pool may be open */
@@ -392,7 +392,7 @@ pub mod tests {
         assert_eq!(RetrieveClaimDef::new().build_get_txn("", 0, None, ""), Err(error::BUILD_CLAIM_DEF_REQ_ERR.code_num));
     }
 
-//    #[ignore]
+    #[ignore]
     #[test]
     fn test_get_claim_def() {
         settings::set_defaults();
@@ -415,10 +415,10 @@ pub mod tests {
     #[test]
     fn test_create_claim_def_and_store_in_wallet() {
         settings::set_defaults();
-        assert!(init_wallet("wallet1").unwrap() > 0);
+        assert!(init_wallet("a_test_wallet").unwrap() > 0);
         let wallet_handle = get_wallet_handle();
         let claim_def_json = create_and_store_claim_def(SCHEMAS_JSON, ISSUER_DID, Some(SigTypes::CL), false).unwrap();
-        delete_wallet("wallet1").unwrap();
+        delete_wallet("a_test_wallet").unwrap();
         let claim_def_obj = ClaimDefinition::from_str(&claim_def_json).unwrap();
         assert_eq!(claim_def_obj.schema_seq_no, 15);
         assert_eq!(claim_def_obj.issuer_did, ISSUER_DID.to_string());
