@@ -53,7 +53,7 @@ fn demo(){
        "agency_pairwise_verkey": "4hmBc54YanNhQHTD66u6XDp1NSgQm1BacPFbE7b5gtat",
        "wallet_name": "my_real_wallet",
        "agency_pairwise_did": "7o2xT9Qtp83cJUJMUBTF3M",
-       "enterprise_verkey": "D2RTm2HZFBLMhrCp43ZowDMuxVHGUVe49pgM6cHhkj6L",
+       "enterprise_verkey": "vrWGArMA3toVoZrYGSAMjR2i9KjBS66bZWyWuYJJYPf",
        "agent_pairwise_verkey": "Chj1oQYdmbTXKG96Fpo8C2sd6fRrt9UyCrbmuo4vzroK",
        "genesis_path":self::cxs::utils::constants::GENESIS_PATH
       }).to_string();
@@ -144,6 +144,9 @@ fn demo(){
 //    let lphone_number = "8017900625";
 //    let phone_number = "2182578533";
     let phone_number = "2053863441";
+//    let phone_number = "3858814106";
+//    let phone_number = "2053863441";
+//    let phone_number = "2182578533";
     let connection_opt = json!({"phone":phone_number});
 //    let connection_opt = String::from("");
     let rc = api::connection::cxs_connection_connect(command_handle,
