@@ -399,8 +399,9 @@ pub fn create_claimdef(source_id: &str, claimdef_name: &str, schema_seq_no: u32)
     let rc = api::claim_def::cxs_claimdef_create(command_handle,
                                                      source_id_cstring.as_ptr(),
                                                      claimdef_name_cstring.as_ptr(),
-                                                     schema_seq_no,
-                                                     false,
+                                                        schema_seq_no,
+                                                        ptr::null(),
+                                                 false,
                                                      cb);
     assert_eq!(rc, 0);
     receiver.recv_timeout(TimeoutUtils::long_timeout()).unwrap()
