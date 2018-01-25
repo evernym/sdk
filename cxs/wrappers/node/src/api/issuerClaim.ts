@@ -17,7 +17,6 @@ import { CXSBaseWithState } from './CXSBaseWithState'
 export interface IClaimConfig {
   sourceId: string,
   schemaNum: number,
-  issuerDid: string,
   attr: {
     [ index: string ]: string
   },
