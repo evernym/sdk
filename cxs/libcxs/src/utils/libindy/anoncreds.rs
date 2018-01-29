@@ -167,7 +167,6 @@ mod tests {
         settings::set_config_value(settings::CONFIG_ENTERPRISE_DID, &issuer_did);
         init_wallet("test_wallet").unwrap();
         let wallet_handle = get_wallet_handle();
-        info!("\n\nwallet handle: {:?}\n\n", wallet_handle);
         SignusUtils::create_and_store_my_did(wallet_handle, None).unwrap();
         let mut claim_req = issuer_claim.claim_request.clone().unwrap();
         claim_req.issuer_did = issuer_did.to_owned();
