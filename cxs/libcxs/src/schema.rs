@@ -561,7 +561,7 @@ mod tests {
         let data = r#""data":{"name":"New Claim - Claim5","version":"1.0","attr_names":["New Claim","claim5","a5","b5","c5","d5"]}"#.to_string();
         init_wallet("a_test_wallet").unwrap();
         let wallet_handle = get_wallet_handle();
-        let schema_attrs = get_schema_attrs("id".to_string(), 242).unwrap();
+        let schema_attrs = get_schema_attrs("id".to_string(), 74).unwrap();
         println!("Schema_attrs: \n\n{:?}", schema_attrs);
 //        assert!(schema_attrs.contains(&data));
 //        assert!(schema_attrs.contains("\"seqNo\":116"));
