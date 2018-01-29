@@ -28,7 +28,7 @@ fn insert_closure<T>(closure: T, map: &Mutex<HashMap<i32, T>>) -> i32 {
     command_handle
 }
 
-fn receive<T>(receiver: &Receiver<T>, timeout: Option<Duration>) -> Result<T, u32>{
+pub fn receive<T>(receiver: &Receiver<T>, timeout: Option<Duration>) -> Result<T, u32>{
     let timeout_val = timeout.unwrap_or(TimeoutUtils::medium_timeout());
 
     match receiver.recv_timeout(timeout_val) {
@@ -49,7 +49,7 @@ fn receive<T>(receiver: &Receiver<T>, timeout: Option<Duration>) -> Result<T, u3
 #[allow(non_camel_case_types)]
 pub struct Return_I32 {
     pub command_handle: i32,
-    receiver: Receiver<i32>,
+    pub receiver: Receiver<i32>,
 }
 
 impl Return_I32 {
@@ -73,7 +73,6 @@ impl Return_I32 {
 
     pub fn receive(&self, timeout: Option<Duration>) -> Result<(), u32> {
         let err = receive(&self.receiver, timeout)?;
-
         map_indy_error((), err)
     }
 }
@@ -81,7 +80,7 @@ impl Return_I32 {
 #[allow(non_camel_case_types)]
 pub struct Return_I32_I32 {
     pub command_handle: i32,
-    receiver: Receiver<(i32, i32)>,
+    pub receiver: Receiver<(i32, i32)>,
 }
 impl Return_I32_I32 {
     pub fn new() -> Result<Return_I32_I32, u32> {
@@ -138,6 +137,42 @@ impl Return_I32_STR {
         let (err, str1) = receive(&self.receiver, timeout)?;
 
         map_indy_error(str1, err)
+    }
+}
+
+#[allow(non_camel_case_types)]
+pub struct Return_I32_STR_STR {
+    pub command_handle: i32,
+    receiver: Receiver<(i32, Option<String>, Option<String>)>,
+}
+impl Return_I32_STR_STR {
+    pub fn new() -> Result<Return_I32_STR_STR, u32> {
+        let (sender, receiver) = channel();
+        let closure:Box<FnMut(i32, Option<String>, Option<String>) + Send> = Box::new(move |err, str1, str2 | {
+            sender.send((err, str1, str2)).unwrap_or_else(log_error);
+        });
+
+        let command_handle = insert_closure(closure, callback::CALLBACKS_I32_STR_STR.deref());
+
+        Ok(Return_I32_STR_STR {
+            command_handle,
+            receiver,
+        })
+    }
+
+    pub fn get_callback(&self) -> extern fn(command_handle: i32,
+                                            arg1: i32,
+                                            arg2: *const c_char,
+                                            arg3: *const c_char) {
+        callback::call_cb_i32_str_str
+    }
+
+    pub fn receive(&self, timeout: Option<Duration>) -> Result<(Option<String>, Option<String>), u32> {
+        let (err, mut str1, mut str2) = receive(&self.receiver, timeout)?;
+
+        str1 = map_indy_error(str1, err)?;
+        str2 = map_indy_error(str2, err)?;
+        Ok((str1, str2))
     }
 }
 

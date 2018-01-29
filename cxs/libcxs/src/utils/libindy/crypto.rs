@@ -193,7 +193,7 @@ pub fn sign(wallet_handle: i32, their_did: &str, msg: &[u8]) -> Result<Vec<u8>, 
 pub mod tests {
 
     use super::*;
-    use utils::libindy::wallet;
+    use utils::wallet;
     use utils::libindy::signus::SignusUtils;
     use utils::constants::*;
 

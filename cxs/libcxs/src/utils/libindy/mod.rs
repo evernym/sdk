@@ -1,5 +1,7 @@
 pub mod ledger;
 pub mod anoncreds;
+pub mod signus;
+pub mod wallet;
 pub mod callback;
 //pub mod call;
 pub mod return_types;

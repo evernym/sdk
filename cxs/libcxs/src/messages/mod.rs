@@ -13,7 +13,7 @@ pub mod register;
 use std::u8;
 use settings;
 use utils::crypto;
-use utils::wallet;
+use utils::libindy::wallet;
 use utils::error;
 use self::rmp_serde::encode;
 use self::create_key::CreateKeyMsg;

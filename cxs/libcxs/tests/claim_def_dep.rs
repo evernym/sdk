@@ -5,10 +5,10 @@ mod tests {
     extern crate cxs;
 
     use self::cxs::utils::constants::{DEMO_ISSUER_PW_SEED, DEMO_AGENT_PW_SEED};
-    use self::cxs::utils::signus::SignusUtils;
+    use self::cxs::utils::libindy::signus::SignusUtils;
     use self::cxs::schema::{create_new_schema, get_sequence_num};
     use self::cxs::claim_def::create_new_claimdef;
-    use self::cxs::utils::wallet;
+    use self::cxs::utils::libindy::wallet;
     use self::cxs::utils::libindy::pool;
 
     static ENTRIES: &[[&str;3];32] = &[
@@ -234,7 +234,7 @@ mod tests {
             self::cxs::settings::set_config_value(self::cxs::settings::CONFIG_WALLET_KEY, &wallet_key);
         }
 
-        self::cxs::utils::wallet::init_wallet(wallet_name).unwrap();
+        self::cxs::utils::libindy::wallet::init_wallet(wallet_name).unwrap();
 
         let connection = Connection::open(wallet_db.as_path()).unwrap();
 
