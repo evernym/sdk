@@ -722,15 +722,14 @@ pub mod tests {
     #[test]
     fn test_issuer_claim_can_build_claim_from_correct_parts() {
         settings::set_defaults();
-        let test_name = "test_issuer_claim_can_build_from_correct_parts";
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
+        wallet::init_wallet("a_test_wallet").unwrap();
+        let issuer_did = "NcYxiDXkpYi6ov5FcYDi1e".to_owned();
+        settings::set_config_value(settings::CONFIG_ENTERPRISE_DID, &issuer_did);
         let schema_str = SCHEMA;
         let mut issuer_claim = create_standard_issuer_claim();
-        let issuer_did = "NcYxiDXkpYi6ov5FcYDi1e".to_owned();
         issuer_claim.claim_id = String::from(DEFAULT_CLAIM_ID);
         assert_eq!(issuer_claim.claim_id, DEFAULT_CLAIM_ID);
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-        settings::set_config_value(settings::CONFIG_ENTERPRISE_DID, &issuer_did);
-        wallet::init_wallet(test_name).unwrap();
         let wallet_handle = wallet::get_wallet_handle();
         SignusUtils::create_and_store_my_did(wallet_handle, None).unwrap();
         util_put_claim_def_in_issuer_wallet(15, wallet_handle);
@@ -754,7 +753,7 @@ pub mod tests {
 
         assert_eq!(serde_json::to_string(&n1).unwrap(), serde_json::to_string(&n2).unwrap());
 
-        wallet::delete_wallet(test_name).unwrap();
+        wallet::delete_wallet("a_test_wallet").unwrap();
     }
 
     #[test]

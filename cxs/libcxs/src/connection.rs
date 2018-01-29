@@ -7,7 +7,7 @@ extern crate libc;
 use utils::libindy::wallet;
 use utils::error;
 use utils::libindy::signus::SignusUtils;
-use utils::crypto;
+use utils::libindy::crypto;
 use api::CxsStateType;
 use rand::Rng;
 use std::sync::Mutex;

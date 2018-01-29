@@ -92,7 +92,6 @@ pub fn init_wallet(wallet_name: &str) -> Result<i32, u32> {
             warn!("libindy create wallet returned: {}", err);
             return Err(error::UNKNOWN_LIBINDY_ERROR.code_num);
         }
-
         match receive(&create_obj.receiver, TimeoutUtils::some_long()) {
             Ok(_) => {
                 if err != 203 && err != 0 {

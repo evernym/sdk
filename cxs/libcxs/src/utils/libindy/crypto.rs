@@ -2,10 +2,12 @@
 extern crate libc;
 
 use self::libc::c_char;
-use std::sync::mpsc::channel;
 use std::ffi::CString;
-use utils::callback::CallbackUtils;
 use utils::timeout::TimeoutUtils;
+use utils::libindy::{ indy_function_eval };
+use utils::libindy::return_types::{ Return_I32_BIN, Return_I32_OPTSTR_BIN };
+use utils::libindy::error_codes::{ map_indy_error_code, map_string_error };
+use utils::error;
 use settings;
 
 extern {
@@ -43,38 +45,23 @@ pub fn prep_msg(wallet_handle: i32, sender_vk: &str, recipient_vk: &str, msg: &[
 
     info!("prep_msg svk: {} rvk: {}",sender_vk, recipient_vk);
 
-    let (sender, receiver) = channel();
-
-    let cb = Box::new(move |err, encrypted_msg| {
-        sender.send((err, encrypted_msg)).unwrap();
-    });
-
-    let (command_handle, cb) = CallbackUtils::closure_to_prep_msg_cb(cb);
-
-    let sender_vk = CString::new(sender_vk).unwrap();
-    let recipient_vk = CString::new(recipient_vk).unwrap();
+    let rtn_obj = Return_I32_BIN::new()?;
+    let sender_vk = CString::new(sender_vk).map_err(map_string_error)?;
+    let recipient_vk = CString::new(recipient_vk).map_err(map_string_error)?;
 
     unsafe {
-        let err = indy_prep_msg(command_handle,
-                                wallet_handle,
-                                sender_vk.as_ptr(),
-                                recipient_vk.as_ptr(),
-                                msg.as_ptr() as *const u8,
-                                msg.len() as u32,
-                                cb);
-
-        if err != 0 {
-            return Err(err as u32);
-        }
-
-        let (err, encrypted_msg) = receiver.recv_timeout(TimeoutUtils::long_timeout()).unwrap();
-
-        if err != 0 {
-            return Err(err as u32);
-        }
-
-        Ok(encrypted_msg)
+        indy_function_eval(
+            indy_prep_msg(rtn_obj.command_handle,
+                          wallet_handle as i32,
+                          sender_vk.as_ptr(),
+                          recipient_vk.as_ptr(),
+                          msg.as_ptr() as *const u8,
+                          msg.len() as u32,
+                         Some(rtn_obj.get_callback()))
+        ).map_err(map_indy_error_code)?;
     }
+
+    rtn_obj.receive(TimeoutUtils::some_long())
 }
 
 pub fn prep_anonymous_msg(recipient_vk: &str, msg: &[u8]) -> Result<Vec<u8>, u32> {
@@ -82,71 +69,45 @@ pub fn prep_anonymous_msg(recipient_vk: &str, msg: &[u8]) -> Result<Vec<u8>, u32
 
     info!("prep_anonymous_msg rvk: {}",recipient_vk);
 
-    let (sender, receiver) = channel();
 
-    let cb = Box::new(move |err, encrypted_msg| {
-        sender.send((err, encrypted_msg)).unwrap();
-    });
-
-    let (command_handle, cb) = CallbackUtils::closure_to_prep_anonymous_msg_cb(cb);
-
-    let recipient_vk = CString::new(recipient_vk).unwrap();
+    let rtn_obj = Return_I32_BIN::new()?;
+    let recipient_vk = CString::new(recipient_vk).map_err(map_string_error)?;
 
     unsafe {
-        let err = indy_prep_anonymous_msg(command_handle,
-                                          recipient_vk.as_ptr(),
-                                          msg.as_ptr() as *const u8,
-                                          msg.len() as u32,
-                                          cb);
-
-        if err != 0 {
-            return Err(err as u32);
-        }
-
-        let (err, encrypted_msg) = receiver.recv_timeout(TimeoutUtils::long_timeout()).unwrap();
-
-        if err != 0 {
-            return Err(err as u32);
-        }
-
-        Ok(encrypted_msg)
+        indy_function_eval(
+            indy_prep_anonymous_msg(rtn_obj.command_handle,
+                                    recipient_vk.as_ptr(),
+                                    msg.as_ptr() as *const u8,
+                                    msg.len() as u32,
+                                    Some(rtn_obj.get_callback()))
+        ).map_err(map_indy_error_code)?;
     }
+
+    rtn_obj.receive(TimeoutUtils::some_long())
 }
 
 pub fn parse_msg(wallet_handle: i32, recipient_vk: &str, msg: &[u8]) -> Result<Vec<u8>, u32> {
     if settings::test_indy_mode_enabled() { return Ok(Vec::from(msg).to_owned()) }
 
     info!("parse_msg vk: {}",recipient_vk);
-    let (sender, receiver) = channel();
 
-    let cb = Box::new(move |err, verkey, msg| {
-        sender.send((err, verkey, msg)).unwrap();
-    });
-
-    let (command_handle, cb) = CallbackUtils::closure_to_parse_msg_cb(cb);
-
-    let recipient_vk = CString::new(recipient_vk).unwrap();
+    let rtn_obj = Return_I32_OPTSTR_BIN::new()?;
+    let recipient_vk = CString::new(recipient_vk).map_err(map_string_error)?;
 
     unsafe {
-        let err = indy_parse_msg(command_handle,
-                                 wallet_handle,
-                                 recipient_vk.as_ptr(),
-                                 msg.as_ptr() as *const u8,
-                                 msg.len() as u32,
-                                 cb);
-
-        if err != 0 {
-            return Err(err as u32);
+            indy_function_eval(
+                indy_parse_msg(rtn_obj.command_handle,
+                                   wallet_handle,
+                                  recipient_vk.as_ptr(),
+                                  msg.as_ptr() as *const u8,
+                                  msg.len() as u32,
+                                  Some(rtn_obj.get_callback()))
+            ).map_err(map_indy_error_code)?;
         }
 
-        let (err, verkey, msg) = receiver.recv_timeout(TimeoutUtils::long_timeout()).unwrap();
-
-        if err != 0 {
-            return Err(err as u32);
-        }
-
+        let (verkey, msg) = rtn_obj.receive(TimeoutUtils::some_long())?;
+        check_str(verkey)?;
         Ok(msg)
-    }
 }
 
 
@@ -155,45 +116,38 @@ pub fn sign(wallet_handle: i32, their_did: &str, msg: &[u8]) -> Result<Vec<u8>, 
 
     info!("sign msg did: {}", their_did);
 
-    let (sender, receiver) = channel();
-
-    let cb = Box::new(move |err, signature| {
-        sender.send((err, signature)).unwrap();
-    });
-
-    let (command_handle, cb) = CallbackUtils::closure_to_sign_cb(cb);
-
-    let their_did = CString::new(their_did).unwrap();
+    let rtn_obj = Return_I32_BIN::new()?;
+    let their_did = CString::new(their_did).map_err(map_string_error)?;
 
     unsafe {
-        let err =
-            indy_sign(command_handle,
-                      wallet_handle,
-                      their_did.as_ptr(),
-                      msg.as_ptr() as *const u8,
-                      msg.len() as u32,
-                      cb);
-
-        if err != 0 {
-            return Err(err as u32);
-        }
-
-        let (err, signature) = receiver.recv_timeout(TimeoutUtils::long_timeout()).unwrap();
-
-        if err != 0 {
-            return Err(err as u32);
-        }
-
-        Ok(signature)
+        indy_function_eval(
+            indy_sign(rtn_obj.command_handle,
+                          wallet_handle,
+                         their_did.as_ptr(),
+                         msg.as_ptr() as *const u8,
+                         msg.len() as u32,
+                                    Some(rtn_obj.get_callback()))
+        ).map_err(map_indy_error_code)?;
     }
+
+    rtn_obj.receive(TimeoutUtils::some_long())
 }
 
+fn check_str(str_opt: Option<String>) -> Result<String, u32>{
+    match str_opt {
+        Some(str) => Ok(str),
+        None => {
+            warn!("libindy did not return a string");
+            return Err(error::UNKNOWN_LIBINDY_ERROR.code_num)
+        }
+    }
+}
 
 #[cfg(test)]
 pub mod tests {
 
     use super::*;
-    use utils::wallet;
+    use utils::libindy::wallet;
     use utils::libindy::signus::SignusUtils;
     use utils::constants::*;
 
