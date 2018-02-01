@@ -69,7 +69,6 @@ pub fn prep_anonymous_msg(recipient_vk: &str, msg: &[u8]) -> Result<Vec<u8>, u32
 
     info!("prep_anonymous_msg rvk: {}",recipient_vk);
 
-
     let rtn_obj = Return_I32_BIN::new()?;
     let recipient_vk = CString::new(recipient_vk).map_err(map_string_error)?;
 

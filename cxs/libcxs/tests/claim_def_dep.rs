@@ -457,7 +457,7 @@ mod tests {
         create_new_claimdef("anything".to_string(), "anything".to_string(), schema_seq_no, issuer_did, false).unwrap();
     }
 
-//    #[ignore]
+    #[ignore]
     #[test]
     fn test_putting_claim_def_dependencies() {
         use std::path::Path;
