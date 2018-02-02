@@ -402,7 +402,7 @@ pub mod tests {
         let wallet_handle = get_wallet_handle();
         let mut retrieve_claim_def = RetrieveClaimDef::new();
         let claim_def = retrieve_claim_def.retrieve_claim_def("GGBDg1j8bsKmr4h5T9XqYf",
-                                                              36,
+                                                              22,
                                                   Some(SigTypes::CL),
                                                   "2hoqvcwupRTUNkXn6ArYzs").unwrap();
         delete_wallet("test_wallet").unwrap();
