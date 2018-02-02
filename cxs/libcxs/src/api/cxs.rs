@@ -2,9 +2,8 @@ extern crate libc;
 
 use self::libc::c_char;
 use utils::cstring::CStringUtils;
-use utils::libindy::wallet;
-use utils::libindy::pool;
-use utils::error;
+use utils::libindy::{wallet, pool};
+use utils::{error, version};
 use settings;
 use std::thread;
 use std::path::Path;
@@ -145,6 +144,13 @@ pub extern fn cxs_init (command_handle: u32,
         Err(x) => return x,
         Ok(v) => v,
     };
+
+    info!("***********************");
+    match version::get_version() {
+        Some(v) => info!("libvcx version: {}", v),
+        None => info!("Version information not available"),
+    }
+    info!("***********************");
 
     info!("Initializing wallet with name: {} and pool: {}", &wallet_name, &pool_name);
 

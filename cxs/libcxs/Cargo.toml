@@ -31,6 +31,7 @@ rmp = "0.8"
 rmp-serde = "0.13.7"
 base64 = "0.8.0"
 openssl = "0.9"
+toml = "0.4"
 
 [dev-dependencies]
 tempfile = "2.2"
