@@ -33,7 +33,7 @@ class Connection:
                                c_source_id,
                                Connection.create.cb)
 
-        connection._connection_handle = result.decode()
+        connection._connection_handle = result
         return connection
 
 

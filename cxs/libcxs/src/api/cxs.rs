@@ -54,7 +54,6 @@ use std::path::Path;
 pub extern fn cxs_init (command_handle: u32,
                         config_path:*const c_char,
                         cb: Option<extern fn(xcommand_handle: u32, err: u32)>) -> u32 {
-    println!("In cxs_init");
     ::utils::logger::LoggerUtils::init();
 
     if !config_path.is_null() {

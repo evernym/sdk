@@ -12,6 +12,10 @@ async def test_create_connection_has_libindy_error_with_no_init():
         await Connection.create(source_id)
         assert ErrorCode.UnknownLibindyError == e.value.error_code
 
+
 @pytest.mark.asyncio
-async def test_create_connection():
-    pass
+async def test_create_connection(init_cxs):
+    source_id = '123'
+    connection = await Connection.create(source_id)
+    assert connection._source_id == source_id
+    assert connection._connection_handle > 0
