@@ -10,6 +10,7 @@ class ErrorCode(IntEnum):
     InvalidOption = 1007,
     InvalidDid = 1008,
     UnknownLibindyError = 1035,
+    AlreadyInitialized = 1044,
 
 
 

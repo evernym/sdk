@@ -14,7 +14,8 @@ async def test_create_connection_has_libindy_error_with_no_init():
 
 
 @pytest.mark.asyncio
-async def test_create_connection(init_cxs):
+@pytest.mark.usefixtures('init_cxs')
+async def test_create_connection():
     source_id = '123'
     connection = await Connection.create(source_id)
     assert connection._source_id == source_id

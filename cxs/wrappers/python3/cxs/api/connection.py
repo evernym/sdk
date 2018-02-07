@@ -18,13 +18,28 @@ class Connection:
         # destructor
         pass
 
+    @property
+    def connection_handle(self):
+        return self._connection_handle
+
+    @connection_handle.setter
+    def connection_handle(self, handle):
+        self._connection_handle = handle
+
+    @property
+    def source_id(self):
+        return self._source_id
+
+    @source_id.setter
+    def source_id(self, x):
+        self._source_id = x
+
     @staticmethod
     async def create(source_id: str):
-        logger = logging.getLogger(__name__)
         connection = Connection(source_id)
 
         if not hasattr(Connection.create, "cb"):
-            logger.debug("cxs_connection_create: Creating callback")
+            connection._logger.debug("cxs_connection_create: Creating callback")
             Connection.create.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_uint32))
 
         c_source_id = c_char_p(source_id.encode('utf-8'))
@@ -33,7 +48,7 @@ class Connection:
                                c_source_id,
                                Connection.create.cb)
 
-        connection._connection_handle = result
+        connection.connection_handle = result
         return connection
 
 
@@ -49,7 +64,3 @@ class Connection:
 
     async def update_state(self, source_id: str):
         pass
-
-    @staticmethod
-    def random_test(self):
-        print('test')
