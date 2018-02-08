@@ -97,10 +97,7 @@ impl Proof {
                 .retrieve_claim_def("GGBDg1j8bsKmr4h5T9XqYf", claim.schema_seq_no, Some(SigTypes::CL), &claim.issuer_did)?;
             let claim_obj: ClaimDefinition = match serde_json::from_str(&claim_def) {
                 Ok(x) => x,
-                Err(_) => {
-                    info!("claim_def: {:?}", claim_def);
-                    return Err(error::INVALID_JSON.code_num)
-                },
+                Err(_) => return Err(error::INVALID_JSON.code_num),
             };
             claim_json.insert(claim.claim_uuid.clone(), claim_obj);
         }
