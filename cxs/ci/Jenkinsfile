@@ -106,6 +106,8 @@ def createDeb(envn) {
         SCRIPT = 'cxs/ci/scripts/gzip_so_file.py'
         SO_FILE = 'cxs/libcxs/target/debug/libcxs.so.*'
         DEST = 'cxs'
+		// --no-build flag because currently the optimized build of libcxs.so breaks
+		// at the nodejs wrapper level.  Tickets have been made to address this.
         sh 'cd cxs/libcxs/; cargo deb --no-build'
         archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs/target/debian/libcxs_*_amd64.deb"
         sh "python ${SCRIPT} ${SO_FILE} ${DEST}"
