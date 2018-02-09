@@ -111,7 +111,7 @@ def createDeb(envn) {
         sh 'cd cxs/libcxs/; cargo deb --no-build'
         archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs/target/debian/libcxs_*_amd64.deb"
         sh "python ${SCRIPT} ${FILES} ${DEST}"
-        archiveArtifacts allowEmptyARchive: true, artifacts: ${DEST}
+        archiveArtifacts allowEmptyARchive: true, artifacts: DEST
       }
   }
 }
