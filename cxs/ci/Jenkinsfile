@@ -108,8 +108,18 @@ def createDeb(envn) {
         DEST = 'cxs'
         sh 'cd cxs/libcxs/; cargo deb --no-build'
         archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs/target/debian/libcxs_*_amd64.deb"
-        sh "python ${SCRIPT} ${SO_FILE} ${DEST}"
-        archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs.so.*.gz"
+        sh "python ${SCRIPT} ${FILES} ${DEST}"
+        archiveArtifacts allowEmptyARchive: true, artifacts: DEST
+        mkdir -p /tmp/cert
+        if [ ! -f /tmp/cert/ca.crt ] ; then     
+            curl -k -o /tmp/cert/ca.crt https://repo.corp.evernym.com/ca.crt      
+        fi
+        withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
+              sh "find cxs/libcxs/target/debian/ -type f -name 'libcxs_*_amd64.deb' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/agency_dev/upload -F file=@{} \\;"
+            }
+        }
+
+>>>>>>> Stashed changes
       }
   }
 }
