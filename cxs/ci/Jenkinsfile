@@ -117,10 +117,8 @@ def createDeb(envn) {
         archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs.so.*.gz"
 
         // get Evernym Certificate onto machine
-        mkdir -p /tmp/cert
-        if [ ! -f /tmp/cert/ca.crt ] ; then     
-            curl -k -o /tmp/cert/ca.crt https://repo.corp.evernym.com/ca.crt      
-        fi
+        sh mkdir -p /tmp/cert
+        sh if [ ! -f /tmp/cert/ca.crt ] ; then curl -k -o /tmp/cert/ca.crt 'https://repo.corp.evernym.com/ca.crt'; fi
 
         // upload debian to Repo
         withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
