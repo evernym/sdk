@@ -101,34 +101,32 @@ def updateVersions(app) {
 // Creates the debian package for the library, as well as gzips the libcxs.so.<version> file
 // Publishes both artifacts.
 def createDeb(envn) {
-  stage('Build libcxs Debian and compress .so file') {
-      envn.inside {
-        CERT_SCRIPT = 'cxs/ci/scripts/getcert.sh'
-        SCRIPT = 'cxs/ci/scripts/gzip_so_file.py'
-        SO_FILE = 'cxs/libcxs/target/debug/libcxs.so.*'
-        DEST = 'cxs'
+    stage('Build libcxs Debian and compress .so file') {
+        envn.inside {
+            CERT_SCRIPT = 'cxs/ci/scripts/getcert.sh'
+            SCRIPT = 'cxs/ci/scripts/gzip_so_file.py'
+            SO_FILE = 'cxs/libcxs/target/debug/libcxs.so.*'
+            DEST = 'cxs'
 
-        // get Evernym Certificate onto machine
-        sh ${CERT_SCRIPT}
+            // get Evernym Certificate onto machine
+            sh ${CERT_SCRIPT}
                 
-        // build debian
-        sh 'cd cxs/libcxs/; cargo deb --no-build'
+            // build debian
+            sh 'cd cxs/libcxs/; cargo deb --no-build'
 
-        // archive debian to Jenkins
-        archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs/target/debian/libcxs_*_amd64.deb"
+            // archive debian to Jenkins
+            archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs/target/debian/libcxs_*_amd64.deb"
 
-        // archive .so file to Jenkins
-        sh "python ${SCRIPT} ${SO_FILE} ${DEST}"
-        archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs.so.*.gz"
+            // archive .so file to Jenkins
+            sh "python ${SCRIPT} ${SO_FILE} ${DEST}"
+            archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs.so.*.gz"
 
-        
-        // upload debian to Repo
-        withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
-              sh "find cxs/libcxs/target/debian/ -type f -name 'libcxs_*_amd64.deb' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/agency_dev/upload -F file=@{} \\;"
+            // upload debian to Repo
+            withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
+                sh "find cxs/libcxs/target/debian/ -type f -name 'libcxs_*_amd64.deb' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/agency_dev/upload -F file=@{} \\;"
             }
         }
-      }
-  }
+    }
 }
 
 
