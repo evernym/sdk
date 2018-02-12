@@ -105,8 +105,8 @@ def createDeb(envn) {
         envn.inside {
             CERT_SCRIPT = 'cxs/ci/scripts/getCert.sh'
             SCRIPT = 'cxs/ci/scripts/gzip_so_file.py'
-            SO_FILE = 'cxs/libcxs/target/debug/libcxs.so.*'
-            DEST = 'cxs'
+            FILES = 'cxs/libcxs/target/debug/libcxs.so.* cxs/libcxs/scripts/provision_agent_keys.py'
+            DEST = 'libcxs.tar.gz'
 
             // get Evernym Certificate onto machine
             sh "${CERT_SCRIPT}"
@@ -118,7 +118,7 @@ def createDeb(envn) {
             archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs/target/debian/libcxs_*_amd64.deb"
 
             // archive .so file to Jenkins
-            sh "python ${SCRIPT} ${SO_FILE} ${DEST}"
+            sh "python ${SCRIPT} ${FILES} ${DEST}"
             archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs.so.*.gz"
 
             // upload debian to Repo
