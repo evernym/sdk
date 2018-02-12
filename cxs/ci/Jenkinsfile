@@ -106,20 +106,27 @@ def createDeb(envn) {
         SCRIPT = 'cxs/ci/scripts/gzip_so_file.py'
         SO_FILE = 'cxs/libcxs/target/debug/libcxs.so.*'
         DEST = 'cxs'
+        // build debian
         sh 'cd cxs/libcxs/; cargo deb --no-build'
+
+        // archive debian to Jenkins
         archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs/target/debian/libcxs_*_amd64.deb"
-        sh "python ${SCRIPT} ${FILES} ${DEST}"
+
+        // archive .so file to Jenkins
+        sh "python ${SCRIPT} ${SO_FILE} ${DEST}"
         archiveArtifacts allowEmptyARchive: true, artifacts: DEST
+        
+        // get Evernym Certificate onto machine
         mkdir -p /tmp/cert
         if [ ! -f /tmp/cert/ca.crt ] ; then     
             curl -k -o /tmp/cert/ca.crt https://repo.corp.evernym.com/ca.crt      
         fi
+
+        // upload debian to Repo
         withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
               sh "find cxs/libcxs/target/debian/ -type f -name 'libcxs_*_amd64.deb' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/agency_dev/upload -F file=@{} \\;"
             }
         }
-
->>>>>>> Stashed changes
       }
   }
 }
