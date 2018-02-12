@@ -103,7 +103,7 @@ def updateVersions(app) {
 def createDeb(envn) {
     stage('Build libcxs Debian and compress .so file') {
         envn.inside {
-            CERT_SCRIPT = 'cxs/ci/scripts/getcert.sh'
+            CERT_SCRIPT = 'cxs/ci/scripts/getCert.sh'
             SCRIPT = 'cxs/ci/scripts/gzip_so_file.py'
             SO_FILE = 'cxs/libcxs/target/debug/libcxs.so.*'
             DEST = 'cxs'
