@@ -109,7 +109,7 @@ def createDeb(envn) {
             DEST = 'cxs'
 
             // get Evernym Certificate onto machine
-            sh ${CERT_SCRIPT}
+            sh "${CERT_SCRIPT}"
                 
             // build debian
             sh 'cd cxs/libcxs/; cargo deb --no-build'
