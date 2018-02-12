@@ -7,11 +7,14 @@ class ErrorCode(IntEnum):
     ConnectionError = 1002,
     InvalidConnectionHandle = 1003,
     InvalidConfiguration = 1004,
+    NotReady = 1005,
     InvalidOption = 1007,
     InvalidDid = 1008,
+    InvalidIssuerClaimHandle = 1015,
+    InvalidJson = 1016,
+    InvalidProofHandle = 1017,
     UnknownLibindyError = 1035,
     AlreadyInitialized = 1044,
-
 
 
 class CxsError(Exception):

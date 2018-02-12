@@ -1,31 +1,14 @@
 from ctypes import *
 
 import asyncio
-import sys
 import itertools
 import logging
-import cxs
 import os
 from .error import CxsError, ErrorCode
 
 _futures = {}
 _futures_counter = itertools.count()
 
-
-# def do_call(name: str, *args):
-#
-#     event_loop = asyncio.get_event_loop()
-#     future = event_loop.create_future()
-#     command_handle = next(_futures_counter)
-#
-#     _futures[command_handle] = (event_loop, future)
-#     err = getattr(_cdll(), name)(command_handle,
-#                                  *args)
-#
-#     if err != ErrorCode.Success:
-#         future.set_exception(CxsError(ErrorCode(err)))
-#
-#     return future
 
 def do_call(name: str, *args):
     logger = logging.getLogger(__name__)
@@ -48,6 +31,7 @@ def do_call(name: str, *args):
 
     logger.debug("do_call: <<< %s", future)
     return future
+
 
 def create_cb(cb_type: CFUNCTYPE, transform_fn=None):
 

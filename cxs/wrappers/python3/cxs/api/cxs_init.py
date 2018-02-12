@@ -1,5 +1,4 @@
 from ctypes import *
-import asyncio
 import logging
 from cxs.common import do_call, create_cb
 
