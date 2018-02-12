@@ -114,8 +114,8 @@ def createDeb(envn) {
 
         // archive .so file to Jenkins
         sh "python ${SCRIPT} ${SO_FILE} ${DEST}"
-        archiveArtifacts allowEmptyARchive: true, artifacts: DEST
-        
+        archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs.so.*.gz"
+
         // get Evernym Certificate onto machine
         mkdir -p /tmp/cert
         if [ ! -f /tmp/cert/ca.crt ] ; then     
