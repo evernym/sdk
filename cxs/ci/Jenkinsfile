@@ -119,7 +119,7 @@ def createDeb(envn) {
 
             // archive .so file to Jenkins
             sh "python ${SCRIPT} ${FILES} ${DEST}"
-            archiveArtifacts allowEmptyARchive: true, artifacts: "cxs/libcxs.so.*.gz"
+            archiveArtifacts allowEmptyARchive: true, artifacts: DEST
 
             // upload debian to Repo
             withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
