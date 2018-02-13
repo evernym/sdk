@@ -24,11 +24,6 @@ describe('A Proof', function () {
     assert.equal(proof.sourceId, 'Proof ID')
   })
 
-  it('has a state of 0 after instanstiated', async () => {
-    const proof = new Proof('Proof ID')
-    const state = await proof.getState()
-  })
-
   it('has a proofHandle and a sourceId after it is created', async () => {
     const sourceId = '1'
     const proof = await Proof.create({ sourceId, attrs: ATTR, name: 'TestProof' })

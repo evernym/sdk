@@ -17,7 +17,7 @@ export abstract class CXSBaseWithState extends CXSBase {
 
   protected async _updateState (): Promise<void> {
     const commandHandle = 0
-    const state = await createFFICallbackPromise<number>(
+    await createFFICallbackPromise<number>(
       (resolve, reject, cb) => {
         const rc = this._updateStFn(commandHandle, this._handle, cb)
         if (rc) {

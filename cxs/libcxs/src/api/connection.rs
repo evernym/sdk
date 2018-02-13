@@ -205,6 +205,24 @@ pub extern fn cxs_connection_update_state(command_handle: u32,
     error::SUCCESS.code_num
 }
 
+#[no_mangle]
+pub extern fn cxs_connection_get_state(command_handle: u32,
+                                       connection_handle: u32,
+                                       cb: Option<extern fn(xcommand_handle: u32, err: u32, state: u32)>) -> u32 {
+
+    check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
+
+    if !is_valid_handle(connection_handle) {
+        return error::INVALID_CONNECTION_HANDLE.code_num;
+    }
+
+    thread::spawn(move|| {
+        cb(command_handle, error::SUCCESS.code_num, get_state(connection_handle));
+    });
+
+    error::SUCCESS.code_num
+}
+
 /// Gets the current connection details
 ///
 /// #Params
@@ -401,5 +419,21 @@ mod tests {
 
         cxs_connection_deserialize(0,CString::new(string).unwrap().into_raw(), Some(deserialize_cb));
         thread::sleep(Duration::from_millis(200));
+    }
+
+    extern "C" fn get_state_cb(command_handle: u32, err: u32, state: u32) {
+        assert!(state > 0);
+        println!("successfully called get_state_cb");
+    }
+
+    #[test]
+    fn test_cxs_connection_get_state() {
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
+        let handle = build_connection("test_cxs_connection_update_state".to_owned()).unwrap();
+        assert!(handle > 0);
+        let rc = cxs_connection_get_state(0,handle,Some(get_state_cb));
+        assert_eq!(rc, error::SUCCESS.code_num);
+        thread::sleep(Duration::from_millis(300));
     }
 }
