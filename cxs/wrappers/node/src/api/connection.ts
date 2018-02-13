@@ -1,5 +1,5 @@
 import * as ffi from 'ffi'
-import { ConnectionTimeoutError, CXSInternalError } from '../errors'
+import { CXSInternalError } from '../errors'
 import { rustAPI } from '../rustlib'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
 import { StateType } from './common'
@@ -98,10 +98,32 @@ export class Connection extends CXSBaseWithState {
    * { phone: "800", timeout: 30 }
    * @returns {Promise<void>}
    */
-  async connect ( options: IConnectOptions = {} ): Promise<void> {
-    const timeout = options.timeout || 10000
-    await this._waitFor(async () => await this._connect(options) === 0, timeout)
-    this.state = StateType.OfferSent
+  async connect ( options: IConnectOptions = {} ): Promise<string> {
+    const phone = options.phone
+    const connectionType: string = phone ? 'SMS' : 'QR'
+    const connectionData: string = JSON.stringify({connection_type: connectionType, phone})
+    try {
+      return await createFFICallbackPromise<string>(
+          (resolve, reject, cb) => {
+            const rc = rustAPI().cxs_connection_connect(0, this._handle, connectionData, cb)
+            if (rc) {
+              resolve(rc)
+            }
+            this.state = StateType.OfferSent
+          },
+          (resolve, reject) => ffi.Callback('void', ['uint32', 'uint32', 'string'], (xHandle, err, details) => {
+            if (err) {
+              reject(err)
+              return
+            } else if (details == null) {
+              reject('no details returned')
+            }
+            resolve(details)
+          })
+        )
+    } catch (error) {
+      throw new CXSInternalError(`cxs_connection_connect -> ${error}`)
+    }
   }
 
   /**
@@ -175,40 +197,5 @@ export class Connection extends CXSBaseWithState {
         })
     )
     return data
-  }
-
-  private async _connect (options: IConnectOptions): Promise<number> {
-    const phone = options.phone
-    const connectionType: string = phone ? 'SMS' : 'QR'
-    const connectionData: string = JSON.stringify({connection_type: connectionType, phone})
-    try {
-      return await createFFICallbackPromise<number>(
-          (resolve, reject, cb) => {
-            const rc = rustAPI().cxs_connection_connect(0, this._handle, connectionData, cb)
-            if (rc) {
-              resolve(rc)
-            }
-          },
-          (resolve, reject) => ffi.Callback('void', ['uint32', 'uint32'], (xHandle, err) => {
-            resolve(err)
-          })
-        )
-    } catch (error) {
-      throw new CXSInternalError(`cxs_connection_connect -> ${error}`)
-    }
-  }
-
-  private _sleep = (sleepTime: number): Promise<void> => new Promise((res) => setTimeout(res, sleepTime))
-
-  private _waitFor = async (predicate: () => any, timeout: number, sleepTime: number = 1000) => {
-    if (timeout < 0) {
-      throw new ConnectionTimeoutError()
-    }
-    const res = predicate()
-    if (!res) {
-      await this._sleep(sleepTime)
-      return this._waitFor(predicate, timeout - sleepTime)
-    }
-    return res
   }
 }

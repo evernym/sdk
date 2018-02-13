@@ -60,7 +60,7 @@ pub extern fn cxs_connection_create(command_handle: u32,
 pub extern fn cxs_connection_connect(command_handle:u32,
                                      connection_handle: u32,
                                      connection_options: *const c_char,
-                                     cb: Option<extern fn(xcommand_handle: u32, err: u32)>) -> u32 {
+                                     cb: Option<extern fn(xcommand_handle: u32, err: u32, invite_details: *const c_char)>) -> u32 {
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
     info!("cxs connection connect called");
@@ -78,12 +78,22 @@ pub extern fn cxs_connection_connect(command_handle:u32,
     };
 
     thread::spawn(move|| {
-        let rc = match connect(connection_handle, options) {
-            Ok(x) => x,
-            Err(x) => x,
+        match connect(connection_handle, options) {
+            Ok(_) => {
+                match get_invite_details(connection_handle,true) {
+                    Ok(x) => {
+                        let msg = CStringUtils::string_to_cstring(x);
+                        cb(command_handle, error::SUCCESS.code_num, msg.as_ptr())
+                    },
+                    Err(_) => {
+                        cb(command_handle, error::SUCCESS.code_num, ptr::null_mut())
+                    },
+                }
+            },
+            Err(x) => {
+                cb(command_handle,x, ptr::null_mut())
+            },
         };
-
-        cb(command_handle,rc);
     });
 
     error::SUCCESS.code_num
@@ -293,8 +303,7 @@ mod tests {
         assert_eq!(rc, error::INVALID_OPTION.code_num);
     }
 
-    extern "C" fn connect_cb(command_handle: u32, err: u32) {
-        if err != 0 {panic!("connect failed: {}", err);}
+    extern "C" fn connect_cb(command_handle: u32, err: u32, details: *const c_char) {        if err != 0 {panic!("connect failed: {}", err);}
         println!("successfully called connect_cb");
     }
 
