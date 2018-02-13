@@ -14,7 +14,7 @@ pushd cxs/wrappers/node/ci
 popd
 docker build -t create-debian -f cxs/ci/Dockerfile-create-debian .
 
-docker run --rm -it -v ${VOLUME}:/output -v $SDK:/sdk create-debian
+docker run --rm -v ${VOLUME}:/output -v $SDK:/sdk create-debian
 
 
 
