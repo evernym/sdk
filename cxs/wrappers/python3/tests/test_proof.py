@@ -1,5 +1,6 @@
 import pytest
 import json
+import random
 from cxs.error import ErrorCode, CxsError
 from cxs.state import State, ProofState
 from cxs.api.proof import Proof
@@ -54,7 +55,7 @@ async def test_serialize_with_bad_handle():
 async def test_deserialize():
     proof = await Proof.create(source_id, name, requested_attrs)
     data = await proof.serialize()
-    data['handle'] = 99999
+    data['handle'] = random.randint(0, 99999)
     data['state'] = State.OfferSent
     proof2 = await Proof.deserialize(data)
     assert proof2.handle == data.get('handle')
@@ -163,7 +164,7 @@ async def test_get_proof_with_invalid_proof():
     data['proof'] = json.loads(proof_msg)
     data['state'] = State.Accepted
     data['proof_state'] = ProofState.Invalid
-    data['handle'] = 99999
+    data['handle'] = random.randint(0, 99999)
     proof2 = await Proof.deserialize(data)
     await proof2.update_state()
     proof_data = await proof2.get_proof(connection)

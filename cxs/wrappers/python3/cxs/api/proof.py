@@ -2,16 +2,17 @@ from typing import Optional
 from ctypes import *
 from cxs.common import do_call, create_cb
 from cxs.api.connection import Connection
+from cxs.api.cxs_base import CxsBase
 
 import logging
 import json
 
 
-class Proof:
+class Proof(CxsBase):
 
     def __init__(self, source_id: str):
+        CxsBase.__init__(self, source_id)
         self._logger = logging.getLogger(__name__)
-        self._source_id = source_id
         self._handle = 0
         self._state = 0
         self._proof_state = 0
@@ -19,14 +20,14 @@ class Proof:
     def __del__(self):
         # destructor
         pass
-
-    @property
-    def handle(self):
-        return self._handle
-
-    @handle.setter
-    def handle(self, handle):
-        self._handle = handle
+    #
+    # @property
+    # def handle(self):
+    #     return self._handle
+    #
+    # @handle.setter
+    # def handle(self, handle):
+    #     self._handle = handle
 
     @property
     def state(self):
@@ -44,13 +45,13 @@ class Proof:
     def proof_state(self, x):
         self._proof_state = x
 
-    @property
-    def source_id(self):
-        return self._source_id
-
-    @source_id.setter
-    def source_id(self, x):
-        self._source_id = x
+    # @property
+    # def source_id(self):
+    #     return self._source_id
+    #
+    # @source_id.setter
+    # def source_id(self, x):
+    #     self._source_id = x
 
     @staticmethod
     async def create(source_id: str,  name: str, requested_attrs: list):
@@ -78,34 +79,15 @@ class Proof:
 
     @staticmethod
     async def deserialize(data: dict):
-        proof = Proof(data.get('source_id'))
-
-        if not hasattr(Proof.deserialize, "cb"):
-            proof._logger.debug("cxs_proof_deserialize: Creating callback")
-            Proof.deserialize.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_uint32))
-
-        c_data = c_char_p(json.dumps(data).encode('utf-8'))
-
-        result = await do_call('cxs_proof_deserialize',
-                               c_data,
-                               Proof.deserialize.cb)
-
-        proof.handle = result
+        proof = await Proof._deserialize(Proof,
+                                         "cxs_proof_deserialize",
+                                         json.dumps(data),
+                                         data.get('source_id'))
         await proof.update_state()
-        proof._logger.debug("created proof object")
         return proof
 
     async def serialize(self):
-        if not hasattr(Proof.serialize, "cb"):
-            self._logger.debug("cxs_proof_serialize: Creating callback")
-            Proof.serialize.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_char_p))
-
-        c_proof_handle = c_uint32(self.handle)
-
-        data = await do_call('cxs_proof_serialize',
-                             c_proof_handle,
-                             Proof.serialize.cb)
-        return json.loads(data.decode())
+        return await self._serialize(Proof, 'cxs_proof_serialize')
 
     async def update_state(self):
         if not hasattr(Proof.update_state, "cb"):
@@ -148,13 +130,5 @@ class Proof:
         return json.loads(proof.decode())
 
     async def release(self) -> None:
-        if not hasattr(Proof.release, "cb"):
-            self._logger.debug("cxs_proof_release: Creating callback")
-            Proof.release.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32))
-
-        c_proof_handle = c_uint32(self.handle)
-
-        await do_call('cxs_proof_release',
-                      c_proof_handle,
-                      Proof.release.cb)
+        await self._release(Proof, 'cxs_proof_release')
 
