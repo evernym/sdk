@@ -1,0 +1,52 @@
+# Development
+FROM ubuntu:16.04
+
+ARG uid=1000
+
+
+# Update environment
+# JRE installation and gcc
+RUN apt-get update -y && apt-get install -y \
+    gcc \
+    pkg-config \
+    build-essential \
+    libsodium-dev \
+    libssl-dev \
+    libgmp3-dev \
+    build-essential \
+    libsqlite3-dev \
+    libsqlite0 \
+    cmake \
+    apt-transport-https \
+    ca-certificates \
+    debhelper \
+    wget \
+    git \
+    curl \
+    ruby \
+    ruby-dev \ 
+    rubygems 
+
+# Install Nodejs 
+RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - \
+    && apt-get install -y nodejs
+
+RUN npm install typescript-compiler
+
+# Install libindy
+RUN mkdir -p /libindy
+WORKDIR /libindy
+
+ENV LIBINDY_DEB=libindy_1.1.0_amd64.deb
+ENV LIBINDY_DOWNLOAD_URL=https://repo.sovrin.org/sdk/lib/apt/xenial/stable/$LIBINDY_DEB
+
+RUN curl -fsOSL $LIBINDY_DOWNLOAD_URL \
+    && dpkg -i $LIBINDY_DEB \
+    && apt-get -f install
+
+ADD bootstrap.sh /root/bootstrap.sh
+
+RUN useradd -ms /bin/bash -u $uid cxs
+
+WORKDIR /root
+CMD ["./bootstrap.sh"]
