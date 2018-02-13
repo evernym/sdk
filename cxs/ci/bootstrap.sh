@@ -1,5 +1,10 @@
 #!/bin/bash
 
+echo 'directory listing of bootstrap.sh'
+ls 
+
+ls cxs/libcxs
+
 cd cxs/libcxs
 # clean
 cargo clean
