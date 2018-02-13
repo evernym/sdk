@@ -17,7 +17,7 @@ node('ubuntu') {
         stage ('Checkout'){
             checkout scm
         }
-        app = buildDocker()
+        //app = buildDocker()
         // build the so file and test the so file
         // buildRust(app)
         // // update the versions in the toml file and package.json

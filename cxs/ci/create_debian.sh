@@ -8,7 +8,7 @@ docker volume rm $VOLUME
 
 # make the volume from sdk
 pushd cxs/wrappers/node/ci
-./create_volume.sh ~/sdk $SDK
+./create_volume.sh ~/cxs $CXS
 
 # build Docker-debian
 popd
@@ -19,8 +19,10 @@ echo "Current directory:"
 echo $(pwd)
 echo "Directory Listing for Current Directory"
 ls
-echo "directory listing for sdk:"
-ls sdk
+echo "Current Home Directory ~/:"
+ls ~/
+echo "directory listing for cxs:"
+ls cxs
 echo "Running Docker"
 #docker run --rm -v ${VOLUME}:/output -v $SDK:/sdk create-debian
 
