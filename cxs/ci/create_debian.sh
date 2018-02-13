@@ -23,6 +23,9 @@ echo "Current Home Directory ~/:"
 ls ~/
 echo "directory listing for cxs:"
 ls cxs
+
+echo "runing git log command:"
+git log
 echo "Running Docker"
 #docker run --rm -v ${VOLUME}:/output -v $SDK:/sdk create-debian
 
