@@ -13,6 +13,7 @@ class ErrorCode(IntEnum):
     InvalidIssuerClaimHandle = 1015,
     InvalidJson = 1016,
     InvalidProofHandle = 1017,
+    InvalidProof = 1023,
     InvalidSchema = 1031,
     UnknownLibindyError = 1035,
     InvalidClaimDef = 1036,

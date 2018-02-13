@@ -1,35 +1,21 @@
 from ctypes import *
 from cxs.common import do_call, create_cb
 from cxs.error import CxsError, ErrorCode
+from cxs.api.cxs_base import CxsBase
 
 import logging
 import json
 
 
-class Schema:
+class Schema(CxsBase):
 
     def __init__(self, source_id: str, name: str, attr_names: list):
+        CxsBase.__init__(self, source_id)
         self._logger = logging.getLogger(__name__)
         self._source_id = source_id
         self._attrs = attr_names
         self._handle = 0
         self._name = name
-
-    @property
-    def handle(self):
-        return self._handle
-
-    @handle.setter
-    def handle(self, handle):
-        self._handle = handle
-
-    @property
-    def source_id(self):
-        return self._source_id
-
-    @source_id.setter
-    def source_id(self, x):
-        self._source_id = x
 
     @property
     def name(self):
@@ -73,20 +59,12 @@ class Schema:
     async def deserialize(data: dict):
         try:
             attrs = data['data']['data']['attr_names']
-            schema = Schema(data['source_id'], data['name'], attrs)
-
-            if not hasattr(Schema.deserialize, "cb"):
-                schema._logger.debug("cxs_schema_deserialize: Creating callback")
-                Schema.deserialize.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_uint32))
-
-            c_data = c_char_p(json.dumps(data).encode('utf-8'))
-
-            result = await do_call('cxs_schema_deserialize',
-                                   c_data,
-                                   Schema.deserialize.cb)
-
-            schema.handle = result
-            schema._logger.debug("created schema object")
+            schema = await Schema._deserialize(Schema,
+                                               "cxs_schema_deserialize",
+                                               json.dumps(data),
+                                               data['source_id'],
+                                               data['name'],
+                                               attrs)
             return schema
         except KeyError:
             raise CxsError(ErrorCode.InvalidSchema)
@@ -119,24 +97,8 @@ class Schema:
             raise CxsError(ErrorCode.InvalidSchema)
 
     async def serialize(self) -> dict:
-        if not hasattr(Schema.serialize, "cb"):
-            self._logger.debug("cxs_schema_serialize: Creating callback")
-            Schema.serialize.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_char_p))
-
-        c_schema_handle = c_uint32(self.handle)
-
-        data = await do_call('cxs_schema_serialize',
-                             c_schema_handle,
-                             Schema.serialize.cb)
-        return json.loads(data.decode())
+        return await self._serialize(Schema, 'cxs_schema_serialize')
 
     async def release(self) -> None:
-        if not hasattr(Schema.release, "cb"):
-            self._logger.debug("cxs_schema_release: Creating callback")
-            Schema.release.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32))
+        await self._release(Schema, 'cxs_schema_release')
 
-        c_schema_handle = c_uint32(self.handle)
-
-        await do_call('cxs_schema_release',
-                      c_schema_handle,
-                      Schema.release.cb)

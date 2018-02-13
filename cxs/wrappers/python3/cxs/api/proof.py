@@ -3,6 +3,8 @@ from ctypes import *
 from cxs.common import do_call, create_cb
 from cxs.api.connection import Connection
 from cxs.api.cxs_base import CxsBase
+from cxs.state import State
+from cxs.error import CxsError, ErrorCode
 
 import logging
 import json
@@ -20,14 +22,6 @@ class Proof(CxsBase):
     def __del__(self):
         # destructor
         pass
-    #
-    # @property
-    # def handle(self):
-    #     return self._handle
-    #
-    # @handle.setter
-    # def handle(self, handle):
-    #     self._handle = handle
 
     @property
     def state(self):
@@ -44,14 +38,6 @@ class Proof(CxsBase):
     @proof_state.setter
     def proof_state(self, x):
         self._proof_state = x
-
-    # @property
-    # def source_id(self):
-    #     return self._source_id
-    #
-    # @source_id.setter
-    # def source_id(self, x):
-    #     self._source_id = x
 
     @staticmethod
     async def create(source_id: str,  name: str, requested_attrs: list):
@@ -79,14 +65,17 @@ class Proof(CxsBase):
 
     @staticmethod
     async def deserialize(data: dict):
-        proof = await Proof._deserialize(Proof,
-                                         "cxs_proof_deserialize",
-                                         json.dumps(data),
-                                         data.get('source_id'))
-        await proof.update_state()
-        return proof
+        try:
+            proof = await Proof._deserialize(Proof,
+                                             "cxs_proof_deserialize",
+                                             json.dumps(data),
+                                             data.get('source_id'))
+            proof.state = data['state']
+            return proof
+        except KeyError:
+            raise CxsError(ErrorCode.InvalidProof)
 
-    async def serialize(self):
+    async def serialize(self) -> dict:
         return await self._serialize(Proof, 'cxs_proof_serialize')
 
     async def update_state(self):

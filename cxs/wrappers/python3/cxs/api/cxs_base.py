@@ -50,7 +50,7 @@ class CxsBase:
         obj.logger.debug("created {} object".format(cls))
         return obj
 
-    async def _serialize(self, cls, fn: str):
+    async def _serialize(self, cls, fn: str) -> dict:
         if not hasattr(cls.serialize, "cb"):
             self.logger.debug("{}: Creating callback".format(fn))
             cls.serialize.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_char_p))
