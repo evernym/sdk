@@ -13,14 +13,16 @@ pushd cxs/wrappers/node/ci
 # build Docker-debian
 popd
 echo "Building Docker"
-docker build -t create-debian -f cxs/ci/Dockerfile-create-debian .
+#docker build -t create-debian -f cxs/ci/Dockerfile-create-debian .
 
 echo "Current directory:"
 echo $(pwd)
-echo "directory listing for /sdk:"
-ls /sdk
+echo "Directory Listing for Current Directory"
+ls
+echo "directory listing for sdk:"
+ls sdk
 echo "Running Docker"
-docker run --rm -v ${VOLUME}:/output -v $SDK:/sdk create-debian
+#docker run --rm -v ${VOLUME}:/output -v $SDK:/sdk create-debian
 
 
 
