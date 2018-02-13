@@ -7,7 +7,7 @@ def getUserUid() {
 }
 
 def build(name, file = 'cxs/ci/ubuntu.dockerfile cxs/ci', customParams = '') {
-    return docker.build("$name-test", "-v artifact1:/artifact1 --build-arg uid=${getUserUid()} -f $file")
+    return docker.build("$name-test", "--build-arg uid=${getUserUid()} -f $file")
 }
 
 
