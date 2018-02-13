@@ -1,0 +1,2 @@
+[alias]
+update-version = "run --package tools --bin update-version"

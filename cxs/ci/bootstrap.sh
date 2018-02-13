@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cd /sdk/cxs/libcxs
+cd cxs/libcxs
 # clean
 cargo clean
 # build
