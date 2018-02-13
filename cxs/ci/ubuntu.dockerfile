@@ -23,6 +23,7 @@ RUN apt-get update -y && apt-get install -y \
     wget \
     git \
     curl \
+	libffi-dev \
     ruby \
     ruby-dev \ 
     rubygems 
