@@ -5,22 +5,15 @@ import { CXSBase } from './CXSBase'
 
 export abstract class CXSBaseWithState extends CXSBase {
   protected abstract _updateStFn: any
-  protected _state: StateType
+  protected abstract _getStFn: any
 
   constructor (sourceId) {
     super(sourceId)
-    this._state = StateType.None
   }
 
   async abstract updateState ()
 
-  get state (): number {
-    return this._state
-  }
-
-  set state (state: number) {
-    this._state = state
-  }
+  async abstract getState ()
 
   protected async _updateState (): Promise<void> {
     const commandHandle = 0
@@ -38,6 +31,23 @@ export abstract class CXSBaseWithState extends CXSBase {
         resolve(_state)
       })
     )
-    this.state = state
+  }
+
+  protected async _getState (): Promise<number> {
+    const commandHandle = 0
+    return await createFFICallbackPromise<number>(
+      (resolve, reject, cb) => {
+        const rc = this._getStFn(commandHandle, this._handle, cb)
+        if (rc) {
+          resolve(StateType.None)
+        }
+      },
+      (resolve, reject) => ffi.Callback('void', ['uint32', 'uint32', 'uint32'], (handle, err, _state) => {
+        if (err) {
+          reject(err)
+        }
+        resolve(_state)
+      })
+    )
   }
 }

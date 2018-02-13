@@ -72,7 +72,7 @@ describe('A Connection object with ', function () {
     const inviteDetails = await connection.connect({ sms: true })
     assert(inviteDetails)
     await connection.updateState()
-    assert.equal(connection.state, StateType.OfferSent)
+    assert.equal(await connection.getState(), StateType.OfferSent)
     let data = await connection.serialize()
     assert.notEqual(data, null)
     assert.equal(data.handle, connection._handle)
@@ -110,7 +110,7 @@ describe('A Connection object with ', function () {
     const inviteDetails = await connection.connect({ sms: true })
     assert(inviteDetails)
     await connection.updateState()
-    assert.equal(connection.state, StateType.OfferSent)
+    assert.equal(await connection.getState(), StateType.OfferSent)
     let data = await connection.serialize()
     const connection2 = await Connection.deserialize(data)
     assert.equal(connection2._handle, connection._handle)
@@ -125,20 +125,20 @@ describe('A Connection object with ', function () {
     const inviteDetails = await connection.connect({ sms: true })
     assert(inviteDetails)
     await connection.updateState()
-    assert.equal(connection.state, StateType.OfferSent)
+    assert.equal(await connection.getState(), StateType.OfferSent)
   })
 
   it('call to updateState where no connection exists should have a state value of 0', async () => {
     const connection = new Connection()
     await connection.updateState()
-    assert.equal(connection.state, StateType.None)
+    assert.equal(await connection.getState(), StateType.None)
   })
 
   it('call to updateState where connection exists but not connected should have a state value of 1', async () => {
     const connection = await Connection.create({ id: 'Unique ID 999' })
     assert.notEqual(connection._handle, undefined)
     await connection.updateState()
-    assert.equal(connection.state, StateType.Initialized)
+    assert.equal(await connection.getState(), StateType.Initialized)
   })
 
   it('call to inviteDetail with abbr returns non-empty string', async () => {
