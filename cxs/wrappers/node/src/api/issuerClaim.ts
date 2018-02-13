@@ -97,7 +97,7 @@ export class IssuerClaim extends CXSBaseWithState {
         cb
         )
       )
-      await claim._updateState()
+      claim.state = StateType.Initialized
       return claim
     } catch (err) {
       throw new CXSInternalError(`cxs_issuer_create_claim -> ${err}`)
@@ -126,7 +126,7 @@ export class IssuerClaim extends CXSBaseWithState {
         schemaNum: claimData.schema_seq_no
       }
       const claim = await super._deserialize<IssuerClaim, IClaimParams>(IssuerClaim, claimData, params)
-      await claim._updateState()
+      claim.state = claimData.state
       return claim
     } catch (err) {
       throw new CXSInternalError(`cxs_issuer_claim_deserialize -> ${err}`)
@@ -183,7 +183,7 @@ export class IssuerClaim extends CXSBaseWithState {
             if (rc) {
               reject(rc)
             }
-            this._state = StateType.OfferSent
+            this.state = StateType.OfferSent
           },
           (resolve, reject) => Callback('void', ['uint32', 'uint32'], (xcommandHandle, err) => {
             if (err) {
@@ -226,7 +226,7 @@ export class IssuerClaim extends CXSBaseWithState {
           resolve(xcommandHandle)
         })
       )
-      await this._updateState()
+      this.state = StateType.Accepted
     } catch (err) {
       throw new CXSInternalError(`cxs_issuer_send_claim -> ${err}`)
     }

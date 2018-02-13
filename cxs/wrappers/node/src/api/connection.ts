@@ -58,7 +58,7 @@ export class Connection extends CXSBaseWithState {
     const commandHandle = 0
     try {
       await connection._create((cb) => rustAPI().cxs_connection_create(commandHandle, recipientInfo.id, cb))
-      await connection._updateState()
+      connection.state = StateType.Initialized
       return connection
     } catch (err) {
       throw new CXSInternalError(`cxs_connection_create -> ${err}`)
@@ -81,7 +81,7 @@ export class Connection extends CXSBaseWithState {
   static async deserialize (connectionData: IConnectionData) {
     try {
       const connection = await super._deserialize(Connection, connectionData)
-      await connection._updateState()
+      connection.state = connectionData.state
       return connection
     } catch (err) {
       throw new CXSInternalError(`cxs_connection_deserialize -> ${err}`)
@@ -101,6 +101,7 @@ export class Connection extends CXSBaseWithState {
   async connect ( options: IConnectOptions = {} ): Promise<void> {
     const timeout = options.timeout || 10000
     await this._waitFor(async () => await this._connect(options) === 0, timeout)
+    this.state = StateType.OfferSent
   }
 
   /**

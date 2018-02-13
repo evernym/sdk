@@ -18,6 +18,10 @@ export abstract class CXSBaseWithState extends CXSBase {
     return this._state
   }
 
+  set state (state: number) {
+    this._state = state
+  }
+
   protected async _updateState (): Promise<void> {
     const commandHandle = 0
     const state = await createFFICallbackPromise<number>(
@@ -34,6 +38,6 @@ export abstract class CXSBaseWithState extends CXSBase {
         resolve(_state)
       })
     )
-    this._state = state
+    this.state = state
   }
 }

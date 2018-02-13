@@ -71,12 +71,11 @@ describe('An issuerClaim', async function () {
     const sourceId = 'Bank Claim'
     let connection = await Connection.create({ id: '234' })
     await connection.connect()
-    await connection.updateState()
-    assert.equal(2, connection.state)
+    assert.equal(StateType.OfferSent, connection.state)
     const claim = await IssuerClaim.create({ ...config, sourceId })
     await claim.sendOffer(connection)
     await claim.updateState()
-    assert.equal(await claim.state, 2)
+    assert.equal(await claim.state, StateType.OfferSent)
   })
 
   it('can be created, then serialized, then deserialized and have the same sourceId, state, and claimHandle', async function () {

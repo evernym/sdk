@@ -107,7 +107,7 @@ export class Proof extends CXSBaseWithState {
         proof._name,
         cb
       ))
-      await proof._updateState()
+      proof.state = StateType.Initialized
       return proof
     } catch (err) {
       throw new CXSInternalError(`cxs_proof_create -> ${err}`)
@@ -130,7 +130,7 @@ export class Proof extends CXSBaseWithState {
   static async deserialize (proofData: IProofData) {
     try {
       const proof = await super._deserialize(Proof, proofData)
-      await proof._updateState()
+      proof.state = proofData.state
       return proof
     } catch (err) {
       throw new CXSInternalError(`cxs_proof_deserialize -> ${err}`)
@@ -197,7 +197,7 @@ export class Proof extends CXSBaseWithState {
             resolve(xcommandHandle)
           })
         )
-      await this.updateState()
+      this.state = StateType.OfferSent
     } catch (err) {
       throw new CXSInternalError(`cxs_proof_send_request -> ${err}`)
     }
