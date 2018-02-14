@@ -1,4 +1,5 @@
 import pytest
+import random
 from cxs.error import ErrorCode, CxsError
 from cxs.state import State
 from cxs.api.connection import Connection
@@ -24,9 +25,10 @@ async def test_create_connection():
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('cxs_init_test_mode')
-async def test_connection_create():
+async def test_connection_connect():
     connection = await Connection.create(source_id)
-    await connection.connect(phone_number)
+    invite_details = await connection.connect(phone_number)
+    assert invite_details
 
 
 @pytest.mark.asyncio
@@ -42,7 +44,15 @@ async def test_call_to_connect_with_bad_handle():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('cxs_init_test_mode')
 async def test_call_to_connect_state_not_initialized():
-    pass
+    with pytest.raises(CxsError) as e:
+        connection = await Connection.create(source_id)
+        await connection.connect(phone_number)
+        data = await connection.serialize()
+        data['state'] = 0
+        data['handle'] = random.randint(900, 99999)
+        connection2 = await Connection.deserialize(data)
+        await connection2.connect(phone_number)
+    assert ErrorCode.NotReady == e.value.error_code
 
 
 @pytest.mark.asyncio
@@ -73,7 +83,7 @@ async def test_deserialize():
     data = await connection.serialize()
     connection2 = await Connection.deserialize(data)
     assert connection2.handle == data.get('handle')
-    assert connection2.state == State.OfferSent
+    assert await connection2.get_state() == State.OfferSent
 
 
 @pytest.mark.asyncio
@@ -121,11 +131,9 @@ async def test_release_connection_with_invalid_handle():
 @pytest.mark.usefixtures('cxs_init_test_mode')
 async def test_update_state():
     connection = await Connection.create(source_id)
-    await connection.update_state()
-    assert connection.state == State.Initialized
+    assert await connection.update_state() == State.Initialized
     await connection.connect(phone_number)
-    await connection.update_state()
-    assert connection.state == State.OfferSent
+    assert await connection.update_state() == State.OfferSent
 
 
 @pytest.mark.asyncio
@@ -136,6 +144,13 @@ async def test_update_state_with_invalid_handle():
         connection.handle = 0
         await connection.update_state()
     assert ErrorCode.InvalidConnectionHandle == e.value.error_code
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('cxs_init_test_mode')
+async def test_get_state():
+    connection = await Connection.create(source_id)
+    assert await connection.get_state() == State.Initialized
 
 
 @pytest.mark.asyncio

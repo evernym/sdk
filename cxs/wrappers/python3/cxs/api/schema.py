@@ -3,7 +3,6 @@ from cxs.common import do_call, create_cb
 from cxs.error import CxsError, ErrorCode
 from cxs.api.cxs_base import CxsBase
 
-import logging
 import json
 
 
@@ -11,10 +10,8 @@ class Schema(CxsBase):
 
     def __init__(self, source_id: str, name: str, attr_names: list):
         CxsBase.__init__(self, source_id)
-        self._logger = logging.getLogger(__name__)
         self._source_id = source_id
         self._attrs = attr_names
-        self._handle = 0
         self._name = name
 
     @property
@@ -35,25 +32,17 @@ class Schema(CxsBase):
 
     @staticmethod
     async def create(source_id: str, name: str, attr_names: list):
-        schema = Schema(source_id, name, attr_names)
-
-        if not hasattr(Schema.create, "cb"):
-            schema._logger.debug("cxs_schema_create: Creating callback")
-            Schema.create.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_uint32))
+        constructor_params = (source_id, name, attr_names)
 
         c_source_id = c_char_p(source_id.encode('utf-8'))
         c_name = c_char_p(name.encode('utf-8'))
         c_schema_data = c_char_p(json.dumps(attr_names).encode('utf-8'))
+        c_params = (c_source_id, c_name, c_schema_data)
 
-        result = await do_call('cxs_schema_create',
-                               c_source_id,
-                               c_name,
-                               c_schema_data,
-                               Schema.create.cb)
-
-        schema.handle = result
-        schema._logger.debug("created proof object")
-        return schema
+        return await Schema._create(Schema,
+                                    "cxs_schema_create",
+                                    constructor_params,
+                                    c_params)
 
     @staticmethod
     async def deserialize(data: dict):
@@ -76,7 +65,7 @@ class Schema(CxsBase):
             schema = Schema(source_id, '', [])
 
             if not hasattr(Schema.lookup, "cb"):
-                schema._logger.debug("cxs_schema_get_attributes: Creating callback")
+                schema.logger.debug("cxs_schema_get_attributes: Creating callback")
                 Schema.lookup.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_char_p))
 
             c_source_id = c_char_p(source_id.encode('utf-8'))
@@ -86,7 +75,7 @@ class Schema(CxsBase):
                                    c_source_id,
                                    c_schema_no,
                                    Schema.lookup.cb)
-            schema._logger.debug("created schema object")
+            schema.logger.debug("created schema object")
 
             schema_result = json.loads(result.decode())
             schema_data = schema_result['data']['data']

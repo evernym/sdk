@@ -10,7 +10,7 @@ class CxsBase:
     def __init__(self, source_id: str):
         self._source_id = source_id
         self._logger = logging.getLogger(__name__)
-        self._handle = None
+        self._handle = 0
 
     @property
     def handle(self):
@@ -33,6 +33,21 @@ class CxsBase:
         return self._logger
 
     @staticmethod
+    async def _create(cls, fn: str, constructor_args, c_args):
+        obj = cls(*constructor_args)
+
+        if not hasattr(cls.create, "cb"):
+            obj.logger.debug("{}: Creating callback".format(fn))
+            cls.create.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_uint32))
+
+        obj.handle = await do_call(fn,
+                                   *c_args,
+                                   cls.create.cb)
+
+        obj.logger.debug("created {} object".format(cls))
+        return obj
+
+    @staticmethod
     async def _deserialize(cls, fn: str, data: str, *args):
         obj = cls(*args)
 
@@ -42,11 +57,10 @@ class CxsBase:
 
         c_data = c_char_p(data.encode('utf-8'))
 
-        result = await do_call(fn,
-                               c_data,
-                               cls.deserialize.cb)
+        obj.handle = await do_call(fn,
+                                   c_data,
+                                   cls.deserialize.cb)
 
-        obj.handle = result
         obj.logger.debug("created {} object".format(cls))
         return obj
 

@@ -59,7 +59,7 @@ async def test_deserialize():
     data['state'] = State.OfferSent
     proof2 = await Proof.deserialize(data)
     assert proof2.handle == data.get('handle')
-    assert proof2.state == State.OfferSent
+    assert await proof2.get_state() == State.OfferSent
 
 
 @pytest.mark.asyncio
@@ -106,8 +106,7 @@ async def test_release_proof_with_invalid_handle():
 @pytest.mark.usefixtures('cxs_init_test_mode')
 async def test_update_state():
     proof = await Proof.create(source_id, name, requested_attrs)
-    await proof.update_state()
-    assert proof.state == State.Initialized
+    assert await proof.update_state() == State.Initialized
 
 
 @pytest.mark.asyncio
@@ -127,7 +126,14 @@ async def test_request_proof():
     await connection.connect(phone_number)
     proof = await Proof.create(source_id, name, requested_attrs)
     await proof.request_proof(connection)
-    assert proof.state == State.OfferSent
+    assert await proof.get_state() == State.OfferSent
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('cxs_init_test_mode')
+async def test_get_state():
+    proof = await Proof.create(source_id, name, requested_attrs)
+    assert await proof.get_state() == State.Initialized
 
 
 @pytest.mark.asyncio

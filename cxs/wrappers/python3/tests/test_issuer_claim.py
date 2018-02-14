@@ -18,7 +18,7 @@ async def test_create_issuer_claim():
     issuer_claim = await IssuerClaim.create(source_id, attrs, schema_no, name)
     assert issuer_claim.source_id == source_id
     assert issuer_claim.handle > 0
-    assert issuer_claim.state == State.Initialized
+    assert await issuer_claim.get_state() == State.Initialized
 
 
 @pytest.mark.asyncio
@@ -50,7 +50,7 @@ async def test_deserialize():
     data['state'] = State.Expired
     issuer_claim2 = await IssuerClaim.deserialize(data)
     assert issuer_claim2.handle == data.get('handle')
-    assert issuer_claim2.state == State.Expired
+    assert await issuer_claim2.get_state() == State.Expired
 
 
 @pytest.mark.asyncio
@@ -76,8 +76,7 @@ async def test_serialize_deserialize_and_then_serialize():
 @pytest.mark.usefixtures('cxs_init_test_mode')
 async def test_update_state():
     issuer_claim = await IssuerClaim.create(source_id, attrs, schema_no, name)
-    await issuer_claim.update_state()
-    assert issuer_claim.state == State.Initialized
+    assert await issuer_claim.update_state() == State.Initialized
 
 
 @pytest.mark.asyncio
@@ -88,6 +87,13 @@ async def test_update_state_with_invalid_handle():
         issuer_claim.handle = 0
         await issuer_claim.update_state()
     assert ErrorCode.InvalidIssuerClaimHandle == e.value.error_code
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('cxs_init_test_mode')
+async def test_get_state():
+    issuer_claim = await IssuerClaim.create(source_id, attrs, schema_no, name)
+    assert await issuer_claim.get_state() == State.Initialized
 
 
 @pytest.mark.asyncio
@@ -118,8 +124,7 @@ async def test_send_offer():
     await connection.connect(phone_number)
     issuer_claim = await IssuerClaim.create(source_id, attrs, schema_no, name)
     await issuer_claim.send_offer(connection)
-    await issuer_claim.update_state()
-    assert issuer_claim.state == State.OfferSent
+    assert await issuer_claim.update_state() == State.OfferSent
 
 
 @pytest.mark.asyncio
@@ -154,15 +159,14 @@ async def test_send_claim():
     await connection.connect(phone_number)
     issuer_claim = await IssuerClaim.create(source_id, attrs, schema_no, name)
     await issuer_claim.send_offer(connection)
-    await issuer_claim.update_state()
-    assert issuer_claim.state == State.OfferSent
+    assert await issuer_claim.update_state() == State.OfferSent
     # simulate consumer sending claim_req
     data = await issuer_claim.serialize()
     data['handle'] = data['handle'] + 1
     data['state'] = State.RequestReceived
     issuer_claim2 = await issuer_claim.deserialize(data)
     await issuer_claim2.send_claim(connection)
-    assert issuer_claim2.state == State.Accepted
+    assert await issuer_claim2.get_state() == State.Accepted
 
 
 @pytest.mark.asyncio

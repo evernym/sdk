@@ -1,33 +1,20 @@
-from typing import Optional
 from ctypes import *
 from cxs.common import do_call, create_cb
 from cxs.api.connection import Connection
-from cxs.api.cxs_base import CxsBase
-from cxs.state import State
-from cxs.error import CxsError, ErrorCode
+from cxs.api.cxs_stateful import CxsStateful
 
 import json
 
 
-class Proof(CxsBase):
+class Proof(CxsStateful):
 
     def __init__(self, source_id: str):
-        CxsBase.__init__(self, source_id)
-        self._handle = 0
-        self._state = 0
+        CxsStateful.__init__(self, source_id)
         self._proof_state = 0
 
     def __del__(self):
         # destructor
         pass
-
-    @property
-    def state(self):
-        return self._state
-
-    @state.setter
-    def state(self, x):
-        self._state = x
 
     @property
     def proof_state(self):
@@ -38,61 +25,42 @@ class Proof(CxsBase):
         self._proof_state = x
 
     @staticmethod
-    async def create(source_id: str,  name: str, requested_attrs: list):
-        proof = Proof(source_id)
-
-        if not hasattr(Proof.create, "cb"):
-            proof._logger.debug("cxs_proof_create: Creating callback")
-            Proof.create.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_uint32))
+    async def create(source_id: str, name: str, requested_attrs: list):
+        constructor_params = (source_id,)
 
         c_source_id = c_char_p(source_id.encode('utf-8'))
         c_name = c_char_p(name.encode('utf-8'))
         c_req_predicates = c_char_p('[]'.encode('utf-8'))
         c_req_attrs = c_char_p(json.dumps(requested_attrs).encode('utf-8'))
+        c_params = (c_source_id, c_req_attrs, c_req_predicates, c_name)
 
-        result = await do_call('cxs_proof_create',
-                               c_source_id,
-                               c_req_attrs,
-                               c_req_predicates,
-                               c_name,
-                               Proof.create.cb)
-
-        proof.handle = result
-        proof._logger.debug("created proof object")
-        return proof
+        return await Proof._create(Proof,
+                                   "cxs_proof_create",
+                                   constructor_params,
+                                   c_params)
 
     @staticmethod
     async def deserialize(data: dict):
-        try:
-            proof = await Proof._deserialize(Proof,
-                                             "cxs_proof_deserialize",
-                                             json.dumps(data),
-                                             data.get('source_id'))
-            proof.state = data['state']
-            return proof
-        except KeyError:
-            raise CxsError(ErrorCode.InvalidProof)
+        return await Proof._deserialize(Proof,
+                                        "cxs_proof_deserialize",
+                                        json.dumps(data),
+                                        data.get('source_id'))
 
     async def serialize(self) -> dict:
         return await self._serialize(Proof, 'cxs_proof_serialize')
 
-    async def update_state(self):
-        if not hasattr(Proof.update_state, "cb"):
-            self._logger.debug("cxs_proof_update_state: Creating callback")
-            Proof.update_state.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_uint32))
+    async def update_state(self) -> int:
+        return await self._update_state(Proof, 'cxs_proof_update_state')
 
-        c_proof_handle = c_uint32(self.handle)
-
-        self.state = await do_call('cxs_proof_update_state',
-                                   c_proof_handle,
-                                   Proof.update_state.cb)
+    async def get_state(self) -> int:
+        return await self._get_state(Proof, 'cxs_proof_get_state')
 
     async def release(self) -> None:
         await self._release(Proof, 'cxs_proof_release')
 
     async def request_proof(self, connection: Connection):
         if not hasattr(Proof.request_proof, "cb"):
-            self._logger.debug("cxs_proof_send_request: Creating callback")
+            self.logger.debug("cxs_proof_send_request: Creating callback")
             Proof.request_proof.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32))
 
         c_proof_handle = c_uint32(self.handle)
@@ -102,11 +70,10 @@ class Proof(CxsBase):
                       c_proof_handle,
                       c_connection_handle,
                       Proof.request_proof.cb)
-        await self.update_state()
 
     async def get_proof(self, connection: Connection) -> list:
         if not hasattr(Proof.get_proof, "cb"):
-            self._logger.debug("cxs_get_proof: Creating callback")
+            self.logger.debug("cxs_get_proof: Creating callback")
             Proof.get_proof.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_uint32, c_char_p))
 
         c_proof_handle = c_uint32(self.handle)
