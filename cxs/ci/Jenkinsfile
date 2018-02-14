@@ -30,6 +30,8 @@ node('sdk') {
         // build and test the so file
         buildRust(app)
 
+        // update the so file to have version
+        updateSo(app)
         // test the npm package and create the npm gzip artifact
         wrapper = build_wrapper_testing_image('cxs/ci/Dockerfile-wrapper-testing', 'cxs')
         testNodeWrapper(wrapper)
@@ -104,9 +106,17 @@ def updateVersions(app) {
                 // TODO fix this ... these *SHOULD* be cargo commands.
                 sh 'cd cxs/libcxs; ls -l; ls ../ci/scripts'
                 sh 'cd cxs/libcxs; python ../ci/scripts/cargo-update-version'
-                sh 'cd cxs/libcxs; python ../ci/scripts/cargo-update-so'
+
             }
         }
+}
+
+def updateSo(app) {
+    stage('Updating .so file version') {
+        app.inside {
+            sh 'cd cxs/libcxs; python ../ci/scripts/cargo-update-so'
+        }
+    }
 }
 
 
