@@ -23,10 +23,10 @@ node('sdk') {
         }
         app = build('libcxs', 'cxs/ci/ubuntu.dockerfile', 'cxs/ci')
 		      
-        // build the so file and test the so file
+        // build and test the so file
         buildRust(app)
         // update the versions in the toml file and package.json
-//        updateVersions(app)
+        updateVersions(app)
         // test the npm package and create the npm gzip artifact
         wrapper = build_wrapper_testing_image('cxs/ci/Dockerfile-wrapper-testing', 'cxs')
         testNodeWrapper(wrapper)
@@ -68,12 +68,8 @@ def buildRust(envn){
             sh "ls -l"
             sh "rustc --version"
             sh "gcc --version"
-            sh "mkdir -p cxs/wrappers/node/lib"
-            sh "ls -l"
             // sh "cd cxs/libcxs; cargo test -- --test-threads=1"
             sh "cd cxs/libcxs; cargo build"
-            sh "cp cxs/libcxs/target/debug/libcxs.so cxs/wrappers/node/lib/"
-            sh "ls cxs/wrappers/node/lib"
         }
     }
 }
@@ -104,6 +100,7 @@ def updateVersions(app) {
         stage('Updating Versions') {
             app.inside {
                 sh 'ls -l'
+                // TODO fix this ... these *SHOULD* be cargo commands.
                 sh 'cd cxs/libcxs; ls -l; ls ../ci/scripts'
                 sh 'cd cxs/libcxs; python ../ci/scripts/cargo-update-version'
                 sh 'cd cxs/libcxs; python ../ci/scripts/cargo-update-so'
@@ -127,9 +124,7 @@ def createDeb(envn) {
                 
             // build debian
             sh 'cd cxs/libcxs/; cargo deb --no-build --color never'
-            
-            // cp the debian to the volume. We will then use it to test the node wrapper
-
+    
 
             if (env.BRANCH_NAME == "master") {
                 // archive debian to Jenkins
