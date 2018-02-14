@@ -26,6 +26,7 @@ RUN apt-get update -y && apt-get install -y \
 	libffi-dev \
     ruby \
     ruby-dev \ 
+	sudo \
     rubygems 
 
 # Install Nodejs 
