@@ -1,7 +1,7 @@
 #!/bin/bash
 
 VOLUME="artifact1"
-SDK="sdk"
+CXS="cxs"
 
 # clean the artifact volume
 docker volume rm $VOLUME
@@ -24,8 +24,6 @@ ls ~/
 echo "directory listing for cxs:"
 ls cxs
 
-echo "runing git log command:"
-git log
 echo "Running Docker"
 docker run --rm -v ${VOLUME}:/output -v $CXS:/cxs create-debian
 
