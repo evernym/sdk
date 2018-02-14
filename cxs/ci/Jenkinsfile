@@ -153,7 +153,7 @@ def testNodeWrapper(envn) {
   dir ('cxs/wrappers/node'){
     stage ('Test Node Wrapper'){
 		withDockerContainer('wrapper-test'){
-        	sh 'ls -l lib'
+//        	sh 'ls -l lib'
 	        // because we need the dependency
 	        sh 'sudo touch /usr/lib/libcxs.so'
         	sh 'npm -v'
