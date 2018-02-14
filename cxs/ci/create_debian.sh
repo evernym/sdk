@@ -19,8 +19,6 @@ echo "Current directory:"
 echo $(pwd)
 echo "Directory Listing for Current Directory"
 ls
-echo "Current Home Directory ~/:"
-ls ~/
 echo "directory listing for cxs:"
 ls cxs
 
