@@ -15,15 +15,16 @@ popd
 echo "Building Docker"
 docker build -t create-debian -f cxs/ci/Dockerfile-create-debian .
 
+echo "############################"
 echo "Current directory:"
 echo $(pwd)
+echo "############################"
 echo "Directory Listing for Current Directory"
-ls
-echo "directory listing for cxs:"
-ls cxs
+ls .
+echo "############################"
+echo "directory listing for ${CXS}:"
+ls $CXS
 
 echo "Running Docker"
 docker run --rm -v ${VOLUME}:/output -v $CXS:/cxs create-debian
-
-
 
