@@ -12,7 +12,7 @@ def build(name, file = 'cxs/ci/ubuntu.dockerfile cxs/ci', customParams = '') {
 }
 
 // docker build -t wrapper-test --build-arg uid=1001 -f cxs/ci/Dockerfile-wrapper-testing
-def build_wrapper_testing_image(file = 'cxs/ci/Dockerfile-wrapper-testing cxs/ci', customParams = ''){
+def build_wrapper_testing_image(file = 'cxs/ci/Dockerfile-wrapper-testing cxs', customParams = ''){
 	return docker.build("wrapper-test", "--build-arg uid=${getUserUid()} -f $file")
 }
 
@@ -71,7 +71,8 @@ def buildRust(envn){
             sh "gcc --version"
             sh "mkdir -p cxs/wrappers/node/lib"
             sh "ls -l"
-            sh "cd cxs/libcxs; cargo test -- --test-threads=1"
+            // sh "cd cxs/libcxs; cargo test -- --test-threads=1"
+            sh "cd cxs/libcxs; cargo build"
             sh "cp cxs/libcxs/target/debug/libcxs.so cxs/wrappers/node/lib/"
             sh "ls cxs/wrappers/node/lib"
         }
@@ -156,9 +157,7 @@ def testNodeWrapper(envn) {
 		withDockerContainer(image:'wrapper-test'){
 //        	sh 'ls -l lib'
 	        // because we need the dependency
-			sh 'whoami'
-	        sh 'sudo touch /usr/lib/libcxs.so'
-        	sh 'npm -v'
+			sh 'npm -v'
 	        sh 'npm install'
 	        sh 'npm rebuild'
 	        sh 'npm run lint'

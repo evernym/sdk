@@ -46,7 +46,7 @@ RUN curl -fsOSL $LIBINDY_DOWNLOAD_URL \
     && dpkg -i $LIBINDY_DEB \
     && apt-get -f install
 
-COPY ../libcxs/target/debug/libcxs.so /usr/lib/libcxs.so
+COPY libcxs/target/debug/libcxs.so /usr/lib/libcxs.so
 
 
 
