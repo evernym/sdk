@@ -10,19 +10,24 @@ def build(name, file = 'cxs/ci/ubuntu.dockerfile cxs/ci', customParams = '') {
     return docker.build("$name-test", "--build-arg uid=${getUserUid()} -f $file")
 }
 
+def build_wrapper_testing_image(file = 'cxs/ci/Dockerfile-wrapper-testing', customParams = ''){
+	return docker.build("Wrapper-test", "--build-arg uid=${getUserUid()} -f $file")
+}
+
 node('sdk') {
     try {
         stage ('Checkout'){
             checkout scm
         }
         app = build('libcxs')
+		wrapper = build_wrapper_testing_image()
        
         // build the so file and test the so file
         buildRust(app)
         // update the versions in the toml file and package.json
         updateVersions(app)
         // test the npm package and create the npm gzip artifact
-        testNodeWrapper(app)
+        testNodeWrapper(wrapper))
         if (env.BRANCH_NAME == "master") {
             // create the debian of the library
             createDeb(app)
@@ -118,7 +123,7 @@ def createDeb(envn) {
             sh "${CERT_SCRIPT}"
                 
             // build debian
-            sh 'cd cxs/libcxs/; cargo deb --no-build'
+            sh 'cd cxs/libcxs/; cargo deb --no-build --color never'
             
             // cp the debian to the volume. We will then use it to test the node wrapper
 
@@ -148,7 +153,7 @@ def testNodeWrapper(envn) {
       envn.inside {
         sh 'ls -l lib'
         // because we need the dependency
-        sh 'sudo cp lib/libcxs.so /usr/lib'
+        sh 'cp lib/libcxs.so /usr/lib'
         sh 'npm -v'
         sh 'npm install'
         sh 'npm rebuild'
