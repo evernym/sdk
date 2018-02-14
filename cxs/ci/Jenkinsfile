@@ -16,7 +16,7 @@ def build_wrapper_testing_image(file='cxs/ci/Dockerfile-wrapper-testing', contex
 	return docker.build("wrapper-test", "--build-arg uid=${getUserUid()} -f $file $context")
 }
 
-node('sdk') {
+node('ubuntu') {
     try {
         stage ('Checkout'){
             checkout scm
