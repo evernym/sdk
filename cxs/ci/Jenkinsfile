@@ -21,12 +21,15 @@ node('sdk') {
         stage ('Checkout'){
             checkout scm
         }
+        
         app = build('libcxs', 'cxs/ci/ubuntu.dockerfile', 'cxs/ci')
-		      
+		
+        // update the versions in the toml file and package.json
+        updateVersions(app)      
+        
         // build and test the so file
         buildRust(app)
-        // update the versions in the toml file and package.json
-        updateVersions(app)
+
         // test the npm package and create the npm gzip artifact
         wrapper = build_wrapper_testing_image('cxs/ci/Dockerfile-wrapper-testing', 'cxs')
         testNodeWrapper(wrapper)
@@ -47,9 +50,7 @@ node('sdk') {
         step([$class: 'WsCleanup'])
     }
 }
-def create_debian(){
-    sh 'cxs/ci/create_debian.sh'
-}
+
 def buildDocker(){
     def app
     def pathToCi = 'cxs/ci'
