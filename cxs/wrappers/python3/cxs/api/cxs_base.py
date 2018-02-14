@@ -1,4 +1,4 @@
-from cxs.common import do_call, create_cb
+from cxs.common import do_call, create_cb, release
 from ctypes import *
 
 import logging
@@ -78,13 +78,8 @@ class CxsBase:
         self.logger.debug("serialized {} object".format(cls))
         return json.loads(data.decode())
 
-    async def _release(self, cls, fn: str):
-        if not hasattr(cls.release, "cb"):
-            self.logger.debug("{}: Creating callback".format(fn))
-            cls.release.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32))
-
+    def _release(self, cls, fn: str):
+        self.logger.debug("Releasing %s handle: %s", cls, self.handle)
         c_handle = c_uint32(self.handle)
 
-        await do_call(fn,
-                      c_handle,
-                      cls.release.cb)
+        release(fn, c_handle)

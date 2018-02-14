@@ -12,8 +12,8 @@ class Connection(CxsStateful):
         CxsStateful.__init__(self, source_id)
 
     def __del__(self):
-        # destructor
-        pass
+        self.release()
+        self.logger.debug("Deleted {} obj: {}".format(Connection, self.handle))
 
     @staticmethod
     async def create(source_id: str):
@@ -43,7 +43,6 @@ class Connection(CxsStateful):
         connection_data = {'connection_type': 'SMS', 'phone': phone_number} if phone_number \
             else {'connection_type': 'QR'}
         c_connection_data = c_char_p(json.dumps(connection_data).encode('utf-8'))
-
         invite_details = await do_call('cxs_connection_connect',
                                        c_connection_handle,
                                        c_connection_data,
@@ -59,8 +58,8 @@ class Connection(CxsStateful):
     async def get_state(self) -> int:
         return await self._get_state(Connection, 'cxs_connection_get_state')
 
-    async def release(self) -> None:
-        await self._release(Connection, 'cxs_connection_release')
+    def release(self) -> None:
+        self._release(Connection, 'cxs_connection_release')
 
     async def invite_details(self, abbreviated: bool) -> dict:
         if not hasattr(Connection.invite_details, "cb"):

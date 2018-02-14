@@ -3,6 +3,8 @@ import random
 from cxs.error import ErrorCode, CxsError
 from cxs.state import State
 from cxs.api.connection import Connection
+from cxs.common import release
+from ctypes import *
 
 source_id = '123'
 phone_number = '8019119191'
@@ -112,7 +114,7 @@ async def test_connection_release():
     with pytest.raises(CxsError) as e:
         connection = await Connection.create(source_id)
         assert connection.handle > 0
-        await connection.release()
+        connection.release()
         await connection.serialize()
     assert ErrorCode.InvalidConnectionHandle == e.value.error_code
 
@@ -123,7 +125,7 @@ async def test_release_connection_with_invalid_handle():
     with pytest.raises(CxsError) as e:
         connection = Connection(source_id)
         connection.handle = 0
-        await connection.release()
+        connection.release()
     assert ErrorCode.InvalidConnectionHandle == e.value.error_code
 
 
@@ -167,3 +169,15 @@ async def test_invite_details_without_abbr():
     connection = await Connection.create(source_id)
     details = await connection.invite_details(False)
     assert details.get('senderAgencyDetail')
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('cxs_init_test_mode')
+async def test_release_called_after_gc():
+    with pytest.raises(CxsError) as e:
+        connection = await Connection.create(source_id)
+        await connection.connect(phone_number)
+        handle = connection.handle
+        connection.__del__()
+        await release('cxs_connection_release', c_uint32(handle))
+    assert ErrorCode.InvalidConnectionHandle == e.value.error_code

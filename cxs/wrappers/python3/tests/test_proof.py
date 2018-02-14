@@ -87,7 +87,7 @@ async def test_proof_release():
     with pytest.raises(CxsError) as e:
         proof = await Proof.create(source_id, name, requested_attrs)
         assert proof.handle > 0
-        await proof.release()
+        proof.release()
         await proof.serialize()
     assert ErrorCode.InvalidProofHandle == e.value.error_code
 
@@ -98,7 +98,7 @@ async def test_release_proof_with_invalid_handle():
     with pytest.raises(CxsError) as e:
         proof = Proof(source_id)
         proof.handle = 0
-        await proof.release()
+        proof.release()
     assert ErrorCode.InvalidProofHandle == e.value.error_code
 
 
@@ -143,7 +143,7 @@ async def test_request_proof_with_invalid_connection():
         connection = await Connection.create(source_id)
         await connection.connect(phone_number)
         proof = await Proof.create(source_id, name, requested_attrs)
-        await connection.release()
+        connection.release()
         await proof.request_proof(connection)
     assert ErrorCode.InvalidConnectionHandle == e.value.error_code
 
@@ -155,7 +155,7 @@ async def test_request_proof_with_released_proof():
         connection = await Connection.create(source_id)
         await connection.connect(phone_number)
         proof = await Proof.create(source_id, name, requested_attrs)
-        await proof.release()
+        proof.release()
         await proof.request_proof(connection)
     assert ErrorCode.InvalidProofHandle == e.value.error_code
 

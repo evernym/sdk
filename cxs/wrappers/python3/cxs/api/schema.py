@@ -14,6 +14,10 @@ class Schema(CxsBase):
         self._attrs = attr_names
         self._name = name
 
+    def __del__(self):
+        self.release()
+        self.logger.debug("Deleted {} obj: {}".format(Schema, self.handle))
+
     @property
     def name(self):
         return self._name
@@ -89,6 +93,6 @@ class Schema(CxsBase):
     async def serialize(self) -> dict:
         return await self._serialize(Schema, 'cxs_schema_serialize')
 
-    async def release(self) -> None:
-        await self._release(Schema, 'cxs_schema_release')
+    def release(self) -> None:
+        self._release(Schema, 'cxs_schema_release')
 

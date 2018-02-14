@@ -33,6 +33,18 @@ def do_call(name: str, *args):
     return future
 
 
+def release(name, handle):
+    logger = logging.getLogger(__name__)
+
+    err = getattr(_cdll(), name)(handle)
+
+    logger.debug("release: Function %s returned err: %i", name, err)
+
+    if err != ErrorCode.Success:
+        logger.warning("release: Function %s returned error %i", name, err)
+        raise CxsError(ErrorCode(err))
+
+
 def create_cb(cb_type: CFUNCTYPE, transform_fn=None):
 
     def _cb(command_handle: int, err: int, *args):
@@ -85,3 +97,4 @@ def _load_cdll() -> CDLL:
         return res
     except OSError as e:
         raise e
+

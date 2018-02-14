@@ -102,7 +102,7 @@ async def test_issuer_claim_release():
     with pytest.raises(CxsError) as e:
         issuer_claim = await IssuerClaim.create(source_id, attrs, schema_no, name)
         assert issuer_claim.handle > 0
-        await issuer_claim.release()
+        issuer_claim.release()
         await issuer_claim.serialize()
     assert ErrorCode.InvalidIssuerClaimHandle == e.value.error_code
 
@@ -113,7 +113,7 @@ async def test_release_proof_with_invalid_handle():
     with pytest.raises(CxsError) as e:
         issuer_claim = IssuerClaim(source_id, attrs, schema_no, name)
         issuer_claim.handle = 0
-        await issuer_claim.release()
+        issuer_claim.release()
     assert ErrorCode.InvalidIssuerClaimHandle == e.value.error_code
 
 

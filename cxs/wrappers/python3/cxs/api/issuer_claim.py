@@ -16,8 +16,8 @@ class IssuerClaim(CxsStateful):
         self._name = name
 
     def __del__(self):
-        # destructor
-        pass
+        self.release()
+        self.logger.debug("Deleted {} obj: {}".format(IssuerClaim, self.handle))
 
     @staticmethod
     async def create(source_id: str, attrs: dict, schema_no: int, name: str):
@@ -57,8 +57,8 @@ class IssuerClaim(CxsStateful):
     async def get_state(self) -> int:
         return await self._get_state(IssuerClaim, 'cxs_issuer_claim_get_state')
 
-    async def release(self) -> None:
-        await self._release(IssuerClaim, 'cxs_claim_issuer_release')
+    def release(self) -> None:
+        self._release(IssuerClaim, 'cxs_claim_issuer_release')
 
     async def send_offer(self, connection: Connection):
         if not hasattr(IssuerClaim.send_offer, "cb"):

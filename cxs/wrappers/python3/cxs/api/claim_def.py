@@ -13,6 +13,10 @@ class ClaimDef(CxsBase):
         self._schema_no = schema_no
         self._name = name
 
+    def __del__(self):
+        self.release()
+        self.logger.debug("Deleted {} obj: {}".format(ClaimDef, self.handle))
+
     @property
     def name(self):
         return self._name
@@ -63,5 +67,5 @@ class ClaimDef(CxsBase):
     async def serialize(self) -> dict:
         return await self._serialize(ClaimDef, 'cxs_claimdef_serialize')
 
-    async def release(self) -> None:
-        await self._release(ClaimDef, 'cxs_claimdef_release')
+    def release(self) -> None:
+        self._release(ClaimDef, 'cxs_claimdef_release')

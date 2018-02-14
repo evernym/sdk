@@ -13,8 +13,8 @@ class Proof(CxsStateful):
         self._proof_state = 0
 
     def __del__(self):
-        # destructor
-        pass
+        self.release()
+        self.logger.debug("Deleted {} obj: {}".format(Proof, self.handle))
 
     @property
     def proof_state(self):
@@ -55,8 +55,8 @@ class Proof(CxsStateful):
     async def get_state(self) -> int:
         return await self._get_state(Proof, 'cxs_proof_get_state')
 
-    async def release(self) -> None:
-        await self._release(Proof, 'cxs_proof_release')
+    def release(self) -> None:
+        self._release(Proof, 'cxs_proof_release')
 
     async def request_proof(self, connection: Connection):
         if not hasattr(Proof.request_proof, "cb"):

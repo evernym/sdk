@@ -70,7 +70,7 @@ async def test_release():
     with pytest.raises(CxsError) as e:
         claim_def = await ClaimDef.create(source_id, name, schema_no, False)
         assert claim_def.handle > 0
-        await claim_def.release()
+        claim_def.release()
         await claim_def.serialize()
     assert ErrorCode.InvalidClaimDefHandle == e.value.error_code
 
@@ -81,6 +81,6 @@ async def test_release_with_invalid_handle():
     with pytest.raises(CxsError) as e:
         claim_def = await ClaimDef.create(source_id, name, schema_no, False)
         claim_def.handle = 0
-        await claim_def.release()
+        claim_def.release()
     assert ErrorCode.InvalidClaimDefHandle == e.value.error_code
 

@@ -76,7 +76,7 @@ async def test_release():
     with pytest.raises(CxsError) as e:
         schema = await Schema.create(source_id, name, attr_names)
         assert schema.handle > 0
-        await schema.release()
+        schema.release()
         await schema.serialize()
     assert ErrorCode.InvalidSchemaHandle == e.value.error_code
 
@@ -87,7 +87,7 @@ async def test_release_with_invalid_handle():
     with pytest.raises(CxsError) as e:
         schema = Schema(source_id, name, attr_names)
         schema.handle = 0
-        await schema.release()
+        schema.release()
     assert ErrorCode.InvalidSchemaHandle == e.value.error_code
 
 
