@@ -10,13 +10,12 @@ def build(name, file = 'cxs/ci/ubuntu.dockerfile cxs/ci', customParams = '') {
     return docker.build("$name-test", "--build-arg uid=${getUserUid()} -f $file")
 }
 
-node('ubuntu') {
+node('sdk') {
     try {
         stage ('Checkout'){
             checkout scm
         }
         app = build('libcxs')
-        test_wrapper = build_test_wrapper('libcxs')
        
         // build the so file and test the so file
         buildRust(app)
@@ -75,7 +74,7 @@ def testRust(envn) {
     stage ('Testing Rust'){
         sh "echo Testing"
         envn.inside {
-            sh "cd cxs/libcxs; cargo test -- --test-threads=1"
+            sh "cd cxs/libcxs; cargo test --color never -- --test-threads=1"
         }
     }
 }
