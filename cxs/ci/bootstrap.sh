@@ -3,6 +3,9 @@
 echo 'directory listing of bootstrap.sh'
 ls 
 
+echo 'directory listing of /cxs'
+ls /cxs
+
 ls cxs/libcxs
 
 cd cxs/libcxs
