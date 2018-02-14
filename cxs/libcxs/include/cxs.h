@@ -17,6 +17,13 @@ typedef enum
   revoked,
 } cxs_state_t;
 
+typedef enum
+{
+  undefined = 0,
+  validated = 1,
+  invalid = 2,
+} cxs_proof_state_t;
+
 typedef unsigned int cxs_error_t;
 typedef unsigned int cxs_schema_handle_t;
 typedef unsigned int cxs_claimdef_handle_t;
@@ -121,8 +128,15 @@ cxs_error_t cxs_connection_deserialize(cxs_command_handle_t command_handle, cons
 /** Request a state update from the agent for the given connection. */
 cxs_error_t cxs_connection_update_state(cxs_command_handle_t command_handle, cxs_connection_handle_t connection_handle, void (*cb)(cxs_command_handle_t xcommand_handle, cxs_error_t err, cxs_state_t state));
 
+/** Retrieves the state of the connection */
+cxs_error_t cxs_connection_get_state(cxs_command_handle_t command_handle, cxs_connection_handle_t connection_handle, void (*cb)(cxs_command_handle_t xcommand_handle, cxs_error_t err, cxs_state_t state));
+
 /** Releases the connection from memory. */
 cxs_error_t cxs_connection_release(cxs_connection_handle_t connection_handle);
+
+/** Get the invite details for the connection. */
+cxs_error_t cxs_connection_invite_details(cxs_command_handle_t command_handle, cxs_connection_handle_t connection_handle, int abbreviated, void (*cb)(cxs_command_handle_t xcommand_handle, cxs_error_t err, const char *details));
+
 
 /**
  * claim issuer object
@@ -138,6 +152,9 @@ cxs_error_t cxs_issuer_send_claim_offer(cxs_command_handle_t command_handle, cxs
 
 /** Updates the state of the claim from the agency. */
 cxs_error_t cxs_issuer_claim_update_state(cxs_command_handle_t command_handle, cxs_claim_handle_t claim_handle, void (*cb)(cxs_command_handle_t xcommand_handle, cxs_error_t err, cxs_state_t state));
+
+/** Retrieves the state of the issuer_claim. */
+cxs_error_t cxs_issuer_claim_get_state(cxs_command_handle_t command_handle, cxs_claim_handle_t claim_handle, void (*cb)(cxs_command_handle_t xcommand_handle, cxs_error_t err, cxs_state_t state));
 
 /** Asynchronously send the claim to the connection. Populates a handle to the new transaction. */
 cxs_error_t cxs_issuer_send_claim(cxs_command_handle_t command_handle, cxs_claim_handle_t claim_handle, cxs_connection_handle_t connection_handle, void (*cb)(cxs_command_handle_t command_handle, cxs_error_t err));
@@ -173,13 +190,16 @@ cxs_error_t cxs_proof_create(cxs_command_handle_t command_handle, const char *so
 cxs_error_t cxs_proof_send_request(cxs_command_handle_t command_handle, cxs_proof_handle_t proof_handle, cxs_connection_handle_t connection_handle, void (*cb)(cxs_command_handle_t xcommand_handle, cxs_error_t err));
 
 /** Populate response_data with the latest proof offer received. */
-cxs_error_t cxs_get_proof(cxs_command_handle_t command_handle, cxs_proof_handle_t proof_handle, cxs_connection_handle_t connection_handle, void (*cb)(cxs_command_handle_t xcommand_handle, cxs_error_t err, cxs_state_t state, const char *proof_string));
+cxs_error_t cxs_get_proof(cxs_command_handle_t command_handle, cxs_proof_handle_t proof_handle, cxs_connection_handle_t connection_handle, void (*cb)(cxs_command_handle_t xcommand_handle, cxs_error_t err, cxs_proof_state_t state, const char *proof_string));
 
 /** Set proof offer as accepted. */
 cxs_error_t cxs_proof_accepted(cxs_proof_handle_t proof_handle);
 
 /** Populates status with the current state of this proof request. */
 cxs_error_t cxs_proof_update_state(cxs_command_handle_t command_handle, cxs_proof_handle_t proof_handle, void (*cb)(cxs_command_handle_t xcommand_handle, cxs_error_t err, cxs_state_t state));
+
+/** Retrieves the state of the proof. */
+cxs_error_t cxs_proof_get_state(cxs_command_handle_t command_handle, cxs_proof_handle_t proof_handle, void (*cb)(cxs_command_handle_t xcommand_handle, cxs_error_t err, cxs_state_t state));
 
 /** Populates status with the current state of this claim. */
 cxs_error_t cxs_proof_serialize(cxs_command_handle_t command_handle, cxs_proof_handle_t proof_handle, void (*cb)(cxs_command_handle_t xcommand_handle, cxs_error_t err, const char *state));
@@ -190,6 +210,7 @@ cxs_error_t cxs_proof_deserialize(cxs_command_handle_t command_handle, const cha
 /** Releases the proof from memory. */
 cxs_error_t cxs_proof_release(cxs_proof_handle_t proof_handle);
 
+void cxs_set_next_agency_response(int);
 #ifdef __cplusplus
 }
 #endif
