@@ -8,12 +8,12 @@ def getUserUid() {
 
 // docker build -t libcxs-test --build-arg uid=1001 -f cxs/ci/ubuntu.dockerfile cxs/ci
 def build(name, file='cxs/ci/ubuntu.dockerfile', context='cxs/ci', customParams = '') {
-    return docker.build("$name-test", "--build-arg uid=${getUserUid()} -f $file $context")
+    return docker.build("$name-test", "--build-arg uid=${getUserUid()} -f ${file} ${context}")
 }
 
 // docker build -t wrapper-test --build-arg uid=1001 -f cxs/ci/Dockerfile-wrapper-testing
 def build_wrapper_testing_image(file='cxs/ci/Dockerfile-wrapper-testing', context='cxs', customParams = ''){
-	return docker.build("wrapper-test", "--build-arg uid=${getUserUid()} -f $file $context")
+	return docker.build("wrapper-test", "--build-arg uid=${getUserUid()} -f ${file} ${context}")
 }
 
 node('sdk') {
