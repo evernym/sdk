@@ -3,16 +3,17 @@ from ctypes import *
 from cxs.common import do_call, create_cb
 from cxs.state import State
 from cxs.api.connection import Connection
+from cxs.api.cxs_base import CxsBase
 
 import logging
 import json
 
 
-class IssuerClaim:
+class IssuerClaim(CxsBase):
 
     def __init__(self, source_id: str, attrs: dict, schema_no: int, name: str):
+        CxsBase.__init__(self, source_id)
         self._logger = logging.getLogger(__name__)
-        self._source_id = source_id
         self._schema_no = schema_no
         self._attrs = attrs
         self._name = name
@@ -24,28 +25,12 @@ class IssuerClaim:
         pass
 
     @property
-    def handle(self):
-        return self._handle
-
-    @handle.setter
-    def handle(self, handle):
-        self._handle = handle
-
-    @property
     def state(self):
         return self._state
 
     @state.setter
     def state(self, x):
         self._state = x
-
-    @property
-    def source_id(self):
-        return self._source_id
-
-    @source_id.setter
-    def source_id(self, x):
-        self._source_id = x
 
     @staticmethod
     async def create(source_id: str, attrs: dict, schema_no: int, name: str):
@@ -77,37 +62,18 @@ class IssuerClaim:
 
     @staticmethod
     async def deserialize(data: dict):
-        issuer_claim = IssuerClaim(data.get('source_id'),
-                                   data.get('claim_attributes'),
-                                   data.get('schema_seq_no'),
-                                   data.get('claim_request'))
-
-        if not hasattr(IssuerClaim.deserialize, "cb"):
-            issuer_claim._logger.debug("cxs_issuer_claim_deserialize: Creating callback")
-            IssuerClaim.deserialize.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_uint32))
-
-        c_data = c_char_p(json.dumps(data).encode('utf-8'))
-
-        result = await do_call('cxs_issuer_claim_deserialize',
-                               c_data,
-                               IssuerClaim.deserialize.cb)
-
-        issuer_claim.handle = result
+        issuer_claim = await IssuerClaim._deserialize(IssuerClaim,
+                                                      "cxs_issuer_claim_deserialize",
+                                                      json.dumps(data),
+                                                      data.get('source_id'),
+                                                      data.get('claim_attributes'),
+                                                      data.get('schema_seq_no'),
+                                                      data.get('claim_request'))
         await issuer_claim.update_state()
-        issuer_claim._logger.debug("created issuer_claim object")
         return issuer_claim
 
     async def serialize(self) -> dict:
-        if not hasattr(IssuerClaim.serialize, "cb"):
-            self._logger.debug("cxs_issuer_claim_serialize: Creating callback")
-            IssuerClaim.serialize.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_char_p))
-
-        c_handle = c_uint32(self.handle)
-
-        data = await do_call('cxs_issuer_claim_serialize',
-                             c_handle,
-                             IssuerClaim.serialize.cb)
-        return json.loads(data.decode())
+        return await self._serialize(IssuerClaim, 'cxs_issuer_claim_serialize')
 
     async def update_state(self):
         if not hasattr(IssuerClaim.update_state, "cb"):
@@ -119,6 +85,9 @@ class IssuerClaim:
         self.state = await do_call('cxs_issuer_claim_update_state',
                                    c_handle,
                                    IssuerClaim.update_state.cb)
+
+    async def release(self) -> None:
+        await self._release(IssuerClaim, 'cxs_claim_issuer_release')
 
     async def send_offer(self, connection: Connection):
         if not hasattr(IssuerClaim.send_offer, "cb"):
@@ -147,14 +116,3 @@ class IssuerClaim:
                       c_connection_handle,
                       IssuerClaim.send_claim.cb)
         await self.update_state()
-
-    async def release(self) -> None:
-        if not hasattr(IssuerClaim.release, "cb"):
-            self._logger.debug("cxs_claim_issuer_release: Creating callback")
-            IssuerClaim.release.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32))
-
-        c_handle = c_uint32(self.handle)
-
-        await do_call('cxs_claim_issuer_release',
-                      c_handle,
-                      IssuerClaim.release.cb)

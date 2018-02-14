@@ -1,15 +1,16 @@
 from typing import Optional
 from ctypes import *
 from cxs.common import do_call, create_cb
+from cxs.api.cxs_base import CxsBase
 
 import logging
 import json
 
 
-class Connection:
+class Connection(CxsBase):
 
     def __init__(self, source_id: str):
-        self._source_id = source_id
+        CxsBase.__init__(self, source_id)
         self._logger = logging.getLogger(__name__)
         self._handle = 0
         self._state = 0
@@ -19,28 +20,12 @@ class Connection:
         pass
 
     @property
-    def handle(self):
-        return self._handle
-
-    @handle.setter
-    def handle(self, handle):
-        self._handle = handle
-
-    @property
     def state(self):
         return self._state
 
     @state.setter
     def state(self, x):
         self._state = x
-
-    @property
-    def source_id(self):
-        return self._source_id
-
-    @source_id.setter
-    def source_id(self, x):
-        self._source_id = x
 
     @staticmethod
     async def create(source_id: str):
@@ -62,25 +47,14 @@ class Connection:
 
     @staticmethod
     async def deserialize(data: dict):
-        connection = Connection(data.get('source_id'))
-
-        if not hasattr(Connection.deserialize, "cb"):
-            connection._logger.debug("cxs_connection_deserialize: Creating callback")
-            Connection.deserialize.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_uint32))
-
-        c_data = c_char_p(json.dumps(data).encode('utf-8'))
-
-        result = await do_call('cxs_connection_deserialize',
-                               c_data,
-                               Connection.deserialize.cb)
-
-        connection.handle = result
-        await connection.update_state()
-        connection._logger.debug("created connection object")
+        connection = await Connection._deserialize(Connection,
+                                                   "cxs_connection_deserialize",
+                                                   json.dumps(data),
+                                                   data.get('source_id'))
+        connection.state = data['state']
         return connection
 
-    async def connect(self, phone_number: Optional[str], timeout=None) -> None:
-        # Todo: Need to handle timeout
+    async def connect(self, phone_number: Optional[str]) -> None:
         if not hasattr(Connection.connect, "cb"):
             self._logger.debug("cxs_connection_connect: Creating callback")
             Connection.connect.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32))
@@ -96,16 +70,7 @@ class Connection:
                       Connection.connect.cb)
 
     async def serialize(self) -> dict:
-        if not hasattr(Connection.serialize, "cb"):
-            self._logger.debug("cxs_connection_serialize: Creating callback")
-            Connection.serialize.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_char_p))
-
-        c_connection_handle = c_uint32(self.handle)
-
-        data = await do_call('cxs_connection_serialize',
-                             c_connection_handle,
-                             Connection.serialize.cb)
-        return json.loads(data.decode())
+        return await self._serialize(Connection, 'cxs_connection_serialize')
 
     async def update_state(self) -> None:
         if not hasattr(Connection.update_state, "cb"):
@@ -119,15 +84,7 @@ class Connection:
                                    Connection.update_state.cb)
 
     async def release(self) -> None:
-        if not hasattr(Connection.release, "cb"):
-            self._logger.debug("cxs_connection_release: Creating callback")
-            Connection.release.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32))
-
-        c_connection_handle = c_uint32(self.handle)
-
-        await do_call('cxs_connection_release',
-                      c_connection_handle,
-                      Connection.release.cb)
+        await self._release(Connection, 'cxs_connection_release')
 
     async def invite_details(self, abbreviated: bool) -> dict:
         if not hasattr(Connection.invite_details, "cb"):

@@ -6,7 +6,6 @@ from cxs.api.cxs_base import CxsBase
 from cxs.state import State
 from cxs.error import CxsError, ErrorCode
 
-import logging
 import json
 
 
@@ -14,7 +13,6 @@ class Proof(CxsBase):
 
     def __init__(self, source_id: str):
         CxsBase.__init__(self, source_id)
-        self._logger = logging.getLogger(__name__)
         self._handle = 0
         self._state = 0
         self._proof_state = 0
@@ -89,6 +87,9 @@ class Proof(CxsBase):
                                    c_proof_handle,
                                    Proof.update_state.cb)
 
+    async def release(self) -> None:
+        await self._release(Proof, 'cxs_proof_release')
+
     async def request_proof(self, connection: Connection):
         if not hasattr(Proof.request_proof, "cb"):
             self._logger.debug("cxs_proof_send_request: Creating callback")
@@ -117,7 +118,3 @@ class Proof(CxsBase):
                                            Proof.get_proof.cb)
         self.proof_state = proof_state
         return json.loads(proof.decode())
-
-    async def release(self) -> None:
-        await self._release(Proof, 'cxs_proof_release')
-

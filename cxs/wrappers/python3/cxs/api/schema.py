@@ -58,6 +58,7 @@ class Schema(CxsBase):
     @staticmethod
     async def deserialize(data: dict):
         try:
+            # Todo: Find better way to access attr_names. Potential for issues.
             attrs = data['data']['data']['attr_names']
             schema = await Schema._deserialize(Schema,
                                                "cxs_schema_deserialize",
