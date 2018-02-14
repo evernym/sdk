@@ -1,23 +1,20 @@
 #!/bin/bash
 
 VOLUME="artifact1"
-CXS="cxs"
+CXS=`readlink -f cxs`
 
 # clean the artifact volume
 docker volume rm $VOLUME
 
 # make the volume from sdk
 pushd cxs/wrappers/node/ci
-./create_volume.sh ~/cxs $CXS
+./create_volume.sh $CXS $VOLUME 
 
 # build Docker-debian
 popd
 echo "Building Docker"
 docker build -t create-debian -f cxs/ci/Dockerfile-create-debian .
 
-echo "############################"
-echo "Current directory:"
-echo $(pwd)
 echo "############################"
 echo "Directory Listing for Current Directory"
 ls .
