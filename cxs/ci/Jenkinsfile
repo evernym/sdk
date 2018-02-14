@@ -6,11 +6,13 @@ def getUserUid() {
     return sh(returnStdout: true, script: 'id -u').trim()
 }
 
+// docker build -t libcxs-test --build-arg uid=1001 -f cxs/ci/ubuntu.dockerfile cxs/ci
 def build(name, file = 'cxs/ci/ubuntu.dockerfile cxs/ci', customParams = '') {
     return docker.build("$name-test", "--build-arg uid=${getUserUid()} -f $file")
 }
 
-def build_wrapper_testing_image(file = 'cxs/ci/Dockerfile-wrapper-testing', customParams = ''){
+// docker build -t wrapper-test --build-arg uid=1001 -f cxs/ci/Dockerfile-wrapper-testing
+def build_wrapper_testing_image(file = 'cxs/ci/Dockerfile-wrapper-testing cxs/ci', customParams = ''){
 	return docker.build("wrapper-test", "--build-arg uid=${getUserUid()} -f $file")
 }
 
