@@ -46,7 +46,7 @@ RUN curl -fsOSL $LIBINDY_DOWNLOAD_URL \
     && dpkg -i $LIBINDY_DEB \
     && apt-get -f install
 
-RUN useradd -m docker && echo "docker:docker" | chpasswd && adduser docker sudo
+RUN useradd -m 1001 && echo "docker:docker" | chpasswd && adduser docker sudo
 USER docker
 WORKDIR /
 
