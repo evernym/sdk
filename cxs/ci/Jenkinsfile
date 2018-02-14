@@ -152,7 +152,7 @@ def createDeb(envn) {
 def testNodeWrapper(envn) {
   dir ('cxs/wrappers/node'){
     stage ('Test Node Wrapper'){
-		withDockerContainer('wrapper-test'){
+		withDockerContainer('wrapper-test', '-u docker'){
 //        	sh 'ls -l lib'
 	        // because we need the dependency
 			sh 'whoami'
