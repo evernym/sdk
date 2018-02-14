@@ -27,7 +27,7 @@ node('sdk') {
         // update the versions in the toml file and package.json
         updateVersions(app)
         // test the npm package and create the npm gzip artifact
-        testNodeWrapper(wrapper))
+        testNodeWrapper(wrapper)
         if (env.BRANCH_NAME == "master") {
             // create the debian of the library
             createDeb(app)
