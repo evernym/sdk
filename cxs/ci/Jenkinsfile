@@ -25,9 +25,9 @@ node('sdk') {
 		wrapper = build_wrapper_testing_image()
        
         // build the so file and test the so file
-        buildRust(app)
+//        buildRust(app)
         // update the versions in the toml file and package.json
-        updateVersions(app)
+//        updateVersions(app)
         // test the npm package and create the npm gzip artifact
         testNodeWrapper(wrapper)
         if (env.BRANCH_NAME == "master") {
@@ -152,22 +152,22 @@ def createDeb(envn) {
 def testNodeWrapper(envn) {
   dir ('cxs/wrappers/node'){
     stage ('Test Node Wrapper'){
-      envn.inside {
-        sh 'ls -l lib'
-        // because we need the dependency
-        sh 'sudo cp lib/libcxs.so /usr/lib'
-        sh 'npm -v'
-        sh 'npm install'
-        sh 'npm rebuild'
-        sh 'npm run lint'
-        sh 'npm run compile'
-        sh 'npm test'
-        sh 'ls -l'
-        sh 'npm pack'
-        sh 'ls'
-        sh "test -f cxs-*.tgz"
-        archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
-      }
+		withDockerContainer('wrapper-test'){
+        	sh 'ls -l lib'
+	        // because we need the dependency
+	        sh 'sudo touch /usr/lib/libcxs.so'
+        	sh 'npm -v'
+	        sh 'npm install'
+	        sh 'npm rebuild'
+	        sh 'npm run lint'
+	        sh 'npm run compile'
+	        sh 'npm test'
+	        sh 'ls -l'
+			sh 'npm pack'
+	        sh 'ls'
+	        sh "test -f cxs-*.tgz"
+	        archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
+      	}
     }
   }
 }
