@@ -12,7 +12,7 @@ def build(name, file='cxs/ci/ubuntu.dockerfile', context='cxs/ci', customParams 
 }
 
 // docker build -t wrapper-test --build-arg uid=1001 -f cxs/ci/Dockerfile-wrapper-testing
-def build_wrapper_testing_image(file='cxs/ci/Dockerfile-wrapper-testing cxs',, customParams = ''){
+def build_wrapper_testing_image(file='cxs/ci/Dockerfile-wrapper-testing cxs', context='', customParams = ''){
 	return docker.build("wrapper-test", "--build-arg uid=${getUserUid()} -f $file $context")
 }
 
