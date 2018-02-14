@@ -155,6 +155,7 @@ def testNodeWrapper(envn) {
 		withDockerContainer('wrapper-test'){
 //        	sh 'ls -l lib'
 	        // because we need the dependency
+			sh 'whoami'
 	        sh 'sudo touch /usr/lib/libcxs.so'
         	sh 'npm -v'
 	        sh 'npm install'
