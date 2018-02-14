@@ -48,6 +48,7 @@ RUN curl -fsOSL $LIBINDY_DOWNLOAD_URL \
 
 COPY libcxs/target/debug/libcxs.so /usr/lib/libcxs.so
 
-
+RUN useradd -ms /bin/bash -u $uid cxs
+USER cxs
 
 
