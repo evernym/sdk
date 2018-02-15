@@ -66,9 +66,9 @@ pub struct EqProof{
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct ClaimData{
-    pub schema_seq_no: Option<u32>,
-    pub issuer_did: Option<String>,
-    pub claim_uuid: Option<String>,
+    pub schema_seq_no: u32,
+    pub issuer_did: String,
+    pub claim_uuid: String,
     pub name: String,
     pub value: Value,
     #[serde(rename = "type")]
