@@ -30,7 +30,7 @@ pub struct AggregatedProof {
 pub struct RequestedProof {
     pub revealed_attrs: HashMap<String, Vec<Value>>,
     pub unrevealed_attrs: HashMap<String, Value>,
-    pub self_attested_attrs: HashMap<String, Value>,
+    pub self_attested_attrs: HashMap<String, String>,
     pub predicates: HashMap<String, Value>,
 }
 
