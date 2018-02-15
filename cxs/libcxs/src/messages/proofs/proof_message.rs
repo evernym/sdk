@@ -66,9 +66,9 @@ pub struct EqProof{
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct ClaimData{
-    pub schema_seq_no: u32,
-    pub issuer_did: String,
-    pub claim_uuid: String,
+    pub schema_seq_no: Option<u32>,
+    pub issuer_did: Option<String>,
+    pub claim_uuid: Option<String>,
     pub name: String,
     pub value: Value,
     #[serde(rename = "type")]
@@ -107,6 +107,7 @@ impl ProofMessage {
     pub fn get_proof_attributes(&self) -> Result<String, u32> {
         let mut all_attrs = self.get_claim_schema_info()?;
         self.set_revealed_attrs(&mut all_attrs)?;
+        self.add_self_attested_attrs(&mut all_attrs)?;
         match serde_json::to_string(&all_attrs) {
             Ok(x) => Ok(x),
             Err(_) => Err(error::INVALID_JSON.code_num),
@@ -116,6 +117,26 @@ impl ProofMessage {
     fn set_revealed_attrs(&self, claim_attrs: &mut Vec<ClaimData>) -> Result<(), u32> {
         for claim_attr in claim_attrs.iter_mut() {
             claim_attr.value = self.compare_and_update_attr_value(&claim_attr.value)?;
+        }
+        Ok(())
+    }
+
+    fn add_self_attested_attrs(&self, claim_attrs: &mut Vec<ClaimData>) -> Result<(), u32> {
+        for (key, val) in self.requested_proof.self_attested_attrs.iter() {
+            let revealed_val = match serde_json::to_value(val) {
+                Ok(x) => x,
+                Err(_) => return Err(error::INVALID_SELF_ATTESTED_VAL.code_num)
+            };
+            claim_attrs.push(
+                ClaimData {
+                    name: key.to_string(),
+                    value: revealed_val,
+                    attr_type: "self_attested".to_string(),
+                    schema_seq_no: 0,
+                    issuer_did: String::new(),
+                    claim_uuid: String::new(),
+                }
+            )
         }
         Ok(())
     }
@@ -355,5 +376,14 @@ pub mod tests {
         let proof = create_default_proof();
         let attrs_str = proof.get_proof_attributes().unwrap();
         assert!(attrs_str.contains(r#"{"schema_seq_no":103,"issuer_did":"V4SGRU86Z58d6TV7PBUe6f","claim_uuid":"claim::71b6070f-14ba-45fa-876d-1fe8491fe5d4","name":"name","value":"Alex","type":"revealed"}"#));
+    }
+
+    #[test]
+    fn test_add_self_attested_attrs() {
+        let mut proof = create_default_proof();
+        proof.requested_proof.self_attested_attrs.insert("dog".to_string(), "ralph".to_string());
+        let attrs_str = proof.get_proof_attributes().unwrap();
+        println!("{:?}", attrs_str);
+        assert!(attrs_str.contains(r#"{"schema_seq_no":0,"issuer_did":"","claim_uuid":"","name":"dog","value":"ralph","type":"self_attested"}"#));
     }
 }
