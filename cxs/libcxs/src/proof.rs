@@ -93,13 +93,25 @@ impl Proof {
         info!("building claimdef json for proof validation");
         let mut claim_json: HashMap<String, ClaimDefinition> = HashMap::new();
         for claim in claim_data.iter() {
+            let schema_seq_no = match claim.schema_seq_no {
+                Some(x) => x,
+                None => return Err(error::INVALID_CLAIM_DEF_JSON.code_num)
+            };
+            let issuer_did = match claim.issuer_did {
+                Some(ref x) => x,
+                None => return Err(error::INVALID_CLAIM_DEF_JSON.code_num)
+            };
+            let claim_uuid = match claim.claim_uuid {
+                Some(ref x) => x,
+                None => return Err(error::INVALID_CLAIM_DEF_JSON.code_num)
+            };
             let claim_def = RetrieveClaimDef::new()
-                .retrieve_claim_def("GGBDg1j8bsKmr4h5T9XqYf", claim.schema_seq_no, Some(SigTypes::CL), &claim.issuer_did)?;
+                .retrieve_claim_def("GGBDg1j8bsKmr4h5T9XqYf", schema_seq_no, Some(SigTypes::CL), issuer_did)?;
             let claim_obj: ClaimDefinition = match serde_json::from_str(&claim_def) {
                 Ok(x) => x,
                 Err(_) => return Err(error::INVALID_JSON.code_num),
             };
-            claim_json.insert(claim.claim_uuid.clone(), claim_obj);
+            claim_json.insert(claim_uuid.to_string(), claim_obj);
         }
 
         match serde_json::to_string(&claim_json) {
@@ -121,12 +133,20 @@ impl Proof {
 
         let mut schema_json: HashMap<String, SchemaTransaction> = HashMap::new();
         for schema in claim_data.iter() {
-            let schema_obj = LedgerSchema::new_from_ledger(schema.schema_seq_no as i32)?;
+            let schema_seq_no = match schema.schema_seq_no {
+                Some(x) => x,
+                None => return Err(error::INVALID_SCHEMA.code_num)
+            };
+            let claim_uuid = match schema.claim_uuid {
+                Some(ref x) => x,
+                None => return Err(error::INVALID_SCHEMA.code_num)
+            };
+            let schema_obj = LedgerSchema::new_from_ledger(schema_seq_no as i32)?;
             let data = match schema_obj.data {
                 Some(x) => x,
                 None => return Err(error::INVALID_PROOF.code_num)
             };
-            schema_json.insert(schema.claim_uuid.clone(), data);
+            schema_json.insert(claim_uuid.to_string(), data);
         }
 
         match serde_json::to_string(&schema_json) {
@@ -725,25 +745,25 @@ mod tests {
             agent_vk: VERKEY.to_string(),
         };
         let claim1 = ClaimData {
-            schema_seq_no: 1,
-            issuer_did: "11".to_string(),
-            claim_uuid: "claim1".to_string(),
+            schema_seq_no: Some(1),
+            issuer_did: Some("11".to_string()),
+            claim_uuid: Some("claim1".to_string()),
             name: "claim1Name".to_string(),
             value: serde_json::to_value("val1").unwrap(),
             attr_type: "attr1".to_string(),
         };
         let claim2 = ClaimData {
-            schema_seq_no: 2,
-            issuer_did: "22".to_string(),
-            claim_uuid: "claim2".to_string(),
+            schema_seq_no: Some(2),
+            issuer_did: Some("22".to_string()),
+            claim_uuid: Some("claim2".to_string()),
             name: "claim2Name".to_string(),
             value: serde_json::to_value("val2").unwrap(),
             attr_type: "attr2".to_string(),
         };
         let claim3 = ClaimData {
-            schema_seq_no: 3,
-            issuer_did: "33".to_string(),
-            claim_uuid: "claim3".to_string(),
+            schema_seq_no: Some(3),
+            issuer_did: Some("33".to_string()),
+            claim_uuid: Some("claim3".to_string()),
             name: "claim3Name".to_string(),
             value: serde_json::to_value("val3").unwrap(),
             attr_type: "attr3".to_string(),
@@ -751,9 +771,9 @@ mod tests {
         let claims = vec![claim1.clone(), claim2.clone(), claim3.clone()];
         let claim_json = proof.build_claim_defs_json(claims.as_ref()).unwrap();
         let test_claim_json = format!(r#"{{"{}":{},"{}":{},"{}":{}}}"#,
-                                      claim1.claim_uuid, data,
-                                      claim2.claim_uuid, data,
-                                      claim3.claim_uuid, data);
+                                      claim1.claim_uuid.unwrap(), data,
+                                      claim2.claim_uuid.unwrap(), data,
+                                      claim3.claim_uuid.unwrap(), data);
         assert!(claim_json.contains("\"claim1\":{\"ref\":1,\"origin\":\"NcYxiDXkpYi6ov5FcYDi1e\",\"signature_type\":\"CL\""));
         assert!(claim_json.contains("\"claim2\":{\"ref\":1,\"origin\":\"NcYxiDXkpYi6ov5FcYDi1e\",\"signature_type\":\"CL\""));
         assert!(claim_json.contains("\"claim3\":{\"ref\":1,\"origin\":\"NcYxiDXkpYi6ov5FcYDi1e\",\"signature_type\":\"CL\""));
@@ -788,25 +808,25 @@ mod tests {
             agent_vk: VERKEY.to_string(),
         };
         let claim1 = ClaimData {
-            schema_seq_no: 1,
-            issuer_did: "11".to_string(),
-            claim_uuid: "claim1".to_string(),
+            schema_seq_no: Some(1),
+            issuer_did: Some("11".to_string()),
+            claim_uuid: Some("claim1".to_string()),
             name: "claim1Name".to_string(),
             value: serde_json::to_value("val1").unwrap(),
             attr_type: "attr1".to_string(),
         };
         let claim2 = ClaimData {
-            schema_seq_no: 2,
-            issuer_did: "22".to_string(),
-            claim_uuid: "claim2".to_string(),
+            schema_seq_no: Some(2),
+            issuer_did: Some("22".to_string()),
+            claim_uuid: Some("claim2".to_string()),
             name: "claim2Name".to_string(),
             value: serde_json::to_value("val2").unwrap(),
             attr_type: "attr2".to_string(),
         };
         let claim3 = ClaimData {
-            schema_seq_no: 3,
-            issuer_did: "33".to_string(),
-            claim_uuid: "claim3".to_string(),
+            schema_seq_no: Some(3),
+            issuer_did: Some("33".to_string()),
+            claim_uuid: Some("claim3".to_string()),
             name: "claim3Name".to_string(),
             value: serde_json::to_value("val3").unwrap(),
             attr_type: "attr3".to_string(),
@@ -846,7 +866,16 @@ mod tests {
             agent_did: DID.to_string(),
             agent_vk: VERKEY.to_string(),
         };
-//        println!("{:?}", proof.get_proof().unwrap());
-        assert!(proof.get_proof().unwrap().contains(r#"{"schema_seq_no":0,"issuer_did":"","claim_uuid":"","name":"dog","value":"ralph","type":"self_attested"}"#))
+        let proof_str = proof.get_proof().unwrap();
+        assert!(proof_str.contains(r#"{"name":"dog","value":"ralph","type":"self_attested"}"#));
+        assert!(proof_str.contains(r#"{"schema_seq_no":103,"issuer_did":"V4SGRU86Z58d6TV7PBUe6f","claim_uuid":"claim::7","name":"name","value":"Alex","type":"revealed"}"#));
+    }
+
+    #[test]
+    fn test_self_attested_values_in_proof() {
+        ::utils::logger::LoggerUtils::init();
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
+
     }
 }

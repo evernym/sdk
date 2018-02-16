@@ -36,9 +36,9 @@ export interface IProofResponses {
 }
 
 export interface IProofResponseAttr {
-  schema_seq_no: number,
-  issuer_did: string,
-  claim_uuid: string,
+  schema_seq_no?: number,
+  issuer_did?: string,
+  claim_uuid?: string,
   name: string,
   value: string,
   type: string,

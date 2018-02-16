@@ -66,9 +66,12 @@ pub struct EqProof{
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct ClaimData{
-    pub schema_seq_no: u32,
-    pub issuer_did: String,
-    pub claim_uuid: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub schema_seq_no: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub issuer_did: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub claim_uuid: Option<String>,
     pub name: String,
     pub value: Value,
     #[serde(rename = "type")]
@@ -105,6 +108,7 @@ impl ProofMessage {
     }
 
     pub fn get_proof_attributes(&self) -> Result<String, u32> {
+        info!("retrieving proof attributes");
         let mut all_attrs = self.get_claim_schema_info()?;
         self.set_revealed_attrs(&mut all_attrs)?;
         self.add_self_attested_attrs(&mut all_attrs)?;
@@ -132,9 +136,9 @@ impl ProofMessage {
                     name: key.to_string(),
                     value: revealed_val,
                     attr_type: "self_attested".to_string(),
-                    schema_seq_no: 0,
-                    issuer_did: String::new(),
-                    claim_uuid: String::new(),
+                    schema_seq_no: None,
+                    issuer_did: None,
+                    claim_uuid: None,
                 }
             )
         }
@@ -172,9 +176,9 @@ impl ProofMessage {
                           issuer_did:&str,
                           claim_uuid:&str) -> Vec<ClaimData> {
         attrs.iter().map(|(name, value)| ClaimData{
-            schema_seq_no,
-            issuer_did: issuer_did.to_string(),
-            claim_uuid: claim_uuid.to_string(),
+            schema_seq_no: Some(schema_seq_no),
+            issuer_did: Some(issuer_did.to_string()),
+            claim_uuid: Some(claim_uuid.to_string()),
             name: name.to_string(),
             value: value.clone(),
             attr_type: String::from("revealed"),
@@ -251,9 +255,9 @@ impl EqProof {
 impl ClaimData {
     pub fn new() -> ClaimData {
         ClaimData{
-            schema_seq_no: 0,
-            issuer_did: String::new(),
-            claim_uuid: String::new(),
+            schema_seq_no: None,
+            issuer_did: None,
+            claim_uuid: None,
             name: String::new(),
             value: serde_json::Value::Null,
             attr_type: String::new(),
@@ -358,9 +362,9 @@ pub mod tests {
     fn test_get_claim_data() {
         let proof = create_default_proof();
         let claim_data = proof.get_claim_schema_info().unwrap();
-        assert_eq!(claim_data[0].claim_uuid, "claim::71b6070f-14ba-45fa-876d-1fe8491fe5d4");
-        assert_eq!(claim_data[0].issuer_did, "V4SGRU86Z58d6TV7PBUe6f".to_string());
-        assert_eq!(claim_data[0].schema_seq_no, 103);
+        assert_eq!(claim_data[0].claim_uuid.clone().unwrap(), "claim::71b6070f-14ba-45fa-876d-1fe8491fe5d4");
+        assert_eq!(claim_data[0].issuer_did.clone().unwrap(), "V4SGRU86Z58d6TV7PBUe6f".to_string());
+        assert_eq!(claim_data[0].schema_seq_no.clone().unwrap(), 103);
     }
 
     #[test]
@@ -375,6 +379,7 @@ pub mod tests {
         let mut proof = create_default_proof();
         proof.requested_proof.self_attested_attrs.insert("dog".to_string(), "ralph".to_string());
         let attrs_str = proof.get_proof_attributes().unwrap();
-        assert!(attrs_str.contains(r#"{"schema_seq_no":0,"issuer_did":"","claim_uuid":"","name":"dog","value":"ralph","type":"self_attested"}"#));
+        println!("{:?}", attrs_str);
+        assert!(attrs_str.contains(r#"{"name":"dog","value":"ralph","type":"self_attested"}"#));
     }
 }
