@@ -72,7 +72,7 @@ def buildRust(envn){
             sh "rustc --version"
             sh "gcc --version"
             // sh "cd cxs/libcxs; cargo test -- --test-threads=1"
-            sh "cd cxs/libcxs; cargo build"
+            sh "cd cxs/libcxs; cargo build --features jenkins"
         }
     }
 }
