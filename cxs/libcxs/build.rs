@@ -64,7 +64,7 @@ fn main() {
         None => {}
     }
 
-    match env::var("CARGO_FEATURE_JENKINS") {
+    match env::var("CARGO_FEATURE_CI") {
         Ok(_) => {
             println!("injecting version information");
             // Leaving as unwrap, this is in the build script.
