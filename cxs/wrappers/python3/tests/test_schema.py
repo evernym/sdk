@@ -1,6 +1,6 @@
 import pytest
-from cxs.error import ErrorCode, CxsError
-from cxs.api.schema import Schema
+from vcx.error import ErrorCode, CxsError
+from vcx.api.schema import Schema
 
 source_id = '123'
 name = 'schema name'
@@ -78,16 +78,6 @@ async def test_release():
         assert schema.handle > 0
         schema.release()
         await schema.serialize()
-    assert ErrorCode.InvalidSchemaHandle == e.value.error_code
-
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
-async def test_release_with_invalid_handle():
-    with pytest.raises(CxsError) as e:
-        schema = Schema(source_id, name, attr_names)
-        schema.handle = 0
-        schema.release()
     assert ErrorCode.InvalidSchemaHandle == e.value.error_code
 
 

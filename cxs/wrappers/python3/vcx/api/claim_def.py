@@ -1,19 +1,22 @@
 from ctypes import *
-from cxs.error import CxsError, ErrorCode
-from cxs.api.cxs_base import CxsBase
+from vcx.error import CxsError, ErrorCode
+from vcx.api.vcx_base import VcxBase
 
 import json
 
+HANDLES = {}
 
-class ClaimDef(CxsBase):
+
+class ClaimDef(VcxBase):
 
     def __init__(self, source_id: str, name: str, schema_no: int):
-        CxsBase.__init__(self, source_id)
+        VcxBase.__init__(self, source_id)
         self._source_id = source_id
         self._schema_no = schema_no
         self._name = name
 
     def __del__(self):
+        print('calling __del__')
         self.release()
         self.logger.debug("Deleted {} obj: {}".format(ClaimDef, self.handle))
 
@@ -45,8 +48,7 @@ class ClaimDef(CxsBase):
         c_revocation = c_bool(revocation)
         c_params = (c_source_id, c_name, c_schema_no, c_issuer_did, c_revocation)
 
-        return await ClaimDef._create(ClaimDef,
-                                      "cxs_claimdef_create",
+        return await ClaimDef._create("cxs_claimdef_create",
                                       constructor_params,
                                       c_params)
 
@@ -54,8 +56,7 @@ class ClaimDef(CxsBase):
     async def deserialize(data: dict):
         try:
             schema_no = data['claim_def']['ref']
-            claim_def = await ClaimDef._deserialize(ClaimDef,
-                                                    "cxs_claimdef_deserialize",
+            claim_def = await ClaimDef._deserialize("cxs_claimdef_deserialize",
                                                     json.dumps(data),
                                                     data['source_id'],
                                                     data['name'],
@@ -68,4 +69,5 @@ class ClaimDef(CxsBase):
         return await self._serialize(ClaimDef, 'cxs_claimdef_serialize')
 
     def release(self) -> None:
+
         self._release(ClaimDef, 'cxs_claimdef_release')

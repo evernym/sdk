@@ -1,15 +1,15 @@
 from ctypes import *
-from cxs.common import do_call, create_cb
-from cxs.api.connection import Connection
-from cxs.api.cxs_stateful import CxsStateful
+from vcx.common import do_call, create_cb
+from vcx.api.connection import Connection
+from vcx.api.cxs_stateful import VcxStateful
 
 import json
 
 
-class Proof(CxsStateful):
+class Proof(VcxStateful):
 
     def __init__(self, source_id: str):
-        CxsStateful.__init__(self, source_id)
+        VcxStateful.__init__(self, source_id)
         self._proof_state = 0
 
     def __del__(self):
@@ -34,15 +34,13 @@ class Proof(CxsStateful):
         c_req_attrs = c_char_p(json.dumps(requested_attrs).encode('utf-8'))
         c_params = (c_source_id, c_req_attrs, c_req_predicates, c_name)
 
-        return await Proof._create(Proof,
-                                   "cxs_proof_create",
+        return await Proof._create("cxs_proof_create",
                                    constructor_params,
                                    c_params)
 
     @staticmethod
     async def deserialize(data: dict):
-        return await Proof._deserialize(Proof,
-                                        "cxs_proof_deserialize",
+        return await Proof._deserialize("cxs_proof_deserialize",
                                         json.dumps(data),
                                         data.get('source_id'))
 

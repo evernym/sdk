@@ -1,10 +1,10 @@
 import pytest
 import json
 import random
-from cxs.error import ErrorCode, CxsError
-from cxs.state import State, ProofState
-from cxs.api.proof import Proof
-from cxs.api.connection import Connection
+from vcx.error import ErrorCode, CxsError
+from vcx.state import State, ProofState
+from vcx.api.proof import Proof
+from vcx.api.connection import Connection
 
 source_id = '123'
 name = 'proof name'
@@ -89,16 +89,6 @@ async def test_proof_release():
         assert proof.handle > 0
         proof.release()
         await proof.serialize()
-    assert ErrorCode.InvalidProofHandle == e.value.error_code
-
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
-async def test_release_proof_with_invalid_handle():
-    with pytest.raises(CxsError) as e:
-        proof = Proof(source_id)
-        proof.handle = 0
-        proof.release()
     assert ErrorCode.InvalidProofHandle == e.value.error_code
 
 

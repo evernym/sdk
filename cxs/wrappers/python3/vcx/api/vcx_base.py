@@ -1,11 +1,13 @@
-from cxs.common import do_call, create_cb, release
+from vcx.common import do_call, create_cb, release
 from ctypes import *
 
 import logging
 import json
 
 
-class CxsBase:
+
+class VcxBase:
+    HANDLES = {}
 
     def __init__(self, source_id: str):
         self._source_id = source_id
@@ -32,7 +34,7 @@ class CxsBase:
     def logger(self):
         return self._logger
 
-    @staticmethod
+    @classmethod
     async def _create(cls, fn: str, constructor_args, c_args):
         obj = cls(*constructor_args)
 
@@ -44,10 +46,13 @@ class CxsBase:
                                    *c_args,
                                    cls.create.cb)
 
+        VcxBase.HANDLES[obj.handle] = obj
+
         obj.logger.debug("created {} object".format(cls))
+
         return obj
 
-    @staticmethod
+    @classmethod
     async def _deserialize(cls, fn: str, data: str, *args):
         obj = cls(*args)
 
@@ -61,8 +66,15 @@ class CxsBase:
                                    c_data,
                                    cls.deserialize.cb)
 
-        obj.logger.debug("created {} object".format(cls))
-        return obj
+        if obj.handle not in VcxBase.HANDLES:
+            obj.logger.debug("deserialized {} object".format(cls))
+            VcxBase.HANDLES[obj.handle] = obj
+            return obj
+        else:
+            obj.logger.debug("duplicate {} object deserialized".format(cls))
+            obj_to_return = VcxBase.HANDLES[obj.handle]
+            obj.handle = 0
+            return obj_to_return
 
     async def _serialize(self, cls, fn: str) -> dict:
         if not hasattr(cls.serialize, "cb"):
@@ -80,6 +92,7 @@ class CxsBase:
 
     def _release(self, cls, fn: str):
         self.logger.debug("Releasing %s handle: %s", cls, self.handle)
-        c_handle = c_uint32(self.handle)
-
-        release(fn, c_handle)
+        if self.handle in VcxBase.HANDLES:
+            c_handle = c_uint32(self.handle)
+            VcxBase.HANDLES.pop(self.handle)
+            release(fn, c_handle)

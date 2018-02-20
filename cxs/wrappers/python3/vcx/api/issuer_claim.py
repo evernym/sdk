@@ -1,16 +1,16 @@
 from typing import Optional
 from ctypes import *
-from cxs.common import do_call, create_cb
-from cxs.api.connection import Connection
-from cxs.api.cxs_stateful import CxsStateful
+from vcx.common import do_call, create_cb
+from vcx.api.connection import Connection
+from vcx.api.cxs_stateful import VcxStateful
 
 import json
 
 
-class IssuerClaim(CxsStateful):
+class IssuerClaim(VcxStateful):
 
     def __init__(self, source_id: str, attrs: dict, schema_no: int, name: str):
-        CxsStateful.__init__(self, source_id)
+        VcxStateful.__init__(self, source_id)
         self._schema_no = schema_no
         self._attrs = attrs
         self._name = name
@@ -32,15 +32,13 @@ class IssuerClaim(CxsStateful):
         c_name = c_char_p(name.encode('utf-8'))
         c_params = (c_source_id, c_schema_no, c_issuer_did, c_data, c_name)
 
-        return await IssuerClaim._create(IssuerClaim,
-                                         "cxs_issuer_create_claim",
+        return await IssuerClaim._create("cxs_issuer_create_claim",
                                          constructor_params,
                                          c_params)
 
     @staticmethod
     async def deserialize(data: dict):
-        issuer_claim = await IssuerClaim._deserialize(IssuerClaim,
-                                                      "cxs_issuer_claim_deserialize",
+        issuer_claim = await IssuerClaim._deserialize("cxs_issuer_claim_deserialize",
                                                       json.dumps(data),
                                                       data.get('source_id'),
                                                       data.get('claim_attributes'),

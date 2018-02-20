@@ -1,15 +1,15 @@
 from typing import Optional
 from ctypes import *
-from cxs.common import do_call, create_cb
-from cxs.api.cxs_stateful import CxsStateful
+from vcx.common import do_call, create_cb
+from vcx.api.cxs_stateful import VcxStateful
 
 import json
 
 
-class Connection(CxsStateful):
+class Connection(VcxStateful):
 
     def __init__(self, source_id: str):
-        CxsStateful.__init__(self, source_id)
+        VcxStateful.__init__(self, source_id)
 
     def __del__(self):
         self.release()
@@ -22,15 +22,13 @@ class Connection(CxsStateful):
         c_source_id = c_char_p(source_id.encode('utf-8'))
         c_params = (c_source_id,)
 
-        return await Connection._create(Connection,
-                                        "cxs_connection_create",
+        return await Connection._create( "cxs_connection_create",
                                         constructor_params,
                                         c_params)
 
     @staticmethod
     async def deserialize(data: dict):
-        return await Connection._deserialize(Connection,
-                                             "cxs_connection_deserialize",
+        return await Connection._deserialize("cxs_connection_deserialize",
                                              json.dumps(data),
                                              data.get('source_id'))
 

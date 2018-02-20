@@ -1,6 +1,6 @@
 import pytest
-from cxs.error import ErrorCode, CxsError
-from cxs.api.claim_def import ClaimDef
+from vcx.error import ErrorCode, CxsError
+from vcx.api.claim_def import ClaimDef
 
 source_id = '123'
 name = 'schema name'
@@ -72,15 +72,5 @@ async def test_release():
         assert claim_def.handle > 0
         claim_def.release()
         await claim_def.serialize()
-    assert ErrorCode.InvalidClaimDefHandle == e.value.error_code
-
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
-async def test_release_with_invalid_handle():
-    with pytest.raises(CxsError) as e:
-        claim_def = await ClaimDef.create(source_id, name, schema_no, False)
-        claim_def.handle = 0
-        claim_def.release()
     assert ErrorCode.InvalidClaimDefHandle == e.value.error_code
 

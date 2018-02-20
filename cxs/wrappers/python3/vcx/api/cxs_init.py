@@ -1,6 +1,7 @@
 from ctypes import *
 import logging
-from cxs.common import do_call, create_cb
+from vcx.common import do_call, create_cb
+
 
 
 async def cxs_init(config_path: str) -> None:

@@ -1,15 +1,15 @@
 from ctypes import *
-from cxs.common import do_call, create_cb
-from cxs.error import CxsError, ErrorCode
-from cxs.api.cxs_base import CxsBase
+from vcx.common import do_call, create_cb
+from vcx.error import CxsError, ErrorCode
+from vcx.api.vcx_base import VcxBase
 
 import json
 
 
-class Schema(CxsBase):
+class Schema(VcxBase):
 
     def __init__(self, source_id: str, name: str, attr_names: list):
-        CxsBase.__init__(self, source_id)
+        VcxBase.__init__(self, source_id)
         self._source_id = source_id
         self._attrs = attr_names
         self._name = name
@@ -43,8 +43,7 @@ class Schema(CxsBase):
         c_schema_data = c_char_p(json.dumps(attr_names).encode('utf-8'))
         c_params = (c_source_id, c_name, c_schema_data)
 
-        return await Schema._create(Schema,
-                                    "cxs_schema_create",
+        return await Schema._create("cxs_schema_create",
                                     constructor_params,
                                     c_params)
 
@@ -53,8 +52,7 @@ class Schema(CxsBase):
         try:
             # Todo: Find better way to access attr_names. Potential for issues.
             attrs = data['data']['data']['attr_names']
-            schema = await Schema._deserialize(Schema,
-                                               "cxs_schema_deserialize",
+            schema = await Schema._deserialize("cxs_schema_deserialize",
                                                json.dumps(data),
                                                data['source_id'],
                                                data['name'],

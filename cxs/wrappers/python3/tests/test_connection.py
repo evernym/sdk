@@ -1,20 +1,13 @@
 import pytest
 import random
-from cxs.error import ErrorCode, CxsError
-from cxs.state import State
-from cxs.api.connection import Connection
-from cxs.common import release
+from vcx.error import ErrorCode, CxsError
+from vcx.state import State
+from vcx.api.connection import Connection
+from vcx.common import release
 from ctypes import *
 
 source_id = '123'
 phone_number = '8019119191'
-
-
-@pytest.mark.asyncio
-async def test_create_connection_has_libindy_error_with_no_init():
-    with pytest.raises(CxsError) as e:
-        await Connection.create(source_id)
-    assert ErrorCode.UnknownLibindyError == e.value.error_code
 
 
 @pytest.mark.asyncio
@@ -85,8 +78,10 @@ async def test_deserialize():
     data = await connection.serialize()
     connection2 = await Connection.deserialize(data)
     assert connection2.handle == data.get('handle')
-    assert await connection2.get_state() == State.OfferSent
 
+    state = await connection2.get_state()
+    assert state == State.OfferSent
+    connection3 = connection
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('cxs_init_test_mode')
@@ -116,16 +111,6 @@ async def test_connection_release():
         assert connection.handle > 0
         connection.release()
         await connection.serialize()
-    assert ErrorCode.InvalidConnectionHandle == e.value.error_code
-
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
-async def test_release_connection_with_invalid_handle():
-    with pytest.raises(CxsError) as e:
-        connection = Connection(source_id)
-        connection.handle = 0
-        connection.release()
     assert ErrorCode.InvalidConnectionHandle == e.value.error_code
 
 

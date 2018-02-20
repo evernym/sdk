@@ -1,8 +1,8 @@
 import pytest
-from cxs.error import ErrorCode, CxsError
-from cxs.state import State
-from cxs.api.issuer_claim import IssuerClaim
-from cxs.api.connection import Connection
+from vcx.error import ErrorCode, CxsError
+from vcx.state import State
+from vcx.api.issuer_claim import IssuerClaim
+from vcx.api.connection import Connection
 
 source_id = '1'
 schema_no = 1234
@@ -106,15 +106,6 @@ async def test_issuer_claim_release():
         await issuer_claim.serialize()
     assert ErrorCode.InvalidIssuerClaimHandle == e.value.error_code
 
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
-async def test_release_proof_with_invalid_handle():
-    with pytest.raises(CxsError) as e:
-        issuer_claim = IssuerClaim(source_id, attrs, schema_no, name)
-        issuer_claim.handle = 0
-        issuer_claim.release()
-    assert ErrorCode.InvalidIssuerClaimHandle == e.value.error_code
 
 
 @pytest.mark.asyncio

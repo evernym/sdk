@@ -1,12 +1,12 @@
-from cxs.common import do_call, create_cb
+from vcx.common import do_call, create_cb
 from ctypes import *
-from cxs.api.cxs_base import CxsBase
+from vcx.api.vcx_base import VcxBase
 
 
-class CxsStateful(CxsBase):
+class VcxStateful(VcxBase):
 
     def __init__(self, source_id: str):
-        CxsBase.__init__(self, source_id)
+        VcxBase.__init__(self, source_id)
 
     async def _update_state(self, cls, fn: str) -> int:
         if not hasattr(cls.update_state, "cb"):
@@ -26,6 +26,7 @@ class CxsStateful(CxsBase):
         if not hasattr(cls.get_state, "cb"):
             self.logger.debug("{}: Creating callback".format(fn))
             cls.get_state.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_uint32))
+
 
         c_handle = c_uint32(self.handle)
 
