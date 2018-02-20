@@ -8,7 +8,7 @@ schema_no = 44
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_create_claim_def():
     claim_def = await ClaimDef.create(source_id, name, schema_no, False)
     assert claim_def.source_id == source_id
@@ -17,7 +17,7 @@ async def test_create_claim_def():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_serialize():
     claim_def = await ClaimDef.create(source_id, name, schema_no, False)
     data = await claim_def.serialize()
@@ -27,7 +27,7 @@ async def test_serialize():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_serialize_with_bad_handle():
     with pytest.raises(CxsError) as e:
         claim_def = await ClaimDef.create(source_id, name, schema_no, False)
@@ -37,7 +37,7 @@ async def test_serialize_with_bad_handle():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_deserialize():
     claim_def = await ClaimDef.create(source_id, name, schema_no, False)
     data = await claim_def.serialize()
@@ -46,7 +46,7 @@ async def test_deserialize():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_deserialize_with_invalid_data():
     with pytest.raises(CxsError) as e:
         data = {'invalid': -99}
@@ -55,7 +55,7 @@ async def test_deserialize_with_invalid_data():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_serialize_deserialize_and_then_serialize():
     claim_def = await ClaimDef.create(source_id, name, schema_no, False)
     data1 = await claim_def.serialize()
@@ -65,7 +65,7 @@ async def test_serialize_deserialize_and_then_serialize():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_release():
     with pytest.raises(CxsError) as e:
         claim_def = await ClaimDef.create(source_id, name, schema_no, False)

@@ -6,6 +6,7 @@ import logging
 import os
 from .error import CxsError, ErrorCode
 
+LIBRARY = "libvcx.so"
 _futures = {}
 _futures_counter = itertools.count()
 
@@ -91,7 +92,7 @@ def _cdll() -> CDLL:
 
 def _load_cdll() -> CDLL:
     file_dir = os.path.dirname(__file__)
-    path = os.path.join(file_dir, "lib", "libcxs.so")
+    path = os.path.join(file_dir, "lib", LIBRARY)
     try:
         res = CDLL(path)
         return res

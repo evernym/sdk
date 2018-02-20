@@ -8,7 +8,7 @@ attr_names = ['attr1', 'attr2', 'height', 'weight']
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_create_schema():
     schema = await Schema.create(source_id, name, attr_names)
     assert schema.source_id == source_id
@@ -16,14 +16,14 @@ async def test_create_schema():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_create_sets_schema_attrs():
     schema = await Schema.create(source_id, name, attr_names)
     assert schema.attrs == attr_names
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_serialize():
     schema = await Schema.create(source_id, name, attr_names)
     data = await schema.serialize()
@@ -33,7 +33,7 @@ async def test_serialize():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_serialize_with_bad_handle():
     with pytest.raises(CxsError) as e:
         schema = Schema(source_id, name, attr_names)
@@ -43,7 +43,7 @@ async def test_serialize_with_bad_handle():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_deserialize():
     schema = await Schema.create(source_id, name, attr_names)
     data = await schema.serialize()
@@ -52,7 +52,7 @@ async def test_deserialize():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_deserialize_with_invalid_data():
     with pytest.raises(CxsError) as e:
         data = {'invalid': -99}
@@ -61,7 +61,7 @@ async def test_deserialize_with_invalid_data():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_serialize_deserialize_and_then_serialize():
     schema = await Schema.create(source_id, name, attr_names)
     data1 = await schema.serialize()
@@ -71,7 +71,7 @@ async def test_serialize_deserialize_and_then_serialize():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_release():
     with pytest.raises(CxsError) as e:
         schema = await Schema.create(source_id, name, attr_names)
@@ -82,7 +82,7 @@ async def test_release():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_lookup():
     schema_no = 999
     schema = await Schema.lookup(source_id, schema_no)

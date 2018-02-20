@@ -13,7 +13,7 @@ phone_number = '8019119191'
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_create_issuer_claim():
     issuer_claim = await IssuerClaim.create(source_id, attrs, schema_no, name)
     assert issuer_claim.source_id == source_id
@@ -22,7 +22,7 @@ async def test_create_issuer_claim():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_serialize():
     issuer_claim = await IssuerClaim.create(source_id, attrs, schema_no, name)
     data = await issuer_claim.serialize()
@@ -32,7 +32,7 @@ async def test_serialize():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_serialize_with_bad_handle():
     with pytest.raises(CxsError) as e:
         issuer_claim = IssuerClaim(source_id, attrs, schema_no, name)
@@ -42,7 +42,7 @@ async def test_serialize_with_bad_handle():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_deserialize():
     issuer_claim = await IssuerClaim.create(source_id, attrs, schema_no, name)
     data = await issuer_claim.serialize()
@@ -54,7 +54,7 @@ async def test_deserialize():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_deserialize_with_invalid_data():
     with pytest.raises(CxsError) as e:
         data = {'invalid': -99}
@@ -63,7 +63,7 @@ async def test_deserialize_with_invalid_data():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_serialize_deserialize_and_then_serialize():
     issuer_claim = await IssuerClaim.create(source_id, attrs, schema_no, name)
     data1 = await issuer_claim.serialize()
@@ -73,14 +73,14 @@ async def test_serialize_deserialize_and_then_serialize():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_update_state():
     issuer_claim = await IssuerClaim.create(source_id, attrs, schema_no, name)
     assert await issuer_claim.update_state() == State.Initialized
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_update_state_with_invalid_handle():
     with pytest.raises(CxsError) as e:
         issuer_claim = IssuerClaim(source_id, attrs, schema_no, name)
@@ -90,14 +90,14 @@ async def test_update_state_with_invalid_handle():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_get_state():
     issuer_claim = await IssuerClaim.create(source_id, attrs, schema_no, name)
     assert await issuer_claim.get_state() == State.Initialized
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_issuer_claim_release():
     with pytest.raises(CxsError) as e:
         issuer_claim = await IssuerClaim.create(source_id, attrs, schema_no, name)
@@ -109,7 +109,7 @@ async def test_issuer_claim_release():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_send_offer():
     connection = await Connection.create(source_id)
     await connection.connect(phone_number)
@@ -119,7 +119,7 @@ async def test_send_offer():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_send_offer_with_invalid_state():
     with pytest.raises(CxsError) as e:
         connection = await Connection.create(source_id)
@@ -134,7 +134,7 @@ async def test_send_offer_with_invalid_state():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_send_offer_with_bad_connection():
     with pytest.raises(CxsError) as e:
         connection = Connection(source_id)
@@ -144,7 +144,7 @@ async def test_send_offer_with_bad_connection():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_send_claim():
     connection = await Connection.create(source_id)
     await connection.connect(phone_number)
@@ -161,7 +161,7 @@ async def test_send_claim():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_send_claim_with_invalid_issuer_claim():
     with pytest.raises(CxsError) as e:
         issuer_claim = IssuerClaim(source_id, attrs, schema_no, name)
@@ -170,7 +170,7 @@ async def test_send_claim_with_invalid_issuer_claim():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_send_claim_with_invalid_connection():
     with pytest.raises(CxsError) as e:
         issuer_claim = await IssuerClaim.create(source_id, attrs, schema_no, name)
@@ -179,7 +179,7 @@ async def test_send_claim_with_invalid_connection():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_send_claim_with_no_prior_offer():
     with pytest.raises(CxsError) as e:
         connection = await Connection.create(source_id)

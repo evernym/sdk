@@ -4,8 +4,6 @@ from vcx.api.vcx_base import VcxBase
 
 import json
 
-HANDLES = {}
-
 
 class ClaimDef(VcxBase):
 
@@ -48,7 +46,7 @@ class ClaimDef(VcxBase):
         c_revocation = c_bool(revocation)
         c_params = (c_source_id, c_name, c_schema_no, c_issuer_did, c_revocation)
 
-        return await ClaimDef._create("cxs_claimdef_create",
+        return await ClaimDef._create("vcx_claimdef_create",
                                       constructor_params,
                                       c_params)
 
@@ -56,7 +54,7 @@ class ClaimDef(VcxBase):
     async def deserialize(data: dict):
         try:
             schema_no = data['claim_def']['ref']
-            claim_def = await ClaimDef._deserialize("cxs_claimdef_deserialize",
+            claim_def = await ClaimDef._deserialize("vcx_claimdef_deserialize",
                                                     json.dumps(data),
                                                     data['source_id'],
                                                     data['name'],
@@ -66,8 +64,8 @@ class ClaimDef(VcxBase):
             raise CxsError(ErrorCode.InvalidClaimDef)
 
     async def serialize(self) -> dict:
-        return await self._serialize(ClaimDef, 'cxs_claimdef_serialize')
+        return await self._serialize(ClaimDef, 'vcx_claimdef_serialize')
 
     def release(self) -> None:
 
-        self._release(ClaimDef, 'cxs_claimdef_release')
+        self._release(ClaimDef, 'vcx_claimdef_release')

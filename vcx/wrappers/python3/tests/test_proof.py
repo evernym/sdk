@@ -23,7 +23,7 @@ async def test_create_proof_has_libindy_error_with_no_init():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_create_proof():
     proof = await Proof.create(source_id, name, requested_attrs)
     assert proof.source_id == source_id
@@ -31,7 +31,7 @@ async def test_create_proof():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_serialize():
     proof = await Proof.create(source_id, name, requested_attrs)
     data = await proof.serialize()
@@ -41,7 +41,7 @@ async def test_serialize():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_serialize_with_bad_handle():
     with pytest.raises(CxsError) as e:
         proof = Proof(source_id)
@@ -51,7 +51,7 @@ async def test_serialize_with_bad_handle():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_deserialize():
     proof = await Proof.create(source_id, name, requested_attrs)
     data = await proof.serialize()
@@ -63,7 +63,7 @@ async def test_deserialize():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_deserialize_with_invalid_data():
     with pytest.raises(CxsError) as e:
         data = {'invalid': -99}
@@ -72,7 +72,7 @@ async def test_deserialize_with_invalid_data():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_serialize_deserialize_and_then_serialize():
     proof = await Proof.create(source_id, name, requested_attrs)
     data1 = await proof.serialize()
@@ -82,7 +82,7 @@ async def test_serialize_deserialize_and_then_serialize():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_proof_release():
     with pytest.raises(CxsError) as e:
         proof = await Proof.create(source_id, name, requested_attrs)
@@ -93,14 +93,14 @@ async def test_proof_release():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_update_state():
     proof = await Proof.create(source_id, name, requested_attrs)
     assert await proof.update_state() == State.Initialized
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_update_state_with_invalid_handle():
     with pytest.raises(CxsError) as e:
         proof = Proof(source_id)
@@ -110,7 +110,7 @@ async def test_update_state_with_invalid_handle():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_request_proof():
     connection = await Connection.create(source_id)
     await connection.connect(phone_number)
@@ -120,14 +120,14 @@ async def test_request_proof():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_get_state():
     proof = await Proof.create(source_id, name, requested_attrs)
     assert await proof.get_state() == State.Initialized
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_request_proof_with_invalid_connection():
     with pytest.raises(CxsError) as e:
         connection = await Connection.create(source_id)
@@ -139,7 +139,7 @@ async def test_request_proof_with_invalid_connection():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_request_proof_with_released_proof():
     with pytest.raises(CxsError) as e:
         connection = await Connection.create(source_id)
@@ -151,7 +151,7 @@ async def test_request_proof_with_released_proof():
 
 
 @pytest.mark.asyncio
-@pytest.mark.usefixtures('cxs_init_test_mode')
+@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_get_proof_with_invalid_proof():
     connection = await Connection.create(source_id)
     await connection.connect(phone_number)

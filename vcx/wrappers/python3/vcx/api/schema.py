@@ -43,7 +43,7 @@ class Schema(VcxBase):
         c_schema_data = c_char_p(json.dumps(attr_names).encode('utf-8'))
         c_params = (c_source_id, c_name, c_schema_data)
 
-        return await Schema._create("cxs_schema_create",
+        return await Schema._create("vcx_schema_create",
                                     constructor_params,
                                     c_params)
 
@@ -52,7 +52,7 @@ class Schema(VcxBase):
         try:
             # Todo: Find better way to access attr_names. Potential for issues.
             attrs = data['data']['data']['attr_names']
-            schema = await Schema._deserialize("cxs_schema_deserialize",
+            schema = await Schema._deserialize("vcx_schema_deserialize",
                                                json.dumps(data),
                                                data['source_id'],
                                                data['name'],
@@ -67,13 +67,13 @@ class Schema(VcxBase):
             schema = Schema(source_id, '', [])
 
             if not hasattr(Schema.lookup, "cb"):
-                schema.logger.debug("cxs_schema_get_attributes: Creating callback")
+                schema.logger.debug("vcx_schema_get_attributes: Creating callback")
                 Schema.lookup.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_char_p))
 
             c_source_id = c_char_p(source_id.encode('utf-8'))
             c_schema_no = c_uint32(schema_no)
 
-            result = await do_call('cxs_schema_get_attributes',
+            result = await do_call('vcx_schema_get_attributes',
                                    c_source_id,
                                    c_schema_no,
                                    Schema.lookup.cb)
@@ -89,8 +89,8 @@ class Schema(VcxBase):
             raise CxsError(ErrorCode.InvalidSchema)
 
     async def serialize(self) -> dict:
-        return await self._serialize(Schema, 'cxs_schema_serialize')
+        return await self._serialize(Schema, 'vcx_schema_serialize')
 
     def release(self) -> None:
-        self._release(Schema, 'cxs_schema_release')
+        self._release(Schema, 'vcx_schema_release')
 

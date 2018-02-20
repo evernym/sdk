@@ -1,7 +1,7 @@
 from typing import Optional
 from ctypes import *
 from vcx.common import do_call, create_cb
-from vcx.api.cxs_stateful import VcxStateful
+from vcx.api.vcx_stateful import VcxStateful
 
 import json
 
@@ -22,52 +22,52 @@ class Connection(VcxStateful):
         c_source_id = c_char_p(source_id.encode('utf-8'))
         c_params = (c_source_id,)
 
-        return await Connection._create( "cxs_connection_create",
+        return await Connection._create( "vcx_connection_create",
                                         constructor_params,
                                         c_params)
 
     @staticmethod
     async def deserialize(data: dict):
-        return await Connection._deserialize("cxs_connection_deserialize",
+        return await Connection._deserialize("vcx_connection_deserialize",
                                              json.dumps(data),
                                              data.get('source_id'))
 
     async def connect(self, phone_number: Optional[str]) -> str:
         if not hasattr(Connection.connect, "cb"):
-            self.logger.debug("cxs_connection_connect: Creating callback")
+            self.logger.debug("vcx_connection_connect: Creating callback")
             Connection.connect.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_char_p))
 
         c_connection_handle = c_uint32(self.handle)
         connection_data = {'connection_type': 'SMS', 'phone': phone_number} if phone_number \
             else {'connection_type': 'QR'}
         c_connection_data = c_char_p(json.dumps(connection_data).encode('utf-8'))
-        invite_details = await do_call('cxs_connection_connect',
+        invite_details = await do_call('vcx_connection_connect',
                                        c_connection_handle,
                                        c_connection_data,
                                        Connection.connect.cb)
         return invite_details
 
     async def serialize(self) -> dict:
-        return await self._serialize(Connection, 'cxs_connection_serialize')
+        return await self._serialize(Connection, 'vcx_connection_serialize')
 
     async def update_state(self) -> int:
-        return await self._update_state(Connection, 'cxs_connection_update_state')
+        return await self._update_state(Connection, 'vcx_connection_update_state')
 
     async def get_state(self) -> int:
-        return await self._get_state(Connection, 'cxs_connection_get_state')
+        return await self._get_state(Connection, 'vcx_connection_get_state')
 
     def release(self) -> None:
-        self._release(Connection, 'cxs_connection_release')
+        self._release(Connection, 'vcx_connection_release')
 
     async def invite_details(self, abbreviated: bool) -> dict:
         if not hasattr(Connection.invite_details, "cb"):
-            self.logger.debug("cxs_connection_invite_details: Creating callback")
+            self.logger.debug("vcx_connection_invite_details: Creating callback")
             Connection.invite_details.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_char_p))
 
         c_connection_handle = c_uint32(self.handle)
         c_abbreviated = c_bool(abbreviated)
 
-        details = await do_call('cxs_connection_invite_details',
+        details = await do_call('vcx_connection_invite_details',
                                 c_connection_handle,
                                 c_abbreviated,
                                 Connection.invite_details.cb)

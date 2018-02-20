@@ -1,7 +1,7 @@
 from ctypes import *
 from vcx.common import do_call, create_cb
 from vcx.api.connection import Connection
-from vcx.api.cxs_stateful import VcxStateful
+from vcx.api.vcx_stateful import VcxStateful
 
 import json
 
@@ -34,50 +34,50 @@ class Proof(VcxStateful):
         c_req_attrs = c_char_p(json.dumps(requested_attrs).encode('utf-8'))
         c_params = (c_source_id, c_req_attrs, c_req_predicates, c_name)
 
-        return await Proof._create("cxs_proof_create",
+        return await Proof._create("vcx_proof_create",
                                    constructor_params,
                                    c_params)
 
     @staticmethod
     async def deserialize(data: dict):
-        return await Proof._deserialize("cxs_proof_deserialize",
+        return await Proof._deserialize("vcx_proof_deserialize",
                                         json.dumps(data),
                                         data.get('source_id'))
 
     async def serialize(self) -> dict:
-        return await self._serialize(Proof, 'cxs_proof_serialize')
+        return await self._serialize(Proof, 'vcx_proof_serialize')
 
     async def update_state(self) -> int:
-        return await self._update_state(Proof, 'cxs_proof_update_state')
+        return await self._update_state(Proof, 'vcx_proof_update_state')
 
     async def get_state(self) -> int:
-        return await self._get_state(Proof, 'cxs_proof_get_state')
+        return await self._get_state(Proof, 'vcx_proof_get_state')
 
     def release(self) -> None:
-        self._release(Proof, 'cxs_proof_release')
+        self._release(Proof, 'vcx_proof_release')
 
     async def request_proof(self, connection: Connection):
         if not hasattr(Proof.request_proof, "cb"):
-            self.logger.debug("cxs_proof_send_request: Creating callback")
+            self.logger.debug("vcx_proof_send_request: Creating callback")
             Proof.request_proof.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32))
 
         c_proof_handle = c_uint32(self.handle)
         c_connection_handle = c_uint32(connection.handle)
 
-        await do_call('cxs_proof_send_request',
+        await do_call('vcx_proof_send_request',
                       c_proof_handle,
                       c_connection_handle,
                       Proof.request_proof.cb)
 
     async def get_proof(self, connection: Connection) -> list:
         if not hasattr(Proof.get_proof, "cb"):
-            self.logger.debug("cxs_get_proof: Creating callback")
+            self.logger.debug("vcx_get_proof: Creating callback")
             Proof.get_proof.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_uint32, c_char_p))
 
         c_proof_handle = c_uint32(self.handle)
         c_connection_handle = c_uint32(connection.handle)
 
-        proof_state, proof = await do_call('cxs_get_proof',
+        proof_state, proof = await do_call('vcx_get_proof',
                                            c_proof_handle,
                                            c_connection_handle,
                                            Proof.get_proof.cb)
