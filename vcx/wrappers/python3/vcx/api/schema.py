@@ -1,6 +1,6 @@
 from ctypes import *
 from vcx.common import do_call, create_cb
-from vcx.error import CxsError, ErrorCode
+from vcx.error import VcxError, ErrorCode
 from vcx.api.vcx_base import VcxBase
 
 import json
@@ -59,7 +59,7 @@ class Schema(VcxBase):
                                                attrs)
             return schema
         except KeyError:
-            raise CxsError(ErrorCode.InvalidSchema)
+            raise VcxError(ErrorCode.InvalidSchema)
 
     @staticmethod
     async def lookup(source_id: str, schema_no: int):
@@ -86,7 +86,7 @@ class Schema(VcxBase):
             schema.handle = schema_result['handle']
             return schema
         except KeyError:
-            raise CxsError(ErrorCode.InvalidSchema)
+            raise VcxError(ErrorCode.InvalidSchema)
 
     async def serialize(self) -> dict:
         return await self._serialize(Schema, 'vcx_schema_serialize')

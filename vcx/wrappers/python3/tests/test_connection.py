@@ -1,6 +1,6 @@
 import pytest
 import random
-from vcx.error import ErrorCode, CxsError
+from vcx.error import ErrorCode, VcxError
 from vcx.state import State
 from vcx.api.connection import Connection
 from vcx.common import release
@@ -29,7 +29,7 @@ async def test_connection_connect():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_call_to_connect_with_bad_handle():
-    with pytest.raises(CxsError) as e:
+    with pytest.raises(VcxError) as e:
         invalid_connection = Connection(source_id)
         invalid_connection.handle = 0
         await invalid_connection.connect(phone_number)
@@ -39,7 +39,7 @@ async def test_call_to_connect_with_bad_handle():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_call_to_connect_state_not_initialized():
-    with pytest.raises(CxsError) as e:
+    with pytest.raises(VcxError) as e:
         connection = await Connection.create(source_id)
         await connection.connect(phone_number)
         data = await connection.serialize()
@@ -63,7 +63,7 @@ async def test_serialize():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_serialize_with_bad_handle():
-    with pytest.raises(CxsError) as e:
+    with pytest.raises(VcxError) as e:
         connection = Connection(source_id)
         connection.handle = 0
         await connection.serialize()
@@ -86,7 +86,7 @@ async def test_deserialize():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_deserialize_with_invalid_data():
-    with pytest.raises(CxsError) as e:
+    with pytest.raises(VcxError) as e:
         data = {'invalid': -99}
         await Connection.deserialize(data)
     assert ErrorCode.InvalidJson == e.value.error_code
@@ -106,7 +106,7 @@ async def test_serialize_deserialize_and_then_serialize():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_connection_release():
-    with pytest.raises(CxsError) as e:
+    with pytest.raises(VcxError) as e:
         connection = await Connection.create(source_id)
         assert connection.handle > 0
         connection.release()
@@ -126,7 +126,7 @@ async def test_update_state():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_update_state_with_invalid_handle():
-    with pytest.raises(CxsError) as e:
+    with pytest.raises(VcxError) as e:
         connection = Connection(source_id)
         connection.handle = 0
         await connection.update_state()

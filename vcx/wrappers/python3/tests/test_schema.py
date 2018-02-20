@@ -1,5 +1,5 @@
 import pytest
-from vcx.error import ErrorCode, CxsError
+from vcx.error import ErrorCode, VcxError
 from vcx.api.schema import Schema
 
 source_id = '123'
@@ -35,7 +35,7 @@ async def test_serialize():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_serialize_with_bad_handle():
-    with pytest.raises(CxsError) as e:
+    with pytest.raises(VcxError) as e:
         schema = Schema(source_id, name, attr_names)
         schema.handle = 0
         await schema.serialize()
@@ -54,7 +54,7 @@ async def test_deserialize():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_deserialize_with_invalid_data():
-    with pytest.raises(CxsError) as e:
+    with pytest.raises(VcxError) as e:
         data = {'invalid': -99}
         await Schema.deserialize(data)
     assert ErrorCode.InvalidSchema == e.value.error_code
@@ -73,7 +73,7 @@ async def test_serialize_deserialize_and_then_serialize():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_release():
-    with pytest.raises(CxsError) as e:
+    with pytest.raises(VcxError) as e:
         schema = await Schema.create(source_id, name, attr_names)
         assert schema.handle > 0
         schema.release()

@@ -3,7 +3,6 @@ import logging
 from vcx.common import do_call, create_cb
 
 
-
 async def vcx_init(config_path: str) -> None:
     logger = logging.getLogger(__name__)
 

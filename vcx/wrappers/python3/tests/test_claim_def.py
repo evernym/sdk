@@ -1,5 +1,5 @@
 import pytest
-from vcx.error import ErrorCode, CxsError
+from vcx.error import ErrorCode, VcxError
 from vcx.api.claim_def import ClaimDef
 
 source_id = '123'
@@ -29,7 +29,7 @@ async def test_serialize():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_serialize_with_bad_handle():
-    with pytest.raises(CxsError) as e:
+    with pytest.raises(VcxError) as e:
         claim_def = await ClaimDef.create(source_id, name, schema_no, False)
         claim_def.handle = 0
         await claim_def.serialize()
@@ -48,7 +48,7 @@ async def test_deserialize():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_deserialize_with_invalid_data():
-    with pytest.raises(CxsError) as e:
+    with pytest.raises(VcxError) as e:
         data = {'invalid': -99}
         await ClaimDef.deserialize(data)
     assert ErrorCode.InvalidClaimDef == e.value.error_code
@@ -67,7 +67,7 @@ async def test_serialize_deserialize_and_then_serialize():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_release():
-    with pytest.raises(CxsError) as e:
+    with pytest.raises(VcxError) as e:
         claim_def = await ClaimDef.create(source_id, name, schema_no, False)
         assert claim_def.handle > 0
         claim_def.release()

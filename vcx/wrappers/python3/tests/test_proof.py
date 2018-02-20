@@ -1,7 +1,7 @@
 import pytest
 import json
 import random
-from vcx.error import ErrorCode, CxsError
+from vcx.error import ErrorCode, VcxError
 from vcx.state import State, ProofState
 from vcx.api.proof import Proof
 from vcx.api.connection import Connection
@@ -17,7 +17,7 @@ proof_msg = '{"version":"0.1","to_did":"BnRXf8yDMUwGyZVDkSENeq","from_did":"Gxtn
 
 @pytest.mark.asyncio
 async def test_create_proof_has_libindy_error_with_no_init():
-    with pytest.raises(CxsError) as e:
+    with pytest.raises(VcxError) as e:
         await Proof.create(source_id, '', [])
         assert ErrorCode.UnknownLibindyError == e.value.error_code
 
@@ -43,7 +43,7 @@ async def test_serialize():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_serialize_with_bad_handle():
-    with pytest.raises(CxsError) as e:
+    with pytest.raises(VcxError) as e:
         proof = Proof(source_id)
         proof.handle = 0
         await proof.serialize()
@@ -65,7 +65,7 @@ async def test_deserialize():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_deserialize_with_invalid_data():
-    with pytest.raises(CxsError) as e:
+    with pytest.raises(VcxError) as e:
         data = {'invalid': -99}
         await Proof.deserialize(data)
     assert ErrorCode.InvalidJson == e.value.error_code
@@ -84,7 +84,7 @@ async def test_serialize_deserialize_and_then_serialize():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_proof_release():
-    with pytest.raises(CxsError) as e:
+    with pytest.raises(VcxError) as e:
         proof = await Proof.create(source_id, name, requested_attrs)
         assert proof.handle > 0
         proof.release()
@@ -102,7 +102,7 @@ async def test_update_state():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_update_state_with_invalid_handle():
-    with pytest.raises(CxsError) as e:
+    with pytest.raises(VcxError) as e:
         proof = Proof(source_id)
         proof.handle = 0
         await proof.update_state()
@@ -129,7 +129,7 @@ async def test_get_state():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_request_proof_with_invalid_connection():
-    with pytest.raises(CxsError) as e:
+    with pytest.raises(VcxError) as e:
         connection = await Connection.create(source_id)
         await connection.connect(phone_number)
         proof = await Proof.create(source_id, name, requested_attrs)
@@ -141,7 +141,7 @@ async def test_request_proof_with_invalid_connection():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_request_proof_with_released_proof():
-    with pytest.raises(CxsError) as e:
+    with pytest.raises(VcxError) as e:
         connection = await Connection.create(source_id)
         await connection.connect(phone_number)
         proof = await Proof.create(source_id, name, requested_attrs)

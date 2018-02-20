@@ -1,5 +1,5 @@
 from ctypes import *
-from vcx.error import CxsError, ErrorCode
+from vcx.error import VcxError, ErrorCode
 from vcx.api.vcx_base import VcxBase
 
 import json
@@ -14,7 +14,6 @@ class ClaimDef(VcxBase):
         self._name = name
 
     def __del__(self):
-        print('calling __del__')
         self.release()
         self.logger.debug("Deleted {} obj: {}".format(ClaimDef, self.handle))
 
@@ -61,7 +60,7 @@ class ClaimDef(VcxBase):
                                                     schema_no)
             return claim_def
         except KeyError:
-            raise CxsError(ErrorCode.InvalidClaimDef)
+            raise VcxError(ErrorCode.InvalidClaimDef)
 
     async def serialize(self) -> dict:
         return await self._serialize(ClaimDef, 'vcx_claimdef_serialize')

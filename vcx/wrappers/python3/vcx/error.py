@@ -22,7 +22,7 @@ class ErrorCode(IntEnum):
     AlreadyInitialized = 1044,
 
 
-class CxsError(Exception):
+class VcxError(Exception):
     # error_code: ErrorCode
 
     def __init__(self, error_code: ErrorCode):
