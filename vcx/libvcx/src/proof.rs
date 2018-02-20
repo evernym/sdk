@@ -200,7 +200,7 @@ impl Proof {
             .proof_name(&self.name)
             .proof_data_version(data_version)
             .requested_attrs(&self.requested_attrs)
-//            .requested_predicates(&self.requested_predicates)
+            .requested_predicates(&self.requested_predicates)
             .serialize_message()?;
 
         self.proof_request = Some(proof_obj);
