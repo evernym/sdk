@@ -39,6 +39,10 @@ export interface IProofResponseAttr {
   schema_seq_no?: number,
   issuer_did?: string,
   claim_uuid?: string,
+  attr_info?: IClaimInfo
+}
+
+export interface IClaimInfo {
   name: string,
   value: string,
   type: string,

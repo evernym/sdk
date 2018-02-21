@@ -152,16 +152,6 @@ impl ProofMessage {
         }
     }
 
-    fn compare_and_update_attr_value(&self, un_rev_attr: &Value) -> Result<Value, u32> {
-        for (_, rev_attr) in self.requested_proof.revealed_attrs.iter() {
-            if un_rev_attr == &rev_attr[2] {
-                return Ok(rev_attr[1].to_owned());
-            }
-        }
-        warn!("No value found for revealed attr");
-        Err(error::INVALID_PROOF_CLAIM_DATA.code_num)
-    }
-
     pub fn get_claim_info(&self) -> Result<Vec<ClaimData>, u32> {
         let claims: Vec<ClaimData> = self.proofs.iter().map(
             |(claim_uuid, proof_data)| {
