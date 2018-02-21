@@ -91,10 +91,15 @@ pub struct ClaimData{
     pub schema_seq_no: u32,
     pub issuer_did: String,
     pub claim_uuid: String,
+    pub attr_info: Option<Attr>,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct Attr{
     pub name: String,
     pub value: Value,
     #[serde(rename = "type")]
-    pub attr_type: String,
+    pub attr_type: String
 }
 
 impl ProofMessage {
@@ -127,19 +132,18 @@ impl ProofMessage {
     }
 
     pub fn get_proof_attributes(&self) -> Result<String, u32> {
-        let mut all_attrs = self.get_claim_schema_info()?;
-        self.set_revealed_attrs(&mut all_attrs)?;
-        match serde_json::to_string(&all_attrs) {
-            Ok(x) => Ok(x),
+        let revealed_attrs = self.get_revealed_attrs()?;
+        //Todo: retrieve all revealed attributes
+        //Todo: Retrieve predicate values??
+        //Todo: retrieve unrevealed attributes??
+        //Todo: retrieve self attested values??
+            //Iterate over each of the 4 and create objects
+        match serde_json::to_string(&revealed_attrs) {
+            Ok(x) => {
+                Ok(x)
+            },
             Err(_) => Err(error::INVALID_JSON.code_num),
         }
-    }
-
-    fn set_revealed_attrs(&self, claim_attrs: &mut Vec<ClaimData>) -> Result<(), u32> {
-        for claim_attr in claim_attrs.iter_mut() {
-            claim_attr.value = self.compare_and_update_attr_value(&claim_attr.value)?;
-        }
-        Ok(())
     }
 
     fn compare_and_update_attr_value(&self, un_rev_attr: &Value) -> Result<Value, u32> {
@@ -152,36 +156,76 @@ impl ProofMessage {
         Err(error::INVALID_PROOF_CLAIM_DATA.code_num)
     }
 
-    pub fn get_claim_schema_info (&self) -> Result<Vec<ClaimData>, u32> {
-        let mut claims: Vec<ClaimData> = Vec::new();
-        for (claim_uuid, proof_data) in self.proofs.iter() {
-            // Todo: retrieve predicate from GE and maybe unrevealed attrs?
-            let ref revealed_attrs = proof_data
-                .proof
-                .primary_proof
-                .eq_proof
-                .revealed_attrs;
-            claims.append(&mut self.get_revealed_attrs(&revealed_attrs,
-                                proof_data.schema_seq_no,
-                                &proof_data.issuer_did,
-                                claim_uuid));
-        }
+    pub fn get_claim_info(&self) -> Result<Vec<ClaimData>, u32> {
+        let claims: Vec<ClaimData> = self.proofs.iter().map(
+            |(claim_uuid, proof_data)| {
+            ClaimData{
+                claim_uuid: claim_uuid.to_string(),
+                issuer_did: proof_data.issuer_did.clone(),
+                schema_seq_no: proof_data.schema_seq_no,
+                attr_info: None,
+            }
+        }).collect();
         Ok(claims)
     }
 
-    fn get_revealed_attrs(&self, attrs: &HashMap<String, Value>,
-                          schema_seq_no:u32,
-                          issuer_did:&str,
-                          claim_uuid:&str) -> Vec<ClaimData> {
-        attrs.iter().map(|(name, value)| ClaimData{
-            schema_seq_no,
-            issuer_did: issuer_did.to_string(),
-            claim_uuid: claim_uuid.to_string(),
-            name: name.to_string(),
-            value: value.clone(),
-            attr_type: String::from("revealed"),
-        }).collect()
+//    fn get_revealed_attrs(&self, attrs: &HashMap<String, Value>,
+//                          schema_seq_no:u32,
+//                          issuer_did:&str,
+//                          claim_uuid:&str) -> Vec<ClaimData> {
+//        attrs.iter().map(|(name, value)| ClaimData{
+//            schema_seq_no,
+//            issuer_did: issuer_did.to_string(),
+//            claim_uuid: claim_uuid.to_string(),
+//            name: name.to_string(),
+//            value: value.clone(),
+//            attr_type: String::from("revealed"),
+//        }).collect()
+//    }
+
+    fn find_attr_name(&self, attr_names: &HashMap<String, Value>, attr: &Value) -> Result<String, u32> {
+        //Todo: use iter().find()
+        for (name, cmp_attr) in attr_names {
+            if attr == cmp_attr { return Ok(name.to_string()) }
+        }
+        Err(error::INVALID_PROOF_CLAIM_DATA.code_num)
     }
+
+    fn get_revealed_attrs(&self) -> Result<Vec<ClaimData>, u32> {
+        let mut claim_data: Vec<ClaimData> = Vec::new();
+        for (attr_id, attr_data) in &self.requested_proof.revealed_attrs {
+            let claim_uuid: String = match serde_json::from_value(attr_data[0].clone()) {
+                Ok(x) => x,
+                Err(_) => return Err(error::INVALID_PROOF_CLAIM_DATA.code_num)
+            };
+            let claim_info = match self.proofs.get(&claim_uuid) {
+                Some(x) => x,
+                None => return Err(error::INVALID_PROOF_CLAIM_DATA.code_num)
+            };
+            let revealed_attr = attr_data[1].clone();
+            let revealed_attrs = &claim_info.proof.primary_proof.eq_proof.revealed_attrs;
+            claim_data.push(ClaimData{
+                claim_uuid: claim_uuid.to_string(),
+                issuer_did: claim_info.issuer_did.to_string(),
+                schema_seq_no: claim_info.schema_seq_no,
+                attr_info: Some(Attr{
+                    name: self.find_attr_name(&revealed_attrs, &attr_data[2])?,
+                    value: revealed_attr,
+                    attr_type: String::from("revealed"),
+                }),
+            });
+        }
+        Ok(claim_data)
+    }
+
+//    fn get_unrevealed_attrs2(&self) -> Vec<ClaimData> {
+//
+//    }
+//
+//    fn get_self_attested_attrs2(&self) -> Vec<ClaimData> {
+//
+//    }
+
 }
 
 impl AggregatedProof {
@@ -256,9 +300,7 @@ impl ClaimData {
             schema_seq_no: 0,
             issuer_did: String::new(),
             claim_uuid: String::new(),
-            name: String::new(),
-            value: serde_json::Value::Null,
-            attr_type: String::new(),
+            attr_info: None,
         }
     }
 }
@@ -359,7 +401,7 @@ pub mod tests {
     #[test]
     fn test_get_claim_data() {
         let proof = create_default_proof();
-        let claim_data = proof.get_claim_schema_info().unwrap();
+        let claim_data = proof.get_claim_info().unwrap();
         assert_eq!(claim_data[0].claim_uuid, "claim::71b6070f-14ba-45fa-876d-1fe8491fe5d4");
         assert_eq!(claim_data[0].issuer_did, "V4SGRU86Z58d6TV7PBUe6f".to_string());
         assert_eq!(claim_data[0].schema_seq_no, 103);
@@ -369,6 +411,9 @@ pub mod tests {
     fn test_get_proof_attrs() {
         let proof = create_default_proof();
         let attrs_str = proof.get_proof_attributes().unwrap();
-        assert!(attrs_str.contains(r#"{"schema_seq_no":103,"issuer_did":"V4SGRU86Z58d6TV7PBUe6f","claim_uuid":"claim::71b6070f-14ba-45fa-876d-1fe8491fe5d4","name":"name","value":"Alex","type":"revealed"}"#));
+        assert!(attrs_str.contains(r#"{"schema_seq_no":103,"issuer_did":"V4SGRU86Z58d6TV7PBUe6f","claim_uuid":"claim::71b6070f-14ba-45fa-876d-1fe8491fe5d4","attr_info":{"name":"name","value":"Alex","type":"revealed"}}"#));
+        //Todo: Assert case with predicates
+        //Todo: Assert case with unrevealed
+        //Todo: Assert case with self_attested
     }
 }

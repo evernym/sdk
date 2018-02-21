@@ -154,7 +154,7 @@ impl Proof {
             Some(x) => x,
             None => return Err(error::INVALID_PROOF.code_num),
         };
-        let claim_data = proof_msg.get_claim_schema_info()?;
+        let claim_data = proof_msg.get_claim_info()?;
 
         if claim_data.len() == 0 {
             return Err(error::INVALID_PROOF_CLAIM_DATA.code_num)
@@ -475,6 +475,7 @@ pub fn generate_nonce() -> Result<String, u32> {
 mod tests {
     use super::*;
     use connection::build_connection;
+    use messages::proofs::proof_message::{ Attr };
 
     static REQUESTED_ATTRS: &'static str = "[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]";
     static REQUESTED_PREDICATES: &'static str = "[{\"attr_name\":\"age\",\"p_type\":\"GE\",\"value\":18,\"schema_seq_no\":1,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\"}]";
@@ -714,25 +715,31 @@ mod tests {
             schema_seq_no: 1,
             issuer_did: "11".to_string(),
             claim_uuid: "claim1".to_string(),
-            name: "claim1Name".to_string(),
-            value: serde_json::to_value("val1").unwrap(),
-            attr_type: "attr1".to_string(),
+            attr_info: Some(Attr{                name: "claim1Name".to_string(),
+                value: serde_json::to_value("val1").unwrap(),
+                attr_type: "attr1".to_string(),
+            })
         };
         let claim2 = ClaimData {
             schema_seq_no: 2,
             issuer_did: "22".to_string(),
             claim_uuid: "claim2".to_string(),
-            name: "claim2Name".to_string(),
-            value: serde_json::to_value("val2").unwrap(),
-            attr_type: "attr2".to_string(),
+            attr_info: Some(Attr{
+                name: "claim2Name".to_string(),
+                value: serde_json::to_value("val2").unwrap(),
+                attr_type: "attr2".to_string(),
+            })
+
         };
         let claim3 = ClaimData {
             schema_seq_no: 3,
             issuer_did: "33".to_string(),
             claim_uuid: "claim3".to_string(),
-            name: "claim3Name".to_string(),
-            value: serde_json::to_value("val3").unwrap(),
-            attr_type: "attr3".to_string(),
+            attr_info: Some(Attr{
+                name: "claim3Name".to_string(),
+                value: serde_json::to_value("val3").unwrap(),
+                attr_type: "attr3".to_string(),
+            })
         };
         let claims = vec![claim1.clone(), claim2.clone(), claim3.clone()];
         let claim_json = proof.build_claim_defs_json(claims.as_ref()).unwrap();
@@ -776,25 +783,31 @@ mod tests {
             schema_seq_no: 1,
             issuer_did: "11".to_string(),
             claim_uuid: "claim1".to_string(),
-            name: "claim1Name".to_string(),
-            value: serde_json::to_value("val1").unwrap(),
-            attr_type: "attr1".to_string(),
+            attr_info: Some(Attr{
+                name: "claim1Name".to_string(),
+                value: serde_json::to_value("val1").unwrap(),
+                attr_type: "attr1".to_string(),
+            })
         };
         let claim2 = ClaimData {
             schema_seq_no: 2,
             issuer_did: "22".to_string(),
             claim_uuid: "claim2".to_string(),
-            name: "claim2Name".to_string(),
-            value: serde_json::to_value("val2").unwrap(),
-            attr_type: "attr2".to_string(),
+            attr_info: Some(Attr{
+                name: "claim2Name".to_string(),
+                value: serde_json::to_value("val2").unwrap(),
+                attr_type: "attr2".to_string(),
+            })
         };
         let claim3 = ClaimData {
             schema_seq_no: 3,
             issuer_did: "33".to_string(),
             claim_uuid: "claim3".to_string(),
-            name: "claim3Name".to_string(),
-            value: serde_json::to_value("val3").unwrap(),
-            attr_type: "attr3".to_string(),
+            attr_info: Some(Attr{
+                name: "claim3Name".to_string(),
+                value: serde_json::to_value("val3").unwrap(),
+                attr_type: "attr3".to_string(),
+            })
         };
         let claims = vec![claim1.clone(), claim2.clone(), claim3.clone()];
         let schemas_json = proof.build_schemas_json(claims.as_ref()).unwrap();
