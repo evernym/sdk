@@ -175,20 +175,6 @@ impl ProofMessage {
         Ok(claims)
     }
 
-//    fn get_revealed_attrs(&self, attrs: &HashMap<String, Value>,
-//                          schema_seq_no:u32,
-//                          issuer_did:&str,
-//                          claim_uuid:&str) -> Vec<ClaimData> {
-//        attrs.iter().map(|(name, value)| ClaimData{
-//            schema_seq_no,
-//            issuer_did: issuer_did.to_string(),
-//            claim_uuid: claim_uuid.to_string(),
-//            name: name.to_string(),
-//            value: value.clone(),
-//            attr_type: String::from("revealed"),
-//        }).collect()
-//    }
-
     fn find_attr_name(&self, attr_names: &HashMap<String, Value>, attr: &Value) -> Result<String, u32> {
         //Todo: use iter().find()
         for (name, cmp_attr) in attr_names {
