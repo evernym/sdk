@@ -174,7 +174,7 @@ impl Proof {
             Some(x) => x,
             None => return Err(error::INVALID_PROOF.code_num),
         };
-        let claim_data = proof_msg.get_claim_schema_info()?;
+        let claim_data = proof_msg.get_claim_info()?;
 
         if claim_data.len() == 0 {
             return Err(error::INVALID_PROOF_CLAIM_DATA.code_num)
@@ -220,17 +220,20 @@ impl Proof {
             .proof_name(&self.name)
             .proof_data_version(data_version)
             .requested_attrs(&self.requested_attrs)
-//            .requested_predicates(&self.requested_predicates)
+            .requested_predicates(&self.requested_predicates)
             .serialize_message()?;
 
         self.proof_request = Some(proof_obj);
         let data = connection::generate_encrypted_payload(&self.prover_vk, &self.remote_vk, &proof_request, "PROOF_REQUEST")?;
         if settings::test_agency_mode_enabled() { httpclient::set_next_u8_response(SEND_CLAIM_OFFER_RESPONSE.to_vec()); }
+        let title = format!("{} wants you to share {}", settings::get_config_value(settings::CONFIG_ENTERPRISE_NAME).unwrap(), self.name);
 
         match messages::send_message().to(&self.prover_did)
             .to_vk(&self.prover_vk)
             .msg_type("proofReq")
             .agent_did(&self.agent_did)
+            .set_title(&title)
+            .set_detail(&title)
             .agent_vk(&self.agent_vk)
             .edge_agent_payload(&data)
             .send_secure() {
@@ -385,6 +388,12 @@ pub fn release(handle: u32) -> u32 {
     }
 }
 
+pub fn release_all() {
+    let mut map = PROOF_MAP.lock().unwrap();
+
+    map.drain();
+}
+
 pub fn to_string(handle: u32) -> Result<String, u32> {
     match PROOF_MAP.lock().unwrap().get(&handle) {
         Some(p) => Ok(serde_json::to_string(&p).unwrap().to_owned()),
@@ -486,6 +495,7 @@ pub fn generate_nonce() -> Result<String, u32> {
 mod tests {
     use super::*;
     use connection::build_connection;
+    use messages::proofs::proof_message::{ Attr };
 
     static REQUESTED_ATTRS: &'static str = "[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]";
     static REQUESTED_PREDICATES: &'static str = "[{\"attr_name\":\"age\",\"p_type\":\"GE\",\"value\":18,\"schema_seq_no\":1,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\"}]";
@@ -505,13 +515,10 @@ mod tests {
     fn test_create_proof_succeeds() {
         set_default_and_enable_test_mode();
 
-        match create_proof(None,
+        create_proof(None,
                            REQUESTED_ATTRS.to_owned(),
                            REQUESTED_PREDICATES.to_owned(),
-                           "Optional".to_owned()) {
-            Ok(x) => assert!(x > 0),
-            Err(_) => assert_eq!(0, 1),
-        }
+                           "Optional".to_owned()).unwrap();
     }
 
     #[test]
@@ -524,13 +531,10 @@ mod tests {
     fn test_to_string_succeeds() {
         set_default_and_enable_test_mode();
 
-        let handle = match create_proof(None,
+        let handle = create_proof(None,
                                         REQUESTED_ATTRS.to_owned(),
                                         REQUESTED_PREDICATES.to_owned(),
-                                        "Optional".to_owned()) {
-            Ok(x) => x,
-            Err(_) => panic!("Proof creation failed"),
-        };
+                                        "Optional".to_owned()).unwrap();
         let proof_string = to_string(handle).unwrap();
         assert!(!proof_string.is_empty());
     }
@@ -538,13 +542,10 @@ mod tests {
     #[test]
     fn test_from_string_succeeds() {
         set_default_and_enable_test_mode();
-        let handle = match create_proof(None,
+        let handle = create_proof(None,
                                         REQUESTED_ATTRS.to_owned(),
                                         REQUESTED_PREDICATES.to_owned(),
-                                        "Optional".to_owned()) {
-            Ok(x) => x,
-            Err(_) => panic!("Proof creation failed"),
-        };
+                                        "Optional".to_owned()).unwrap();
         let proof_data = to_string(handle).unwrap();
         assert!(!proof_data.is_empty());
         release(handle);
@@ -557,20 +558,16 @@ mod tests {
     #[test]
     fn test_release_proof() {
         set_default_and_enable_test_mode();
-        let handle = match create_proof(Some("1".to_string()),
+        let handle = create_proof(Some("1".to_string()),
                                         REQUESTED_ATTRS.to_owned(),
                                         REQUESTED_PREDICATES.to_owned(),
-                                        "Optional".to_owned()) {
-            Ok(x) => x,
-            Err(_) => panic!("Proof creation failed"),
-        };
+                                        "Optional".to_owned()).unwrap();
         assert_eq!(release(handle), 0);
         assert!(!is_valid_handle(handle));
     }
 
     #[test]
     fn test_send_proof_request() {
-        ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
 
@@ -579,13 +576,10 @@ mod tests {
         connection::set_agent_did(connection_handle, DID);
         connection::set_their_pw_verkey(connection_handle, VERKEY);
 
-        let handle = match create_proof(Some("1".to_string()),
+        let handle = create_proof(Some("1".to_string()),
                                         REQUESTED_ATTRS.to_owned(),
                                         REQUESTED_PREDICATES.to_owned(),
-                                        "Optional".to_owned()) {
-            Ok(x) => x,
-            Err(_) => panic!("Proof creation failed"),
-        };
+                                        "Optional".to_owned()).unwrap();
         assert_eq!(send_proof_request(handle, connection_handle).unwrap(), error::SUCCESS.code_num);
         assert_eq!(get_state(handle), VcxStateType::VcxStateOfferSent as u32);
         assert_eq!(get_proof_uuid(handle).unwrap(), "ntc2ytb");
@@ -603,13 +597,10 @@ mod tests {
         let connection_handle = build_connection("test_send_proof_request".to_owned()).unwrap();
         connection::set_pw_did(connection_handle, "");
 
-        let handle = match create_proof(Some("1".to_string()),
+        let handle = create_proof(Some("1".to_string()),
                                         REQUESTED_ATTRS.to_owned(),
                                         REQUESTED_PREDICATES.to_owned(),
-                                        "Optional".to_owned()) {
-            Ok(x) => x,
-            Err(_) => panic!("Proof creation failed"),
-        };
+                                        "Optional".to_owned()).unwrap();
         match send_proof_request(handle, connection_handle) {
             Ok(x) => panic!("Should have failed in send_proof_request"),
             Err(y) => assert_eq!(y, error::INVALID_DID.code_num)
@@ -619,13 +610,10 @@ mod tests {
     #[test]
     fn test_get_proof_fails_with_no_proof() {
         set_default_and_enable_test_mode();
-        let handle = match create_proof(Some("1".to_string()),
+        let handle = create_proof(Some("1".to_string()),
                                         REQUESTED_ATTRS.to_owned(),
                                         REQUESTED_PREDICATES.to_owned(),
-                                        "Optional".to_owned()) {
-            Ok(x) => x,
-            Err(_) => panic!("Proof creation failed"),
-        };
+                                        "Optional".to_owned()).unwrap();
         assert!(is_valid_handle(handle));
 
         match get_proof(handle) {
@@ -639,7 +627,6 @@ mod tests {
 
     #[test]
     fn test_update_state_with_pending_proof() {
-        ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
 
@@ -677,7 +664,6 @@ mod tests {
 
     #[test]
     fn test_get_proof_returns_proof_when_proof_state_invalid() {
-        ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
 
@@ -721,7 +707,6 @@ mod tests {
     #[test]
     fn test_build_claim_defs_json_with_multiple_claims() {
         let claim_result = r#"{"auditPath":["7hRA1eWgHDmqFfXQHmHLzCE1ZeXvvkq5VaJEpb6NWz74","4QvchQ6JGxvU57kyzHzKJvUV7rb12jpFX7FBP9LrN9qA","G14qswNCM1mxhRHPMLx4h5qmbLEDQkczjJUVUEedUGxQ","4B6hCrJc2TubiFE1rgxjM1Hj7zvTTjxkzo9Gikhy4MVZ"],"data":{"attr_names":["name","male"],"name":"name","version":"1.0"},"identifier":"VsKV7grR1BUE29mG2Fm2kX","reqId":1515795761424583710,"rootHash":"C98M4qjp4zzHw6APDWwGxTBHkEdAhjUQepi3Bxz2auna","seqNo":299,"signature":"4iFhpLknpRiCU6Axrj8HcFxMaxGaMmnzwJ1WMKndK653k4B7LYGZD2PNHEEGZQEBVXwhgDxPFe1t9bSzdVcEQ3eL","txnTime":1515795761,"type":"101"}"#;
-        ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
         let data = r#"{"ref":1,"origin":"NcYxiDXkpYi6ov5FcYDi1e","signature_type":"CL","data":{"primary":{"n":"9","s":"8","rms":"7","r":{"height":"6","sex":"5","age":"4","name":"3"},"rctxt":"2","z":"1"},"revocation":null}}"#;
@@ -750,25 +735,32 @@ mod tests {
             schema_seq_no: Some(1),
             issuer_did: Some("11".to_string()),
             claim_uuid: Some("claim1".to_string()),
-            name: "claim1Name".to_string(),
-            value: serde_json::to_value("val1").unwrap(),
-            attr_type: "attr1".to_string(),
+            attr_info: Some(Attr{
+                name: "claim1Name".to_string(),
+                value: serde_json::to_value("val1").unwrap(),
+                attr_type: "attr1".to_string(),
+            })
         };
         let claim2 = ClaimData {
             schema_seq_no: Some(2),
             issuer_did: Some("22".to_string()),
             claim_uuid: Some("claim2".to_string()),
-            name: "claim2Name".to_string(),
-            value: serde_json::to_value("val2").unwrap(),
-            attr_type: "attr2".to_string(),
+            attr_info: Some(Attr{
+                name: "claim2Name".to_string(),
+                value: serde_json::to_value("val2").unwrap(),
+                attr_type: "attr2".to_string(),
+            })
+
         };
         let claim3 = ClaimData {
             schema_seq_no: Some(3),
             issuer_did: Some("33".to_string()),
             claim_uuid: Some("claim3".to_string()),
-            name: "claim3Name".to_string(),
-            value: serde_json::to_value("val3").unwrap(),
-            attr_type: "attr3".to_string(),
+            attr_info: Some(Attr{
+                name: "claim3Name".to_string(),
+                value: serde_json::to_value("val3").unwrap(),
+                attr_type: "attr3".to_string(),
+            })
         };
         let claims = vec![claim1.clone(), claim2.clone(), claim3.clone()];
         let claim_json = proof.build_claim_defs_json(claims.as_ref()).unwrap();
@@ -784,7 +776,6 @@ mod tests {
     #[test]
     fn test_build_schemas_json_with_multiple_schemas() {
         let claim_result = r#"{"auditPath":["7hRA1eWgHDmqFfXQHmHLzCE1ZeXvvkq5VaJEpb6NWz74","4QvchQ6JGxvU57kyzHzKJvUV7rb12jpFX7FBP9LrN9qA","G14qswNCM1mxhRHPMLx4h5qmbLEDQkczjJUVUEedUGxQ","4B6hCrJc2TubiFE1rgxjM1Hj7zvTTjxkzo9Gikhy4MVZ"],"data":{"attr_names":["name","male"],"name":"name","version":"1.0"},"identifier":"VsKV7grR1BUE29mG2Fm2kX","reqId":1515795761424583710,"rootHash":"C98M4qjp4zzHw6APDWwGxTBHkEdAhjUQepi3Bxz2auna","seqNo":299,"signature":"4iFhpLknpRiCU6Axrj8HcFxMaxGaMmnzwJ1WMKndK653k4B7LYGZD2PNHEEGZQEBVXwhgDxPFe1t9bSzdVcEQ3eL","txnTime":1515795761,"type":"101"}"#;
-        ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
         let data = r#"{"ref":1,"origin":"NcYxiDXkpYi6ov5FcYDi1e","signature_type":"CL","data":{"primary":{"n":"9","s":"8","rms":"7","r":{"height":"6","sex":"5","age":"4","name":"3"},"rctxt":"2","z":"1"},"revocation":null}}"#;
@@ -813,25 +804,31 @@ mod tests {
             schema_seq_no: Some(1),
             issuer_did: Some("11".to_string()),
             claim_uuid: Some("claim1".to_string()),
-            name: "claim1Name".to_string(),
-            value: serde_json::to_value("val1").unwrap(),
-            attr_type: "attr1".to_string(),
+            attr_info: Some(Attr{
+                name: "claim1Name".to_string(),
+                value: serde_json::to_value("val1").unwrap(),
+                attr_type: "attr1".to_string(),
+            })
         };
         let claim2 = ClaimData {
             schema_seq_no: Some(2),
             issuer_did: Some("22".to_string()),
             claim_uuid: Some("claim2".to_string()),
-            name: "claim2Name".to_string(),
-            value: serde_json::to_value("val2").unwrap(),
-            attr_type: "attr2".to_string(),
+            attr_info: Some(Attr{
+                name: "claim2Name".to_string(),
+                value: serde_json::to_value("val2").unwrap(),
+                attr_type: "attr2".to_string(),
+            })
         };
         let claim3 = ClaimData {
             schema_seq_no: Some(3),
             issuer_did: Some("33".to_string()),
             claim_uuid: Some("claim3".to_string()),
-            name: "claim3Name".to_string(),
-            value: serde_json::to_value("val3").unwrap(),
-            attr_type: "attr3".to_string(),
+            attr_info: Some(Attr{
+                name: "claim3Name".to_string(),
+                value: serde_json::to_value("val3").unwrap(),
+                attr_type: "attr3".to_string(),
+            })
         };
         let claims = vec![claim1.clone(), claim2.clone(), claim3.clone()];
         let schemas_json = proof.build_schemas_json(claims.as_ref()).unwrap();
@@ -845,7 +842,7 @@ mod tests {
         ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
-        let proof_msg = r#"{"proofs":{"claim::7":{"proof":{"primary_proof":{"eq_proof":{"revealed_attrs":{"sex":"5","name":"1"},"a_prime":"5","e":"3","v":"9","m":{},"m1":"2","m2":"3"},"ge_proofs":[]},"non_revoc_proof":null},"schema_seq_no":103,"issuer_did":"V4SGRU86Z58d6TV7PBUe6f"}},"aggregated_proof":{"c_hash":"6","c_list":[[209]]},"requested_proof":{"revealed_attrs":{"attr2_uuid":["claim::","male","5"],"attr1_uuid":["claim::7","Alex","1"]},"unrevealed_attrs":{},"self_attested_attrs":{"dog":"ralph"},"predicates":{}},"remoteDid":"KP8AaEBc368CMK1PqZaEzX","userPairwiseDid":"PofTCeegEXT7S2aAePhM6a"}"#;
+        let proof_msg = r#"{"proofs":{"claim::71b6070f-14ba-45fa-876d-1fe8491fe5d4":{"proof":{"primary_proof":{"eq_proof":{"revealed_attrs":{"sex":"5944657099558967239210949258394887428692050081607692519917050011144233115103","name":"1139481716457488690172217916278103335"},"a_prime":"55115757663642844902979276276581544287881791112969892277372135316353511833640150801244335663890109536491278379177551666081054765286807563008348637104046950934828407012194403360724040287698135607556244297972578864339500981366412262454282194811242239615009347165118318516694216754501345324782597475927199400880006212632553233049354866295429520527445980181939247828351677971991914388778860092824318440481574181300185829423762990910739241691289976584754979812272223819007422499654272590946235912914032826994670588466080422906806402660885408376207875827950805200378568062518210110828954480363081643567615791016011737856977","e":"34976147138641338975844073241645969211530343885520088294714132974884138611036204288689212378023649179372520412699253155486970203797562324","v":"961473607552945346906354315658276499450491951690969023699851664262072769313929148332129868528140265952852653009499943891795293148107502144091334703992581737220352761140064276811372868396353572957613845323343723271098601244774874235526135299483412285009916812621185291842845156342501611029106982811773616231232684804116984093651972537804480090649736612551759833591251845595059217608938213987633789344584340351801507541774726753840600143685051258161251666953243698589585559347435011414292427590918153421953579895479604685390401357681887618798200391305919594609949167659780330698000168295871428737686822637913218269005987492318466661186509308179489615192663542904993253626728197630057096161118638090776180812895097232529119979970798938360220605280817954648588493778338816318524451785027916181454650102696493927306340658666852294316562458212054696739343800993703515542777264448535624584845146378512183572107830260813929222999","m":{},"m1":"75548120024969192086664289521241751069844239013520403238642886571169851979005373784309432586593371476370934469326730539754613694936161784687213609047455188306625204249706249661640538349287762196100659095340756990269587317065862046598569445591945049204366911309949910119711238973099702616527117177036784698661","m2":"287944186286321709724396773443214682376883853676549188669693055373059354657799325692443906346632814001611911026063358134413175852024773765930829079850890920811398176944587192618"},"ge_proofs":[]},"non_revoc_proof":null},"schema_seq_no":103,"issuer_did":"V4SGRU86Z58d6TV7PBUe6f"}},"aggregated_proof":{"c_hash":"63330487197040957750863022608534150304998351350639315143102570772502292901825","c_list":[[1,180,153,212,162,132,5,189,14,181,140,112,236,109,182,76,91,6,161,215,62,207,205,135,86,211,49,197,215,198,104,201,14,22,48,6,112,170,31,191,110,118,121,15,62,114,126,249,221,107,114,161,163,234,19,233,150,236,182,217,195,6,218,217,193,6,94,160,33,23,103,147,109,221,81,38,138,20,225,141,68,37,142,10,225,79,164,119,168,250,188,186,47,229,165,8,237,230,14,35,53,176,97,28,82,105,87,210,117,16,154,222,66,11,96,172,90,13,239,190,29,71,11,88,53,36,219,139,67,21,136,58,161,164,97,106,56,230,55,157,59,35,187,235,154,194,111,93,168,135,67,15,97,136,38,169,87,142,32,255,50,247,111,83,44,88,251,99,6,226,182,170,146,229,118,164,118,228,235,51,137,168,135,50,1,14,1,201,72,175,102,241,149,117,88,83,84,37,205,130,26,155,124,158,211,89,112,33,46,24,94,93,202,8,127,172,214,178,6,156,79,188,132,223,239,127,200,158,95,247,139,101,51,162,168,175,74,1,67,201,94,108,192,14,130,109,217,248,193,10,142,37,95,231,227,251,209]]},"requested_proof":{"revealed_attrs":{"attr2_uuid":["claim::71b6070f-14ba-45fa-876d-1fe8491fe5d4","male","5944657099558967239210949258394887428692050081607692519917050011144233115103"],"attr1_uuid":["claim::71b6070f-14ba-45fa-876d-1fe8491fe5d4","Alex","1139481716457488690172217916278103335"]},"unrevealed_attrs":{},"self_attested_attrs":{"self_attested_attr":"self_value"},"predicates":{}},"remoteDid":"KP8AaEBc368CMK1PqZaEzX","userPairwiseDid":"PofTCeegEXT7S2aAePhM6a"}"#;
         let new_handle = 1121;
         let proof = Proof {
             handle: new_handle,
@@ -869,14 +866,24 @@ mod tests {
             agent_vk: VERKEY.to_string(),
         };
         let proof_str = proof.get_proof().unwrap();
-        assert!(proof_str.contains(r#"{"name":"dog","value":"ralph","type":"self_attested"}"#));
-        assert!(proof_str.contains(r#"{"schema_seq_no":103,"issuer_did":"V4SGRU86Z58d6TV7PBUe6f","claim_uuid":"claim::7","name":"name","value":"Alex","type":"revealed"}"#));
+        assert!(proof_str.contains(r#"{"schema_seq_no":103,"issuer_did":"V4SGRU86Z58d6TV7PBUe6f","claim_uuid":"claim::71b6070f-14ba-45fa-876d-1fe8491fe5d4","attr_info":{"name":"name","value":"Alex","type":"revealed"}}"#));
+        assert!(proof_str.contains(r#"{"name":"self_attested_attr","value":"self_value","type":"self_attested"}"#));
     }
 
     #[test]
-    fn test_self_attested_values_in_proof() {
-        ::utils::logger::LoggerUtils::init();
+    fn test_release_all() {
         settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
+        let h1 = create_proof(None,REQUESTED_ATTRS.to_owned(),REQUESTED_PREDICATES.to_owned(),"Optional".to_owned()).unwrap();
+        let h2 = create_proof(None,REQUESTED_ATTRS.to_owned(),REQUESTED_PREDICATES.to_owned(),"Optional".to_owned()).unwrap();
+        let h3 = create_proof(None,REQUESTED_ATTRS.to_owned(),REQUESTED_PREDICATES.to_owned(),"Optional".to_owned()).unwrap();
+        let h4 = create_proof(None,REQUESTED_ATTRS.to_owned(),REQUESTED_PREDICATES.to_owned(),"Optional".to_owned()).unwrap();
+        let h5 = create_proof(None,REQUESTED_ATTRS.to_owned(),REQUESTED_PREDICATES.to_owned(),"Optional".to_owned()).unwrap();
+        release_all();
+        assert_eq!(release(h1),error::INVALID_PROOF_HANDLE.code_num);
+        assert_eq!(release(h2),error::INVALID_PROOF_HANDLE.code_num);
+        assert_eq!(release(h3),error::INVALID_PROOF_HANDLE.code_num);
+        assert_eq!(release(h4),error::INVALID_PROOF_HANDLE.code_num);
+        assert_eq!(release(h5),error::INVALID_PROOF_HANDLE.code_num);
     }
 }

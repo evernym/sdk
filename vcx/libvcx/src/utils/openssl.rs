@@ -25,7 +25,6 @@ pub fn encode(s: &str ) -> Result<String, u32> {
     }
 }
 
-
 #[cfg(test)]
 mod test{
     use super::*;
