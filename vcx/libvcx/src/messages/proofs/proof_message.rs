@@ -427,7 +427,7 @@ pub mod tests {
         proof.requested_proof.self_attested_attrs.insert("dog".to_string(), "ralph".to_string());
         proof.requested_proof.self_attested_attrs.insert("cat".to_string(), "sam".to_string());
         let attrs_str = proof.get_proof_attributes().unwrap();
-        assert!(attrs_str.contains(r#"{"name":"dog","value":"ralph","type":"self_attested"}"#));
-        assert!(attrs_str.contains(r#"{"name":"cat","value":"sam","type":"self_attested"}"#));
+        assert!(attrs_str.contains(r#""attr_info":{"name":"dog","value":"ralph","type":"self_attested"}"#));
+        assert!(attrs_str.contains(r#""attr_info":{"name":"cat","value":"sam","type":"self_attested"}"#));
     }
 }
