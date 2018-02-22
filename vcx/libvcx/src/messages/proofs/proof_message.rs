@@ -194,6 +194,7 @@ impl ProofMessage {
                 schema_seq_no: Some(claim_info.schema_seq_no),
                 attr_info: Some(Attr{
                     name: self.find_attr_name(&revealed_attrs, &attr_data[2])?,
+//                    name: claim_info.proof.primary_proof.retrieve_revealed_attr_name(&attr_data[2])?,
                     value: revealed_attr,
                     attr_type: String::from("revealed"),
                 }),
@@ -249,6 +250,7 @@ impl RequestedProof {
             predicates: HashMap::new(),
         }
     }
+
 }
 
 
@@ -280,6 +282,13 @@ impl EqAndGeProof {
             ge_proofs: Vec::new(),
         }
     }
+
+//    pub fn retrieve_revealed_attr_name(&self, attr_value: &Value) -> Result<String, u32> {
+//        for (name, cmp_attr) in self.eq_proof.revealed_attrs {
+//            if attr_value == cmp_attr { return Ok(name.to_string()) }
+//        }
+//        Err(error::INVALID_PROOF_CLAIM_DATA.code_num)
+//    }
 }
 
 

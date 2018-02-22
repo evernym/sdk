@@ -161,12 +161,6 @@ impl ProofRequestMessage {
                 return self;
             }
         };
-//        proof_attrs.attrs
-//            .iter()
-//            .enumerate()
-//            .for_each(|(i, attr)|
-//                self.proof_request_data.requested_attrs.insert(format!("{}_{}", attr.name, i), attr.clone())
-//            );
         for (i, attr) in proof_attrs.attrs.iter().enumerate() {
             self.proof_request_data.requested_attrs.insert(format!("{}_{}", attr.name, i), attr.clone());
         }
