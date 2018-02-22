@@ -19,6 +19,7 @@ class ErrorCode(IntEnum):
     InvalidClaimDef = 1036,
     InvalidClaimDefHandle = 1037,
     InvalidSchemaHandle = 1042,
+    InvalidSchemaSequenceNumber = 1040,
     AlreadyInitialized = 1044,
 
 

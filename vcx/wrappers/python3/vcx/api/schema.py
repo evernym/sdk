@@ -8,7 +8,7 @@ import json
 
 class Schema(VcxBase):
 
-    def __init__(self, source_id: str, name: str, attr_names: list):
+    def __init__(self, source_id: str, name: str, attr_names: dict):
         VcxBase.__init__(self, source_id)
         self._source_id = source_id
         self._attrs = attr_names
@@ -35,7 +35,7 @@ class Schema(VcxBase):
         self._attrs = x
 
     @staticmethod
-    async def create(source_id: str, name: str, attr_names: list):
+    async def create(source_id: str, name: str, attr_names: dict):
         constructor_params = (source_id, name, attr_names)
 
         c_source_id = c_char_p(source_id.encode('utf-8'))
@@ -51,7 +51,7 @@ class Schema(VcxBase):
     async def deserialize(data: dict):
         try:
             # Todo: Find better way to access attr_names. Potential for issues.
-            attrs = data['data']['data']['attr_names']
+            attrs = data['data']['data']
             schema = await Schema._deserialize("vcx_schema_deserialize",
                                                json.dumps(data),
                                                data['source_id'],
@@ -94,3 +94,7 @@ class Schema(VcxBase):
     def release(self) -> None:
         self._release(Schema, 'vcx_schema_release')
 
+    async def get_sequence_number(self):
+        cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_uint32))
+        c_handle = c_uint32(self.handle)
+        return await do_call('vcx_schema_get_sequence_no', c_handle, cb)

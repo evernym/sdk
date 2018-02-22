@@ -1,0 +1,36 @@
+{
+    "agent_vk": "DCBEBEg7svMKXR7dbPEBegJeEtmEBaEbAPMPx6A7gda",
+    "did_endpoint": "",
+    "state": 4,
+    "uuid": "",
+    "invite_detail": {
+        "statusMsg": "message created",
+        "targetName": "there",
+        "connReqId": "owjjnwi",
+        "senderAgencyDetail": {
+            "endpoint": "52.38.32.107:80/agency/msg",
+            "verKey": "4hmBc54YanNhQHTD66u6XDp1NSgQm1BacPFbE7b5gtat",
+            "DID": "7o2xT9Qtp83cJUJMUBTF3M"
+        },
+        "statusCode": "MS-101",
+        "senderDetail": {
+            "name": "Planet Express",
+            "agentKeyDlgProof": {
+                "agentDID": "PNVSUETWG1wT6VgsF6mUr",
+                "signature": "/9ibLYg6asFLVrk/hLTJUbYgFKYbwq0IRS+s0EuBULXHMhXof6NCmUT87PwgfT2b5XC9Te5UOInVJOmycDHcCA==",
+                "agentDelegatedKey": "DCBEBEg7svMKXR7dbPEBegJeEtmEBaEbAPMPx6A7gda"
+            },
+            "logoUrl": "https://images-na.ssl-images-amazon.com/images/I/51w4Cjdy3-L.jpg",
+            "verKey": "JYBh6DYU4QaNnDyo2ysQfBdthut3BBoDkK4ej96ZFGH",
+            "DID": "ZBH4QqwjPD4CCoLNniobx"
+        }
+    },
+    "pw_did": "ZBH4QqwjPD4CCoLNniobx",
+    "pw_verkey": "JYBh6DYU4QaNnDyo2ysQfBdthut3BBoDkK4ej96ZFGH",
+    "their_pw_did": "CdjRadaZyJeU46QDR8YLoo",
+    "source_id": "Philip J Fry",
+    "handle": 4053849911,
+    "endpoint": "",
+    "their_pw_verkey": "7LkbHY3YjhDbCkW8ai9uiA7kTW51wHccszvmXcjMmeRr",
+    "agent_did": "PNVSUETWG1wT6VgsF6mUr"
+}
