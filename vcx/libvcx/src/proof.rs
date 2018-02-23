@@ -739,6 +739,7 @@ mod tests {
                 name: "claim1Name".to_string(),
                 value: serde_json::to_value("val1").unwrap(),
                 attr_type: "attr1".to_string(),
+                predicate_type: None,
             })
         };
         let claim2 = ClaimData {
@@ -749,6 +750,7 @@ mod tests {
                 name: "claim2Name".to_string(),
                 value: serde_json::to_value("val2").unwrap(),
                 attr_type: "attr2".to_string(),
+                predicate_type: None,
             })
 
         };
@@ -760,6 +762,7 @@ mod tests {
                 name: "claim3Name".to_string(),
                 value: serde_json::to_value("val3").unwrap(),
                 attr_type: "attr3".to_string(),
+                predicate_type: None,
             })
         };
         let claims = vec![claim1.clone(), claim2.clone(), claim3.clone()];
@@ -808,6 +811,7 @@ mod tests {
                 name: "claim1Name".to_string(),
                 value: serde_json::to_value("val1").unwrap(),
                 attr_type: "attr1".to_string(),
+                predicate_type: None,
             })
         };
         let claim2 = ClaimData {
@@ -818,6 +822,7 @@ mod tests {
                 name: "claim2Name".to_string(),
                 value: serde_json::to_value("val2").unwrap(),
                 attr_type: "attr2".to_string(),
+                predicate_type: None,
             })
         };
         let claim3 = ClaimData {
@@ -828,6 +833,7 @@ mod tests {
                 name: "claim3Name".to_string(),
                 value: serde_json::to_value("val3").unwrap(),
                 attr_type: "attr3".to_string(),
+                predicate_type: None,
             })
         };
         let claims = vec![claim1.clone(), claim2.clone(), claim3.clone()];
