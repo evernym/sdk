@@ -55,7 +55,7 @@ pub struct Proofs{
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct ProofOptions{
-    primary_proof: EqAndGeProof,
+    pub primary_proof: EqAndGeProof,
     non_revoc_proof: serde_json::Value,
 }
 
@@ -138,8 +138,8 @@ impl ProofMessage {
         info!("retrieving proof attributes");
         let mut claim_attrs = self.get_revealed_attrs()?;
         claim_attrs.append(self.get_predicates()?.as_mut());
-        //Todo: retrieve unrevealed attributes
         claim_attrs.append(self.get_self_attested_attrs()?.as_mut());
+        //Todo: retrieve unrevealed attributes
         serde_json::to_string(&claim_attrs)
             .or(Err(error::INVALID_JSON.code_num))
     }
@@ -178,11 +178,6 @@ impl ProofMessage {
                                                  None))))
         }).collect::<Result<Vec<ClaimData>, u32>>()
     }
-
-//    fn get_unrevealed_attrs(&self) -> Vec<ClaimData> {
-//
-//    }
-
 
     fn get_predicates(&self) -> Result<Vec<ClaimData>, u32> {
         info!("retrieving predicates");
@@ -339,6 +334,15 @@ impl ClaimData {
 }
 
 impl Attr {
+
+    pub fn new() -> Attr {
+        Attr {
+            name: String::new(),
+            value: Value::Null,
+            attr_type: String::new(),
+            predicate_type: None
+        }
+    }
 
     pub fn create(name: &str, value: &Value, attr_type: &str, predicate_type: Option<String>) -> Attr {
         Attr {

@@ -45,7 +45,14 @@ export interface IProofResponseAttr {
 export interface IClaimInfo {
   name: string,
   value: string,
-  type: string,
+  type: ProofFieldType,
+}
+
+export enum ProofFieldType {
+  Revealed = 'revealed',
+  Unrevealed = 'unrevealed',
+  SelfAttested = 'self_attested',
+  Predicates = 'predicates'
 }
 
 /**
