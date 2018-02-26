@@ -41,7 +41,6 @@ node('sdk') {
         
         app = build('libvcx', 'vcx/ci/ubuntu.dockerfile', 'vcx/ci')
         libindy = build_libindy_image()
-        python = build_python_image()
 		
         // update the versions in the toml file and package.json
         updateVersions(app)      
@@ -50,6 +49,8 @@ node('sdk') {
         buildRust(app)
 
 		// test python wrapper
+		// this image must be built after the libvcx.so is built
+        python = build_python_image()
         testPythonWrapper(python)
 
 	    // test rust
