@@ -12,6 +12,7 @@ import qrcode
 
 ENTERPRISE_DID = '2hoqvcwupRTUNkXn6ArYzs'
 
+
 class Vcxdemo:
 
     proof_requests = {}
@@ -272,9 +273,15 @@ class Vcxdemo:
     def retrieve_proof(self, proof_id):
         proof = self.get_proof_request(proof_id)
         res = Vcxdemo.get_loop().run_until_complete(asyncio.gather(proof.get_proof(self.connection)))
+        print(res[0])
         if len(res) > 0:
-            return True
+            return res[0]
         else:
-            return False
+            return None
 
+    @staticmethod
+    def lookup_schema(source_id, sequence_number):
+        res = Vcxdemo.get_loop().run_until_complete(asyncio.gather(Schema.lookup(source_id, sequence_number)))
+        if len(res) > 0:
+            return res[0]
 

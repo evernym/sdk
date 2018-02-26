@@ -91,7 +91,7 @@ def _cdll() -> CDLL:
 
 
 def _load_cdll() -> CDLL:
-    file_dir = os.path.dirname(__file__)
+    file_dir = '/usr'
     path = os.path.join(file_dir, "lib", LIBRARY)
     try:
         res = CDLL(path)

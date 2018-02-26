@@ -1,17 +1,18 @@
-from vcx.error import VcxError
 from demo.vcxdemo import Vcxdemo
+from demo.utils.random_name import get_name
+from demo.utils.create_vcx import create_config
+
+from vcx.error import VcxError
 from vcx.state import State
 from vcx.api.connection import Connection
 from vcx.api.issuer_claim import IssuerClaim
 from vcx.api.schema import Schema
 from vcx.api.proof import Proof
-from demo.utils.random_name import get_name
+
 import qrcode
 import json
 import os
 import time
-from demo.utils.create_vcx import create_config
-import random
 
 ENTERPRISE_DID = '2hoqvcwupRTUNkXn6ArYzs'
 SOURCE_ID = 'Philip J Fry'
@@ -65,6 +66,7 @@ def util_create_schema(source_id):
     assert len(Vcxdemo.schemas) == size + 1
 
 
+# THE demo
 def test_vcxdemo():
     # get random name for unique testing
     name = get_name()
@@ -128,16 +130,29 @@ def test_vcxdemo():
     proof_attr = Vcxdemo.format_proof_attrs(Vcxdemo.did,
                                             Vcxdemo.get_schema_sequence_number(0),
                                             Vcxdemo.get_schema_attr_list(0)['attr_names'])
-    customer1.create_proof_request(proof_id, 'Club Membership', proof_attr)
-    assert isinstance(customer1.connection, Connection)
-    customer1.request_proof(proof_id)
-    customer1.wait_for_proof_state(proof_id, State.OfferSent)
-    assert customer1.get_proof_state(proof_id) == State.OfferSent
-    customer1.wait_for_proof_state(proof_id, State.Accepted)
-    assert customer1.get_proof_state(proof_id) == State.Accepted
-    customer1.retrieve_proof(proof_id)
+    source_id = 'Club Membership'
+
+    proof1 = request_proof(customer1, source_id, proof_attr, proof_id)
+
+    # second request of same proof
+    time.sleep(5)
+    proof2 = request_proof(customer1, source_id, proof_attr, proof_id)
+    assert proof1['claim_uuid'] != proof2['claim_uuid']
 
 
+def request_proof(connection, source_id, proof_attr, proof_id):
+    connection.create_proof_request(proof_id, source_id, proof_attr)
+    assert isinstance(connection.connection, Connection)
+    connection.request_proof(proof_id)
+    connection.wait_for_proof_state(proof_id, State.OfferSent)
+    assert connection.get_proof_state(proof_id) == State.OfferSent
+    connection.wait_for_proof_state(proof_id, State.Accepted)
+    assert connection.get_proof_state(proof_id) == State.Accepted
+    proof = connection.retrieve_proof(proof_id)
+    return proof
+
+
+# demo
 def test_vcx_deserialize_connection_fulfill_claim():
     try:
         Vcxdemo.init(VCXCONFIG)
@@ -164,6 +179,7 @@ def test_vcx_deserialize_connection_fulfill_claim():
         print('error writing to claim.dat: %s' % e)
 
 
+# demo
 def test_deserialize_accepted_claim_and_issue_claim():
     init_vcxdemo()
     frank = Vcxdemo(SOURCE_ID, details=DETAILS)
@@ -174,6 +190,7 @@ def test_deserialize_accepted_claim_and_issue_claim():
     assert frank.state['claim'] == State.Accepted
 
 
+# demo
 def test_insert_claim_def_into_wallet():
     init_vcxdemo()
     schema_name = 'Account Ledger'
@@ -198,11 +215,13 @@ def test_insert_claim_def_into_wallet():
     assert Vcxdemo.claim_defs[name]
 
 
+# demo
 def test_connection_request_qr_code():
     img = qrcode.make(QR_DATA)
     img.save('./qrcode1.png')
 
 
+# demo
 def test_claim_data():
     c = None
     with open('claim.dat') as in_file:
@@ -270,6 +289,7 @@ def test_schema():
     assert s_created == s0
 
 
+# demo
 def test_request_proof():
     Vcxdemo.init(VCXCONFIG)
     customer1 = Vcxdemo('Fry')
@@ -292,7 +312,7 @@ def test_request_proof():
     assert customer1.get_proof_state(proof_id) == State.Accepted
     customer1.retrieve_proof(proof_id)
 
-
+# unit testable
 def test_utils_create_config():
     filename = 'vcxconfig.json'
     dir = 'utils'
@@ -309,3 +329,23 @@ def test_utils_create_config():
         assert config['logo_url'] == 'https://robohash.org/' + image_hash
         assert config['enterprise_name'] == random_name
     print(get_name())
+
+
+# demo
+def test_lookup():
+    schema_filename = 'schema.dat'
+    schema = None
+    with open(schema_filename) as in_file:
+        schema = json.load(in_file)
+
+    Vcxdemo.init(VCXCONFIG)
+    customer1 = Vcxdemo('Fry')
+    customer1.deserialize_connection('connection.dat')
+    assert isinstance(customer1.connection, Connection)
+    customer1.deserialize_claim('claim.dat')
+    Vcxdemo.deserialize_schema(schema_filename)
+    lookup_schema = Vcxdemo.lookup_schema('FindSchema', Vcxdemo.get_schema_sequence_number(0))
+    Vcxdemo.schemas.append(lookup_schema)
+    assert len(Vcxdemo.schemas) == 2
+    assert schema['sequence_num'] == Vcxdemo.get_schema_sequence_number(1)
+

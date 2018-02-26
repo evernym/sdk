@@ -1,6 +1,7 @@
 import pytest
 from vcx.api.vcx_init import vcx_init
 
+
 @pytest.mark.asyncio
 @pytest.fixture
 async def vcx_init_test_mode():
