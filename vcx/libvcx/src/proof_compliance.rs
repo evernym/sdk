@@ -92,7 +92,7 @@ fn verify_requested_attributes(request: &ProofRequestData, proof: &ProofMessage)
             }
         };
 
-        let proof_data = match &proof.proofs.get(proof_id) {
+        let proof_data = match proof.proofs.get(proof_id) {
             Some(data) => data,
             None => {
                 warn!("Proof Compliance: proof id not found in proofs");
