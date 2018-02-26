@@ -24,6 +24,7 @@ def build_libindy_image(){
 
 def build_python_image(){
     dir ('vcx') {
+		sh 'ls'
         return docker.build("python", "--build-arg uid${getUserUid()} -f wrappers/python3/ci/Dockerfile-python-wrapper .")
     }
 }
