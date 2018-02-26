@@ -25,11 +25,15 @@ def build_libindy_image(){
 def build_python_image(){
     dir ('vcx') {
 		sh 'ls'
+		sh 'ls libvcx'
+		sh 'ls libvcx/target'
+		sh 'ls libvcx/target/debug'
         return docker.build("python", "--build-arg uid${getUserUid()} -f wrappers/python3/ci/Dockerfile-python-wrapper .")
     }
 }
 
-node('ubuntu') {
+//node('ubuntu') {
+node('sdk') {
     try {
         stage ('Checkout'){
             checkout scm
