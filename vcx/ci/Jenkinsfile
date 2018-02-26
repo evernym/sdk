@@ -13,7 +13,19 @@ def build(name, file='vcx/ci/ubuntu.dockerfile', context='vcx/ci', customParams 
 
 // docker build -t wrapper-test --build-arg uid=1001 -f vcx/ci/Dockerfile-wrapper-testing
 def build_wrapper_testing_image(file='vcx/ci/Dockerfile-wrapper-testing', context='vcx', customParams = ''){
-	return docker.build("wrapper-test", "--no-cache --build-arg uid=${getUserUid()} -f $file $context")
+	return docker.build("wrapper-test", "--build-arg uid=${getUserUid()} -f $file $context")
+}
+
+def build_libindy_image(){
+    dir ('vcx') {
+        return docker.build("libindy", "--build-arg uid=${getUserUid()} -f wrappers/python3/ci/Dockerfile .")
+    }
+}
+
+def build_python_image(){
+    dir ('vcx') {
+        return docker.build("python", "--build-arg uid${getUserUid()} -f wrapper/python3/ci/Dockerfile-python-wrapper wrapper/python3")
+    }
 }
 
 node('ubuntu') {
@@ -23,6 +35,8 @@ node('ubuntu') {
         }
         
         app = build('libvcx', 'vcx/ci/ubuntu.dockerfile', 'vcx/ci')
+        libindy = build_libindy_image()
+        python = build_python_image()
 		
         // update the versions in the toml file and package.json
         updateVersions(app)      
@@ -30,8 +44,11 @@ node('ubuntu') {
         // build and test the so file
         buildRust(app)
 
-	// test rust
-	testRust(app)
+		// test python wrapper
+        testPythonWrapper(python)
+
+	    // test rust
+	    testRust(app)
 
         // update the so file to have version
         updateSo(app)
@@ -66,6 +83,14 @@ def buildDocker(){
         app = build('vcx')
     }
     return app
+}
+
+def testPythonWrapper(envn){
+    stage ("Testing Python Wrapper"){
+        envn.inside {
+            sh "python3 -m pytest"
+        }
+    }
 }
 
 def buildRust(envn){
