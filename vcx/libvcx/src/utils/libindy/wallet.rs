@@ -68,7 +68,7 @@ pub fn init_wallet(wallet_name: &str) -> Result<i32, u32> {
     };
     let mut use_key = false;
     let credentials = match settings::get_wallet_credentials() {
-        Some(x) => {info!("using key for indy wallet"); use_key = true; CString::new(x).map_err(map_string_error)? },
+        Some(x) => {debug!("using key for indy wallet"); use_key = true; CString::new(x).map_err(map_string_error)? },
         None => CString::new("").map_err(map_string_error)?,
     };
 
@@ -130,16 +130,18 @@ pub fn init_wallet(wallet_name: &str) -> Result<i32, u32> {
     }
 }
 
-pub fn close_wallet(wallet_handle: i32) -> Result<(), u32> {
+pub fn close_wallet() -> Result<(), u32> {
     let rtn_obj = Return_I32::new()?;
 
     unsafe {
         indy_function_eval(
             indy_close_wallet(rtn_obj.command_handle,
-                              wallet_handle,
+                              WALLET_HANDLE,
                              Some(rtn_obj.get_callback()))
         ).map_err(map_indy_error_code)?;
+        WALLET_HANDLE = 0;
     }
+
     rtn_obj.receive(TimeoutUtils::some_long())
 }
 

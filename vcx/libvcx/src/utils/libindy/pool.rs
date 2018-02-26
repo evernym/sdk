@@ -177,6 +177,7 @@ pub fn refresh(pool_handle: i32) -> Result<(), u32> {
 
 pub fn close() -> Result<(), u32> {
     let handle = get_pool_handle()?;
+    change_pool_handle(None);
     call(handle,
          TimeoutUtils::some_long(),
          indy_close_pool_ledger)
@@ -250,7 +251,6 @@ pub mod tests {
     }
 
     fn clean_pools(slice: &[String]) {
-        ::utils::logger::LoggerUtils::init();
         let home = home_dir().unwrap().as_path().to_str().unwrap().to_owned();
         let temp_path = format!("{}/{}",home, ".indy_client/pool/");
         assert!(temp_path.len() > "./indy_client/pool/".to_string().len());
@@ -261,8 +261,8 @@ pub mod tests {
             let path = Path::new(&pp);
             if path.exists(){
                 match fs::remove_dir_all(path){
-                    Ok(_) => info!("Removed {:?}", path),
-                    Err(_)=> info!("Failed to remove {:?}", path),
+                    Ok(_) => debug!("Removed {:?}", path),
+                    Err(_)=> warn!("Failed to remove {:?}", path),
                 };
             }
         }

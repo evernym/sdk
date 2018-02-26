@@ -54,7 +54,6 @@ use std::path::Path;
 pub extern fn vcx_init (command_handle: u32,
                         config_path:*const c_char,
                         cb: Option<extern fn(xcommand_handle: u32, err: u32)>) -> u32 {
-    ::utils::logger::LoggerUtils::init();
 
     if !config_path.is_null() {
         check_useful_c_str!(config_path,error::INVALID_OPTION.code_num);
@@ -62,14 +61,15 @@ pub extern fn vcx_init (command_handle: u32,
         if config_path == "ENABLE_TEST_MODE" {
             settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
         } else {
-            info!("config_path: {}", config_path);
             match settings::process_config_file(&config_path) {
-                Err(_) => {
-                    error!("Invalid configuration specified");
+                Err(e) => {
+                    println!("Invalid configuration specified: {}", e);
                     return error::INVALID_CONFIGURATION.code_num;
                 },
-                Ok(_) => info!("Successfully parsed config: {}", config_path),
+                Ok(_) => (),
             };
+            ::utils::logger::LoggerUtils::init();
+            println!("config_path: {}", config_path);
         }
     } else {
         error!("Cannot initialize with given config path: config path is null.");
@@ -161,18 +161,18 @@ pub extern fn vcx_init (command_handle: u32,
         let option_path = Some(Path::new(&path));
         match pool::create_pool_ledger_config(&pool_name, option_path.to_owned()) {
             Err(e) => {
-                info!("Pool Config Creation Error: {}", e);
+                warn!("Pool Config Creation Error: {}", e);
                 return e;
             },
             Ok(_) => {
-                info!("Pool Config Created Successfully");
+                debug!("Pool Config Created Successfully");
                 match pool::open_pool_ledger(&pool_name, None) {
                     Err(e) => {
-                    info!("Open Pool Error: {}", e);
+                    warn!("Open Pool Error: {}", e);
                         return e;
                     },
                     Ok(handle) => {
-                        info!("Open Pool Successful");
+                        debug!("Open Pool Successful");
                     }
                 }
             }
@@ -182,11 +182,11 @@ pub extern fn vcx_init (command_handle: u32,
     thread::spawn(move|| {
         match wallet::init_wallet(&wallet_name) {
             Err(e) => {
-                info!("Init Wallet Error {}.", e);
+                warn!("Init Wallet Error {}.", e);
                 cb(command_handle, e);
             },
             Ok(_) => {
-                info!("Init Wallet Successful");
+                debug!("Init Wallet Successful");
                 cb(command_handle, error::SUCCESS.code_num);
             },
         }
@@ -195,35 +195,28 @@ pub extern fn vcx_init (command_handle: u32,
     error::SUCCESS.code_num
 }
 
+#[no_mangle]
+pub extern fn vcx_reset() -> u32 {
 
+    ::schema::release_all();
+    ::connection::release_all();
+    ::issuer_claim::release_all();
+    ::claim_def::release_all();
+    ::proof::release_all();
 
+    match wallet::close_wallet() {
+        Ok(_) => {},
+        Err(_) => {},
+    };
 
-/**
- * Schema object
- */
+    match pool::close() {
+        Ok(_) => {},
+        Err(_) => {},
+    };
 
-#[allow(unused_variables, unused_mut)]
-pub extern fn vcx_schema_create(schema_data: *const c_char, schema_handle: *mut u32) -> u32 { error::SUCCESS.code_num }
-#[allow(unused_variables, unused_mut)]
-pub extern fn vcx_schema_commit(schema_handle: u32) -> u32 { error::SUCCESS.code_num }
-#[allow(unused_variables)]
-pub extern fn vcx_schema_get_data(schema_handle: u32, data: *mut c_char) -> u32 { error::SUCCESS.code_num }
-#[allow(unused_variables, unused_mut)]
-pub extern fn vcx_schema_get_sequence_no(schema_handle: u32, sequence_no: *mut u32) -> u32 { error::SUCCESS.code_num }
-
-
-/**
- * claimdef object
- */
-
-#[allow(unused_variables, unused_mut)]
-pub extern fn vcx_claimdef_create(schema_handle: u32, claimdef_handle: *mut u32) -> u32 { error::SUCCESS.code_num }
-#[allow(unused_variables, unused_mut)]
-pub extern fn vcx_claimdef_commit(claimdef_handle: u32) -> u32 { error::SUCCESS.code_num }
-#[allow(unused_variables, unused_mut)]
-pub extern fn vcx_claimdef_get_sequence_no(claimdef_handle: u32, sequence_no: *mut u32) -> u32 { error::SUCCESS.code_num }
-#[allow(unused_variables, unused_mut)]
-pub extern fn vcx_claimdef_get(claimdef_handle: u32, data: *mut c_char) -> u32 { error::SUCCESS.code_num }
+    settings::set_defaults();
+    error::SUCCESS.code_num
+}
 
 
 #[cfg(test)]
@@ -303,5 +296,28 @@ mod tests {
         thread::sleep(Duration::from_secs(1));
         wallet::delete_wallet("wallet1").unwrap();
 
+    }
+
+    #[test]
+    fn test_reset() {
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
+        let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#;
+        let req_attr = "[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]";
+        let req_predicates = "[{\"attr_name\":\"age\",\"p_type\":\"GE\",\"value\":18,\"schema_seq_no\":1,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\"}]";
+
+        wallet::init_wallet("wallet1").unwrap();
+        let connection = ::connection::build_connection("h1".to_owned()).unwrap();
+        let claim = ::issuer_claim::issuer_claim_create(0,None,"8XFh8yBzrpJQmNyZzgoTqB".to_owned(),"claim_name".to_string(),"{\"attr\":\"value\"}".to_owned()).unwrap();
+        let proof = ::proof::create_proof(None,req_attr.to_owned(),req_predicates.to_owned(),"Optional".to_owned()).unwrap();
+        let claimdef = ::claim_def::create_new_claimdef("SID".to_string(),"NAME".to_string(),15,"4fUDR9R7fjwELRvH9JT6HH".to_string(),false).unwrap();
+        let schema = ::schema::create_new_schema("5".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
+        vcx_reset();
+        assert_eq!(::connection::release(connection),error::INVALID_CONNECTION_HANDLE.code_num);
+        assert_eq!(::issuer_claim::release(claim),error::INVALID_ISSUER_CLAIM_HANDLE.code_num);
+        assert_eq!(::schema::release(schema),error::INVALID_SCHEMA_HANDLE.code_num);
+        assert_eq!(::proof::release(proof),error::INVALID_PROOF_HANDLE.code_num);
+        assert_eq!(::claim_def::release(claimdef),error::INVALID_CLAIM_DEF_HANDLE.code_num);
+        assert_eq!(wallet::get_wallet_handle(), 0);
     }
 }

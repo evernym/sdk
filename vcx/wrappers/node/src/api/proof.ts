@@ -36,9 +36,13 @@ export interface IProofResponses {
 }
 
 export interface IProofResponseAttr {
-  schema_seq_no: number,
-  issuer_did: string,
-  claim_uuid: string,
+  schema_seq_no?: number,
+  issuer_did?: string,
+  claim_uuid?: string,
+  attr_info: IClaimInfo
+}
+
+export interface IClaimInfo {
   name: string,
   value: string,
   type: string,
@@ -110,7 +114,7 @@ export class Proof extends VCXBaseWithState {
       ))
       return proof
     } catch (err) {
-      throw new VCXInternalError(`vcx_proof_create -> ${err}`)
+      throw new VCXInternalError(err, 'vcx_proof_create')
     }
   }
 
@@ -132,7 +136,7 @@ export class Proof extends VCXBaseWithState {
       const proof = await super._deserialize(Proof, proofData)
       return proof
     } catch (err) {
-      throw new VCXInternalError(`vcx_proof_deserialize -> ${err}`)
+      throw new VCXInternalError(err, 'vcx_proof_deserialize')
     }
   }
 
@@ -150,7 +154,7 @@ export class Proof extends VCXBaseWithState {
       const data: IProofData = JSON.parse(await super._serialize())
       return data
     } catch (err) {
-      throw new VCXInternalError(`vcx_proof_serialize -> ${err}`)
+      throw new VCXInternalError(err, 'vcx_proof_serialize')
     }
   }
 
@@ -164,8 +168,8 @@ export class Proof extends VCXBaseWithState {
   async getState (): Promise<number> {
     try {
       return await this._getState()
-    } catch (error) {
-      throw new VCXInternalError(`vcx_proof_get_state -> ${error}`)
+    } catch (err) {
+      throw new VCXInternalError(err, 'vcx_proof_get_state')
     }
   }
 
@@ -179,8 +183,8 @@ export class Proof extends VCXBaseWithState {
   async updateState (): Promise<void> {
     try {
       await this._updateState()
-    } catch (error) {
-      throw new VCXInternalError(`vcx_proof_updateState -> ${error}`)
+    } catch (err) {
+      throw new VCXInternalError(err, 'vcx_proof_updateState')
     }
   }
 
@@ -212,7 +216,7 @@ export class Proof extends VCXBaseWithState {
           })
         )
     } catch (err) {
-      throw new VCXInternalError(`vcx_proof_send_request -> ${err}`)
+      throw new VCXInternalError(err, 'vcx_proof_send_request')
     }
   }
 
@@ -237,7 +241,7 @@ export class Proof extends VCXBaseWithState {
         )
       return {proofAttrs: JSON.parse(proof), proofState: this.getProofState()}
     } catch (err) {
-      throw new VCXInternalError(`vcx_get_proof -> ${err}`)
+      throw new VCXInternalError(err, 'vcx_get_proof')
     }
   }
 

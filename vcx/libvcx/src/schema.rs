@@ -69,7 +69,7 @@ pub trait Schema: ToString {
                 Err(_) => return Err(error::INVALID_JSON.code_num)
             };
         }
-        info!("retrieving schema_no {} from ledger", sequence_num);
+        debug!("retrieving schema_no {} from ledger", sequence_num);
         let txn = Self::retrieve_from_ledger(sequence_num)?;
         match Self::process_ledger_txn(txn){
             Ok(data) => Ok(data),
@@ -232,10 +232,10 @@ pub fn create_new_schema(source_id: String,
                          schema_name: String,
                          issuer_did: String,
                          data: String) -> Result<u32, u32> {
-    info!("creating schema with source_id: {}, name: {}, issuer_did: {}", source_id, schema_name, issuer_did);
+    debug!("creating schema with source_id: {}, name: {}, issuer_did: {}", source_id, schema_name, issuer_did);
     let req = CreateSchema::create_schema_req(&issuer_did, data)?;
     let sign_response = CreateSchema::sign_and_send_request(&issuer_did, &req)?;
-    info!("created schema on ledger");
+    debug!("created schema on ledger");
 
     let new_handle = rand::thread_rng().gen::<u32>();
     let mut new_schema = Box::new(CreateSchema {
@@ -249,13 +249,13 @@ pub fn create_new_schema(source_id: String,
     match new_schema.data.sequence_num {
         Some(x) => {
             new_schema.set_sequence_num(x as u32);
-            info!("created schema object with sequence_num: {}", new_schema.sequence_num);
+            debug!("created schema object with sequence_num: {}", new_schema.sequence_num);
         },
         None => return Err(error::INVALID_SCHEMA_CREATION.code_num),
     };
     {
         let mut m = SCHEMA_MAP.lock().unwrap();
-        info!("inserting handle {} into schema table", new_handle);
+        debug!("inserting handle {} into schema table", new_handle);
         m.insert(new_handle, new_schema);
     }
 
@@ -274,7 +274,7 @@ pub fn get_schema_attrs(source_id: String, sequence_num: u32) -> Result<String, 
 
     {
         let mut m = SCHEMA_MAP.lock().unwrap();
-        info!("inserting handle {} into schema table", new_handle);
+        debug!("inserting handle {} into schema table", new_handle);
         m.insert(new_handle, new_schema);
     }
 
@@ -314,7 +314,7 @@ pub fn from_string(schema_data: &str) -> Result<u32, u32> {
 
     {
         let mut m = SCHEMA_MAP.lock().unwrap();
-        info!("inserting handle {} into schema table", new_handle);
+        debug!("inserting handle {} into schema table", new_handle);
         m.insert(new_handle, schema);
     }
     Ok(new_handle)
@@ -325,6 +325,12 @@ pub fn release(handle: u32) -> u32 {
         Some(t) => error::SUCCESS.code_num,
         None => error::INVALID_SCHEMA_HANDLE.code_num,
     }
+}
+
+pub fn release_all() {
+    let mut map = SCHEMA_MAP.lock().unwrap();
+
+    map.drain();
 }
 
 #[cfg(test)]
@@ -460,13 +466,11 @@ mod tests {
 
     #[test]
     fn test_process_ledger_txn(){
-        ::utils::logger::LoggerUtils::init();
         let test = LedgerSchema::process_ledger_txn(String::from_str(LEDGER_SAMPLE).unwrap()).unwrap();
     }
 
     #[test]
     fn test_process_ledger_txn_fails_with_incorrect_type(){
-        ::utils::logger::LoggerUtils::init();
         let data = r#"{"result":{"identifier":"GGBDg1j8bsKmr4h5T9XqYf","data":{"verkey":"~CoRER63DVYnWZtK8uAzNbx","dest":"V4SGRU86Z58d6TV7PBUe6f","role":"0","type":"1","auditPath":[],"rootHash":"3W3ih6Hxf1yv8pmerY6jdEhYR3scDVFBk4PM91XKx1Bk","seqNo":1},"type":"3","reqId":1516732266277924815,"seqNo":1},"op":"REPLY"}"#;
         let test = LedgerSchema::process_ledger_txn(String::from_str(data).unwrap());
         assert!(test.is_err());
@@ -488,7 +492,6 @@ mod tests {
 
     #[test]
     fn test_ledger_schema_to_string(){
-        ::utils::logger::LoggerUtils::init();
         let test = LedgerSchema::process_ledger_txn(String::from_str(LEDGER_SAMPLE).unwrap()).unwrap();
 
         let schema = LedgerSchema {sequence_num:15, data:Some(test)};
@@ -506,7 +509,6 @@ mod tests {
 
     #[test]
     fn test_create_schema_to_string(){
-        ::utils::logger::LoggerUtils::init();
         let create_schema = CreateSchema {
             data: serde_json::from_str(DIRTY_EXAMPLE).unwrap(),
             source_id: "testId".to_string(),
@@ -520,15 +522,13 @@ mod tests {
 
     #[test]
     fn test_create_schema_success(){
-        let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#.to_string();
-        ::utils::logger::LoggerUtils::init();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
+        let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#.to_string();
         assert!(create_new_schema("1".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data).is_ok());
     }
 
     #[test]
     fn test_get_schema_attrs_success(){
-        ::utils::logger::LoggerUtils::init();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
         let schema_attrs = get_schema_attrs("Check For Success".to_string(), 999).unwrap();
         assert!(schema_attrs.contains(SCHEMA_TXN));
@@ -538,7 +538,6 @@ mod tests {
 
     #[test]
     fn test_create_schema_fails(){
-        ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         assert_eq!(create_new_schema("1".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), "".to_string()),
@@ -592,5 +591,23 @@ mod tests {
         pool::open_sandbox_pool();
         let test: LedgerSchema = LedgerSchema::new_from_ledger(22).unwrap();
         print!("{}", test.to_string());
+    }
+
+    #[test]
+    fn test_release_all() {
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
+        let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#;
+        let h1 = create_new_schema("1".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
+        let h2 = create_new_schema("2".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
+        let h3 = create_new_schema("3".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
+        let h4 = create_new_schema("4".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
+        let h5 = create_new_schema("5".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
+        release_all();
+        assert_eq!(release(h1),error::INVALID_SCHEMA_HANDLE.code_num);
+        assert_eq!(release(h2),error::INVALID_SCHEMA_HANDLE.code_num);
+        assert_eq!(release(h3),error::INVALID_SCHEMA_HANDLE.code_num);
+        assert_eq!(release(h4),error::INVALID_SCHEMA_HANDLE.code_num);
+        assert_eq!(release(h5),error::INVALID_SCHEMA_HANDLE.code_num);
     }
 }

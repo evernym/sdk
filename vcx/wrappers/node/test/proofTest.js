@@ -59,7 +59,8 @@ describe('A Proof', function () {
     try {
       await proof.serialize()
     } catch (error) {
-      assert.equal(error.toString(), 'Error: vcx_proof_serialize -> 1017')
+      assert.equal(error.vcxCode, 1017)
+      assert.equal(error.message, 'vcx_proof_serialize')
     }
   })
 
@@ -88,8 +89,9 @@ describe('A Proof', function () {
     const proof = await Proof.create({ sourceId, attrs: ATTR, name: 'TestProof' })
     try {
       await proof.requestProof(connection)
-    } catch (err) {
-      assert.equal(err.toString(), 'Error: vcx_proof_send_request -> 1003')
+    } catch (error) {
+      assert.equal(error.vcxCode, 1003)
+      assert.equal(error.message, 'vcx_proof_send_request')
     }
   })
 
@@ -102,8 +104,9 @@ describe('A Proof', function () {
     await proof.release()
     try {
       await proof.requestProof(connection)
-    } catch (err) {
-      assert.equal(err.toString(), 'Error: vcx_proof_send_request -> 1017')
+    } catch (error) {
+      assert.equal(error.vcxCode, 1017)
+      assert.equal(error.message, 'vcx_proof_send_request')
     }
   })
 
@@ -122,7 +125,7 @@ describe('A Proof', function () {
     await proof2.updateState()
     let proofData = await proof2.getProof(connection)
     assert.equal(proof2.getProofState(), ProofState.Invalid)
-    const attrs = '[{"schema_seq_no":15,"issuer_did":"4fUDR9R7fjwELRvH9JT6HH","claim_uuid":"claim::f22cc7c8-924f-4541-aeff-29a9aed9c46b","name":"state","value":"UT","type":"revealed"}]'
+    const attrs = '[{"schema_seq_no":15,"issuer_did":"4fUDR9R7fjwELRvH9JT6HH","claim_uuid":"claim::f22cc7c8-924f-4541-aeff-29a9aed9c46b","attr_info":{"name":"state","value":"UT","type":"revealed"}}]'
     const expectedData = {proofAttrs: attrs, proofState: ProofState.Invalid}
     assert.equal(JSON.stringify(proofData.proofAttrs), expectedData.proofAttrs)
     assert.equal(proofData.proofState, expectedData.proofState)
