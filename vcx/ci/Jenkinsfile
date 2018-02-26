@@ -13,7 +13,7 @@ def build(name, file='vcx/ci/ubuntu.dockerfile', context='vcx/ci', customParams 
 
 // docker build -t wrapper-test --build-arg uid=1001 -f vcx/ci/Dockerfile-wrapper-testing
 def build_wrapper_testing_image(file='vcx/ci/Dockerfile-wrapper-testing', context='vcx', customParams = ''){
-	return docker.build("wrapper-test", "--build-arg uid=${getUserUid()} -f $file $context")
+	return docker.build("wrapper-test", "-no-cache --build-arg uid=${getUserUid()} -f $file $context")
 }
 
 def build_libindy_image(){
@@ -24,7 +24,7 @@ def build_libindy_image(){
 
 def build_python_image(){
     dir ('vcx') {
-        return docker.build("python", "--build-arg uid${getUserUid()} -f wrappers/python3/ci/Dockerfile-python-wrapper wrappers/python3")
+        return docker.build("python", "--build-arg uid${getUserUid()} -f wrappers/python3/ci/Dockerfile-python-wrapper .")
     }
 }
 
