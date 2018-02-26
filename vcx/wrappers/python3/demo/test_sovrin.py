@@ -5,8 +5,13 @@ from vcx.api.connection import Connection
 from vcx.api.issuer_claim import IssuerClaim
 from vcx.api.schema import Schema
 from vcx.api.proof import Proof
+from demo.utils.random_name import get_name
 import qrcode
 import json
+import os
+import time
+from demo.utils.create_vcx import create_config
+import random
 
 ENTERPRISE_DID = '2hoqvcwupRTUNkXn6ArYzs'
 SOURCE_ID = 'Philip J Fry'
@@ -25,7 +30,7 @@ DETAILS= [{
     }]
 
 QR_DATA= '{"sm": "message created", "t": "there", "s": {"v": "E2u2xA7RqRgGZ5aSyaJMGr1yEUfKUoyPot9qtnWJUXPC", "n": "DoomTown", "dp": {"k": "DVKwoWZ8PtYqGqSjEcExxggLc46iM91jW31qvgXABq9h", "s": "TW8FLdouR5KKb/35wNvSsi5pzcb59ycDzZCIftMSX2Tlmx2IFy1zmKopKj6L3EUfHaX9F1gQRggD7OEnkVFeDg==", "d": "PuxVjQ9imGLnVwrCbYukjn"}, "d": "Qut5k3WJVeDkvLx2Z5XHDe", "l": "https://robohash.org/469b25d"}, "id": "nzvmmwn", "sc": "MS-101", "sa": {"v": "4hmBc54YanNhQHTD66u6XDp1NSgQm1BacPFbE7b5gtat", "d": "7o2xT9Qtp83cJUJMUBTF3M", "e": "52.38.32.107:80/agency/msg"}}'
-VCXCONFIG = '/home/mark/Documents/vcxconfig.json'
+VCXCONFIG = 'utils/vcxconfig.json'
 SCHEMA_SEQ_NUMBER = 22
 CLAIM_NAME = 'Planet Express Club Member'
 SCHEMA_NAME = 'Club Membership'
@@ -56,28 +61,37 @@ def util_create_schema(source_id):
                        "attr_names": attr_names,
                        }
     size = len(Vcxdemo.schemas)
-    Vcxdemo.create_schema(ENTERPRISE_SOURCE_ID, schema_name, schema_skeleton)
+    Vcxdemo.create_schema(source_id, schema_name, schema_skeleton)
     assert len(Vcxdemo.schemas) == size + 1
 
 
 def test_vcxdemo():
+    # get random name for unique testing
+    name = get_name()
+
+    config = {
+        'enterprise_name': name,
+        'logo_url': 'https://robohash.org/' + name
+    }
+    create_config(config)
+
+    source_id = name
+
     init_vcxdemo()
-    claim_name = 'Planet Express Club Member'
-    source_id = 'Planet Express'
+    claim_name = 'Club Membership'
     assert len(Vcxdemo.schemas) == 0
     util_create_schema(source_id)
     assert len(Vcxdemo.schemas) == 1
     s0 = Vcxdemo.get_schema_attr_list(0)
 
     # Create Claim Def on Ledger (and wallet)
-    name = 'Club Membership'
     schema_number = Vcxdemo.get_schema_sequence_number(0)
-    Vcxdemo.create_claim_def(source_id, name, schema_number)
+    Vcxdemo.create_claim_def(source_id, claim_name, schema_number)
     assert len(Vcxdemo.claim_defs) > 0
-    assert Vcxdemo.claim_defs[name]
+    assert Vcxdemo.claim_defs[claim_name]
 
-    customer1 = Vcxdemo(SOURCE_ID, details=DETAILS[0])
-    assert customer1.source_id == SOURCE_ID
+    customer1 = Vcxdemo(source_id, details=DETAILS[0])
+    assert customer1.source_id == source_id
     for d in customer1.details:
         assert customer1.details[d] == DETAILS[0][d]
 
@@ -102,9 +116,13 @@ def test_vcxdemo():
     customer1.update_claim_state()
     assert customer1.state['claim'] == State.OfferSent
     customer1.wait_for_claim_state(State.RequestReceived)
+    print("About to send claim offer...")
+    # time.sleep(5)
     customer1.send_issuer_claim()
+    print("Waiting for claim state to become accepted")
     customer1.wait_for_claim_state(State.Accepted)
-
+    print("Claim State became accepted")
+    time.sleep(5)
     # Proof
     proof_id = '222'
     proof_attr = Vcxdemo.format_proof_attrs(Vcxdemo.did,
@@ -275,3 +293,19 @@ def test_request_proof():
     customer1.retrieve_proof(proof_id)
 
 
+def test_utils_create_config():
+    filename = 'vcxconfig.json'
+    dir = 'utils'
+    image_hash= '12345'
+    random_name = get_name()
+    config = {
+        'logo_url': 'https://robohash.org/' + image_hash,
+        'enterprise_name': random_name
+    }
+    create_config(config)
+    assert filename in os.listdir(dir)
+    with open(os.path.join(dir, filename), 'r') as in_file:
+        config = json.load(in_file)
+        assert config['logo_url'] == 'https://robohash.org/' + image_hash
+        assert config['enterprise_name'] == random_name
+    print(get_name())
