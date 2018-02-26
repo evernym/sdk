@@ -24,7 +24,7 @@ def build_libindy_image(){
 
 def build_python_image(){
     dir ('vcx') {
-        return docker.build("python", "--build-arg uid${getUserUid()} -f wrapper/python3/ci/Dockerfile-python-wrapper wrapper/python3")
+        return docker.build("python", "--build-arg uid${getUserUid()} -f wrappers/python3/ci/Dockerfile-python-wrapper wrappers/python3")
     }
 }
 
@@ -94,7 +94,7 @@ def testPythonWrapper(envn){
 }
 
 def buildRust(envn){
-    stage ('Building and Testing Rust Library'){
+    stage ('Building Rust Library'){
         envn.inside {
             sh "ls -l"
             sh "rustc --version"
