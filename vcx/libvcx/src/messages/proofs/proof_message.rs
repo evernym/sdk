@@ -143,7 +143,7 @@ impl ProofMessage {
         claim_attrs.append(self.get_self_attested_attrs()?.as_mut());
         //Todo: retrieve unrevealed attributes
         serde_json::to_string(&claim_attrs).map_err(|err| {
-            error!("Err {}. Proof Attributes had invalid json.");
+            error!("{}. Proof Attributes had invalid json.", err);
             error::INVALID_JSON.code_num
         })
     }

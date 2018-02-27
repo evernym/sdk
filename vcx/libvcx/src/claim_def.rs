@@ -200,7 +200,7 @@ impl CreateClaimDef {
 impl ClaimDefinitionData {
     pub fn to_string(&self) -> Result<String, u32> {
         serde_json::to_string(&self).map_err(|err| {
-            error!("Err {}. ClaimDefinitionData failed on to_string().");
+            error!("{}. ClaimDefinitionData failed on to_string().", err);
             error::INVALID_JSON.code_num
         })
     }
