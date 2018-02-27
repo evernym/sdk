@@ -149,7 +149,7 @@ async def test_request_proof_with_released_proof():
         await proof.request_proof(connection)
     assert ErrorCode.InvalidProofHandle == e.value.error_code
 
-@pytest.skip
+@pytest.mark.skip
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_get_proof_with_invalid_proof():
