@@ -48,10 +48,6 @@ node('sdk') {
         // build and test the so file
         buildRust(app)
 
-		// test python wrapper
-		// this image must be built after the libvcx.so is built
-        python = build_python_image()
-        testPythonWrapper(python)
 
 	    // test rust
 	    testRust(app)
@@ -60,7 +56,12 @@ node('sdk') {
         updateSo(app)
         // test the npm package and create the npm gzip artifact
         wrapper = build_wrapper_testing_image('vcx/ci/Dockerfile-wrapper-testing', 'vcx')
+		// test python wrapper
+		// this image must be built after the libvcx.so is built
+        python = build_python_image()
+        testPythonWrapper(python)
         testNodeWrapper(wrapper)
+
         if (env.BRANCH_NAME == "master") {
             // create the debian of the library
             createDeb(app)
