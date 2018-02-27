@@ -55,13 +55,13 @@ node(NODETYPE) {
 
         // test the npm package and create the npm gzip artifact
         nodejs = build('nodejs', 'wrappers/node/ci/Dockerfile-nodejs', '.')
-        vcx-nodejs = build('vcx-nodejs', 'wrappers/node/ci/Dockerfile-nodejs-wrapper', '.', '--no-cache')
-		vcx-python = build('vcx-python', 'wrappers/python/ci/Dockerfile-python-wrapper', '.', '--no-cache')
+        vcx_nodejs = build('vcx-nodejs', 'wrappers/node/ci/Dockerfile-nodejs-wrapper', '.', '--no-cache')
+		vcx_python = build('vcx-python', 'wrappers/python/ci/Dockerfile-python-wrapper', '.', '--no-cache')
         
         // test python wrapper
 		// this image must be built after the libvcx.so is built
-        testPythonWrapper(python)
-        testNodeWrapper(wrapper)
+        testPythonWrapper(vcx_python)
+        testNodeWrapper(vcx_nodejs)
 
         if (env.BRANCH_NAME == "master") {
             // create the debian of the library
