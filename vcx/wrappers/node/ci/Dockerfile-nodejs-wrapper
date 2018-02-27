@@ -1,7 +1,7 @@
 # Development
 FROM nodejs
 
-ARG uid=1000
+ARG uid=1001
 RUN useradd -ms /bin/bash -u $uid vcxnode
 
 # Assumes we are in the ./vcx directory

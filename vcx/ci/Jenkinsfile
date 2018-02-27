@@ -193,6 +193,7 @@ def testNodeWrapper(envn) {
     stage ('Test Node Wrapper'){
         envn.inside {
             sh 'npm -v'
+            sh 'ls'
             sh 'npm run lint'
             sh 'npm run compile'
             sh 'npm test'

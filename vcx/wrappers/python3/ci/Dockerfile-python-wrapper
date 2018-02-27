@@ -1,7 +1,7 @@
 # Development
 FROM libindy
 
-ARG uid=1001
+ARG uid=1000
 
 RUN apt-get update && apt-get install -y python3
 
