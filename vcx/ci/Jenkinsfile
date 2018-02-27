@@ -1,11 +1,5 @@
 #!groovy
 
-def TESTING = false
-def NODETYPE = 'ubuntu'
-if (TESTING) {
-	NODETYPE  = 'sdk'
-}
-
 def dockerfile= 'dockerfile'
 
 def getUserUid() {
@@ -32,7 +26,9 @@ def build(name, file, context='.', customParams = '') {
 //     }
 // }
 
-node(NODETYPE) {
+
+node('ubuntu') {
+
     try {
         stage ('Checkout'){
             checkout scm
