@@ -39,7 +39,7 @@ RUN npm install typescript-compiler
 RUN mkdir -p /libindy
 WORKDIR /libindy
 
-ENV LIBINDY_DEB=libindy_1.1.0_amd64.deb
+ENV LIBINDY_DEB=libindy_1.3.0_amd64.deb
 ENV LIBINDY_DOWNLOAD_URL=https://repo.sovrin.org/sdk/lib/apt/xenial/stable/$LIBINDY_DEB
 
 RUN curl -fsOSL $LIBINDY_DOWNLOAD_URL \
