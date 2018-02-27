@@ -116,7 +116,7 @@ def testRust(envn) {
     stage ('Testing Rust'){
         sh "echo Testing"
         envn.inside {
-            sh "cd vcx/libvcx; cargo test --color never -- --test-threads=1"
+            sh "cd vcx/libvcx; cargo test --color=never -- --test-threads=1"
         }
     }
 }
