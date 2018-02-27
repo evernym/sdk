@@ -10,24 +10,7 @@ def build(name, file, context='.', customParams = '') {
     return docker.build("$name", "${customParams} --build-arg uid=${getUserUid()} -f $file $context")
 }
 
-// def build_wrapper_testing_image(file='vcx/ci/Dockerfile-wrapper-testing', context='vcx', customParams = '--no-cache'){
-// 	return docker.build("wrapper-test", "${customParams} --build-arg uid=${getUserUid()} -f $file $context")
-// }
-
-// def build_libindy_image(){
-//     dir ('vcx') {
-//         return docker.build("libindy", "--build-arg uid=${getUserUid()} -f wrappers/python3/ci/Dockerfile .")
-//     }
-// }
-
-// def build_python_image(){
-//     dir ('vcx') {
-//         return docker.build("python", "--no-cache --build-arg uid${getUserUid()} -f wrappers/python3/ci/Dockerfile-python-wrapper .")
-//     }
-// }
-
-
-node('sdk') {
+node('ubuntu') {
 
     try {
         stage ('Checkout'){
