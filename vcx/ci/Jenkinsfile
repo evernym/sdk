@@ -38,7 +38,7 @@ node(NODETYPE) {
             checkout scm
         }
         libindy = build('libindy', 'vcx/ci/Dockerfile-libindy', 'vcx')
-        rust = build('rust', 'ci/ubuntu.dockerfile', '.')
+        rust = build('rust', 'vcx/ci/ubuntu.dockerfile', 'vcx')
 		
         // update the versions in the toml file and package.json
         updateVersions(rust)      
