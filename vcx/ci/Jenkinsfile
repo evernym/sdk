@@ -41,6 +41,11 @@ node('ubuntu') {
         
         // build and test the so file
         buildRust(rust)
+        
+        // temporarily moved to earlier in the pipeline
+        nodejs = build('nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs', 'vcx')
+        vcx_nodejs = build('vcx-nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs-wrapper', 'vcx', '--no-cache')
+        testNodeWrapper(vcx_nodejs)
 
 	    // test rust
 	    testRust(rust)
@@ -49,14 +54,13 @@ node('ubuntu') {
         updateSo(rust)
 
         // test the npm package and create the npm gzip artifact
-        nodejs = build('nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs', 'vcx')
-        vcx_nodejs = build('vcx-nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs-wrapper', 'vcx', '--no-cache')
+        
 		vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', 'vcx', '--no-cache')
         
         // test python wrapper
 		// this image must be built after the libvcx.so is built
         testPythonWrapper(vcx_python)
-        testNodeWrapper(vcx_nodejs)
+        
 
         if (env.BRANCH_NAME == "master") {
             // create the debian of the library
@@ -189,11 +193,13 @@ def createDeb(envn) {
 // Creates the tgz file that can be 'npm install'-ed.
 def testNodeWrapper(envn) {
     stage ('Test Node Wrapper'){
-	    envn.inside {
-            sh 'ls'
-            sh 'ls ci'
-            sh 'ci/test_wrapper.sh'
-            archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
+        dir ('vcx/wrappers/node'){
+	        envn.inside {
+                sh 'ls'
+                sh 'ls ci'
+                sh 'ci/test_wrapper.sh'
+                archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
+            }
         }
     }
 }
