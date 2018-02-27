@@ -134,7 +134,7 @@ impl ProofMessage {
     }
 
     pub fn get_proof_attributes(&self) -> Result<String, u32> {
-        info!("retrieving proof attributes");
+        debug!("retrieving proof attributes");
         let mut claim_attrs = self.get_revealed_attrs()?;
         claim_attrs.append(self.get_predicates()?.as_mut());
         claim_attrs.append(self.get_self_attested_attrs()?.as_mut());
@@ -153,7 +153,7 @@ impl ProofMessage {
     }
 
     fn get_revealed_attrs(&self) -> Result<Vec<ClaimData>, u32> {
-        info!("retrieving revealed attributes");
+        debug!("retrieving revealed attributes");
 
         self.requested_proof.revealed_attrs.iter().map(|(attr_id, attr_data)| {
             let claim_uuid: String = serde_json::from_value(attr_data[0].clone())
@@ -180,7 +180,7 @@ impl ProofMessage {
     }
 
     fn get_predicates(&self) -> Result<Vec<ClaimData>, u32> {
-        info!("retrieving predicates");
+        debug!("retrieving predicates");
         // Collect all unique claim_uuid's which contain predicate values
         let mut claims_with_predicates: HashSet<String> = HashSet::new();
         let mut claim_data: Vec<ClaimData> = Vec::new();
@@ -200,7 +200,7 @@ impl ProofMessage {
     }
 
     fn get_self_attested_attrs(&self) -> Result<Vec<ClaimData>, u32> {
-        info!("retrieving self attested attributes");
+        debug!("retrieving self attested attributes");
 
         self.requested_proof.self_attested_attrs.iter().map(|(key, val)| {
             let revealed_val = serde_json::to_value(val).map_err(|err|{
