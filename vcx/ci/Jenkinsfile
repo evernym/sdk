@@ -191,16 +191,15 @@ def createDeb(envn) {
 // Creates the tgz file that can be 'npm install'-ed.
 def testNodeWrapper(envn) {
     stage ('Test Node Wrapper'){
-        dir ('/node'){
-	        envn.inside {
-                sh 'npm -v'
-                sh 'npm run lint'
-                sh 'npm run compile'
-                sh 'npm test'
-                sh 'npm pack'
-                archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
-            }
+        envn.inside {
+            sh 'npm -v'
+            sh 'npm run lint'
+            sh 'npm run compile'
+            sh 'npm test'
+            sh 'npm pack'
+            archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
         }
+    
     }
 }
 
