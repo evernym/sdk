@@ -41,13 +41,8 @@ node('ubuntu') {
         
         // build and test the so file
         buildRust(rust)
-        
-        // temporarily moved to earlier in the pipeline
-        nodejs = build('nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs', 'vcx')
-        vcx_nodejs = build('vcx-nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs-wrapper', 'vcx', '--no-cache')
-        testNodeWrapper(vcx_nodejs)
 
-	    // test rust
+        // test rust
 	    testRust(rust)
 
         // update the so file to have version
@@ -56,9 +51,13 @@ node('ubuntu') {
         // test the npm package and create the npm gzip artifact
         
 		vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', 'vcx', '--no-cache')
+        nodejs = build('nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs', 'vcx')
+        vcx_nodejs = build('vcx-nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs-wrapper', 'vcx', '--no-cache')
+        
+        // test nodejs wrapper
+        testNodeWrapper(vcx_nodejs)
         
         // test python wrapper
-		// this image must be built after the libvcx.so is built
         testPythonWrapper(vcx_python)
         
 
@@ -195,9 +194,11 @@ def testNodeWrapper(envn) {
     stage ('Test Node Wrapper'){
         dir ('vcx/wrappers/node'){
 	        envn.inside {
-                sh 'ls'
-                sh 'ls ci'
-                sh 'ci/test_wrapper.sh'
+                sh 'npm -v'
+                sh 'npm run lint'
+                sh 'npm run compile'
+                sh 'npm test'
+                sh 'npm pack'
                 archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
             }
         }
