@@ -122,13 +122,16 @@ impl ProofMessage {
     }
 
     pub fn to_string(&self) -> Result<String, u32> {
-        serde_json::to_string(&self).or(Err(error::INVALID_PROOF.code_num))
+        serde_json::to_string(&self).map_err(|err| {
+            error!("{} with: {}", error::INVALID_PROOF.message, err);
+        error::INVALID_PROOF.code_num
+        })
     }
 
     pub fn from_str(payload:&str) -> Result<ProofMessage, u32> {
         serde_json::from_str(payload)
             .map_err(|err| {
-                warn!("{} with serde error: {}",error::INVALID_PROOF.message, err);
+                error!("{} with serde error: {}",error::INVALID_PROOF.message, err);
                 error::INVALID_PROOF.code_num
             })
     }
@@ -139,8 +142,10 @@ impl ProofMessage {
         claim_attrs.append(self.get_predicates()?.as_mut());
         claim_attrs.append(self.get_self_attested_attrs()?.as_mut());
         //Todo: retrieve unrevealed attributes
-        serde_json::to_string(&claim_attrs)
-            .or(Err(error::INVALID_JSON.code_num))
+        serde_json::to_string(&claim_attrs).map_err(|err| {
+            error!("Err {}. Proof Attributes had invalid json.");
+            error::INVALID_JSON.code_num
+        })
     }
 
     pub fn get_claim_info(&self) -> Result<Vec<ClaimData>, u32> {
@@ -158,7 +163,7 @@ impl ProofMessage {
         self.requested_proof.revealed_attrs.iter().map(|(attr_id, attr_data)| {
             let claim_uuid: String = serde_json::from_value(attr_data[0].clone())
                 .map_err(|err| {
-                    warn!("{} with serde error: {}",error::INVALID_PROOF_CLAIM_DATA.message, err);
+                    error!("{} with serde error: {}",error::INVALID_PROOF_CLAIM_DATA.message, err);
                     error::INVALID_PROOF_CLAIM_DATA.code_num
                 })?;
             let claim_info = match self.proofs.get(&claim_uuid) {
@@ -204,16 +209,13 @@ impl ProofMessage {
 
         self.requested_proof.self_attested_attrs.iter().map(|(key, val)| {
             let revealed_val = serde_json::to_value(val).map_err(|err|{
-                warn!("{} with serde error: {}",error::INVALID_SELF_ATTESTED_VAL.message, err);
+                error!("{} with serde error: {}",error::INVALID_SELF_ATTESTED_VAL.message, err);
                 error::INVALID_SELF_ATTESTED_VAL.code_num
             })?;
-            Ok(ClaimData::create(None,
-                              None,
-                              None,
-                              Some(Attr::create(key,
-                                                &revealed_val,
-                                                "self_attested",
-                                                None))))
+            Ok(ClaimData::create(None, None, None, Some(Attr::create(key,
+                                                                     &revealed_val,
+                                                                     "self_attested",
+                                                                     None))))
         }).collect::<Result<Vec<ClaimData>, u32>>()
     }
 }
@@ -280,8 +282,10 @@ impl EqAndGeProof {
         self.ge_proofs.iter().map(|ge_proof| {
             let predicate = &ge_proof.predicate;
             let value = serde_json::to_value(predicate.value)
-                .map_err(|err| error::INVALID_PREDICATE.code_num)?;
-
+                .map_err(|err| {
+                    error!("{} with: {}", error::INVALID_PREDICATE.message, err);
+                    error::INVALID_PREDICATE.code_num
+                })?;
 
             Ok(ClaimData::create(predicate.schema_seq_no,
                                  predicate.issuer_did.clone(),

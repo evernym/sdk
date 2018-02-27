@@ -81,7 +81,7 @@ pub trait ClaimDefCommon {
                 self.extract_result(&x)
             },
             Err(y) => {
-                warn!("Indy send request for claim_def failed with err: {}", y);
+                error!("Indy send request for claim_def failed with err: {}", y);
                 return Err(y)
             },
         }
@@ -117,7 +117,10 @@ pub trait ClaimDefCommon {
             claim_def["result"]["data"]["revocation"] = serde_json::Value::Null;
         }
 
-        serde_json::to_string(&claim_def["result"]).map_err(|_| error::INVALID_JSON.code_num)
+        serde_json::to_string(&claim_def["result"]).map_err(|err| {
+            error!("Error {}. Claim Definition result had invalid json.",  err);
+            error::INVALID_JSON.code_num
+        })
     }
 }
 
@@ -196,7 +199,10 @@ impl CreateClaimDef {
 
 impl ClaimDefinitionData {
     pub fn to_string(&self) -> Result<String, u32> {
-        serde_json::to_string(&self).map_err(|err| error::INVALID_JSON.code_num)
+        serde_json::to_string(&self).map_err(|err| {
+            error!("Err {}. ClaimDefinitionData failed on to_string().");
+            error::INVALID_JSON.code_num
+        })
     }
 }
 
@@ -216,7 +222,7 @@ impl ClaimDefinition {
 
     fn from_str(claim_def: &str) -> Result<Self, u32> {
         serde_json::from_str(claim_def).map_err(|err| {
-            warn!("{} with serde error: {}",error::INVALID_CLAIM_DEF_JSON.message, err);
+            error!("{} with serde error: {}",error::INVALID_CLAIM_DEF_JSON.message, err);
             error::INVALID_CLAIM_DEF_JSON.code_num
         })
     }
@@ -234,7 +240,7 @@ pub fn create_new_claimdef(source_id: String,
                                         schema_seq_no,
                                         &issuer_did,
                                         Some(SigTypes::CL)) {
-        warn!("Claim Definition already on Ledger");
+        error!("Claim Definition already on Ledger");
         return Err(error::CLAIM_DEF_ALREADY_CREATED.code_num)
     }
     debug!("creating claimdef with source_id: {}, name: {}, issuer_did: {}, sequence_no: {}", source_id, claimdef_name, issuer_did, schema_seq_no);
@@ -278,7 +284,7 @@ fn create_and_store_claim_def(schema_json: &str,
                                        sig_type,
                                        create_non_revoc)
         .map_err(|err| {
-            warn!("{} with: {}", error::CREATE_CLAIM_DEF_ERR.message, err);
+            error!("{} with: {}", error::CREATE_CLAIM_DEF_ERR.message, err);
             error::CREATE_CLAIM_DEF_ERR.code_num
         })
 }
@@ -306,7 +312,10 @@ pub fn to_string(handle: u32) -> Result<String, u32> {
 
 pub fn from_string(claimdef_data: &str) -> Result<u32, u32> {
     let derived_claimdef: CreateClaimDef = serde_json::from_str(claimdef_data)
-        .map_err(|err| error::INVALID_CLAIM_DEF_JSON.code_num)?;
+        .map_err(|err| {
+            error!("{} with: {}", error::INVALID_CLAIM_DEF_JSON.message, err);
+            error::INVALID_CLAIM_DEF_JSON.code_num
+        })?;
     let new_handle = derived_claimdef.handle;
 
     if is_valid_handle(new_handle) {return Ok(new_handle);}
