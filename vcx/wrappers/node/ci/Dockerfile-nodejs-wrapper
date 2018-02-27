@@ -12,4 +12,5 @@ RUN chmod 755 /node
 WORKDIR /node
 RUN npm install typescript-compiler
 RUN npm install
+USER vcxnode
 
