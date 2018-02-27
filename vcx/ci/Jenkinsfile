@@ -37,8 +37,7 @@ node(NODETYPE) {
         stage ('Checkout'){
             checkout scm
         }
-        sh 'cd vcx'
-        libindy = build('libindy', 'ci/Dockerfile-libindy', '.')
+        libindy = build('libindy', 'vcx/ci/Dockerfile-libindy', 'vcx')
         rust = build('rust', 'ci/ubuntu.dockerfile', '.')
 		
         // update the versions in the toml file and package.json
@@ -54,9 +53,9 @@ node(NODETYPE) {
         updateSo(rust)
 
         // test the npm package and create the npm gzip artifact
-        nodejs = build('nodejs', 'wrappers/node/ci/Dockerfile-nodejs', '.')
-        vcx_nodejs = build('vcx-nodejs', 'wrappers/node/ci/Dockerfile-nodejs-wrapper', '.', '--no-cache')
-		vcx_python = build('vcx-python', 'wrappers/python/ci/Dockerfile-python-wrapper', '.', '--no-cache')
+        nodejs = build('nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs', 'vcx')
+        vcx_nodejs = build('vcx-nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs-wrapper', 'vcx', '--no-cache')
+		vcx_python = build('vcx-python', 'vcx/wrappers/python/ci/Dockerfile-python-wrapper', 'vcx', '--no-cache')
         
         // test python wrapper
 		// this image must be built after the libvcx.so is built
