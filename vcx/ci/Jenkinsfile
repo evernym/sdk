@@ -191,7 +191,7 @@ def createDeb(envn) {
 // Creates the tgz file that can be 'npm install'-ed.
 def testNodeWrapper(envn) {
     stage ('Test Node Wrapper'){
-        envn.inside {
+        envn.inside('-w /node') {
             sh 'npm -v'
             sh 'ls'
             sh 'npm run lint'
