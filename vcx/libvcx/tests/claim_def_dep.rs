@@ -468,7 +468,7 @@ mod tests {
         self::vcx::settings::set_defaults();
         let wallet_key = String::from("");
         let home = home_dir().unwrap();
-        let wallet_name = "my_real_wallet";
+        let wallet_name = "temp4";
         let wallet_dir = format!(".indy_client/wallet/{}/sqlite.db", wallet_name);
         let wallet_dir = Path::new(&wallet_dir);
         let wallet_db = home.join(wallet_dir);

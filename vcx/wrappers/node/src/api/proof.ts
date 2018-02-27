@@ -46,13 +46,20 @@ export interface IClaimInfo {
   name: string,
   value: string,
   type: ProofFieldType,
+  predicate_type?: PredicateTypes
 }
 
 export enum ProofFieldType {
   Revealed = 'revealed',
   Unrevealed = 'unrevealed',
   SelfAttested = 'self_attested',
-  Predicates = 'predicates'
+  Predicate = 'predicate'
+}
+
+export enum PredicateTypes {
+  GE = 'GE',
+  LE = 'LE',
+  EQ = 'EQ'
 }
 
 /**

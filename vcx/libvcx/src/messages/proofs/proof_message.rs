@@ -126,12 +126,11 @@ impl ProofMessage {
     }
 
     pub fn from_str(payload:&str) -> Result<ProofMessage, u32> {
-        match serde_json::from_str(payload) {
-            Ok(p) => Ok(p),
-            Err(err) => {
+        serde_json::from_str(payload)
+            .map_err(|err| {
                 warn!("{} with serde error: {}",error::INVALID_PROOF.message, err);
-                Err(error::INVALID_PROOF.code_num)},
-        }
+                error::INVALID_PROOF.code_num
+            })
     }
 
     pub fn get_proof_attributes(&self) -> Result<String, u32> {
@@ -157,10 +156,11 @@ impl ProofMessage {
         info!("retrieving revealed attributes");
 
         self.requested_proof.revealed_attrs.iter().map(|(attr_id, attr_data)| {
-            let claim_uuid: String = match serde_json::from_value(attr_data[0].clone()) {
-                Ok(x) => x,
-                Err(_) => return Err(error::INVALID_PROOF_CLAIM_DATA.code_num)
-            };
+            let claim_uuid: String = serde_json::from_value(attr_data[0].clone())
+                .map_err(|err| {
+                    warn!("{} with serde error: {}",error::INVALID_PROOF_CLAIM_DATA.message, err);
+                    error::INVALID_PROOF_CLAIM_DATA.code_num
+                })?;
             let claim_info = match self.proofs.get(&claim_uuid) {
                 Some(x) => x,
                 None => return Err(error::INVALID_PROOF_CLAIM_DATA.code_num)
@@ -203,10 +203,10 @@ impl ProofMessage {
         info!("retrieving self attested attributes");
 
         self.requested_proof.self_attested_attrs.iter().map(|(key, val)| {
-            let revealed_val = match serde_json::to_value(val) {
-                Ok(x) => x,
-                Err(_) => return Err(error::INVALID_SELF_ATTESTED_VAL.code_num)
-            };
+            let revealed_val = serde_json::to_value(val).map_err(|err|{
+                warn!("{} with serde error: {}",error::INVALID_SELF_ATTESTED_VAL.message, err);
+                error::INVALID_SELF_ATTESTED_VAL.code_num
+            })?;
             Ok(ClaimData::create(None,
                               None,
                               None,
@@ -279,10 +279,9 @@ impl EqAndGeProof {
     pub fn get_predicates_from_claim(&self, uuid: &str) -> Result<Vec<ClaimData>, u32> {
         self.ge_proofs.iter().map(|ge_proof| {
             let predicate = &ge_proof.predicate;
-            let value = match serde_json::to_value(predicate.value) {
-                Ok(x) => x,
-                Err(_) => return Err(error::INVALID_PREDICATE.code_num)
-            };
+            let value = serde_json::to_value(predicate.value)
+                .map_err(|err| error::INVALID_PREDICATE.code_num)?;
+
 
             Ok(ClaimData::create(predicate.schema_seq_no,
                                  predicate.issuer_did.clone(),
