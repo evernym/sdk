@@ -35,17 +35,18 @@ node('sdk') {
         }
         libindy = build('libindy', 'vcx/ci/Dockerfile-libindy', 'vcx')
         rust = build('rust', 'vcx/ci/ubuntu.dockerfile', 'vcx')
-		
+		// test nodejs wrapper
+        nodejs = build('nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs', 'vcx')
+        vcx_nodejs = build('vcx-nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs-wrapper', 'vcx', '--no-cache')
+        testNodeWrapper(vcx_nodejs)
+        
         // update the versions in the toml file and package.json
         updateVersions(rust)      
         
         // build and test the so file
         buildRust(rust)
         
-        // test nodejs wrapper
-        nodejs = build('nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs', 'vcx')
-        vcx_nodejs = build('vcx-nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs-wrapper', 'vcx', '--no-cache')
-        testNodeWrapper(vcx_nodejs)
+        
         
         // test rust
 	    testRust(rust)
