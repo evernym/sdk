@@ -194,6 +194,8 @@ def createDeb(envn) {
 def testNodeWrapper(envn) {
     stage ('Test Node Wrapper'){
 	    envn.inside {
+            sh 'ls'
+            sh 'ls ci'
             sh 'ci/test_wrapper.sh'
             archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
         }
