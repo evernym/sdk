@@ -1,6 +1,6 @@
 #!groovy
 
-def TESTING = false
+def TESTING = true
 def NODETYPE = 'ubuntu'
 if (TESTING) {
 	NODETYPE  = 'sdk'
