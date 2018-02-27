@@ -193,7 +193,6 @@ def testNodeWrapper(envn) {
     stage ('Test Node Wrapper'){
         dir('vcx/wrappers/node'){
             envn.inside() {
-                sh 'npm install typescript-compiler'
                 sh 'npm install'
                 sh 'npm -v'
                 sh 'ls'

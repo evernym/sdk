@@ -1,6 +1,7 @@
 # Development
 FROM nodejs
 # Assumes we are in the ./vcx directory
+RUN npm install typescript-compiler
 COPY libvcx/target/debug/libvcx.so /usr/lib
 
 
