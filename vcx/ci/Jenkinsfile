@@ -2,7 +2,7 @@
 
 def TESTING = true
 def NODETYPE = 'ubuntu'
-if TESTING {
+if (TESTING) {
 	NODETYPE  = 'sdk'
 }
 
@@ -55,8 +55,8 @@ node(NODETYPE) {
 
         // test the npm package and create the npm gzip artifact
         nodejs = build('nodejs', 'wrappers/node/ci/Dockerfile-nodejs', '.')
-        vcx-nodejs = build('vcx-nodejs', 'wrappers/node/ci/Dockerfile-nodejs-wrapper', '.')
-		vcx-python = build('vcx-python', 'wrappers/python/ci/Dockerfile-python-wrapper', '.')
+        vcx-nodejs = build('vcx-nodejs', 'wrappers/node/ci/Dockerfile-nodejs-wrapper', '.', '--no-cache')
+		vcx-python = build('vcx-python', 'wrappers/python/ci/Dockerfile-python-wrapper', '.', '--no-cache')
         
         // test python wrapper
 		// this image must be built after the libvcx.so is built
