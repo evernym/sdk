@@ -191,14 +191,18 @@ def createDeb(envn) {
 // Creates the tgz file that can be 'npm install'-ed.
 def testNodeWrapper(envn) {
     stage ('Test Node Wrapper'){
-        envn.inside('-w /node') {
-            sh 'npm -v'
-            sh 'ls'
-            sh 'npm run lint'
-            sh 'npm run compile'
-            sh 'npm test'
-            sh 'npm pack'
-            archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
+        dir('vcx/wrappers/node')
+            envn.inside() {
+                sh 'npm install typescript-compiler'
+                sh 'npm install'
+                sh 'npm -v'
+                sh 'ls'
+                sh 'npm run lint'
+                sh 'npm run compile'
+                sh 'npm test'
+                sh 'npm pack'
+                archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
+            }
         }
     
     }
