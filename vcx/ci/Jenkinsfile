@@ -27,7 +27,7 @@ def build(name, file, context='.', customParams = '') {
 // }
 
 
-node('ubuntu') {
+node('sdk') {
 
     try {
         stage ('Checkout'){
