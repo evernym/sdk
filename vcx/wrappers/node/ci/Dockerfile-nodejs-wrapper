@@ -10,7 +10,8 @@ COPY wrappers/node/ /node
 RUN chown -R vcxnode:vcxnode /node
 RUN chmod 755 /node
 WORKDIR /node
+USER vcxnode
 RUN npm install typescript-compiler
 RUN npm install
-USER vcxnode
+
 
