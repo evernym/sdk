@@ -27,7 +27,7 @@ __pycache__/
 *.so
 
 # dat files for demo of python wrapper
-.dat
+*.dat
 
 # png file for demo of python wrapper
-.png
+*.png

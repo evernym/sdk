@@ -4,20 +4,22 @@ import os
 import sys
 ENTERPRISE_DID = '2hoqvcwupRTUNkXn6ArYzs'
 config = {
-    "agency_pairwise_did": "7o2xT9Qtp83cJUJMUBTF3M",
-    "agency_pairwise_verkey": "4hmBc54YanNhQHTD66u6XDp1NSgQm1BacPFbE7b5gtat",
-    "agent_endpoint": "https://enym-eagency.pdev.evernym.com",
-    "agent_enterprise_verkey": "By1CvKuLFRRdqMyGsmu8naVQQQfSH4MYna4K7d4KDvfy",
-    "agent_pairwise_did": "NUHiPAuSi8XoPRPGnECPUo",
-    "agent_pairwise_verkey": "Chj1oQYdmbTXKG96Fpo8C2sd6fRrt9UyCrbmuo4vzroK",
-    "enterprise_did": "2hoqvcwupRTUNkXn6ArYzs",
-    "enterprise_did_agent": "M7uZU89SUdsav7i4hVZtXp",
-    "enterprise_name": "Planet Express",
-    "enterprise_verkey": "vrWGArMA3toVoZrYGSAMjR2i9KjBS66bZWyWuYJJYPf",
-    "genesis_path": "/var/lib/indy/verity-dev/pool_transactions_genesis",
-    "logo_url": "https://robohash.org/default_config",
-    "wallet_name": "my_real_wallet"
+  "agent_enterprise_verkey": "GrcPZrVRjj4Mt2G4d7QLX5VcKRz78gpgV8v3guWtvkpf",
+  "enterprise_did": "2hoqvcwupRTUNkXn6ArYzs",
+  "agent_pairwise_verkey": "3pCoHTVnHf9c2EPcLSrGD7xFMXDKMb8oqbbpugfW13ZT",
+  "agency_pairwise_did": "YRuVCckY6vfZfX9kcQZe3u",
+  "enterprise_name": "<CHANGE_ME>",
+  "enterprise_verkey": "vrWGArMA3toVoZrYGSAMjR2i9KjBS66bZWyWuYJJYPf",
+  "genesis_path": "<CHANGE_ME>",
+  "wallet_name": "my_real_wallet",
+  "agent_endpoint": "https://enym-eagency.pdev.evernym.com",
+  "logo_url": "<CHANGE_ME>",
+  "agent_pairwise_did": "6ASMWNRWjY6LopWeaM3QuK",
+  "agency_pairwise_verkey": "J8Yct6FwmarXjrE2khZesUXRVVSVczSoa9sFaGe6AD2v",
+  "enterprise_did_agent": "W6FfcgDN93B6arvJEJihUw",
+  "wallet_key": "walletkey"
 }
+
 FILENAME = 'utils/vcxconfig.json'
 
 

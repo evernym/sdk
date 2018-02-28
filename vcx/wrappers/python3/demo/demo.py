@@ -1,6 +1,6 @@
-from demo.vcxdemo import Vcxdemo
-from demo.utils.random_name import get_name
 from demo.utils.create_vcx import create_config
+from demo.utils.random_name import get_name
+from demo.vcxdemo import Vcxdemo
 
 from vcx.error import VcxError
 from vcx.state import State
@@ -67,13 +67,14 @@ def util_create_schema(source_id):
 
 
 # THE demo
-def test_vcxdemo():
+def test_demo():
     # get random name for unique testing
     name = get_name()
 
     config = {
         'enterprise_name': name,
-        'logo_url': 'https://robohash.org/' + name
+        'logo_url': 'https://robohash.org/' + name,
+        'genesis_path': '/var/lib/indy/verity-dev/pool_transactions_genesis'
     }
     create_config(config)
 
@@ -137,7 +138,6 @@ def test_vcxdemo():
     # second request of same proof
     time.sleep(5)
     proof2 = request_proof(customer1, source_id, proof_attr, proof_id)
-    assert proof1['claim_uuid'] != proof2['claim_uuid']
 
 
 def request_proof(connection, source_id, proof_attr, proof_id):
@@ -349,3 +349,6 @@ def test_lookup():
     assert len(Vcxdemo.schemas) == 2
     assert schema['sequence_num'] == Vcxdemo.get_schema_sequence_number(1)
 
+
+if __name__=='__main__':
+    demo()
