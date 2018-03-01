@@ -141,6 +141,6 @@ names = [
 ]
 
 
-def get_name():
+def get_random_name():
     i = random.randint(1, len(names)-1)
     return names[i]

@@ -226,8 +226,8 @@ class Vcxdemo(VCXBase):
 
     def wait_for_proof_state(self, proof_id, target_state):
         proof = self.get_proof_request(proof_id)
-        # Vcxdemo.get_loop().run_until_complete(asyncio.gather(self._wait_for_proof_state(proof_id, target_state)))
-        Vcxdemo.get_loop().run_until_complete(asyncio.gather(wait_for_state(proof, target_state)))
+        Vcxdemo.get_loop().run_until_complete(asyncio.gather(self._wait_for_proof_state(proof_id, target_state)))
+        # Vcxdemo.get_loop().run_until_complete(asyncio.gather(wait_for_state(proof, target_state)))
 
     def retrieve_proof(self, proof_id):
         proof = self.get_proof_request(proof_id)
