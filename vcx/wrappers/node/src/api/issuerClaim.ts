@@ -44,9 +44,10 @@ export interface IClaimData {
   handle: number
   schema_seq_no: number
   claim_attributes: string
-  claim_name: string,
+  claim_name: string
   issuer_did: string
   state: StateType
+  msg_uid: string
 }
 
 /**
