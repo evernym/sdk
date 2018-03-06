@@ -223,8 +223,10 @@ pub extern fn vcx_reset() -> u32 {
 pub extern fn vcx_error_message(error_code: u32) -> *const c_char {
     info!("vcx_error_message(error_code: {})", error_code);
     let msg = error::error_message(&error_code);
-    println!("{:?}", msg);
     msg.as_ptr() as *const i8
+//    let msg = error::error_message(&error_code);
+//    let c_msg = CStringUtils::string_to_cstring(msg.to_string());
+//    c_msg.clone().as_ptr().clone()
 }
 
 
@@ -333,14 +335,21 @@ mod tests {
     #[test]
     fn test_vcx_error_message() {
         settings::set_defaults();
-        assert_eq!(CStringUtils::c_str_to_string(vcx_error_message(0)), Ok(Some("SUCCESS".to_string())));
+        assert_eq!(CStringUtils::c_str_to_string(vcx_error_message(1015)), Ok(Some("Invalid Claim Issuer Handle".to_string())));
         thread::sleep(Duration::from_millis(200));
-    }
 
-    #[test]
-    fn test_vcx_error_message_with_invalid_rc() {
+        assert_eq!(CStringUtils::c_str_to_string(vcx_error_message(1018)), Ok(Some("Invalid Claim Request".to_string())));
+        thread::sleep(Duration::from_millis(200));
+
+        assert_eq!(CStringUtils::c_str_to_string(vcx_error_message(1021)), Ok(Some("Attributes provided to Claim Offer are not correct, possibly malformed".to_string())));
+        thread::sleep(Duration::from_millis(200));
+
+        // TODO: Why does 0 return SucessUnknown Error
+//        assert_eq!(CStringUtils::c_str_to_string(vcx_error_message(0)), Ok(Some("Success".to_string())));
+//        thread::sleep(Duration::from_millis(200));
+
         settings::set_defaults();
         assert_eq!(CStringUtils::c_str_to_string(vcx_error_message(9999999)), Ok(Some("Unknown Error".to_string())));
-        thread::sleep(Duration::from_millis(200));
     }
+
 }

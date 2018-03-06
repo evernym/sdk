@@ -185,6 +185,9 @@ mod tests {
 
         let msg = error_message(&1002);
         assert_eq!(msg, "Error with Connection");
+
+        let msg = error_message(&0);
+        assert_eq!(msg, "Success");
     }
 
     #[test]
