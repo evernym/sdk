@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 use std::fmt;
+use std::ffi::CString;
+use std::sync::Mutex;
 
 // **** DEFINE NEW ERRORS HERE ****
 // STEP 1: create new public static instance of Error, assign it a new unused number and
@@ -57,80 +59,89 @@ pub static INVALID_SELF_ATTESTED_VAL: Error = Error{code_num: 1046, message: "Se
 pub static INVALID_PREDICATE: Error = Error{code_num: 1047, message: "Predicate in proof is invalid"};
 
 lazy_static! {
-    static ref ERROR_MESSAGES: HashMap<u32, &'static str> = {
-        let mut m = HashMap::new();
-        insert_message(&mut m, &SUCCESS);
-        insert_message(&mut m, &UNKNOWN_ERROR);
-        insert_message(&mut m, &CONNECTION_ERROR);
-        insert_message(&mut m, &INVALID_CONNECTION_HANDLE);
-        insert_message(&mut m, &INVALID_CONFIGURATION);
-        insert_message(&mut m, &NOT_READY);
-        insert_message(&mut m, &NO_ENDPOINT);
+    static ref ERROR_MAP: Mutex<HashMap<u32, Box<DynamicError>>> = {
+        let errors:Mutex<HashMap<u32, Box<DynamicError>>> = Mutex::new(HashMap::new());
+        {
+            let mut m = errors.lock().unwrap();
+            insert_message(&mut m, &SUCCESS);
+            insert_message(&mut m, &UNKNOWN_ERROR);
+            insert_message(&mut m, &CONNECTION_ERROR);
+            insert_message(&mut m, &INVALID_CONNECTION_HANDLE);
+            insert_message(&mut m, &INVALID_CONFIGURATION);
+            insert_message(&mut m, &NOT_READY);
+            insert_message(&mut m, &NO_ENDPOINT);
         insert_message(&mut m, &INVALID_OPTION);
-        insert_message(&mut m, &INVALID_DID);
-        insert_message(&mut m, &INVALID_VERKEY);
-        insert_message(&mut m, &POST_MSG_FAILURE);
-        insert_message(&mut m, &INVALID_NONCE);
-        insert_message(&mut m, &INVALID_KEY_DELEGATE);
-        insert_message(&mut m, &INVALID_URL);
-        insert_message(&mut m, &NOT_BASE58);
-        insert_message(&mut m, &INVALID_ISSUER_CLAIM_HANDLE);
-        insert_message(&mut m, &INVALID_JSON);
-        insert_message(&mut m, &INVALID_MESSAGES);
-        insert_message(&mut m, &INVALID_MSGPACK);
-        insert_message(&mut m, &INVALID_ATTRIBUTES_STRUCTURE);
-        insert_message(&mut m, &INVALID_PROOF_HANDLE);
-        insert_message(&mut m, &INVALID_CLAIM_REQUEST);
-        insert_message(&mut m, &BIG_NUMBER_ERROR);
-        insert_message(&mut m, &INVALID_PROOF);
-        insert_message(&mut m, &INVALID_GENESIS_TXN_PATH);
-        insert_message(&mut m, &CREATE_POOL_CONFIG);
-        insert_message(&mut m, &INVALID_PROOF_CLAIM_DATA);
-        insert_message(&mut m, &CREATE_POOL_CONFIG_PARAMETERS);
-        insert_message(&mut m, &INDY_SUBMIT_REQUEST_ERR);
-        insert_message(&mut m, &BUILD_CLAIM_DEF_REQ_ERR);
-        insert_message(&mut m, &NO_POOL_OPEN);
-        insert_message(&mut m, &INVALID_SCHEMA);
-        insert_message(&mut m, &FAILED_PROOF_COMPLIANCE);
-        insert_message(&mut m, &INVALID_HTTP_RESPONSE);
-        insert_message(&mut m, &CREATE_CLAIM_DEF_ERR);
-        insert_message(&mut m, &UNKNOWN_LIBINDY_ERROR);
-        insert_message(&mut m, &TIMEOUT_LIBINDY_ERROR);
-        insert_message(&mut m, &INVALID_CLAIM_DEF_JSON);
-        insert_message(&mut m, &INVALID_CLAIM_DEF_HANDLE);
-        insert_message(&mut m, &CLAIM_DEF_ALREADY_CREATED);
-        insert_message(&mut m, &INVALID_SCHEMA_SEQ_NO);
-        insert_message(&mut m, &INVALID_SCHEMA_CREATION);
-        insert_message(&mut m, &INVALID_SCHEMA_HANDLE);
-        insert_message(&mut m, &ALREADY_INITIALIZED);
-        insert_message(&mut m, &INVALID_INVITE_DETAILS);
-        insert_message(&mut m, &INVALID_MASTER_SECRET);
-        m
+            insert_message(&mut m, &INVALID_DID);
+            insert_message(&mut m, &INVALID_VERKEY);
+            insert_message(&mut m, &POST_MSG_FAILURE);
+            insert_message(&mut m, &INVALID_NONCE);
+            insert_message(&mut m, &INVALID_KEY_DELEGATE);
+            insert_message(&mut m, &INVALID_URL);
+            insert_message(&mut m, &NOT_BASE58);
+            insert_message(&mut m, &INVALID_ISSUER_CLAIM_HANDLE);
+            insert_message(&mut m, &INVALID_JSON);
+            insert_message(&mut m, &INVALID_MESSAGES);
+            insert_message(&mut m, &INVALID_MSGPACK);
+            insert_message(&mut m, &INVALID_ATTRIBUTES_STRUCTURE);
+            insert_message(&mut m, &INVALID_PROOF_HANDLE);
+            insert_message(&mut m, &INVALID_CLAIM_REQUEST);
+            insert_message(&mut m, &BIG_NUMBER_ERROR);
+            insert_message(&mut m, &INVALID_PROOF);
+            insert_message(&mut m, &INVALID_GENESIS_TXN_PATH);
+            insert_message(&mut m, &CREATE_POOL_CONFIG);
+            insert_message(&mut m, &INVALID_PROOF_CLAIM_DATA);
+            insert_message(&mut m, &CREATE_POOL_CONFIG_PARAMETERS);
+            insert_message(&mut m, &INDY_SUBMIT_REQUEST_ERR);
+            insert_message(&mut m, &BUILD_CLAIM_DEF_REQ_ERR);
+            insert_message(&mut m, &NO_POOL_OPEN);
+            insert_message(&mut m, &INVALID_SCHEMA);
+            insert_message(&mut m, &FAILED_PROOF_COMPLIANCE);
+            insert_message(&mut m, &INVALID_HTTP_RESPONSE);
+            insert_message(&mut m, &CREATE_CLAIM_DEF_ERR);
+            insert_message(&mut m, &UNKNOWN_LIBINDY_ERROR);
+            insert_message(&mut m, &TIMEOUT_LIBINDY_ERROR);
+            insert_message(&mut m, &INVALID_CLAIM_DEF_JSON);
+            insert_message(&mut m, &INVALID_CLAIM_DEF_HANDLE);
+            insert_message(&mut m, &CLAIM_DEF_ALREADY_CREATED);
+            insert_message(&mut m, &INVALID_SCHEMA_SEQ_NO);
+            insert_message(&mut m, &INVALID_SCHEMA_CREATION);
+            insert_message(&mut m, &INVALID_SCHEMA_HANDLE);
+            insert_message(&mut m, &ALREADY_INITIALIZED);
+            insert_message(&mut m, &INVALID_INVITE_DETAILS);
+            insert_message(&mut m, &INVALID_MASTER_SECRET);
+        }
+        errors
     };
 }
 
 // ******* END *******
 
 
-
-
 // Helper function for static defining of error messages. Does limited checking that it can.
-fn insert_message(map: &mut HashMap<u32, &'static str>, error: &Error) {
+fn insert_message(map: &mut HashMap<u32, Box<DynamicError>>, error: &'static Error) {
     if map.contains_key(&error.code_num) {
         panic!("Error Code number was repeated which is not allowed! (likely a copy/paste error)")
     }
-    map.insert(error.code_num, error.message);
+    let my_error = DynamicError{ code_num: error.code_num, message: String::from(error.message), c_message: CString::new(error.message).unwrap()};
+    map.insert(error.code_num, Box::new(my_error));
 
 }
 
+
 pub struct Error {
     pub code_num: u32,
-    pub message: &'static str
+    pub message: &'static str,
+}
+
+pub struct DynamicError {
+    pub code_num: u32,
+    pub message: String,
+    pub c_message: CString,
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let msg = error_message(&self.code_num);
+        let msg = error_message(self.code_num);
         write!(f, "{}: (Error Num:{})", msg, &self.code_num)
     }
 }
@@ -140,16 +151,31 @@ impl fmt::Display for Error {
 ///
 /// Intended for use with wrappers that receive an error code without a message through a
 /// c-callable interface.
-pub fn error_message(code_num:&u32) -> &'static str {
-    match ERROR_MESSAGES.get(code_num) {
-        Some(msg) => msg,
+pub fn error_message<'a>(code_num:u32) -> &'a str {
+    match ERROR_MAP.lock().unwrap().get(&code_num) {
+        Some(msg) => &msg.message,
         None => UNKNOWN_ERROR.message
     }
 }
 
+//fn error_msg_as_cstring(code_num:&u32) -> Option<&CString> {
+//
+//   let mut msg = match ERROR_MAP.lock().unwrap().get_mut(code_num) {
+//        Some(msg) => {
+//            msg
+//        },
+//        None => return None
+//   };
+//   if msg.c_message == None {
+//       msg.c_message = Some(&CString::new("").unwrap())
+//   }
+//    msg.c_message
+//}
+
 pub fn error_string(code_num:u32) -> String {
-    match ERROR_MESSAGES.get(&code_num) {
-        Some(msg) => format!("{}-{}", code_num, msg),
+
+    match ERROR_MAP.lock().unwrap().get(&code_num) {
+        Some(error) => format!("{}-{}", code_num, error.message),
         None => format!("{}-{}", code_num, UNKNOWN_ERROR.message),
     }
 }
@@ -176,6 +202,11 @@ mod tests {
     fn test_display_error(){
         let msg = format!("{}",UNKNOWN_ERROR);
         assert_eq!(msg, "Unknown Error: (Error Num:1001)")
+    }
+    #[test]
+    fn test_struct() {
+        let test = TestAttr {attr1: "test", test: CString::new("teststr").unwrap()};
+
     }
 
     #[test]

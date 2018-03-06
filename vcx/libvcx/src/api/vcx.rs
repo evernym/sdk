@@ -222,11 +222,12 @@ pub extern fn vcx_reset() -> u32 {
 #[no_mangle]
 pub extern fn vcx_error_message(error_code: u32) -> *const c_char {
     info!("vcx_error_message(error_code: {})", error_code);
-    let msg = error::error_message(&error_code);
-    msg.as_ptr() as *const i8
 //    let msg = error::error_message(&error_code);
-//    let c_msg = CStringUtils::string_to_cstring(msg.to_string());
-//    c_msg.clone().as_ptr().clone()
+//    msg.as_ptr() as *const i8
+    let msg = error::error_message(error_code);
+    let c_msg = CStringUtils::string_to_cstring(msg.to_string());
+    println!("{:?}", c_msg);
+    c_msg.as_ptr()
 }
 
 
@@ -334,7 +335,9 @@ mod tests {
 
     #[test]
     fn test_vcx_error_message() {
-        settings::set_defaults();
+
+        let msg = vcx_error_message(0);
+        println!("{:?}", msg);
         assert_eq!(CStringUtils::c_str_to_string(vcx_error_message(1015)), Ok(Some("Invalid Claim Issuer Handle".to_string())));
         thread::sleep(Duration::from_millis(200));
 
@@ -345,8 +348,8 @@ mod tests {
         thread::sleep(Duration::from_millis(200));
 
         // TODO: Why does 0 return SucessUnknown Error
-//        assert_eq!(CStringUtils::c_str_to_string(vcx_error_message(0)), Ok(Some("Success".to_string())));
-//        thread::sleep(Duration::from_millis(200));
+        assert_eq!(CStringUtils::c_str_to_string(vcx_error_message(0)), Ok(Some("Success".to_string())));
+        thread::sleep(Duration::from_millis(200));
 
         settings::set_defaults();
         assert_eq!(CStringUtils::c_str_to_string(vcx_error_message(9999999)), Ok(Some("Unknown Error".to_string())));
