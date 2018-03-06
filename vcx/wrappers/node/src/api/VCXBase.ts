@@ -17,7 +17,7 @@ export abstract class VCXBase extends GCWatcher {
   }
 
   static errorMessage (errorCode: number): string {
-    return rustAPI().vcx_error_message(errorCode)
+    return rustAPI().vcx_error_c_message(errorCode)
   }
 
   static async _deserialize<T extends VCXBase = any, P = object> (
