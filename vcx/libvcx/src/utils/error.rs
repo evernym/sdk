@@ -210,7 +210,7 @@ pub fn error_message(code_num:&u32) -> &'static str {
 pub fn error_c_message(code_num:&u32) -> &CString {
     match ERROR_C_MESSAGES.get(code_num) {
         Some(msg) => &msg,
-        None => error_c_message(&1001),
+        None => error_c_message(&UNKNOWN_ERROR.code_num),
     }
 }
 
