@@ -261,7 +261,6 @@ impl Proof {
             return Ok(error::SUCCESS.code_num);
         }
         else if self.state != VcxStateType::VcxStateOfferSent || self.msg_uid.is_empty() || self.prover_did.is_empty() {
-            println!("Offer Sent check");
             return Ok(error::SUCCESS.code_num);
         }
 
@@ -273,6 +272,7 @@ impl Proof {
         };
 
         self.state = VcxStateType::VcxStateAccepted;
+
         match self.proof_validation() {
             Ok(x) => {
                 if self.proof_state != ProofStateType::ProofInvalid {

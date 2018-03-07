@@ -217,6 +217,7 @@ fn get_matching_message(msg_uid:&str, pw_did: &str, pw_vk: &str, agent_did: &str
 
 pub fn get_ref_msg(msg_id: &str, pw_did: &str, pw_vk: &str, agent_did: &str, agent_vk: &str) -> Result<Vec<u8>, u32> {
     let message = get_matching_message(msg_id, pw_did, pw_vk, agent_did, agent_vk)?;
+
     debug!("checking for ref_msg: {:?}", message);
     let msg_id;
     if message.status_code == MessageAccepted.as_string() && !message.ref_msg_id.is_none() {
