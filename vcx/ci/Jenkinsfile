@@ -32,7 +32,7 @@ node('ubuntu-04') {
         // updateSo(rust)
 
         // test python wrapper
-        // vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', 'vcx', '--no-cache')
+        vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', 'vcx', '--no-cache')
         // testPythonWrapper(vcx_python)
 
         // create pip installable artifact
