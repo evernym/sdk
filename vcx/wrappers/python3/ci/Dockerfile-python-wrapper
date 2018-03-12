@@ -13,8 +13,6 @@ ENV PYTHONPATH=$PYTHONPATH:/python3
 
 COPY libvcx/target/debug/libvcx.so /usr/lib
 COPY wrappers/python3/ /python3
-RUN mkdir -p /scripts
-COPY ci/scripts/* /scripts
 WORKDIR /python3/tests
 
 CMD [ "/usr/bin/python3", "-m", "pytest", "-v"]
