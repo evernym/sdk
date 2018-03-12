@@ -29,7 +29,14 @@ node(NODE_CONTEXT) {
         
         // build and test the so file
         buildRust(rust)
-        
+
+        // test python wrapper
+        vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', 'vcx', '--no-cache')
+        testPythonWrapper(vcx_python)
+
+        // create pip installable artifact
+        createPtyhonArtifact(vcx_python)
+
         if (!TEST_MODE) {
             // test rust
 	        testRust(rust)
@@ -38,17 +45,11 @@ node(NODE_CONTEXT) {
             updateSo(rust)
         }
 
-        // test python wrapper
-        vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', 'vcx', '--no-cache')
-        // testPythonWrapper(vcx_python)
-
-        // create pip installable artifact
-        createPtyhonArtifact(vcx_python)
-
+        
         // test nodejs wrapper
-        // nodejs = build('nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs', 'vcx')
-        // vcx_nodejs = build('vcx-nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs-wrapper', 'vcx', '--no-cache')
-        // testNodeWrapper(vcx_nodejs)
+        nodejs = build('nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs', 'vcx')
+        vcx_nodejs = build('vcx-nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs-wrapper', 'vcx', '--no-cache')
+        testNodeWrapper(vcx_nodejs)
 
 		if (env.BRANCH_NAME == "master") {
             // create the debian of the library
@@ -112,10 +113,11 @@ def createPtyhonArtifact(envn) {
     stage ('Building Python Artifact') {
         dir('vcx/wrappers/python3'){
             sh 'echo Building Python Artifact'
+            def scriptsPath = '~/vcx/libvcx/ci/scripts'
             envn.inside {
                 sh 'pwd'
                 sh 'ls -al'
-                sh 'export VCX_VERSION=1.2.3; python3 setup.py sdist'
+                sh "export PYTHONPATH=\$PYTHONPATH:${scriptsPath} python3 setup.py sdist"
                 archiveArtifacts allowEmptyArchive: true, artifacts: 'dist/**/*.tar.gz'
             }
         }

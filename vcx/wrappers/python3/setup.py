@@ -1,9 +1,10 @@
 from setuptools import setup, find_packages
-import os
+from toml_utils import get_version_from_file
+CARGO_FILE= '/home/mark/dev/sdk/vcx/libvcx/Cargo.toml'
 
 setup(
     name='vcx',
-    version=os.environ['VCX_VERSION'],
+    version=get_version_from_file(CARGO_FILE),
     description='Wrapper for libcxs',
     long_description='None...for now',
     author='Devin Fisher, Ryan Marsh, Mark Hadley, Doug Wightman',
