@@ -19,13 +19,6 @@ node('ubuntu-04') {
         libindy = build('libindy', 'vcx/ci/Dockerfile-libindy', 'vcx')
         rust = build('rust', 'vcx/ci/ubuntu.dockerfile', 'vcx')
 
-        // test python wrapper
-        vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', 'vcx', '--no-cache')
-        testPythonWrapper(vcx_python)
-
-        // create pip installable artifact
-        createPtyhonArtifact(vcx_python)
-        
         // update the versions in the toml file and package.json
         updateVersions(rust)      
         
@@ -37,6 +30,13 @@ node('ubuntu-04') {
 
         // update the so file to have version
         // updateSo(rust)
+
+        // test python wrapper
+        // vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', 'vcx', '--no-cache')
+        // testPythonWrapper(vcx_python)
+
+        // create pip installable artifact
+        createPtyhonArtifact(vcx_python)
 
         // test nodejs wrapper
         // nodejs = build('nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs', 'vcx')
