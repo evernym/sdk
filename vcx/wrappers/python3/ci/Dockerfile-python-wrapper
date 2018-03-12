@@ -1,5 +1,5 @@
 # Development
-FROM scripts
+FROM libindy
 
 ARG uid=1000
 
@@ -10,6 +10,9 @@ RUN apt-get install -y python3-pip
 RUN pip3 install pytest qrcode pytest-asyncio
 
 ENV PYTHONPATH=$PYTHONPATH:/python3
+
+RUN mkdir -p /scripts
+COPY ci/scripts/ /scripts
 
 COPY libvcx/target/debug/libvcx.so /usr/lib
 COPY wrappers/python3/ /python3
