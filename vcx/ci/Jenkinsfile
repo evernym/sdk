@@ -20,7 +20,9 @@ node('ubuntu-04') {
         rust = build('rust', 'vcx/ci/ubuntu.dockerfile', 'vcx')
 
         // attempt to fix crossbeam compilation failure on ubuntu-04
-        sh 'cargo clean'
+        rust.inside{
+            'cargo clean'
+        }
 		
         // update the versions in the toml file and package.json
         updateVersions(rust)      
