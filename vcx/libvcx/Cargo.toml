@@ -39,6 +39,7 @@ rmp = "0.8"
 rmp-serde = "0.13.7"
 base64 = "0.8.0"
 openssl = "0.9"
+crossbeam="0.3.2"
 
 [build-dependencies]
 serde = "1.0"
