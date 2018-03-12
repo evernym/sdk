@@ -2,6 +2,11 @@
 
 def dockerfile= 'dockerfile'
 
+def TEST_MODE=false
+def NODE_CONTEXT='ubuntu'
+if TEST_MODE {
+    NODE_CONTEXT='ubuntu-04'
+}
 def getUserUid() {
     return sh(returnStdout: true, script: 'id -u').trim()
 }
@@ -10,7 +15,7 @@ def build(name, file, context='.', customParams = '') {
     return docker.build("$name", "${customParams} --build-arg uid=${getUserUid()} -f $file $context")
 }
 
-node('ubuntu-04') {
+node(NODE_CONTEXT) {
 
     try {
         stage ('Checkout'){
@@ -25,11 +30,13 @@ node('ubuntu-04') {
         // build and test the so file
         buildRust(rust)
         
-        // test rust
-	    // testRust(rust)
-
-        // update the so file to have version
-        // updateSo(rust)
+        if (!TEST_MODE) {
+            // test rust
+	        testRust(rust)
+            
+            // update the so file to have version
+            updateSo(rust)
+        }
 
         // test python wrapper
         vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', 'vcx', '--no-cache')
@@ -108,8 +115,7 @@ def createPtyhonArtifact(envn) {
             envn.inside {
                 sh 'pwd'
                 sh 'ls -al'
-                sh 'export VCX_VERSION=1.2.3'
-                sh 'python3 setup.py sdist'
+                sh 'export VCX_VERSION=1.2.3; python3 setup.py sdist'
                 archiveArtifacts allowEmptyArchive: true, artifacts: 'dist/**/*.tar.gz'
             }
         }
