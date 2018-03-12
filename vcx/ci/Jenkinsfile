@@ -15,12 +15,24 @@ def build(name, file, context='.', customParams = '') {
     return docker.build("$name", "${customParams} --build-arg uid=${getUserUid()} -f $file $context")
 }
 
+def getVcxVersion(envn){
+    envn.inside {
+        version = sh(
+            script: "python3 -c 'import toml_utils; print(toml_utils.get_version_from_file(\"../../libvcx/Cargo.toml\"))'"
+            returnStdout: true
+        )
+        return version
+    }
+}
+
 node(NODE_CONTEXT) {
 
     try {
         stage ('Checkout'){
             checkout scm
         }
+
+        
         libindy = build('libindy', 'vcx/ci/Dockerfile-libindy', 'vcx')
         rust = build('rust', 'vcx/ci/ubuntu.dockerfile', 'vcx')
         scripts = build('scripts', 'vcx/ci/Dockerfile-scripts','vcx', '--no-cache')
@@ -28,28 +40,33 @@ node(NODE_CONTEXT) {
         // update the versions in the toml file and package.json
         updateVersions(rust)      
 
-        // test rust
-	    testRust(rust)
-            
-        // update the so file to have version
-        updateSo(rust)
-        
         // build and test the so file
         buildRust(rust)
 
+        if (!TEST_MODE) {
+            // test rust
+	        testRust(rust)
+        }
+        
+        // update the so file to have version
+        updateSo(rust)
+        
         // test python wrapper
         vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', 'vcx', '--no-cache')
+        VCX_VERSION = getVcxVersion(vcx_python)
         testPythonWrapper(vcx_python)
 
         // create pip installable artifact
-        createPtyhonArtifact(vcx_python)
+        createPtyhonArtifact(vcx_python, VCX_VERSION)
         
-        // test nodejs wrapper
-        nodejs = build('nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs', 'vcx')
-        vcx_nodejs = build('vcx-nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs-wrapper', 'vcx', '--no-cache')
-        testNodeWrapper(vcx_nodejs)
-
-		if (env.BRANCH_NAME == "master") {
+        if (!TEST_MODE){
+            // test nodejs wrapper
+            nodejs = build('nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs', 'vcx')
+            vcx_nodejs = build('vcx-nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs-wrapper', 'vcx', '--no-cache')
+            testNodeWrapper(vcx_nodejs)
+        }
+		
+        if (env.BRANCH_NAME == "master") {
             // create the debian of the library
             createDeb(rust)
             // create the npm deb 
@@ -107,16 +124,13 @@ def testRust(envn) {
     }
 }
 
-def createPtyhonArtifact(envn) {
+def createPtyhonArtifact(envn, version) {
     stage ('Building Python Artifact') {
         dir('vcx/wrappers/python3'){
             sh 'echo Building Python Artifact'
-            def scriptsPath = '/scripts'
-            withEnv(["PYTHONPATH=${scriptsPath}"]) {
-                envn.inside {
-                    sh "python3 setup.py sdist"
-                    archiveArtifacts allowEmptyArchive: true, artifacts: 'dist/**/*.tar.gz'
-                }
+            envn.inside {
+                sh "export VCX_VERSION=${version}; python3 setup.py sdist"
+                archiveArtifacts allowEmptyArchive: true, artifacts: 'dist/**/*.tar.gz'
             }
         }
     }
