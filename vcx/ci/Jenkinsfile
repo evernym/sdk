@@ -4,7 +4,7 @@ def dockerfile= 'dockerfile'
 
 def TEST_MODE=false
 def NODE_CONTEXT='ubuntu'
-if TEST_MODE {
+if (TEST_MODE) {
     NODE_CONTEXT='ubuntu-04'
 }
 def getUserUid() {
