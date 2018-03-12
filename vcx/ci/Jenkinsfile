@@ -108,7 +108,7 @@ def testRust(envn) {
 
 def createPtyhonArtifact(envn) {
     stage ('Building Python Artifact') {
-        dir('vcx/wrappers/node'){
+        dir('vcx/wrappers/node/python3'){
             sh 'echo Building Python Artifact'
             envn.inside {
                 sh 'export VCX_VERSION=1.2.3'
