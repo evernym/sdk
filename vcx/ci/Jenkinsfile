@@ -19,11 +19,13 @@ node('ubuntu-04') {
         libindy = build('libindy', 'vcx/ci/Dockerfile-libindy', 'vcx')
         rust = build('rust', 'vcx/ci/ubuntu.dockerfile', 'vcx')
 
-        // attempt to fix crossbeam compilation failure on ubuntu-04
-        rust.inside{
-            'cargo clean'
-        }
-		
+        // test python wrapper
+        vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', 'vcx', '--no-cache')
+        testPythonWrapper(vcx_python)
+
+        // create pip installable artifact
+        createPtyhonArtifact(vcx_python)
+        
         // update the versions in the toml file and package.json
         updateVersions(rust)      
         
@@ -41,14 +43,7 @@ node('ubuntu-04') {
         // vcx_nodejs = build('vcx-nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs-wrapper', 'vcx', '--no-cache')
         // testNodeWrapper(vcx_nodejs)
 
-		// test python wrapper
-        vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', 'vcx', '--no-cache')
-        testPythonWrapper(vcx_python)
-
-        // create pip installable artifact
-        createPtyhonArtifact(vcx_python)
-        
-        if (env.BRANCH_NAME == "master") {
+		if (env.BRANCH_NAME == "master") {
             // create the debian of the library
             createDeb(rust)
             // create the npm deb 
@@ -111,6 +106,7 @@ def createPtyhonArtifact(envn) {
         dir('vcx/wrappers/node/python3'){
             sh 'echo Building Python Artifact'
             envn.inside {
+                sh 'ls -al'
                 sh 'export VCX_VERSION=1.2.3'
                 sh 'python3 setup.py sdist'
                 archiveArtifacts allowEmptyArchive: true, artifacts: 'dist/**/*.tar.gz'
