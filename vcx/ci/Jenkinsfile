@@ -114,10 +114,8 @@ def createPtyhonArtifact(envn) {
         dir('vcx/wrappers/python3'){
             sh 'echo Building Python Artifact'
             def scriptsPath = '~/vcx/libvcx/ci/scripts'
-            envn.inside {
-                sh 'pwd'
-                sh 'ls -al'
-                sh "export PYTHONPATH=\$PYTHONPATH:${scriptsPath} python3 setup.py sdist"
+            envn.inside.withEnv(["PYTHONPATH=${scriptsPath}"]) {
+                sh "python3 setup.py sdist"
                 archiveArtifacts allowEmptyArchive: true, artifacts: 'dist/**/*.tar.gz'
             }
         }
