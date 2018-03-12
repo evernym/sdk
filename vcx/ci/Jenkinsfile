@@ -21,9 +21,9 @@ node(NODE_CONTEXT) {
         stage ('Checkout'){
             checkout scm
         }
-        libindy = build('libindy', 'vcx/ci/Dockerfile-libindy', 'vcx')
-        rust = build('rust', 'vcx/ci/ubuntu.dockerfile', 'vcx')
-
+        libindy = build('libindy', 'vcx/ci/Dockerfile-libindy', context='vcx')
+        rust = build('rust', 'vcx/ci/ubuntu.dockerfile', context='vcx')
+        scripts = build('scripts', 'vcx/ci/Dockerfile-scripts',context='vcx')
         // update the versions in the toml file and package.json
         updateVersions(rust)      
         

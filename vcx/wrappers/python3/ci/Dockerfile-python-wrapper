@@ -1,5 +1,5 @@
 # Development
-FROM libindy
+FROM scripts
 
 ARG uid=1000
 
