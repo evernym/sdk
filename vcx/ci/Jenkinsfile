@@ -31,7 +31,7 @@ node(NODE_CONTEXT) {
         buildRust(rust)
 
         // test python wrapper
-        vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', 'vcx', '--no-cache')
+        vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', 'vcx', '--no-cache -v vcx/libvcx/ci/scripts:/scripts')
         testPythonWrapper(vcx_python)
 
         // create pip installable artifact
@@ -113,10 +113,12 @@ def createPtyhonArtifact(envn) {
     stage ('Building Python Artifact') {
         dir('vcx/wrappers/python3'){
             sh 'echo Building Python Artifact'
-            def scriptsPath = '~/vcx/libvcx/ci/scripts'
-            envn.inside.withEnv(["PYTHONPATH=${scriptsPath}"]) {
-                sh "python3 setup.py sdist"
-                archiveArtifacts allowEmptyArchive: true, artifacts: 'dist/**/*.tar.gz'
+            def scriptsPath = '/scripts'
+            withEnv(["PYTHONPATH=${scriptsPath}"]) {
+                envn.inside {
+                    sh "python3 setup.py sdist"
+                    archiveArtifacts allowEmptyArchive: true, artifacts: 'dist/**/*.tar.gz'
+                }
             }
         }
     }
