@@ -21,8 +21,9 @@ def getVcxVersion(envn){
         sh "echo \$PYTHONPATH"
         sh 'whoami'
         sh 'ls /scripts'
+         withEnv(["PYTHONPATH=/scripts"]) {
         version = sh(
-            script: "export PYTHONPATH=\$PYTHONPATH:/scripts; python3 -c 'import toml_utils; print(toml_utils.get_version_from_file(\"vcx/libvcx/Cargo.toml\"))'",
+            script: "python3 -c 'import toml_utils; print(toml_utils.get_version_from_file(\"vcx/libvcx/Cargo.toml\"))'",
             returnStdout: true
         )
         return version
