@@ -17,9 +17,9 @@ def build(name, file, context='.', customParams = '') {
 
 def getVcxVersion(envn){
     sh 'ls -al'
-    sh 'echo $PYTHONPATH'
+    sh 'echo \$PYTHONPATH'
     version = sh(
-        script: "export PYTHONPATH=$PYTHONPATH:/scripts; python3 -c 'import toml_utils; print(toml_utils.get_version_from_file(\"vcx/libvcx/Cargo.toml\"))'",
+        script: "export PYTHONPATH=\$PYTHONPATH:/scripts; python3 -c 'import toml_utils; print(toml_utils.get_version_from_file(\"vcx/libvcx/Cargo.toml\"))'",
         returnStdout: true
     )
     return version
