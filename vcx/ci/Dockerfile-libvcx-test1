@@ -40,9 +40,6 @@ RUN curl -fsOSL $LIBINDY_DOWNLOAD_URL \
     && dpkg -i $LIBINDY_DEB \
     && apt-get -f install
 
-RUN mkdir -p /libvcx
-WORKDIR /libvcx
-
 ENV VER=0.1.3919265-89e0a35
 RUN curl -k -O https://repo.corp.evernym.com/deb/pool/main/libv/libvcx/libvcx_${VER}_amd64.deb
 RUN dpkg -i libvcx_${VER}_amd64.deb

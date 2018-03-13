@@ -16,8 +16,10 @@ def build(name, file, context='.', customParams = '') {
 }
 
 def getVcxVersion(envn){
-    dir ('ci/scripts') {
+    dir ('vcx/') {
         sh 'ls -al'
+        sh 'echo \"echoing PYTHONPATH...\"'
+        sh 'echo $PYTHONPATH'
         version = sh(
             script: "python3 -c 'import toml_utils; print(toml_utils.get_version_from_file(\"libvcx/Cargo.toml\"))'",
             returnStdout: true
@@ -33,8 +35,8 @@ node(NODE_CONTEXT) {
             checkout scm
         }
             stage ('VCX-PYTHON testing') {
-            libvcx = build('libvcx', 'vcx/ci/Dockerfile-libvcx-test1', 'vcx', '--no-cache')
-            vcx_python = build('python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper-test1', 'vcx', '--no-cache')
+            libvcx = build('libvcx', 'vcx/ci/Dockerfile-libvcx-test1', 'vcx')
+            vcx_python = build('python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper-test1', 'vcx')
             // create pip installable artifact
             VCX_VERSION = getVcxVersion(vcx_python)
             sh "echo ${VCX_VERSION}"
