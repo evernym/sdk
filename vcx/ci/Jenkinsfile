@@ -5,7 +5,7 @@ def dockerfile= 'dockerfile'
 def TEST_MODE=true
 def NODE_CONTEXT='ubuntu'
 if (TEST_MODE) {
-    NODE_CONTEXT='ubuntu-12'
+    NODE_CONTEXT='ubuntu-05'
 }
 def getUserUid() {
     return sh(returnStdout: true, script: 'id -u').trim()
@@ -36,15 +36,50 @@ node(NODE_CONTEXT) {
         stage ('Checkout'){
             checkout scm
         }
-        stage ('VCX-PYTHON testing') {
-            libvcx = build('libvcx', 'vcx/ci/Dockerfile-libvcx-test1', 'vcx')
-            vcx_python = build('python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper-test1', 'vcx')
-            // create pip installable artifact
-            VCX_VERSION = getVcxVersion(vcx_python)
-            sh "echo ${VCX_VERSION}"
-            createPtyhonArtifact(vcx_python, VCX_VERSION)
+
+        
+        libindy = build('libindy', 'vcx/ci/Dockerfile-libindy', 'vcx')
+        rust = build('rust', 'vcx/ci/ubuntu.dockerfile', 'vcx')
+       
+        scripts = build('scripts', 'vcx/ci/Dockerfile-scripts','vcx', '--no-cache')
+        
+        // update the versions in the toml file and package.json
+        updateVersions(rust)      
+
+        // build and test the so file
+        buildRust(rust)
+
+        if (!TEST_MODE) {
+            // test rust
+	        testRust(rust)
         }
-                        
+        
+        // update the so file to have version
+        updateSo(rust)
+        
+        // test python wrapper
+        vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', 'vcx', '--no-cache')
+                    
+        testPythonWrapper(vcx_python)
+
+        // create pip installable artifact
+        VCX_VERSION = getVcxVersion(vcx_python)
+        createPtyhonArtifact(vcx_python, VCX_VERSION)
+        
+        if (!TEST_MODE){
+            // test nodejs wrapper
+            nodejs = build('nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs', 'vcx')
+            vcx_nodejs = build('vcx-nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs-wrapper', 'vcx', '--no-cache')
+            testNodeWrapper(vcx_nodejs)
+        }
+		
+        if (env.BRANCH_NAME == "master") {
+            // create the debian of the library
+            createDeb(rust)
+            // create the npm deb 
+            createNpmDeb(rust) 
+        }
+        
     } catch (Exception ex) {
         currentBuild.result = "FAILED"
         if (env.BRANCH_NAME == "master") {
