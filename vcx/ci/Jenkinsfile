@@ -16,17 +16,13 @@ def build(name, file, context='.', customParams = '') {
 }
 
 def getVcxVersion(envn){
-    dir ('vcx/') {
-        sh 'ls -al'
-        sh 'echo \"echoing PYTHONPATH...\"'
-        sh 'echo $PYTHONPATH'
-        version = sh(
-            script: "python3 -c 'import toml_utils; print(toml_utils.get_version_from_file(\"libvcx/Cargo.toml\"))'",
-            returnStdout: true
-        )
-        return version
-    }
-
+    sh 'ls -al'
+    sh 'echo $PYTHONPATH'
+    version = sh(
+        script: "python3 -c 'import toml_utils; print(toml_utils.get_version_from_file(\"vcx/libvcx/Cargo.toml\"))'",
+        returnStdout: true
+    )
+    return version
 }
 
 node(NODE_CONTEXT) {
