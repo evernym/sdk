@@ -5,7 +5,7 @@ def dockerfile= 'dockerfile'
 def TEST_MODE=true
 def NODE_CONTEXT='ubuntu'
 if (TEST_MODE) {
-    NODE_CONTEXT='ubuntu'
+    NODE_CONTEXT='ubuntu-12'
 }
 def getUserUid() {
     return sh(returnStdout: true, script: 'id -u').trim()
@@ -16,14 +16,17 @@ def build(name, file, context='.', customParams = '') {
 }
 
 def getVcxVersion(envn){
-    sh 'ls -al'
-    sh "echo \$PYTHONPATH"
-    sh 'ls /scripts'
-    version = sh(
-        script: "export PYTHONPATH=\$PYTHONPATH:/scripts; python3 -c 'import toml_utils; print(toml_utils.get_version_from_file(\"vcx/libvcx/Cargo.toml\"))'",
-        returnStdout: true
-    )
-    return version
+    envn.inside {
+        sh 'ls -al'
+        sh "echo \$PYTHONPATH"
+        sh 'whoami'
+        sh 'ls /scripts'
+        version = sh(
+            script: "export PYTHONPATH=\$PYTHONPATH:/scripts; python3 -c 'import toml_utils; print(toml_utils.get_version_from_file(\"vcx/libvcx/Cargo.toml\"))'",
+            returnStdout: true
+        )
+        return version
+    }
 }
 
 node(NODE_CONTEXT) {
