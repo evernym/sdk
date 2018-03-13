@@ -17,6 +17,7 @@ def build(name, file, context='.', customParams = '') {
 
 def getVcxVersion(envn){
     dir ('ci/scripts') {
+        sh 'ls -al'
         version = sh(
             script: "ls -al; export PYTHONPATH=\"scripts\"; ls scripts; python3 -c 'import toml_utils; print(toml_utils.get_version_from_file(\"../../libvcx/Cargo.toml\"))'",
             returnStdout: true
