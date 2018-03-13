@@ -12,7 +12,7 @@ RUN pip3 install pytest qrcode pytest-asyncio
 RUN useradd -ms /bin/bash -u $uid vcx
 
 RUN mkdir -p /scripts
-COPY --chown vcx ci/scripts/ /scripts
+COPY --chown=vcx ci/scripts/ /scripts
 
 USER vcx
 
