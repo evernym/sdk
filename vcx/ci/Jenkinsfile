@@ -34,11 +34,11 @@ node(NODE_CONTEXT) {
             checkout scm
         }
 
-        libvcx = build('libvcx', 'vcx/ci/Dockerfile-libvcx-test1', 'vcx')
-        vcx_python = build('python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper-test1', 'vcx')
+        libvcx = build('libvcx', 'vcx/ci/Dockerfile-libvcx-test1', 'vcx', '--no-cache')
+        vcx_python = build('python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper-test1', 'vcx', '--no-cache')
         
         // create pip installable artifact
-        VCX_VERSION = getVcxVersion(python)
+        VCX_VERSION = getVcxVersion(vcx_python)
         sh "echo ${VCX_VERSION}"
         createPtyhonArtifact(vcx_python, VCX_VERSION)
                         
