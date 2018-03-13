@@ -98,12 +98,15 @@ def createPtyhonArtifact(envn, version) {
     stage ('Building Python Artifact') {
         dir('vcx/wrappers/python3'){
             sh 'echo Building Python Artifact'
-            envn.inside {
-                sh(
-                   script: "export VCX_VERSION=${version} python3 setup.py sdist",
-                    returnStdout: true
-                )
-                archiveArtifacts allowEmptyArchive: true, artifacts: 'dist/**/*.tar.gz'
+            environment {
+                VCX_VERSION = ${version}
+                envn.inside {
+                    sh(
+                        script: "python3 setup.py sdist",
+                        returnStdout: true
+                    )
+                    archiveArtifacts allowEmptyArchive: true, artifacts: 'dist/**/*.tar.gz'
+                }
             }
         }
     }
