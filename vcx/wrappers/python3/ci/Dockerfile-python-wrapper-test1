@@ -9,6 +9,13 @@ RUN apt-get install -y python3-pip
 
 RUN pip3 install pytest qrcode pytest-asyncio
 
+
+RUN useradd -ms /bin/bash -u $uid vcx
+USER vcx
+
+RUN mkdir -p /scripts
+COPY ci/scripts/ /scripts
+
 ENV PYTHONPATH=$PYTHONPATH:/python3:/scripts
 RUN mkdir -p /scripts
 COPY ci/scripts/ /scripts
