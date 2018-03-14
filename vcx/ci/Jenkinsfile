@@ -1,8 +1,5 @@
 #!groovy
 
-def dockerfile= 'dockerfile'
-
-def NODE_CONTEXT='ubuntu'
 
 def getUserUid() {
     return sh(returnStdout: true, script: 'id -u').trim()
@@ -12,17 +9,14 @@ def build(name, file, context='.', customParams = '') {
     return docker.build("$name", "${customParams} --build-arg uid=${getUserUid()} -f $file $context")
 }
 
-node(NODE_CONTEXT) {
+node('ubuntu') {
     try {
         stage ('Checkout'){
             checkout scm
         }
         
-        libindy = build('libindy', 'vcx/ci/Dockerfile-libindy', 'vcx')
         rust = build('rust', 'vcx/ci/ubuntu.dockerfile', 'vcx')
        
-        scripts = build('scripts', 'vcx/ci/Dockerfile-scripts','vcx', '--no-cache')
-        
         // update the versions in the toml file and package.json
         updateVersions(rust)     
 
@@ -35,25 +29,28 @@ node(NODE_CONTEXT) {
         // update the so file to have version
         updateSo(rust)
         
-        // test python wrapper
+        // image used as an intermediary, where the libvcx.so is placed into /usr/lib.  
+        // This image must be built after the rust build and tests have been run.
+        libindy = build('libindy', 'vcx/ci/Dockerfile-libindy', 'vcx')
+
+        // test python wrapper, the image must be built after  the libindy image build, and must be --no-cache
         vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', 'vcx', '--no-cache')
-                    
         testPythonWrapper(vcx_python)
 
-        // create pip installable artifact
-        VCX_VERSION = getVcxVersion(vcx_python)
-        createPtyhonArtifact(vcx_python, VCX_VERSION)
-    
-        // test nodejs wrapper
+        // test nodejs wrapper, the image must be built after  the libindy image build, and must be --no-cache
         nodejs = build('nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs', 'vcx')
-        vcx_nodejs = build('vcx-nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs-wrapper', 'vcx', '--no-cache')
+        vcx_nodejs = build('vcx-nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs', 'vcx', '--no-cache')
         testNodeWrapper(vcx_nodejs)
         
         if (env.BRANCH_NAME == "master") {
-            // create the debian of the library
+            // create the debian of the library (just the libvcx.so file)
             createDeb(rust)
+
             // create the npm deb 
-            createNpmDeb(rust) 
+            createNpmDeb(rust)
+
+            // create pip installable artifact
+            createPtyhonArtifact(vcx_python, getVcxVersion(vcx_python))
         }
         
     } catch (Exception ex) {
@@ -67,6 +64,7 @@ node(NODE_CONTEXT) {
     }
 }
 
+// This runs a python script that extracts version information out of the Cargo.toml file.
 def getVcxVersion(envn){
     envn.inside {
         sh 'ls -al'
@@ -81,18 +79,6 @@ def getVcxVersion(envn){
     }
 }
 
-def buildDocker(){
-    def app
-    def pathToCi = 'vcx/ci'
-    stage ('Build docker environment'){
-        sh "pwd"
-        sh "ls ${pathToCi}"
-        sh "echo building"
-        app = build('vcx')
-    }
-    return app
-}
-
 def testPythonWrapper(envn){
     stage ("Testing Python Wrapper"){
         envn.inside {
@@ -104,7 +90,6 @@ def testPythonWrapper(envn){
 def buildRust(envn){
     stage ('Building Rust Library'){
         envn.inside {
-            sh "ls -l"
             sh "rustc --version"
             sh "gcc --version"
             sh "cd vcx/libvcx; cargo build --features ci --color=never"
@@ -121,6 +106,7 @@ def testRust(envn) {
     }
 }
 
+// Creates a tar.gz file that is installable from pip.
 def createPtyhonArtifact(envn, version) {
     stage ('Building Python Artifact') {
         dir('vcx/wrappers/python3'){
@@ -138,17 +124,6 @@ def createPtyhonArtifact(envn, version) {
     }
 }
 
-// updates the path to include the scripts, 
-// needed for cargo commands
-def updatePath(app) {
-    dir ('vcx/ci/scripts') {
-        app.inside {
-            sh 'export PATH=$PATH:`pwd`'
-        }
-    }
-}
-
-
 // Update the version and revision in the Cargo.toml file, also the so file .
 def updateVersions(app) {
         stage('Updating Versions') {
@@ -162,6 +137,7 @@ def updateVersions(app) {
         }
 }
 
+// Updates the libvcx.so file to libvcx<VER>.so
 def updateSo(app) {
     stage('Updating .so file version') {
         app.inside {
@@ -169,7 +145,6 @@ def updateSo(app) {
         }
     }
 }
-
 
 // Creates the debian package for the library, as well as gzips the libvcx.so.<version> file
 // Publishes both artifacts.
@@ -205,7 +180,6 @@ def createDeb(envn) {
     }
 }
 
-
 // Creates the tgz file that can be 'npm install'-ed.
 def testNodeWrapper(envn) {
     stage ('Test Node Wrapper'){
@@ -222,7 +196,6 @@ def testNodeWrapper(envn) {
         }
     }
 }
-
 
 // Creates debian that can install through npm.
 def createNpmDeb(app){
