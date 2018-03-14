@@ -18,8 +18,6 @@ def build(name, file, context='.', customParams = '') {
 def getVcxVersion(envn){
     envn.inside {
         sh 'ls -al'
-        sh "echo \$PYTHONPATH"
-        sh 'whoami'
         sh 'ls /scripts'
         withEnv(["PYTHONPATH=/scripts"]) {
             version = sh(
