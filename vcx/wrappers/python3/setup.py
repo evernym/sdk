@@ -4,10 +4,10 @@ VERSION = 'VCX_VERSION'
 
 
 def get_version():
-    if hasattr(os.environ, VERSION):
-        return os.environ[VERSION]
-    else:
+    if os.environ[VERSION] is None:
         return '0.1'
+    else:
+        return os.environ[VERSION]
 
 
 setup(
