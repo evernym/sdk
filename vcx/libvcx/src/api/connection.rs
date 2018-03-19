@@ -7,6 +7,8 @@ use utils::error::error_string;
 use std::ptr;
 use std::thread;
 use connection::{build_connection, build_connection_with_invite, connect, to_string, get_state, release, is_valid_handle, update_state, from_string, get_invite_details};
+use error::connection::*;
+use error::ToErrorCode;
 
 /**
  * connection object
@@ -126,8 +128,8 @@ pub extern fn vcx_connection_connect(command_handle:u32,
             },
             Err(x) => {
                 warn!("vcx_connection_connect_cb(command_handle: {}, connection_handle: {}, rc: {}, details: {})",
-                      command_handle, connection_handle, error_string(x), "null");
-                cb(command_handle,x, ptr::null_mut())
+                      command_handle, connection_handle, x.to_string(), "null");
+                cb(command_handle,x.to_error_code(), ptr::null_mut())
             },
         };
     });

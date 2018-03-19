@@ -23,7 +23,9 @@ use self::rmp_serde::{encode, Deserializer};
 use messages::MessageResponseCode::{ MessageAccepted };
 use serde_json::Value;
 use utils::json::KeyMatch;
-
+use error::connection::ConnectionError;
+use error::base::BaseError;
+use error::message::MessageError;
 lazy_static! {
     static ref CONNECTION_MAP: Mutex<HashMap<u32, Box<Connection>>> = Default::default();
 }
@@ -54,7 +56,7 @@ struct Connection {
 }
 
 impl Connection {
-    fn _connect_send_invite(&mut self, options: Option<String>) -> Result<u32,u32> {
+    fn _connect_send_invite(&mut self, options: Option<String>) -> Result<u32, ConnectionError> {
         debug!("\"_connect_send_invite\" for handle {}", self.handle);
 
         let options_obj: ConnectionOptions = match options{
@@ -66,7 +68,9 @@ impl Connection {
                     },
                     false => match serde_json::from_str(opt.trim()) {
                         Ok(val) => val,
-                        Err(_) => return Err(error::INVALID_OPTION.code_num),
+//                        TODO: Implement Correct Error
+//                        Err(_) => return Err(error::INVALID_OPTION.code_num),
+                        Err(_) => return Err(ConnectionError::GeneralConnectionError()),
                     }
                 }
             },
@@ -86,7 +90,9 @@ impl Connection {
             .agent_vk(&self.agent_vk)
             .send_secure() {
             Err(_) => {
-                return Err(error::POST_MSG_FAILURE.code_num)
+                // TODO: Implement Correct Error
+//                return Err(error::POST_MSG_FAILURE.code_num)
+                return Err(ConnectionError::GeneralConnectionError())
             },
             Ok(response) => {
                 self.state = VcxStateType::VcxStateOfferSent;
@@ -94,7 +100,9 @@ impl Connection {
                     Ok(x) => Some(x),
                     Err(x) => {
                         error!("error when sending invite: {}", x);
-                        return Err(x);
+                        // TODO: Implement Correct Error
+//                        return Err(x);
+                        return Err(ConnectionError::GeneralConnectionError())
                     },
                 };
                 Ok(error::SUCCESS.code_num)
@@ -102,7 +110,7 @@ impl Connection {
         }
     }
 
-    fn _connect_accept_invite(&mut self, options: Option<String>) -> Result<u32,u32> {
+    fn _connect_accept_invite(&mut self, options: Option<String>) -> Result<u32,ConnectionError> {
         debug!("\"_connect_accept_invite\" for handle {}", self.handle);
 
         if let Some(ref details) = self.invite_detail {
@@ -117,7 +125,9 @@ impl Connection {
                 .reply_to(&details.conn_req_id)
                 .send_secure() {
                 Err(_) => {
-                    Err(error::POST_MSG_FAILURE.code_num)
+//                    TODO: Implement Correct Error
+//                    Err(error::POST_MSG_FAILURE.code_num)
+                    Err(ConnectionError::GeneralConnectionError())
                 },
                 Ok(response) => {
                     self.state = VcxStateType::VcxStateAccepted;
@@ -127,19 +137,22 @@ impl Connection {
         }
         else{
             warn!("Can not connect without Invite Details");
-            Err(error::NOT_READY.code_num)
+//            Err(error::NOT_READY.code_num)
+//            TODO: Implement Correct Error
+            Err(ConnectionError::GeneralConnectionError())
         }
     }
 
 
-    fn connect(&mut self, options: Option<String>) -> Result<u32,u32> {
+    fn connect(&mut self, options: Option<String>) -> Result<u32,ConnectionError> {
         match self.state {
             VcxStateType::VcxStateInitialized
                 | VcxStateType::VcxStateOfferSent => self._connect_send_invite(options),
             VcxStateType::VcxStateRequestReceived => self._connect_accept_invite(options),
             _ => {
                 warn!("connection {} in state {} not ready to connect",self.handle,self.state as u32);
-                Err(error::NOT_READY.code_num)
+//            TODO: Implement Correct Error
+                Err(ConnectionError::GeneralConnectionError())
             }
         }
     }
@@ -522,10 +535,10 @@ pub fn update_state(handle: u32) -> Result<u32, u32> {
     }
 }
 
-pub fn connect(handle: u32, options: Option<String>) -> Result<u32,u32> {
+pub fn connect(handle: u32, options: Option<String>) -> Result<u32, ConnectionError> {
     match CONNECTION_MAP.lock().unwrap().get_mut(&handle) {
         Some(t) => t.connect(options),
-        None => Err(error::INVALID_CONNECTION_HANDLE.code_num),
+        None => Err(ConnectionError::GeneralConnectionError()),
     }
 }
 
@@ -1050,6 +1063,8 @@ mod tests {
 
     #[test]
     fn test_connect_with_invalid_details() {
+        use error::connection::ConnectionError;
+        use error::ToErrorCode;
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
         let test_name = "test_connect_with_invalid_details";
@@ -1074,7 +1089,8 @@ mod tests {
 
         match connect(handle, Some("{}".to_string())) {
             Ok(_) => panic!("should fail"),
-            Err(x) => assert_eq!(x, error::NOT_READY.code_num),
+//            Err(x) => assert_eq!(x, error::NOT_READY.code_num),
+            Err(x) => assert_eq!(x.to_error_code(), 1002),
         };
     }
 }
