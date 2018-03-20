@@ -258,7 +258,7 @@ pub fn create_new_schema(source_id: String,
     Ok(new_handle)
 }
 
-pub fn get_schema_attrs(source_id: String, sequence_num: u32) -> Result<String, u32> {
+pub fn get_schema_attrs(source_id: String, sequence_num: u32) -> Result<(u32, String), u32> {
     let new_handle = rand::thread_rng().gen::<u32>();
     let new_schema = Box::new(CreateSchema {
         source_id,
@@ -273,8 +273,7 @@ pub fn get_schema_attrs(source_id: String, sequence_num: u32) -> Result<String, 
         debug!("inserting handle {} into schema table", new_handle);
         m.insert(new_handle, new_schema);
     }
-
-    to_string(new_handle)
+    Ok((new_handle, to_string(new_handle)?))
 }
 
 pub fn is_valid_handle(handle: u32) -> bool {
@@ -534,7 +533,8 @@ mod tests {
     #[test]
     fn test_get_schema_attrs_success(){
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
-        let schema_attrs = get_schema_attrs("Check For Success".to_string(), 999).unwrap();
+        let (handle, schema_attrs ) = get_schema_attrs("Check For Success".to_string(), 999).unwrap();
+        assert!(handle > 0);
         assert!(schema_attrs.contains(SCHEMA_TXN));
         assert!(schema_attrs.contains("\"source_id\":\"Check For Success\""));
         assert!(schema_attrs.contains("\"sequence_num\":999"));

@@ -220,7 +220,7 @@ pub extern fn vcx_schema_get_sequence_no(command_handle: u32,
 pub extern fn vcx_schema_get_attributes(command_handle: u32,
                                         source_id: *const c_char,
                                         sequence_no: u32,
-                                        cb: Option<extern fn(xcommand_handle: u32, err: u32, schema_attrs: *const c_char)>) -> u32 {
+                                        cb: Option<extern fn(xcommand_handle: u32, err: u32, s_handle: u32, schema_attrs: *const c_char)>) -> u32 {
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
     check_useful_c_str!(source_id, error::INVALID_OPTION.code_num);
     info!("vcx_schema_get_attributes(command_handle: {}, source_id: {}, sequence_no: {})",
@@ -228,16 +228,16 @@ pub extern fn vcx_schema_get_attributes(command_handle: u32,
 
     thread::spawn( move|| {
         match schema::get_schema_attrs(source_id, sequence_no) {
-            Ok(x) => {
-                info!("vcx_schema_get_attributes_cb(command_handle: {}, rc: {}, attrs: {}, sequence_no: {})",
-                      command_handle, error_string(0), x, sequence_no);
-                let msg = CStringUtils::string_to_cstring(x);
-                cb(command_handle, error::SUCCESS.code_num, msg.as_ptr());
+            Ok((handle, data)) => {
+                info!("vcx_schema_get_attributes_cb(command_handle: {}, rc: {}, handle: {}, attrs: {})",
+                      command_handle, error_string(0), handle, data);
+                let msg = CStringUtils::string_to_cstring(data.clone());
+                cb(command_handle, error::SUCCESS.code_num, handle, msg.as_ptr());
             },
             Err(x) => {
-                warn!("vcx_schema_get_attributes_cb(command_handle: {}, rc: {}, attrs: {}, sequence_no: {})",
-                      command_handle, error_string(x), 0, sequence_no);
-                cb(command_handle, x, ptr::null_mut());
+                warn!("vcx_schema_get_attributes_cb(command_handle: {}, rc: {}, handle: {}, attrs: {})",
+                      command_handle, error_string(x), 0, "");
+                cb(command_handle, x, 0, ptr::null_mut());
             },
         };
 
@@ -281,8 +281,9 @@ mod tests {
         thread::sleep(Duration::from_millis(200));
     }
 
-    extern "C" fn get_attrs_cb(command_handle: u32, err: u32, schema_data: *const c_char) {
+    extern "C" fn get_attrs_cb(command_handle: u32, err: u32, handle: u32, schema_data: *const c_char) {
         assert_eq!(err, 0);
+        assert!(handle > 0);
         if schema_data.is_null() {
             panic!("schema_data is null");
         }
