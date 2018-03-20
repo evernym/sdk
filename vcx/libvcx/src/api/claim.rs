@@ -43,12 +43,12 @@ pub extern fn vcx_claim_create_with_offer(command_handle: u32,
     thread::spawn(move|| {
         match claim::claim_create_with_offer(&source_id, &offer) {
             Ok(x) => {
-                info!("vcx_claim_create_with_offer(command_handle: {}, source_id: {}, rc: {}, handle: {})",
+                info!("vcx_claim_create_with_offer_cb(command_handle: {}, source_id: {}, rc: {}, handle: {})",
                       command_handle, source_id, error_string(0), x);
                 cb(command_handle, error::SUCCESS.code_num, x)
             },
             Err(x) => {
-                warn!("vcx_schema_create_cb(command_handle: {}, source_id: {}, rc: {}, handle: {})",
+                warn!("vcx_claim_create_with_offer_cb(command_handle: {}, source_id: {}, rc: {}, handle: {})",
                       command_handle, source_id, error_string(x), 0);
                 cb(command_handle, x, 0);
             },
@@ -81,7 +81,7 @@ pub extern fn vcx_claim_send_request(command_handle: u32,
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
     if !claim::is_valid_handle(claim_handle) {
-        return error::INVALID_ISSUER_CLAIM_HANDLE.code_num;
+        return error::INVALID_CLAIM_HANDLE.code_num;
     }
 
     if !connection::is_valid_handle(connection_handle) {
@@ -94,12 +94,12 @@ pub extern fn vcx_claim_send_request(command_handle: u32,
     thread::spawn(move|| {
         match claim::send_claim_request(claim_handle, connection_handle) {
             Ok(x) => {
-                info!("vcx_claim_send_request(command_handle: {}, rc: {})",
+                info!("vcx_claim_send_request_cb(command_handle: {}, rc: {})",
                       command_handle, error_string(0));
                 cb(command_handle,x);
             },
             Err(x) => {
-                warn!("vcx_claim_send_request(command_handle: {}, rc: {})",
+                warn!("vcx_claim_send_request_cb(command_handle: {}, rc: {})",
                       command_handle, error_string(x));
                 cb(command_handle,x);
             },
@@ -132,19 +132,19 @@ pub extern fn vcx_claim_get_offers(command_handle: u32,
         return error::INVALID_CONNECTION_HANDLE.code_num;
     }
 
-    info!("vcx_claim_new_offers(command_handle: {}, connection_handle: {})",
+    info!("vcx_claim_get_offers(command_handle: {}, connection_handle: {})",
           command_handle, connection_handle);
 
     thread::spawn(move|| {
         match claim::get_claim_offer_messages(connection_handle, None) {
             Ok(x) => {
-                info!("vcx_claim_new_offers(command_handle: {}, rc: {}, msg: {})",
+                info!("vcx_claim_get_offers_cb(command_handle: {}, rc: {}, msg: {})",
                       command_handle, error_string(0), x);
                 let msg = CStringUtils::string_to_cstring(x);
                 cb(command_handle, error::SUCCESS.code_num, msg.as_ptr());
             },
             Err(x) => {
-                error!("vcx_claim_new_offers(command_handle: {}, rc: {}, msg: null)",
+                error!("vcx_claim_get_offers_cb(command_handle: {}, rc: {}, msg: null)",
                       command_handle, error_string(x));
                 cb(command_handle, x, ptr::null_mut());
             },
@@ -175,7 +175,7 @@ pub extern fn vcx_claim_update_state(command_handle: u32,
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
     if !claim::is_valid_handle(claim_handle) {
-        return error::INVALID_ISSUER_CLAIM_HANDLE.code_num;
+        return error::INVALID_CLAIM_HANDLE.code_num;
     }
 
     info!("vcx_claim_update_state(command_handle: {}, claim_handle: {})",
@@ -185,7 +185,7 @@ pub extern fn vcx_claim_update_state(command_handle: u32,
         match claim::update_state(claim_handle) {
             Ok(_) => (),
             Err(e) => {
-                error!("vcx_claim_update_state(command_handle: {}, rc: {}, state: {})",
+                error!("vcx_claim_update_state_cb(command_handle: {}, rc: {}, state: {})",
                       command_handle, error_string(e), 0);
                 cb(command_handle, e, 0)
             }
@@ -193,12 +193,12 @@ pub extern fn vcx_claim_update_state(command_handle: u32,
 
         let state = match claim::get_state(claim_handle) {
             Ok(s) => {
-                info!("vcx_claim_update_state(command_handle: {}, rc: {}, state: {})",
+                info!("vcx_claim_update_state_cb(command_handle: {}, rc: {}, state: {})",
                        command_handle, error_string(0), s);
                 cb(command_handle, error::SUCCESS.code_num, s)
             },
             Err(e) => {
-                error!("vcx_claim_update_state(command_handle: {}, rc: {}, state: {})",
+                error!("vcx_claim_update_state_cb(command_handle: {}, rc: {}, state: {})",
                       command_handle, error_string(e), 0);
                 cb(command_handle, e, 0)
             }
@@ -215,7 +215,7 @@ pub extern fn vcx_claim_get_state(command_handle: u32,
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
     if !claim::is_valid_handle(handle) {
-        return error::INVALID_PROOF_HANDLE.code_num;
+        return error::INVALID_CLAIM_HANDLE.code_num;
     }
 
     info!("vcx_claim_get_state(command_handle: {}, claim_handle: {})",
@@ -224,12 +224,12 @@ pub extern fn vcx_claim_get_state(command_handle: u32,
     thread::spawn(move|| {
         match claim::get_state(handle) {
             Ok(s) => {
-                info!("vcx_claim_get_state(command_handle: {}, rc: {}, state: {})",
+                info!("vcx_claim_get_state_cb(command_handle: {}, rc: {}, state: {})",
                       command_handle, error_string(0), s);
                 cb(command_handle, error::SUCCESS.code_num, s)
             },
             Err(e) => {
-                error!("vcx_claim_get_state(command_handle: {}, rc: {}, state: {})",
+                error!("vcx_claim_get_state_cb(command_handle: {}, rc: {}, state: {})",
                       command_handle, error_string(e), 0);
                 cb(command_handle, e, 0)
             }
@@ -259,7 +259,7 @@ pub extern fn vcx_claim_serialize(command_handle: u32,
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
     if !claim::is_valid_handle(handle) {
-        return error::INVALID_ISSUER_CLAIM_HANDLE.code_num;
+        return error::INVALID_CLAIM_HANDLE.code_num;
     }
 
     info!("vcx_claim_serialize(command_handle: {}, claim_handle: {})",
@@ -268,13 +268,13 @@ pub extern fn vcx_claim_serialize(command_handle: u32,
     thread::spawn(move|| {
         match claim::to_string(handle) {
             Ok(x) => {
-                info!("vcx_claim_serialize(command_handle: {}, rc: {}, data: {})",
+                info!("vcx_claim_serialize_cb(command_handle: {}, rc: {}, data: {})",
                     command_handle, error_string(0), x);
                 let msg = CStringUtils::string_to_cstring(x);
                 cb(command_handle, error::SUCCESS.code_num, msg.as_ptr());
             },
             Err(x) => {
-                error!("vcx_claim_serialize(command_handle: {}, rc: {}, data: {})",
+                error!("vcx_claim_serialize_cb(command_handle: {}, rc: {}, data: {})",
                     command_handle, error_string(x), 0);
                 cb(command_handle,x,ptr::null_mut());
             },
@@ -310,13 +310,13 @@ pub extern fn vcx_claim_deserialize(command_handle: u32,
     thread::spawn(move|| {
         match claim::from_string(&claim_data) {
             Ok(x) => {
-                info!("vcx_claim_deserialize(command_handle: {}, rc: {}, claim_handle: {})",
+                info!("vcx_claim_deserialize_cb(command_handle: {}, rc: {}, claim_handle: {})",
                       command_handle, error_string(0), x);
 
                 cb(command_handle, 0, x);
             },
             Err(x) => {
-                error!("vcx_claim_deserialize(command_handle: {}, rc: {}, claim_handle: {})",
+                error!("vcx_claim_deserialize_cb(command_handle: {}, rc: {}, claim_handle: {})",
                       command_handle, error_string(x), 0);
                 cb(command_handle, x, 0);
             },
