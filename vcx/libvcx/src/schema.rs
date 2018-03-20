@@ -53,6 +53,7 @@ pub struct LedgerSchema {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateSchema {
     data: SchemaTransaction,
+    #[serde(skip_serializing, default)]
     handle: u32,
     name: String,
     source_id: String,
@@ -219,6 +220,8 @@ impl CreateSchema {
 
     pub fn get_sequence_num(&self) -> u32 {let sequence_num = self.sequence_num as u32; sequence_num}
 
+    pub fn get_source_id(&self) -> String { self.source_id.clone() }
+
 }
 
 pub fn create_new_schema(source_id: String,
@@ -295,20 +298,27 @@ pub fn to_string(handle: u32) -> Result<String, u32> {
     }
 }
 
+pub fn get_source_id(handle: u32) -> Result<String, u32> {
+    match SCHEMA_MAP.lock().unwrap().get(&handle) {
+        Some(s) => Ok(s.get_source_id()),
+        None => Err(error::INVALID_SCHEMA_HANDLE.code_num),
+    }
+}
+
 pub fn from_string(schema_data: &str) -> Result<u32, u32> {
     let derived_schema: CreateSchema = serde_json::from_str(schema_data)
         .map_err(|_| {
             error!("Invalid Json format for CreateSchema string");
             error::INVALID_JSON.code_num
         })?;
-    let new_handle = derived_schema.handle;
 
-    if is_valid_handle(new_handle) {return Ok(new_handle);}
+    let new_handle = rand::thread_rng().gen::<u32>();
+    let source_id = derived_schema.source_id.clone();
     let schema = Box::from(derived_schema);
 
     {
         let mut m = SCHEMA_MAP.lock().unwrap();
-        debug!("inserting handle {} into schema table", new_handle);
+        debug!("inserting handle {} with source_id {:?} into schema table", new_handle, source_id);
         m.insert(new_handle, schema);
     }
     Ok(new_handle)
@@ -510,7 +520,7 @@ mod tests {
             name: "schema_name".to_string(),
             sequence_num: 306,
         };
-        let create_schema_str = r#"{"data":{"seqNo":15,"identifier":"4fUDR9R7fjwELRvH9JT6HH","txnTime":1510246647,"type":"101","data":{"name":"Home Address","version":"0.1","attr_names":["address1","address2","city","state","zip"]}},"handle":1,"name":"schema_name","source_id":"testId","sequence_num":306}"#;
+        let create_schema_str = r#"{"data":{"seqNo":15,"identifier":"4fUDR9R7fjwELRvH9JT6HH","txnTime":1510246647,"type":"101","data":{"name":"Home Address","version":"0.1","attr_names":["address1","address2","city","state","zip"]}},"name":"schema_name","source_id":"testId","sequence_num":306}"#;
         assert_eq!(create_schema.to_string(), create_schema_str.to_string());
     }
 
