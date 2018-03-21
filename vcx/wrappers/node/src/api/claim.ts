@@ -5,8 +5,8 @@ import { rustAPI } from '../rustlib'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
 import { StateType } from './common'
 import { Connection } from './connection'
-import { VCXBaseWithState } from './VCXBaseWithState'
 import { VCXBase } from './VCXBase'
+import { VCXBaseWithState } from './VCXBaseWithState'
 
 export interface IClaimStructData {
   source_id: string,

@@ -1,7 +1,7 @@
 const assert = require('chai').assert
 const vcx = require('../dist/index')
 const { stubInitVCX } = require('./helpers')
-const { Claim, Connection, StateType } = vcx
+const { Claim, Connection } = vcx
 
 describe('A Claim', function () {
   this.timeout(30000)
@@ -27,30 +27,30 @@ describe('A Claim', function () {
   }
 
   const SERIALIZED_CLAIM = {
-    source_id:'wrapper_tests',
-    state:3,
-    claim_name:null,
-    claim_request:null,
-    claim_offer:{
-	msg_type:'CLAIM_OFFER',
-	version:'0.1',
-	to_did:'LtMgSjtFcyPwenK9SHCyb8',
-	from_did:'LtMgSjtFcyPwenK9SHCyb8',
-	claim:{'account_num':['8BEaoLf8TBmK4BUyX8WWnA'],'name_on_account':['Alice']},
-	schema_seq_no:48,
-	issuer_did:'Pd4fnFtRBcMKRVC2go5w3j',
-	claim_name:'Account Certificate',
-	claim_id:'3675417066',
-	msg_ref_id:'ymy5nth'
+    source_id: 'wrapper_tests',
+    state: 3,
+    claim_name: null,
+    claim_request: null,
+    claim_offer: {
+      msg_type: 'CLAIM_OFFER',
+      version: '0.1',
+      to_did: 'LtMgSjtFcyPwenK9SHCyb8',
+      from_did: 'LtMgSjtFcyPwenK9SHCyb8',
+      claim: {'account_num': ['8BEaoLf8TBmK4BUyX8WWnA'], 'name_on_account': ['Alice']},
+      schema_seq_no: 48,
+      issuer_did: 'Pd4fnFtRBcMKRVC2go5w3j',
+      claim_name: 'Account Certificate',
+      claim_id: '3675417066',
+      msg_ref_id: 'ymy5nth'
     },
-    link_secret_alias:'main',
-    msg_uid:null,
-    agent_did:null,
-    agent_vk:null,
-    my_did:null,
-    my_vk:null,
-    their_did:null,
-    their_vk:null
+    link_secret_alias: 'main',
+    msg_uid: null,
+    agent_did: null,
+    agent_vk: null,
+    my_did: null,
+    my_vk: null,
+    their_did: null,
+    their_vk: null
   }
 
   before(async () => {
@@ -67,7 +67,7 @@ describe('A Claim', function () {
 
   it(' a call to create with no sourceId returns an error', async () => {
     try {
-      const obj = await Claim.create({offer: JSON.stringify(OFFER)})
+      await Claim.create({offer: JSON.stringify(OFFER)})
     } catch (error) {
       assert.equal(error.vcxCode, 1007)
     }
@@ -75,7 +75,7 @@ describe('A Claim', function () {
 
   it(' a call to create with no offer returns an error', async () => {
     try {
-      const obj = await Claim.create({sourceId: 'Test'})
+      await Claim.create({sourceId: 'Test'})
     } catch (error) {
       assert.equal(error.vcxCode, 1007)
     }
@@ -83,7 +83,7 @@ describe('A Claim', function () {
 
   it(' a call to create with a bad offer returns an error', async () => {
     try {
-      const obj = await Claim.create({sourceId: 'Test', offer: '{}'})
+      await Claim.create({sourceId: 'Test', offer: '{}'})
     } catch (error) {
       assert.equal(error.vcxCode, 1016)
     }
@@ -132,15 +132,15 @@ describe('A Claim', function () {
     await connection.connect()
     const obj = await Claim.deserialize(SERIALIZED_CLAIM)
     await obj.sendRequest(connection)
-    state = await obj.getState()
+    const state = await obj.getState()
     assert(state === 2)
   })
 
- it('can query for claim offers.', async () => {
+  it('can query for claim offers.', async () => {
     let connection = await Connection.create({ id: '234' })
     assert(connection)
     await connection.connect()
-    let val = await Claim.get_offers(connection);
+    let val = await Claim.get_offers(connection)
     assert(val)
   })
 })
