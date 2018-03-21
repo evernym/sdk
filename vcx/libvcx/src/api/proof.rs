@@ -91,6 +91,7 @@ pub extern fn vcx_proof_update_state(command_handle: u32,
     let source_id = proof::get_source_id(proof_handle).unwrap_or_default();
     info!("vcx_proof_update_state(command_handle: {}, proof_handle: {}), source_id: {:?}",
           command_handle, proof_handle, source_id);
+
     if !proof::is_valid_handle(proof_handle) {
         return error::INVALID_PROOF_HANDLE.code_num;
     }
@@ -115,6 +116,7 @@ pub extern fn vcx_proof_get_state(command_handle: u32,
     let source_id = proof::get_source_id(proof_handle).unwrap_or_default();
     info!("vcx_proof_get_state(command_handle: {}, proof_handle: {}), source_id: {:?}",
           command_handle, proof_handle, source_id);
+
     if !proof::is_valid_handle(proof_handle) {
         return error::INVALID_PROOF_HANDLE.code_num;
     }
@@ -148,6 +150,7 @@ pub extern fn vcx_proof_serialize(command_handle: u32,
 
     let source_id = proof::get_source_id(proof_handle).unwrap_or_default();
     info!("vcx_proof_serialize(command_handle: {}, proof_handle: {}), source_id: {:?}", command_handle, proof_handle, source_id);
+
     if !proof::is_valid_handle(proof_handle) {
         return error::INVALID_PROOF_HANDLE.code_num;
     };

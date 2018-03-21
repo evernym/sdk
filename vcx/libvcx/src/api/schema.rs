@@ -44,7 +44,7 @@ pub extern fn vcx_schema_create(command_handle: u32,
           command_handle, source_id, schema_name, schema_data);
 
     thread::spawn( move|| {
-        let ( rc, handle) = match schema::create_new_schema(source_id.clone(),
+        let ( rc, handle) = match schema::create_new_schema(&source_id,
                                                                  schema_name,
                                                                  issuer_did,
                                                                  schema_data) {
@@ -55,7 +55,7 @@ pub extern fn vcx_schema_create(command_handle: u32,
             },
             Err(x) => {
                 warn!("vcx_schema_create_cb(command_handle: {}, rc: {}, handle: {}), source_id: {:?}",
-                      command_handle, error_string(x), 0, source_id);
+                      command_handle, error_string(x), 0, &source_id);
                 (x, 0) },
         };
 
@@ -231,7 +231,7 @@ pub extern fn vcx_schema_get_attributes(command_handle: u32,
             Ok((handle, data)) => {
                 info!("vcx_schema_get_attributes_cb(command_handle: {}, rc: {}, handle: {}, attrs: {})",
                       command_handle, error_string(0), handle, data);
-                let msg = CStringUtils::string_to_cstring(data.clone());
+                let msg = CStringUtils::string_to_cstring(data);
                 cb(command_handle, error::SUCCESS.code_num, handle, msg.as_ptr());
             },
             Err(x) => {

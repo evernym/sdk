@@ -224,7 +224,7 @@ impl CreateSchema {
 
 }
 
-pub fn create_new_schema(source_id: String,
+pub fn create_new_schema(source_id: &str,
                          schema_name: String,
                          issuer_did: String,
                          data: String) -> Result<u32, u32> {
@@ -235,7 +235,7 @@ pub fn create_new_schema(source_id: String,
 
     let new_handle = rand::thread_rng().gen::<u32>();
     let mut new_schema = Box::new(CreateSchema {
-        source_id,
+        source_id: source_id.to_string(),
         handle: new_handle,
         name: schema_name,
         data: CreateSchema::parse_schema_data(&sign_response)?,

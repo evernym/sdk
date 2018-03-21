@@ -114,6 +114,10 @@ pub extern fn vcx_issuer_send_claim_offer(command_handle: u32,
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
+    let source_id = issuer_claim::get_source_id(claim_handle).unwrap_or_default();
+    info!("vcx_issuer_send_claim(command_handle: {}, claim_handle: {}, connection_handle: {}), source_id: {:?}",
+          command_handle, claim_handle, connection_handle, source_id);
+
     if !issuer_claim::is_valid_handle(claim_handle) {
         return error::INVALID_ISSUER_CLAIM_HANDLE.code_num;
     }
@@ -121,10 +125,6 @@ pub extern fn vcx_issuer_send_claim_offer(command_handle: u32,
     if !connection::is_valid_handle(connection_handle) {
         return error::INVALID_CONNECTION_HANDLE.code_num;
     }
-
-    let source_id = issuer_claim::get_source_id(claim_handle).unwrap_or_default();
-    info!("vcx_issuer_send_claim(command_handle: {}, claim_handle: {}, connection_handle: {}), source_id: {:?}",
-          command_handle, claim_handle, connection_handle, source_id);
 
     thread::spawn(move|| {
         let err = match issuer_claim::send_claim_offer(claim_handle, connection_handle) {
@@ -164,13 +164,13 @@ pub extern fn vcx_issuer_claim_update_state(command_handle: u32,
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
+    let source_id = issuer_claim::get_source_id(claim_handle).unwrap_or_default();
+    info!("vcx_issuer_claim_update_state(command_handle: {}, claim_handle: {})",
+          command_handle, claim_handle);
 
     if !issuer_claim::is_valid_handle(claim_handle) {
         return error::INVALID_ISSUER_CLAIM_HANDLE.code_num;
     }
-    let source_id = issuer_claim::get_source_id(claim_handle).unwrap_or_default();
-    info!("vcx_issuer_claim_update_state(command_handle: {}, claim_handle: {})",
-          command_handle, claim_handle);
 
     thread::spawn(move|| {
         issuer_claim::update_state(claim_handle);
@@ -190,13 +190,13 @@ pub extern fn vcx_issuer_claim_get_state(command_handle: u32,
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
-    if !issuer_claim::is_valid_handle(claim_handle) {
-        return error::INVALID_ISSUER_CLAIM_HANDLE.code_num;
-    }
-
     let source_id = issuer_claim::get_source_id(claim_handle).unwrap_or_default();
     info!("vcx_issuer_claim_get_state(command_handle: {}, claim_handle: {}), source_id: {:?}",
           command_handle, claim_handle, source_id);
+
+    if !issuer_claim::is_valid_handle(claim_handle) {
+        return error::INVALID_ISSUER_CLAIM_HANDLE.code_num;
+    }
 
     thread::spawn(move|| {
         info!("vcx_issuer_claim_get_state_cb(command_handle: {}, claim_handle: {}, rc: {}, state: {}), source_id: {:?}",
@@ -518,7 +518,7 @@ mod tests {
         assert!(claim_handle > 0);
         println!("successfully called deserialize_cb");
         let serialized_issuer_claim = r#"{"source_id":"test_claim_serialize","claim_attributes":"{\"attr\":\"value\"}","msg_uid":"","schema_seq_no":32,"issuer_did":"8XFh8yBzrpJQmNyZzgoTqB","state":1,"claim_request":null,"claim_name":"claim name","claim_id":"1737199584","ref_msg_id":"abc123","agent_did":"","agent_vk":"","issued_did":"","issued_vk":"","remote_did":"","remote_vk":""}"#;
-        let original = formatter(&serialized_issuer_claim);
+        let original = formatter(&serialized_issuer_claim1);
         let new = formatter(&issuer_claim::to_string(claim_handle).unwrap());
         assert_eq!(original, new);
     }
