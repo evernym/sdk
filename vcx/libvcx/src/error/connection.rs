@@ -8,6 +8,7 @@ use std::error::Error;
 pub enum ConnectionError {
     GeneralConnectionError(),
     ConnectionNotReady(),
+    InviteDetailError(),
     CommonError(u32),
 }
 
@@ -16,6 +17,7 @@ impl fmt::Display for ConnectionError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             ConnectionError::GeneralConnectionError() => write!(f, "Error with Connection"),
+            ConnectionError::InviteDetailError() => write!(f, "Invite Detail Error"),
             ConnectionError::ConnectionNotReady() => write!(f, "Object not ready for specified action"),
             ConnectionError::CommonError(x) => write!(f, "This common error had value: {}", x),
         }
@@ -27,6 +29,7 @@ impl Error for ConnectionError {
         match *self {
             ConnectionError::GeneralConnectionError() => None,
             ConnectionError::ConnectionNotReady() => None,
+            ConnectionError::InviteDetailError() => None,
             ConnectionError::CommonError(x) => None,
         }
     }
@@ -36,6 +39,7 @@ impl Error for ConnectionError {
         match *self {
             ConnectionError::GeneralConnectionError() => "General Connection Error",
             ConnectionError::ConnectionNotReady() => "Connection Not Ready",
+            ConnectionError::InviteDetailError() => "Invite Detail Error",
             ConnectionError::CommonError(x) => "Common Error",
         }
     }
@@ -46,6 +50,7 @@ impl ToErrorCode for ConnectionError {
        match *self {
            ConnectionError::GeneralConnectionError() => 1002,
            ConnectionError::ConnectionNotReady() => 1005,
+           ConnectionError::InviteDetailError() => 9999,
            ConnectionError::CommonError(x) => x,
        }
    }

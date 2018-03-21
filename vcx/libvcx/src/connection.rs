@@ -504,12 +504,13 @@ pub fn parse_acceptance_details(handle: u32, message: &Message) -> Result<Sender
     Ok(details)
 }
 
-pub fn update_state(handle: u32) -> Result<u32, u32> {
+pub fn update_state(handle: u32) -> Result<u32, ConnectionError> {
     debug!("updating state for connection handle {}", handle);
-    let pw_did = get_pw_did(handle)?;
-    let pw_vk = get_pw_verkey(handle)?;
-    let agent_did = get_agent_did(handle)?;
-    let agent_vk = get_agent_verkey(handle)?;
+    // TODO: Refactor Error
+    let pw_did = get_pw_did(handle).map_err(|e| ConnectionError::CommonError(e))?;
+    let pw_vk = get_pw_verkey(handle).map_err(|e| ConnectionError::CommonError(e))?;
+    let agent_did = get_agent_did(handle).map_err(|e| ConnectionError::CommonError(e))?;
+    let agent_vk = get_agent_verkey(handle).map_err(|e| ConnectionError::CommonError(e))?;
 
     let url = format!("{}/agency/route", settings::get_config_value(settings::CONFIG_AGENCY_ENDPOINT).unwrap());
 
@@ -522,7 +523,8 @@ pub fn update_state(handle: u32) -> Result<u32, u32> {
         Err(x) => {
             error!("could not update state for handle {}: {}",  handle, x);
             println!("could not update state");
-            Err(error::POST_MSG_FAILURE.code_num)
+            // TODO: Refactor Error
+            Err(ConnectionError::CommonError(error::POST_MSG_FAILURE.code_num))
         }
         Ok(response) => {
             debug!("update state response: {:?}", response);
@@ -531,7 +533,7 @@ pub fn update_state(handle: u32) -> Result<u32, u32> {
                  for i in response {
                      if i.status_code == MessageAccepted.as_string() && i.msg_type == "connReqAnswer" {
                          // TODO: Refactor Error
-                          let details = parse_acceptance_details(handle, &i).map_err(|e| { e.to_error_code()})?;
+                          let details = parse_acceptance_details(handle, &i)?;
                           set_their_pw_did(handle, &details.did);
                           set_their_pw_verkey(handle, &details.verkey);
                           set_state(handle, VcxStateType::VcxStateAccepted);
@@ -559,15 +561,15 @@ pub fn to_string(handle: u32) -> Result<String,u32> {
     }
 }
 
-pub fn from_string(connection_data: &str) -> Result<u32,u32> {
+pub fn from_string(connection_data: &str) -> Result<u32, ConnectionError> {
     let derived_connection: Connection = match serde_json::from_str(connection_data) {
         Ok(x) => x,
-        Err(_) => return Err(error::INVALID_JSON.code_num),
+        Err(_) => return Err(ConnectionError::CommonError(error::INVALID_JSON.code_num)),
     };
 
     let new_handle = derived_connection.handle;
 
-    if is_valid_handle(new_handle) {return Ok(new_handle);}
+    if is_valid_handle(new_handle) { return Ok(new_handle); }
 
     let connection = Box::from(derived_connection);
 
@@ -578,10 +580,10 @@ pub fn from_string(connection_data: &str) -> Result<u32,u32> {
     Ok(new_handle)
 }
 
-pub fn release(handle: u32) -> u32 {
+pub fn release(handle: u32) -> ConnectionError {
     match CONNECTION_MAP.lock().unwrap().remove(&handle) {
-        Some(t) => error::SUCCESS.code_num,
-        None => error::INVALID_CONNECTION_HANDLE.code_num,
+        Some(t) => ConnectionError::CommonError(error::SUCCESS.code_num),
+        None => ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num),
     }
 }
 
@@ -591,25 +593,24 @@ pub fn release_all() {
     map.drain();
 }
 
-pub fn get_invite_details(handle: u32, abbreviated:bool) -> Result<String,u32> {
+pub fn get_invite_details(handle: u32, abbreviated:bool) -> Result<String, ConnectionError> {
     match CONNECTION_MAP.lock().unwrap().get(&handle) {
         Some(t) => {
             match abbreviated {
                 false => {
-                    Ok(serde_json::to_string(&t.invite_detail)
-                        .or(Err(error::CONNECTION_ERROR.code_num))?)
-                },
+                    Ok( serde_json::to_string(&t.invite_detail)
+                            .or(Err(ConnectionError::InviteDetailError()))?) },
                 true => {
                     let details = serde_json::to_value(&t.invite_detail)
-                        .or(Err(error::CONNECTION_ERROR.code_num))?;
+                        .or(Err(ConnectionError::InviteDetailError()))?;
                     let abbr = abbrv_event_detail(details)
-                        .or(Err(error::CONNECTION_ERROR.code_num))?;
+                        .or(Err(ConnectionError::InviteDetailError()))?;
                     Ok(serde_json::to_string(&abbr)
-                        .or(Err(error::CONNECTION_ERROR.code_num))?)
+                        .or(Err(ConnectionError::InviteDetailError()))?)
                 }
             }
         },
-        None => Err(error::INVALID_CONNECTION_HANDLE.code_num),
+        None => Err(ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num)),
     }
 
 }
@@ -778,7 +779,7 @@ mod tests {
 
     #[test]
     fn test_connection_release_fails() {
-        let rc = release(1);
+        let rc = release(1).to_error_code();
         assert_eq!(rc, error::INVALID_CONNECTION_HANDLE.code_num);
     }
 
@@ -808,7 +809,6 @@ mod tests {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
         let test_name = "test_get_qr_code_data";
         let handle = rand::thread_rng().gen::<u32>();
-
         let c = Box::new(Connection {
             source_id: test_name.to_string(),
             handle,
@@ -832,6 +832,8 @@ mod tests {
         let details = get_invite_details(handle, true).unwrap();
         println!("{}",details);
         assert!(details.contains("\"dp\":"));
+        assert_eq!(get_invite_details(12345, true).err(),
+                   Some(ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num)));
     }
 
     #[test]
@@ -972,7 +974,7 @@ mod tests {
             update_state(handle).unwrap();
         }
 
-//        assert_eq!(update_state(12345).map_err(|e| {e}), ConnectionError::CommonError(123))
+        assert_eq!(update_state(12345).err(), Some(ConnectionError::CommonError(123)));
     }
 
     #[test]
@@ -1048,11 +1050,11 @@ mod tests {
         let h4 = build_connection("rel4").unwrap();
         let h5 = build_connection("rel5").unwrap();
         release_all();
-        assert_eq!(release(h1),error::INVALID_CONNECTION_HANDLE.code_num);
-        assert_eq!(release(h2),error::INVALID_CONNECTION_HANDLE.code_num);
-        assert_eq!(release(h3),error::INVALID_CONNECTION_HANDLE.code_num);
-        assert_eq!(release(h4),error::INVALID_CONNECTION_HANDLE.code_num);
-        assert_eq!(release(h5),error::INVALID_CONNECTION_HANDLE.code_num);
+        assert_eq!(release(h1).to_error_code(),error::INVALID_CONNECTION_HANDLE.code_num);
+        assert_eq!(release(h2),ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num));
+        assert_eq!(release(h3),ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num));
+        assert_eq!(release(h4),ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num));
+        assert_eq!(release(h5),ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num));
     }
 
     #[test]
@@ -1129,5 +1131,13 @@ mod tests {
 //            Err(x) => assert_eq!(x, error::NOT_READY.code_num),
             Err(x) => assert_eq!(x.to_error_code(), 1002),
         };
+
+        // from_string throws a ConnectionError
+        assert_eq!(from_string("").err(), Some(ConnectionError::CommonError(1016)));
+
+        // release throws a connection Error
+        assert_eq!(release(1234),
+                   ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num));
+
     }
 }

@@ -219,6 +219,7 @@ mod tests {
     use std::time::Duration;
     use std::fs;
     use std::ptr;
+    use error::connection::ConnectionError;
 
     extern "C" fn init_cb(command_handle: u32, err: u32) {
         if err != 0 {panic!("create_cb failed: {}", err)}
@@ -302,7 +303,7 @@ mod tests {
         let claimdef = ::claim_def::create_new_claimdef("SID".to_string(),"NAME".to_string(),15,"4fUDR9R7fjwELRvH9JT6HH".to_string(),false).unwrap();
         let schema = ::schema::create_new_schema("5".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
         vcx_reset();
-        assert_eq!(::connection::release(connection),error::INVALID_CONNECTION_HANDLE.code_num);
+        assert_eq!(::connection::release(connection),ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num));
         assert_eq!(::issuer_claim::release(claim),error::INVALID_ISSUER_CLAIM_HANDLE.code_num);
         assert_eq!(::schema::release(schema),error::INVALID_SCHEMA_HANDLE.code_num);
         assert_eq!(::proof::release(proof),error::INVALID_PROOF_HANDLE.code_num);

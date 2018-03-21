@@ -212,8 +212,8 @@ pub extern fn vcx_connection_deserialize(command_handle: u32,
             },
             Err(x) => {
                 warn!("vcx_connection_deserialize_cb(command_handle: {}, rc: {}, handle: {})",
-                      command_handle, error_string(x), 0);
-                (x, 0)
+                      command_handle, error_string(x.to_error_code()), 0);
+                (x.to_error_code(), 0)
             },
         };
 
@@ -257,8 +257,9 @@ pub extern fn vcx_connection_update_state(command_handle: u32,
             },
             Err(x) => {
                 warn!("vcx_connection_update_state_cb(command_handle: {}, rc: {}, connection_handle: {}, state: {})",
-                      command_handle, error_string(x), connection_handle, get_state(connection_handle));
-                x
+                      // TODO: Refactor Error
+                      command_handle, error_string(x.to_error_code()), connection_handle, get_state(connection_handle));
+                x.to_error_code()
             },
         };
         let state = get_state(connection_handle);
@@ -328,8 +329,8 @@ pub extern fn vcx_connection_invite_details(command_handle: u32,
             },
             Err(x) => {
                 warn!("vcx_connection_invite_details_cb(command_handle: {}, connection_handle: {}, rc: {}, details: {})",
-                      command_handle, connection_handle, error_string(x), "null");
-                cb(command_handle, x, ptr::null_mut());
+                      command_handle, connection_handle, error_string(x.to_error_code()), "null");
+                cb(command_handle, x.to_error_code(), ptr::null_mut());
             }
         }
     });
@@ -347,7 +348,7 @@ pub extern fn vcx_connection_invite_details(command_handle: u32,
 #[no_mangle]
 pub extern fn vcx_connection_release(connection_handle: u32) -> u32 {
     info!("vcx_connection_release(connection_handle: {})", connection_handle);
-    release(connection_handle)
+    release(connection_handle).to_error_code()
 }
 
 #[cfg(test)]
