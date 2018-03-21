@@ -527,7 +527,7 @@ mod tests {
     fn test_create_schema_success(){
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
         let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#.to_string();
-        assert!(create_new_schema("1".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data).is_ok());
+        assert!(create_new_schema("1", "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data).is_ok());
     }
 
     #[test]
@@ -544,7 +544,7 @@ mod tests {
     fn test_create_schema_fails(){
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-        assert_eq!(create_new_schema("1".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), "".to_string()),
+        assert_eq!(create_new_schema("1", "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), "".to_string()),
         Err(error::INVALID_SCHEMA_CREATION.code_num));
     }
 
@@ -583,7 +583,7 @@ mod tests {
         let wallet_handle = get_wallet_handle();
         let (my_did, _) = SignusUtils::create_and_store_my_did(wallet_handle, Some(DEMO_ISSUER_PW_SEED)).unwrap();
         SignusUtils::create_and_store_my_did(wallet_handle, Some(DEMO_AGENT_PW_SEED)).unwrap();
-        let handle = create_new_schema("id".to_string(), "name".to_string(), my_did, data).unwrap();
+        let handle = create_new_schema("id", "name".to_string(), my_did, data).unwrap();
         delete_wallet("test_create_schema").unwrap();
         assert!(handle > 0);
         assert!(get_sequence_num(handle).unwrap() > 0);
@@ -602,11 +602,11 @@ mod tests {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
         let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#;
-        let h1 = create_new_schema("1".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
-        let h2 = create_new_schema("2".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
-        let h3 = create_new_schema("3".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
-        let h4 = create_new_schema("4".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
-        let h5 = create_new_schema("5".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
+        let h1 = create_new_schema("1", "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
+        let h2 = create_new_schema("2", "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
+        let h3 = create_new_schema("3", "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
+        let h4 = create_new_schema("4", "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
+        let h5 = create_new_schema("5", "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
         release_all();
         assert_eq!(release(h1),error::INVALID_SCHEMA_HANDLE.code_num);
         assert_eq!(release(h2),error::INVALID_SCHEMA_HANDLE.code_num);

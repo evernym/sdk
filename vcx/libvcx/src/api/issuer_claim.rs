@@ -509,7 +509,7 @@ mod tests {
         assert!(claim_handle > 0);
         println!("successfully called deserialize_cb");
         let serialized_issuer_claim = r#"{"source_id":"test_claim_serialize","claim_attributes":"{\"attr\":\"value\"}","msg_uid":"","schema_seq_no":32,"issuer_did":"8XFh8yBzrpJQmNyZzgoTqB","state":1,"claim_request":null,"claim_name":"claim name","claim_id":"1737199584","ref_msg_id":"abc123","agent_did":"","agent_vk":"","issued_did":"","issued_vk":"","remote_did":"","remote_vk":""}"#;
-        let original = formatter(&serialized_issuer_claim1);
+        let original = formatter(&serialized_issuer_claim);
         let new = formatter(&issuer_claim::to_string(claim_handle).unwrap());
         assert_eq!(original, new);
     }

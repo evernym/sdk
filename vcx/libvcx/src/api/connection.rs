@@ -105,9 +105,6 @@ pub extern fn vcx_connection_connect(command_handle:u32,
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
-    let source_id = get_source_id(connection_handle).unwrap_or_default();
-    info!("vcx_connection_connect(command_handle: {}, connection_handle: {}, connection_options: {:?}), source_id: {:?}", command_handle, connection_handle, options, source_id);
-
     if !is_valid_handle(connection_handle) {
         error!("vcx_connection_get_state - invalid handle");
         return error::INVALID_CONNECTION_HANDLE.code_num;
@@ -120,6 +117,10 @@ pub extern fn vcx_connection_connect(command_handle:u32,
     else {
         None
     };
+
+    let source_id = get_source_id(connection_handle).unwrap_or_default();
+    info!("vcx_connection_connect(command_handle: {}, connection_handle: {}, connection_options: {:?}), source_id: {:?}",
+          command_handle, connection_handle, options, source_id);
 
     thread::spawn(move|| {
         match connect(connection_handle, options) {
@@ -168,7 +169,8 @@ pub extern fn vcx_connection_serialize(command_handle: u32,
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
     let source_id = get_source_id(connection_handle).unwrap_or_default();
-    info!("vcx_connection_serialize(command_handle: {}, connection_handle: {}), source_id: {:?}", command_handle, connection_handle, source_id);
+    info!("vcx_connection_serialize(command_handle: {}, connection_handle: {}), source_id: {:?}",
+          command_handle, connection_handle, source_id);
 
     if !is_valid_handle(connection_handle) {
         error!("vcx_connection_get_state - invalid handle");
