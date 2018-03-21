@@ -8,6 +8,7 @@ use std::error::Error;
 pub enum ConnectionError {
     GeneralConnectionError(),
     ConnectionNotReady(),
+    CommonError(u32),
 }
 
 
@@ -16,6 +17,7 @@ impl fmt::Display for ConnectionError {
         match *self {
             ConnectionError::GeneralConnectionError() => write!(f, "Error with Connection"),
             ConnectionError::ConnectionNotReady() => write!(f, "Object not ready for specified action"),
+            ConnectionError::CommonError(x) => write!(f, "This common error had value: {}", x),
         }
     }
 }
@@ -25,6 +27,7 @@ impl Error for ConnectionError {
         match *self {
             ConnectionError::GeneralConnectionError() => None,
             ConnectionError::ConnectionNotReady() => None,
+            ConnectionError::CommonError(x) => None,
         }
     }
 
@@ -33,6 +36,7 @@ impl Error for ConnectionError {
         match *self {
             ConnectionError::GeneralConnectionError() => "General Connection Error",
             ConnectionError::ConnectionNotReady() => "Connection Not Ready",
+            ConnectionError::CommonError(x) => "Common Error",
         }
     }
 }
@@ -42,17 +46,17 @@ impl ToErrorCode for ConnectionError {
        match *self {
            ConnectionError::GeneralConnectionError() => 1002,
            ConnectionError::ConnectionNotReady() => 1005,
+           ConnectionError::CommonError(x) => x,
        }
    }
 }
 
-//impl Error for ConnectionError {
-//    fn description(&self) -> &str {
-//        match *self {
-//            _=> self::to_string(),
-//        }
-//    }
-//}
+impl PartialEq for ConnectionError {
+    fn eq(&self, other: &ConnectionError) -> bool {
+        self.to_error_code() == other.to_error_code()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

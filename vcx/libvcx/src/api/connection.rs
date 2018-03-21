@@ -42,8 +42,9 @@ pub extern fn vcx_connection_create(command_handle: u32,
             },
             Err(x) => {
                 warn!("vcx_connection_create_cb(command_handle: {}, rc: {}, handle: {})",
-                      command_handle, error_string(x), 0);
-                cb(command_handle, x, 0)
+                    //TODO remove to_error_code()
+                      command_handle, error_string(x.to_error_code()), 0);
+                cb(command_handle, x.to_error_code(), 0)
             },
         };
     });
@@ -64,7 +65,7 @@ pub extern fn vcx_connection_create_with_invite(command_handle: u32,
     thread::spawn(move|| {
         match build_connection_with_invite(&source_id, &invite_details) {
             Ok(handle) => cb(command_handle, error::SUCCESS.code_num, handle),
-            Err(x) => cb(command_handle, x, 0),
+            Err(x) => cb(command_handle, x.to_error_code(), 0),
         };
     });
 

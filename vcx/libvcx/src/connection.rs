@@ -25,7 +25,7 @@ use serde_json::Value;
 use utils::json::KeyMatch;
 use error::connection::ConnectionError;
 use error::base::BaseError;
-use error::message::MessageError;
+use error::ToErrorCode;
 lazy_static! {
     static ref CONNECTION_MAP: Mutex<HashMap<u32, Box<Connection>>> = Default::default();
 }
@@ -68,6 +68,7 @@ impl Connection {
                     },
                     false => match serde_json::from_str(opt.trim()) {
                         Ok(val) => val,
+                        // TODO: Refactor Error
 //                        TODO: Implement Correct Error
 //                        Err(_) => return Err(error::INVALID_OPTION.code_num),
                         Err(_) => return Err(ConnectionError::GeneralConnectionError()),
@@ -90,6 +91,7 @@ impl Connection {
             .agent_vk(&self.agent_vk)
             .send_secure() {
             Err(_) => {
+                // TODO: Refactor Error
                 // TODO: Implement Correct Error
 //                return Err(error::POST_MSG_FAILURE.code_num)
                 return Err(ConnectionError::GeneralConnectionError())
@@ -100,6 +102,7 @@ impl Connection {
                     Ok(x) => Some(x),
                     Err(x) => {
                         error!("error when sending invite: {}", x);
+                        // TODO: Refactor Error
                         // TODO: Implement Correct Error
 //                        return Err(x);
                         return Err(ConnectionError::GeneralConnectionError())
@@ -125,6 +128,7 @@ impl Connection {
                 .reply_to(&details.conn_req_id)
                 .send_secure() {
                 Err(_) => {
+                    // TODO: Refactor Error
 //                    TODO: Implement Correct Error
 //                    Err(error::POST_MSG_FAILURE.code_num)
                     Err(ConnectionError::GeneralConnectionError())
@@ -138,6 +142,7 @@ impl Connection {
         else{
             warn!("Can not connect without Invite Details");
 //            Err(error::NOT_READY.code_num)
+            // TODO: Refactor Error
 //            TODO: Implement Correct Error
             Err(ConnectionError::GeneralConnectionError())
         }
@@ -151,6 +156,7 @@ impl Connection {
             VcxStateType::VcxStateRequestReceived => self._connect_accept_invite(options),
             _ => {
                 warn!("connection {} in state {} not ready to connect",self.handle,self.state as u32);
+                // TODO: Refactor Error
 //            TODO: Implement Correct Error
                 Err(ConnectionError::GeneralConnectionError())
             }
@@ -392,12 +398,12 @@ fn create_connection(source_id: &str) -> u32 {
     new_handle
 }
 
-fn init_connection(handle: u32) -> Result<u32,u32> {
+fn init_connection(handle: u32) -> Result<u32, ConnectionError> {
     let (my_did, my_verkey) = match SignusUtils::create_and_store_my_did(wallet::get_wallet_handle(),None) {
         Ok(y) => y,
         Err(x) => {
             error!("could not create DID/VK: {}", x);
-            return Err(error::UNKNOWN_LIBINDY_ERROR.code_num);
+            return Err(ConnectionError::CommonError(x))
         },
     };
 
@@ -409,7 +415,7 @@ fn init_connection(handle: u32) -> Result<u32,u32> {
         Err(x) => {
             error!("could not create pairwise key on agent: {}", x);
             release(handle);
-            return Err(x);
+            return Err(ConnectionError::CommonError(x))
         },
         Ok(_) => debug!("created pairwise key on agent"),
     };
@@ -418,7 +424,7 @@ fn init_connection(handle: u32) -> Result<u32,u32> {
         Err(x) => {
             error!("could not update profile on agent: {}", x);
             release(handle);
-            return Err(x);
+            return Err(ConnectionError::CommonError(x))
         },
         Ok(_) => debug!("updated profile on agent"),
     };
@@ -428,26 +434,26 @@ fn init_connection(handle: u32) -> Result<u32,u32> {
     Ok(error::SUCCESS.code_num)
 }
 
-pub fn build_connection(source_id: &str) -> Result<u32,u32> {
+pub fn build_connection(source_id: &str) -> Result<u32,ConnectionError> {
     let new_handle = create_connection(source_id);
 
     match init_connection(new_handle) {
         Ok(_) => Ok(new_handle),
         Err(x) => {
             release(new_handle);
-            Err(x)
+            return Err(x)
         }
     }
 }
 
-pub fn build_connection_with_invite(source_id: &str, details: &str) -> Result<u32,u32> {
+pub fn build_connection_with_invite(source_id: &str, details: &str) -> Result<u32,ConnectionError> {
 
     let mut details:Value = serde_json::from_str(&details)
-        .or(Err(error::INVALID_JSON.code_num))?;
+        .or(Err(ConnectionError::CommonError(error::INVALID_JSON.code_num)))?;
 
-    details = unabbrv_event_detail(details)?;
+    details = unabbrv_event_detail(details).map_err(|e| {ConnectionError::CommonError(e)})?;
     let invite_details:InviteDetail = serde_json::from_value(details)
-        .or(Err(error::INVALID_INVITE_DETAILS.code_num))?;
+        .or(Err(ConnectionError::CommonError(error::INVALID_INVITE_DETAILS.code_num)))?;
 
     let new_handle = create_connection(source_id);
 
@@ -469,14 +475,16 @@ pub fn build_connection_with_invite(source_id: &str, details: &str) -> Result<u3
     Ok(new_handle)
 }
 
-pub fn parse_acceptance_details(handle: u32, message: &Message) -> Result<SenderDetail, u32> {
+pub fn parse_acceptance_details(handle: u32, message: &Message) -> Result<SenderDetail, ConnectionError> {
 
     debug!("parsing acceptance details for message {:?}", message);
-    if message.payload.is_none() {return Err(error::INVALID_MSGPACK.code_num); }
+    if message.payload.is_none() {
+        return Err(ConnectionError::CommonError(error::INVALID_MSGPACK.code_num)) }
 
     let my_vk = settings::get_config_value(settings::CONFIG_SDK_TO_REMOTE_VERKEY).unwrap();
     let payload = messages::to_u8(message.payload.as_ref().unwrap());
-    let payload = crypto::parse_msg(wallet::get_wallet_handle(),&my_vk,&payload)?;
+    // TODO: Refactor Error
+    let payload = crypto::parse_msg(wallet::get_wallet_handle(),&my_vk,&payload).map_err(|e| {ConnectionError::CommonError(e)})?;
 
     debug!("deserializing GetMsgResponse: {:?}", payload);
 
@@ -485,12 +493,13 @@ pub fn parse_acceptance_details(handle: u32, message: &Message) -> Result<Sender
         Ok(x) => x,
         Err(x) => {
             error!("Could not parse outer msg: {}", x);
-            return Err(error::INVALID_MSGPACK.code_num)
+            return Err(ConnectionError::CommonError(error::INVALID_MSGPACK.code_num))
         },
     };
 
     let payload = messages::to_u8(&response.msg);
-    let details = messages::invite::parse_invitation_acceptance_details(payload)?;
+    // TODO: Refactor Error
+    let details = messages::invite::parse_invitation_acceptance_details(payload).map_err(|e| {ConnectionError::CommonError(e)})?;
 
     Ok(details)
 }
@@ -521,7 +530,8 @@ pub fn update_state(handle: u32) -> Result<u32, u32> {
             if get_state(handle) == VcxStateType::VcxStateOfferSent as u32 || get_state(handle) == VcxStateType::VcxStateInitialized as u32{
                  for i in response {
                      if i.status_code == MessageAccepted.as_string() && i.msg_type == "connReqAnswer" {
-                          let details = parse_acceptance_details(handle, &i)?;
+                         // TODO: Refactor Error
+                          let details = parse_acceptance_details(handle, &i).map_err(|e| { e.to_error_code()})?;
                           set_their_pw_did(handle, &details.did);
                           set_their_pw_verkey(handle, &details.verkey);
                           set_state(handle, VcxStateType::VcxStateAccepted);
@@ -733,6 +743,13 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_build_connection(){
+
+        build_connection("This Should Fail").map_err(|e| {assert_eq!(e.to_error_code(),
+                                                                                1035)});
+       assert!(build_connection_with_invite("This Should Fail", "BadDetailsFoobar").is_err());
+    }
+    #[test]
     fn test_create_connection() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
@@ -862,7 +879,7 @@ mod tests {
     fn test_bad_wallet_connection_fails() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
-        assert_eq!(build_connection("test_bad_wallet_connection_fails").unwrap_err(),error::UNKNOWN_LIBINDY_ERROR.code_num);
+        assert_eq!(build_connection("test_bad_wallet_connection_fails").unwrap_err().to_error_code(),error::UNKNOWN_LIBINDY_ERROR.code_num);
     }
 
     #[test]
@@ -900,6 +917,24 @@ mod tests {
         CONNECTION_MAP.lock().unwrap().insert(handle, c);
 
         parse_acceptance_details(handle, &response).unwrap();
+
+        // test that it fails
+        let bad_response = Message {
+            status_code: MessageAccepted.as_string(),
+            payload: None, // This will cause an error
+            sender_did: "H4FBkUidRG8WLsWa7M6P38".to_string(),
+            uid: "yzjjywu".to_string(),
+            msg_type: "connReqAnswer".to_string(),
+            ref_msg_id: None,
+            delivery_details: Vec::new(),
+        };
+
+        match parse_acceptance_details(handle, &bad_response) {
+            Ok(_) => assert_eq!(0,1), // we should not receive this
+            // TODO: Refactor Error
+            // TODO: Fix this test to be a correct Error Type
+            Err(e) => assert_eq!(e, ConnectionError::CommonError(1019)),
+        }
     }
 
     #[ignore]
@@ -936,6 +971,8 @@ mod tests {
             thread::sleep(Duration::from_millis(1000));
             update_state(handle).unwrap();
         }
+
+//        assert_eq!(update_state(12345).map_err(|e| {e}), ConnectionError::CommonError(123))
     }
 
     #[test]
@@ -1057,7 +1094,7 @@ mod tests {
         let bad_details = r#"{"id":"mtfjmda","s":{"d":"abc"},"l":"abc","n":"Evernym","v":"avc"},"sa":{"d":"abc","e":"abc","v":"abc"},"sc":"MS-101","sm":"message created","t":"there"}"#;
         match build_connection_with_invite("alice",&bad_details) {
             Ok(_) => panic!("should have failed"),
-            Err(x) => assert_eq!(x, error::INVALID_JSON.code_num),
+            Err(x) => assert_eq!(x, ConnectionError::CommonError(error::INVALID_JSON.code_num)),
         };
     }
 
