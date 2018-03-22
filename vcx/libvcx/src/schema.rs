@@ -18,6 +18,8 @@ use utils::libindy::ledger::{
     libindy_submit_request,
     libindy_sign_and_submit_request
 };
+use error::schema::SchemaError;
+use error::ToErrorCode;
 
 lazy_static! {
     static ref SCHEMA_MAP: Mutex<HashMap<u32, Box<CreateSchema>>> = Default::default();
@@ -61,35 +63,35 @@ pub struct CreateSchema {
 
 pub trait Schema: ToString {
     type SchemaType;
-    fn retrieve_schema(sequence_num: i32) -> Result<SchemaTransaction, u32>
+    fn retrieve_schema(sequence_num: i32) -> Result<SchemaTransaction, SchemaError>
     {
         if settings::test_indy_mode_enabled() {
             match serde_json::from_str(SCHEMA_TXN) {
                 Ok(x) => return Ok(x),
-                Err(_) => return Err(error::INVALID_JSON.code_num)
+                Err(_) => return Err(SchemaError::CommonError(error::INVALID_JSON.code_num)),
             };
         }
         debug!("retrieving schema_no {} from ledger", sequence_num);
         let txn = Self::retrieve_from_ledger(sequence_num)?;
         match Self::process_ledger_txn(txn){
             Ok(data) => Ok(data),
-            Err(code) => return Err(error::INVALID_SCHEMA_SEQ_NO.code_num)
+            Err(code) => return Err(SchemaError::InvalidSchemaSeqNo())
         }
     }
 
-    fn process_ledger_txn(txn: String) -> Result<SchemaTransaction, u32>
+    fn process_ledger_txn(txn: String) -> Result<SchemaTransaction, SchemaError>
     {
         let result = Self::extract_result_from_txn(&txn)?;
         let schema_txn: SchemaTransaction = match result.get("data") {
             Some(d) => {
                 serde_json::from_value(d.clone()).map_err(|err| {
                     warn!("{}: {:?}","Parse from value error", err);
-                    error::INVALID_JSON.code_num
+                    SchemaError::CommonError(error::INVALID_JSON.code_num)
                 })?
             },
             None => {
                 warn!("{}","'data' not found in json");
-                return Err(error::INVALID_JSON.code_num)
+                return Err(SchemaError::CommonError(error::INVALID_JSON.code_num))
             }
         };
 
@@ -97,41 +99,41 @@ pub trait Schema: ToString {
             Some(x) => {
                 if x.ne(SCHEMA_TYPE) {
                     warn!("ledger txn type not schema: {:?}", x);
-                    return Err(error::INVALID_SCHEMA_SEQ_NO.code_num)
+                    return Err(SchemaError::CommonError(error::INVALID_SCHEMA_SEQ_NO.code_num))
                 }
                 Ok(schema_txn)
             },
-            None => Err(error::INVALID_SCHEMA_SEQ_NO.code_num)
+            None => Err(SchemaError::CommonError(error::INVALID_SCHEMA_SEQ_NO.code_num))
         }
     }
 
-    fn extract_result_from_txn(txn:&str) -> Result<serde_json::Value, u32> {
+    fn extract_result_from_txn(txn:&str) -> Result<serde_json::Value, SchemaError> {
         let txn_struct: Value = serde_json::from_str(txn).map_err(|err| {
             warn!("{}: {:?}","Parse from json error", err);
-            error::INVALID_JSON.code_num
+            SchemaError::CommonError(error::INVALID_JSON.code_num)
         })?;
         match txn_struct.get("result"){
             Some(result) => Ok(result.clone()),
             None => {
                 warn!("{}","'result' not found in json");
-                return Err(error::INVALID_JSON.code_num)
+                return Err(SchemaError::CommonError(error::INVALID_JSON.code_num))
             }
         }
     }
 
-    fn retrieve_from_ledger(sequence_num: i32) -> Result<String, u32>
+    fn retrieve_from_ledger(sequence_num: i32) -> Result<String, SchemaError>
     {
         let txn = Self::build_get_txn(sequence_num)?;
-        let pool_handle = get_pool_handle()?;
+        let pool_handle = get_pool_handle().map_err(|x| SchemaError::CommonError(x))?;
 
-        libindy_submit_request(pool_handle, txn)
+        libindy_submit_request(pool_handle, txn).map_err(|x| SchemaError::CommonError(x))
     }
 
-    fn build_get_txn(sequence_num: i32) -> Result<String, u32>
+    fn build_get_txn(sequence_num: i32) -> Result<String, SchemaError>
     {
         let submitter_did = "GGBDg1j8bsKmr4h5T9XqYf".to_string();
 
-        libindy_build_get_txn_request(submitter_did, sequence_num)
+        libindy_build_get_txn_request(submitter_did, sequence_num).map_err(|x| SchemaError::CommonError(x))
     }
 }
 
@@ -179,7 +181,7 @@ impl fmt::Display for CreateSchema {
 }
 
 impl LedgerSchema {
-    pub fn new_from_ledger(sequence_num: i32) -> Result<LedgerSchema, u32>
+    pub fn new_from_ledger(sequence_num: i32) -> Result<LedgerSchema, SchemaError>
     {
         Ok(LedgerSchema{
             sequence_num: sequence_num,
@@ -190,28 +192,27 @@ impl LedgerSchema {
 }
 
 impl CreateSchema {
-    pub fn create_schema_req(submitter_did: &str, data: String) -> Result<String, u32> {
+    pub fn create_schema_req(submitter_did: &str, data: String) -> Result<String, SchemaError> {
         if settings::test_indy_mode_enabled() { return Ok(SCHEMA_REQ.to_string()); }
-        libindy_build_schema_request(submitter_did.to_string(), data)
-            .map_err( |x| error::map_libindy_err(x, error::INVALID_SCHEMA_CREATION.code_num))
+        libindy_build_schema_request(submitter_did.to_string(), data).or(Err(SchemaError::InvalidSchemaCreation()))
+//            .map_err( |x| error::map_libindy_err(x, error::INVALID_SCHEMA_CREATION.code_num))
     }
 
-    pub fn sign_and_send_request(submitter_did: &str, request: &str) ->  Result<String, u32> {
+    pub fn sign_and_send_request(submitter_did: &str, request: &str) ->  Result<String, SchemaError> {
         if settings::test_indy_mode_enabled() { return Ok(CREATE_SCHEMA_RESULT.to_string()); }
-        let pool_handle = get_pool_handle()?;
+        let pool_handle = get_pool_handle().map_err(|x| SchemaError::CommonError(x))?;
         let wallet_handle = get_wallet_handle();
         libindy_sign_and_submit_request(pool_handle,
                                         wallet_handle,
                                         submitter_did.to_string(),
-                                        request.to_string())
-            .map_err( |x| error::map_libindy_err(x, error::INVALID_SCHEMA_CREATION.code_num))
+                                        request.to_string()).or(Err(SchemaError::InvalidSchemaCreation()))
     }
 
-    pub fn parse_schema_data(data: &str) -> Result<SchemaTransaction, u32> {
+    pub fn parse_schema_data(data: &str) -> Result<SchemaTransaction, SchemaError> {
         let result = CreateSchema::extract_result_from_txn(data)?;
         match serde_json::from_str(&result.to_string()) {
             Ok(x) => Ok(x),
-            Err(x) => Err(error::INVALID_SCHEMA_CREATION.code_num),
+            Err(x) => Err(SchemaError::InvalidSchemaCreation()),
         }
     }
 
@@ -224,8 +225,9 @@ impl CreateSchema {
 pub fn create_new_schema(source_id: String,
                          schema_name: String,
                          issuer_did: String,
-                         data: String) -> Result<u32, u32> {
+                         data: String) -> Result<u32, SchemaError> {
     debug!("creating schema with source_id: {}, name: {}, issuer_did: {}", source_id, schema_name, issuer_did);
+    // TODO: Refactor Error
     let req = CreateSchema::create_schema_req(&issuer_did, data)?;
     let sign_response = CreateSchema::sign_and_send_request(&issuer_did, &req)?;
     debug!("created schema on ledger");
@@ -244,7 +246,7 @@ pub fn create_new_schema(source_id: String,
             new_schema.set_sequence_num(x as u32);
             debug!("created schema object with sequence_num: {}", new_schema.sequence_num);
         },
-        None => return Err(error::INVALID_SCHEMA_CREATION.code_num),
+        None => return Err(SchemaError::InvalidSchemaCreation())
     };
     {
         let mut m = SCHEMA_MAP.lock().unwrap();
@@ -255,7 +257,7 @@ pub fn create_new_schema(source_id: String,
     Ok(new_handle)
 }
 
-pub fn get_schema_attrs(source_id: String, sequence_num: u32) -> Result<String, u32> {
+pub fn get_schema_attrs(source_id: String, sequence_num: u32) -> Result<String, SchemaError> {
     let new_handle = rand::thread_rng().gen::<u32>();
     let new_schema = Box::new(CreateSchema {
         source_id,
@@ -281,25 +283,25 @@ pub fn is_valid_handle(handle: u32) -> bool {
     }
 }
 
-pub fn get_sequence_num(handle: u32) -> Result<u32, u32> {
+pub fn get_sequence_num(handle: u32) -> Result<u32, SchemaError> {
     match SCHEMA_MAP.lock().unwrap().get(&handle) {
         Some(x) => Ok(x.get_sequence_num()),
-        None => Err(error::INVALID_SCHEMA_HANDLE.code_num)
+        None => Err(SchemaError::InvalidHandle()),
     }
 }
 
-pub fn to_string(handle: u32) -> Result<String, u32> {
+pub fn to_string(handle: u32) -> Result<String, SchemaError> {
     match SCHEMA_MAP.lock().unwrap().get(&handle) {
         Some(p) => Ok(p.to_string().to_owned()),
-        None => Err(error::INVALID_SCHEMA_HANDLE.code_num)
+        None => Err(SchemaError::InvalidHandle()),
     }
 }
 
-pub fn from_string(schema_data: &str) -> Result<u32, u32> {
+pub fn from_string(schema_data: &str) -> Result<u32, SchemaError> {
     let derived_schema: CreateSchema = serde_json::from_str(schema_data)
         .map_err(|_| {
             error!("Invalid Json format for CreateSchema string");
-            error::INVALID_JSON.code_num
+            SchemaError::CommonError(error::INVALID_JSON.code_num)
         })?;
     let new_handle = derived_schema.handle;
 
@@ -314,10 +316,10 @@ pub fn from_string(schema_data: &str) -> Result<u32, u32> {
     Ok(new_handle)
 }
 
-pub fn release(handle: u32) -> u32 {
+pub fn release(handle: u32) -> Result< u32, SchemaError> {
     match SCHEMA_MAP.lock().unwrap().remove(&handle) {
-        Some(t) => error::SUCCESS.code_num,
-        None => error::INVALID_SCHEMA_HANDLE.code_num,
+        Some(t) => Ok(error::SUCCESS.code_num),
+        None => Err(SchemaError::InvalidHandle()),
     }
 }
 
@@ -336,6 +338,7 @@ mod tests {
     use utils::libindy::wallet::{ delete_wallet, init_wallet };
     use utils::constants::{ DEMO_AGENT_PW_SEED, DEMO_ISSUER_PW_SEED };
     use std::str::FromStr;
+    use utils::error::{INVALID_JSON, NO_POOL_OPEN};
 
     static  EXAMPLE: &str = r#"{
     "seqNo": 15,
@@ -382,6 +385,7 @@ mod tests {
   "txnTime":1510246647,
   "type":"101"
 }"#;
+    static BAD_LEDGER_SAMPLE: &str = r#"{"result":{}"#;
     static LEDGER_SAMPLE: &str = r#"
         {
           "result":{
@@ -461,6 +465,9 @@ mod tests {
     #[test]
     fn test_process_ledger_txn(){
         let test = LedgerSchema::process_ledger_txn(String::from_str(LEDGER_SAMPLE).unwrap()).unwrap();
+        let bad_ledger_schema = LedgerSchema::process_ledger_txn(
+            String::from_str(BAD_LEDGER_SAMPLE).unwrap());
+        assert_eq!(bad_ledger_schema.err(), Some(SchemaError::CommonError(INVALID_JSON.code_num)));
     }
 
     #[test]
@@ -534,10 +541,14 @@ mod tests {
     fn test_create_schema_fails(){
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-        assert_eq!(create_new_schema("1".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), "".to_string()),
-        Err(error::INVALID_SCHEMA_CREATION.code_num));
+        let schema = create_new_schema("1".to_string(),
+                                       "name".to_string(),
+                                       "VsKV7grR1BUE29mG2Fm2kX".to_string(),
+                                       "".to_string());
+        assert_eq!(schema.err(),Some(SchemaError::InvalidSchemaCreation()));
     }
 
+    // TODO: Why is this test here?
     #[test]
     fn test_from_ledger_without_pool(){
         settings::set_defaults();
@@ -545,7 +556,7 @@ mod tests {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         let test = LedgerSchema::new_from_ledger(22);
         assert!(test.is_err());
-        assert_eq!(error::NO_POOL_OPEN.code_num, test.unwrap_err())
+        assert_eq!(error::NO_POOL_OPEN.code_num, test.unwrap_err().to_error_code())
     }
 
     #[ignore]
@@ -598,10 +609,20 @@ mod tests {
         let h4 = create_new_schema("4".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
         let h5 = create_new_schema("5".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
         release_all();
-        assert_eq!(release(h1),error::INVALID_SCHEMA_HANDLE.code_num);
-        assert_eq!(release(h2),error::INVALID_SCHEMA_HANDLE.code_num);
-        assert_eq!(release(h3),error::INVALID_SCHEMA_HANDLE.code_num);
-        assert_eq!(release(h4),error::INVALID_SCHEMA_HANDLE.code_num);
-        assert_eq!(release(h5),error::INVALID_SCHEMA_HANDLE.code_num);
+        assert_eq!(release(h1).err(),Some(SchemaError::InvalidHandle()));
+        assert_eq!(release(h2).err(),Some(SchemaError::InvalidHandle()));
+        assert_eq!(release(h3).err(),Some(SchemaError::InvalidHandle()));
+        assert_eq!(release(h4).err(),Some(SchemaError::InvalidHandle()));
+        assert_eq!(release(h5).err(),Some(SchemaError::InvalidHandle()));
+    }
+
+    #[test]
+    fn test_errors(){
+        assert_eq!(get_sequence_num(1).err(), Some(SchemaError::InvalidHandle()));
+        assert_eq!(to_string(1).err(), Some(SchemaError::InvalidHandle()));
+        let test: Result<LedgerSchema, SchemaError> = LedgerSchema::new_from_ledger(22);
+        assert_eq!(test.err(), Some(SchemaError::CommonError(NO_POOL_OPEN.code_num)));
+        let bad_schema = EXAMPLE;
+        assert_eq!(from_string(bad_schema).err(), Some(SchemaError::CommonError(INVALID_JSON.code_num)));
     }
 }

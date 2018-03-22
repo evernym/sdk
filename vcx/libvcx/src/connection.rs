@@ -26,6 +26,7 @@ use utils::json::KeyMatch;
 use error::connection::ConnectionError;
 use error::base::BaseError;
 use error::ToErrorCode;
+
 lazy_static! {
     static ref CONNECTION_MAP: Mutex<HashMap<u32, Box<Connection>>> = Default::default();
 }
@@ -623,19 +624,22 @@ pub fn set_invite_details(handle: u32, invite_detail: InviteDetail) {
 }
 
 
-pub fn parse_invite_detail(response: &str) -> Result<InviteDetail, u32> {
+pub fn parse_invite_detail(response: &str) -> Result<InviteDetail, ConnectionError> {
 
     let details: InviteDetail = match serde_json::from_str(response) {
         Ok(x) => x,
         Err(x) => {
             debug!("Connect called without a valid response from server: {}", x);
-            return Err(error::INVALID_HTTP_RESPONSE.code_num);
+            return Err(ConnectionError::InviteDetailError());
         },
     };
 
     Ok(details)
 }
 
+// TODO: Refactor Error
+// this will become a CommonError, because multiple types (Connection/Issuer Claim) use this function
+// Possibly this function moves out of this file.
 pub fn generate_encrypted_payload(my_vk: &str, their_vk: &str, data: &str, msg_type: &str) -> Result<Vec<u8>, u32> {
     let my_payload = messages::Payload {
         msg_info: messages::MsgInfo { name: msg_type.to_string(), ver: "1.0".to_string(), fmt: "json".to_string(), },
@@ -801,6 +805,7 @@ mod tests {
     fn test_parse_invite_details() {
         let invite = parse_invite_detail(INVITE_DETAIL_STRING).unwrap();
         assert_eq!(invite.sender_detail.verkey,"ESE6MnqAyjRigduPG454vfLvKhMbmaZjy9vqxCnSKQnp");
+        assert_eq!(parse_invite_detail(BAD_INVITE_DETAIL_STRING).err(), Some(ConnectionError::InviteDetailError()));
     }
 
     #[test]

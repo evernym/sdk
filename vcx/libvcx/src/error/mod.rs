@@ -1,5 +1,6 @@
 pub mod connection;
 pub mod base;
+pub mod schema;
 
 
 pub trait ToErrorCode {

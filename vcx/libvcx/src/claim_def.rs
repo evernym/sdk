@@ -18,6 +18,7 @@ use utils::libindy::ledger::{libindy_submit_request,
                              libindy_build_get_claim_def_txn,
                              libindy_build_create_claim_def_txn,
                              libindy_sign_and_submit_request};
+use error::ToErrorCode;
 
 lazy_static! {
     static ref CLAIMDEF_MAP: Mutex<HashMap<u32, Box<CreateClaimDef>>> = Default::default();
@@ -291,7 +292,7 @@ fn create_and_store_claim_def(schema_json: &str,
 
 pub fn get_schema_data(schema_seq_no: u32) -> Result<String, u32> {
     if settings::test_indy_mode_enabled() { return Ok(SCHEMAS_JSON.to_string()); }
-    let schema_obj = LedgerSchema::new_from_ledger(schema_seq_no as i32)?;
+    let schema_obj = LedgerSchema::new_from_ledger(schema_seq_no as i32).map_err(|x| x.to_error_code())?;
     debug!("retrieved schema data from ledger");
     Ok(schema_obj.to_string())
 }

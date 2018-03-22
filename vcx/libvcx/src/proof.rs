@@ -22,6 +22,7 @@ use utils::libindy::anoncreds::libindy_verifier_verify_proof;
 use claim_def::{ RetrieveClaimDef, ClaimDefCommon, ClaimDefinition };
 use schema::{ LedgerSchema, SchemaTransaction };
 use proof_compliance::{ proof_compliance };
+use error::ToErrorCode;
 
 lazy_static! {
     static ref PROOF_MAP: Mutex<HashMap<u32, Box<Proof>>> = Default::default();
@@ -139,7 +140,7 @@ impl Proof {
                 Some(ref x) => x,
                 None => return Err(error::INVALID_SCHEMA.code_num)
             };
-            let schema_obj = LedgerSchema::new_from_ledger(schema_seq_no as i32)?;
+            let schema_obj = LedgerSchema::new_from_ledger(schema_seq_no as i32).map_err(|x| x.to_error_code())?;
             let data = match schema_obj.data {
                 Some(x) => x,
                 None => return Err(error::INVALID_PROOF.code_num)

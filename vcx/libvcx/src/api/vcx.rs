@@ -220,6 +220,7 @@ mod tests {
     use std::fs;
     use std::ptr;
     use error::connection::ConnectionError;
+    use error::schema::SchemaError;
 
     extern "C" fn init_cb(command_handle: u32, err: u32) {
         if err != 0 {panic!("create_cb failed: {}", err)}
@@ -305,7 +306,7 @@ mod tests {
         vcx_reset();
         assert_eq!(::connection::release(connection),ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num));
         assert_eq!(::issuer_claim::release(claim),error::INVALID_ISSUER_CLAIM_HANDLE.code_num);
-        assert_eq!(::schema::release(schema),error::INVALID_SCHEMA_HANDLE.code_num);
+        assert_eq!(::schema::release(schema).err(),Some(SchemaError::InvalidHandle()));
         assert_eq!(::proof::release(proof),error::INVALID_PROOF_HANDLE.code_num);
         assert_eq!(::claim_def::release(claimdef),error::INVALID_CLAIM_DEF_HANDLE.code_num);
         assert_eq!(wallet::get_wallet_handle(), 0);
