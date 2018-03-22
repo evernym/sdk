@@ -347,7 +347,10 @@ pub extern fn vcx_connection_invite_details(command_handle: u32,
 #[no_mangle]
 pub extern fn vcx_connection_release(connection_handle: u32) -> u32 {
     info!("vcx_connection_release(connection_handle: {})", connection_handle);
-    release(connection_handle).to_error_code()
+    match release(connection_handle){
+        Ok(x) => x,
+        Err(e) => e.to_error_code(),
+    }
 }
 
 #[cfg(test)]

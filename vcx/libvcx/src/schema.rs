@@ -338,7 +338,7 @@ mod tests {
     use utils::libindy::wallet::{ delete_wallet, init_wallet };
     use utils::constants::{ DEMO_AGENT_PW_SEED, DEMO_ISSUER_PW_SEED };
     use std::str::FromStr;
-    use utils::error::{INVALID_JSON, NO_POOL_OPEN};
+    use utils::error::INVALID_JSON;
 
     static  EXAMPLE: &str = r#"{
     "seqNo": 15,
@@ -626,6 +626,7 @@ mod tests {
         // This error will throw when run outside of all the other test modules, but will NOT
         // error when a pool is open from any previous test.  Ideally we fix this by closing our
         // opened pools.
+//        use utils::error::NO_POOL_OPEN;
 //        assert_eq!(test.err(), Some(SchemaError::CommonError(NO_POOL_OPEN.code_num)));
         let bad_schema = EXAMPLE;
         assert_eq!(from_string(bad_schema).err(), Some(SchemaError::CommonError(INVALID_JSON.code_num)));

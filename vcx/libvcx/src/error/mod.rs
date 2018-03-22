@@ -2,6 +2,7 @@ pub mod connection;
 pub mod base;
 pub mod schema;
 pub mod cred_def;
+pub mod issuer_cred;
 
 
 pub trait ToErrorCode {
