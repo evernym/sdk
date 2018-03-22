@@ -104,7 +104,7 @@ impl Proof {
                 None => return Err(error::INVALID_CLAIM_DEF_JSON.code_num)
             };
             let claim_def = RetrieveClaimDef::new()
-                .retrieve_claim_def("GGBDg1j8bsKmr4h5T9XqYf", schema_seq_no, Some(SigTypes::CL), issuer_did)?;
+                .retrieve_claim_def("GGBDg1j8bsKmr4h5T9XqYf", schema_seq_no, Some(SigTypes::CL), issuer_did).map_err(|x| x.to_error_code())?;
             let claim_obj: ClaimDefinition = serde_json::from_str(&claim_def)
                 .map_err(|err| {
                     error!("Invalid json format for ClaimDefinition.");

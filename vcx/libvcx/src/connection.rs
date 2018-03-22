@@ -24,7 +24,6 @@ use messages::MessageResponseCode::{ MessageAccepted };
 use serde_json::Value;
 use utils::json::KeyMatch;
 use error::connection::ConnectionError;
-use error::base::BaseError;
 use error::ToErrorCode;
 
 lazy_static! {
@@ -745,13 +744,14 @@ mod tests {
     use messages::get_message::*;
     use std::thread;
     use std::time::Duration;
+    use utils::error::UNKNOWN_LIBINDY_ERROR;
     use super::*;
 
     #[test]
     fn test_build_connection(){
 
-        build_connection("This Should Fail").map_err(|e| {assert_eq!(e.to_error_code(),
-                                                                                1035)});
+        assert_eq!(build_connection("This Should Fail").err(),
+                   Some(ConnectionError::CommonError(UNKNOWN_LIBINDY_ERROR.code_num)));
        assert!(build_connection_with_invite("This Should Fail", "BadDetailsFoobar").is_err());
     }
     #[test]

@@ -1,6 +1,7 @@
 pub mod connection;
 pub mod base;
 pub mod schema;
+pub mod cred_def;
 
 
 pub trait ToErrorCode {
@@ -9,7 +10,6 @@ pub trait ToErrorCode {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     #[test]
     fn test_to_error_code(){
 

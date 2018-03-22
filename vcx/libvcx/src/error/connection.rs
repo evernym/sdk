@@ -1,7 +1,6 @@
 
 use std::fmt;
 use error::ToErrorCode;
-use error::base::BaseError;
 use std::error::Error;
 
 #[derive(Debug)]

@@ -7,7 +7,6 @@ use utils::error::error_string;
 use std::ptr;
 use std::thread;
 use connection::{build_connection, build_connection_with_invite, connect, to_string, get_state, release, is_valid_handle, update_state, from_string, get_invite_details};
-use error::connection::*;
 use error::ToErrorCode;
 
 /**
