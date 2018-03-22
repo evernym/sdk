@@ -580,10 +580,10 @@ pub fn from_string(connection_data: &str) -> Result<u32, ConnectionError> {
     Ok(new_handle)
 }
 
-pub fn release(handle: u32) -> ConnectionError {
+pub fn release(handle: u32) -> Result< u32, ConnectionError> {
     match CONNECTION_MAP.lock().unwrap().remove(&handle) {
-        Some(t) => ConnectionError::CommonError(error::SUCCESS.code_num),
-        None => ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num),
+        Some(t) => Ok(ConnectionError::CommonError(error::SUCCESS.code_num).to_error_code()),
+        None => Err(ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num)),
     }
 }
 
@@ -783,8 +783,9 @@ mod tests {
 
     #[test]
     fn test_connection_release_fails() {
-        let rc = release(1).to_error_code();
-        assert_eq!(rc, error::INVALID_CONNECTION_HANDLE.code_num);
+        let rc = release(1);
+        assert_eq!(rc.err(),
+                   Some(ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num)));
     }
 
     #[test]
@@ -1055,11 +1056,11 @@ mod tests {
         let h4 = build_connection("rel4").unwrap();
         let h5 = build_connection("rel5").unwrap();
         release_all();
-        assert_eq!(release(h1).to_error_code(),error::INVALID_CONNECTION_HANDLE.code_num);
-        assert_eq!(release(h2),ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num));
-        assert_eq!(release(h3),ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num));
-        assert_eq!(release(h4),ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num));
-        assert_eq!(release(h5),ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num));
+        assert_eq!(release(h1).err(),Some(ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num)));
+        assert_eq!(release(h2).err(),Some(ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num)));
+        assert_eq!(release(h3).err(),Some(ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num)));
+        assert_eq!(release(h4).err(),Some(ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num)));
+        assert_eq!(release(h5).err(),Some(ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num)));
     }
 
     #[test]
@@ -1141,8 +1142,8 @@ mod tests {
         assert_eq!(from_string("").err(), Some(ConnectionError::CommonError(1016)));
 
         // release throws a connection Error
-        assert_eq!(release(1234),
-                   ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num));
+        assert_eq!(release(1234).err(),
+                   Some(ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num)));
 
     }
 }
