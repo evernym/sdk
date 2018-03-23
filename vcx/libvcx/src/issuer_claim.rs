@@ -292,8 +292,8 @@ pub fn create_claim_payload_using_wallet<'a>(claim_id: &str, claim_req: &ClaimRe
     debug!("claim request: {}", claim_req_str);
 
     let (_, xclaim_json) = libindy_issuer_create_claim(wallet_handle,
-                                                       claim_req_str,
-                                                       claim_data.to_string(),
+                                                       &claim_req_str,
+                                                       claim_data,
                                                        -1)?;
     debug!("xclaim_json: {:?}", xclaim_json);
     Ok(xclaim_json)
@@ -510,7 +510,7 @@ pub mod tests {
 
         let issuer_did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
 
-        libindy_create_and_store_claim_def(wallet_handle, issuer_did, SCHEMAS_JSON.to_string(), None, false).unwrap();
+        libindy_create_and_store_claim_def(wallet_handle, &issuer_did, SCHEMAS_JSON, None, false).unwrap();
     }
 
     fn set_default_and_enable_test_mode() {
