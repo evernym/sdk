@@ -94,16 +94,16 @@ pub trait Schema: ToString {
             }
         };
 
-        match schema_txn.clone().txn_type {
+        match schema_txn.txn_type.as_ref() {
             Some(x) => {
                 if x.ne(SCHEMA_TYPE) {
                     warn!("ledger txn type not schema: {:?}", x);
                     return Err(error::INVALID_SCHEMA_SEQ_NO.code_num)
                 }
-                Ok(schema_txn)
             },
-            None => Err(error::INVALID_SCHEMA_SEQ_NO.code_num)
-        }
+            None => return Err(error::INVALID_SCHEMA_SEQ_NO.code_num)
+        };
+        Ok(schema_txn)
     }
 
     fn extract_result_from_txn(txn:&str) -> Result<serde_json::Value, u32> {
