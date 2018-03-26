@@ -189,7 +189,7 @@ impl CreateClaimDef {
         }
     }
 
-    pub fn get_source_id(&self) -> String { self.source_id.clone() }
+    pub fn get_source_id(&self) -> &String { &self.source_id }
 
     pub fn set_handle(&mut self, handle: u32) { self.handle = handle; }
 
@@ -333,7 +333,7 @@ pub fn from_string(claimdef_data: &str) -> Result<u32, u32> {
 
 pub fn get_source_id(handle: u32) -> Result<String, u32> {
     match CLAIMDEF_MAP.lock().unwrap().get(&handle) {
-        Some(c) => Ok(c.get_source_id()),
+        Some(c) => Ok(c.get_source_id().clone()),
         None => Err(error::INVALID_CLAIM_DEF_HANDLE.code_num),
     }
 }

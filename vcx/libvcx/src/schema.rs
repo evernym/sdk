@@ -220,7 +220,7 @@ impl CreateSchema {
 
     pub fn get_sequence_num(&self) -> u32 {let sequence_num = self.sequence_num as u32; sequence_num}
 
-    pub fn get_source_id(&self) -> String { self.source_id.clone() }
+    pub fn get_source_id(&self) -> &String { &self.source_id }
 
 }
 
@@ -299,7 +299,7 @@ pub fn to_string(handle: u32) -> Result<String, u32> {
 
 pub fn get_source_id(handle: u32) -> Result<String, u32> {
     match SCHEMA_MAP.lock().unwrap().get(&handle) {
-        Some(s) => Ok(s.get_source_id()),
+        Some(s) => Ok(s.get_source_id().clone()),
         None => Err(error::INVALID_SCHEMA_HANDLE.code_num),
     }
 }

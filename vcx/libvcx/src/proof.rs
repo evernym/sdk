@@ -304,9 +304,9 @@ impl Proof {
 
     fn get_proof_state(&self) -> u32 {let state = self.proof_state as u32; state}
 
-    fn get_proof_uuid(&self) -> String { self.msg_uid.clone() }
+    fn get_proof_uuid(&self) -> &String { &self.msg_uid }
 
-    fn get_source_id(&self) -> String { self.source_id.clone() }
+    fn get_source_id(&self) -> &String { &self.source_id }
 }
 
 pub fn create_proof(source_id: String,
@@ -402,7 +402,7 @@ pub fn to_string(handle: u32) -> Result<String, u32> {
 
 pub fn get_source_id(handle: u32) -> Result<String, u32> {
     match PROOF_MAP.lock().unwrap().get(&handle) {
-        Some(p) => Ok(p.get_source_id()),
+        Some(p) => Ok(p.get_source_id().clone()),
         None => Err(error::INVALID_PROOF_HANDLE.code_num)
     }
 }
@@ -454,7 +454,7 @@ fn get_proof_details(response: &str) -> Result<String, u32> {
 
 pub fn get_proof_uuid(handle: u32) -> Result<String,u32> {
     match PROOF_MAP.lock().unwrap().get(&handle) {
-        Some(proof) => Ok(proof.get_proof_uuid()),
+        Some(proof) => Ok(proof.get_proof_uuid().clone()),
         None => Err(error::INVALID_PROOF_HANDLE.code_num),
     }
 }

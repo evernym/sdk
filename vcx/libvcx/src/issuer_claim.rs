@@ -248,13 +248,13 @@ impl IssuerClaim {
     }
 
     fn get_state(&self) -> u32 { let state = self.state as u32; state }
-    fn get_offer_uid(&self) -> String { self.msg_uid.clone() }
+    fn get_offer_uid(&self) -> &String { &self.msg_uid }
     fn set_offer_uid(&mut self, uid: &str) {self.msg_uid = uid.to_owned();}
     fn set_claim_request(&mut self, claim_request:ClaimRequest){
         self.claim_request = Some(claim_request);
     }
 
-    fn get_source_id(&self) -> String { self.source_id.clone() }
+    fn get_source_id(&self) -> &String { &self.source_id }
 
     fn generate_claim_offer(&self, to_did: &str) -> Result<ClaimOffer, u32> {
         let attr_map = convert_to_map(&self.claim_attributes)?;
@@ -301,7 +301,7 @@ pub fn create_claim_payload_using_wallet<'a>(claim_id: &str, claim_req: &ClaimRe
 
 pub fn get_offer_uid(handle: u32) -> Result<String,u32> {
     match ISSUER_CLAIM_MAP.lock().unwrap().get(&handle) {
-        Some(claim) => Ok(claim.get_offer_uid()),
+        Some(claim) => Ok(claim.get_offer_uid().clone()),
         None => Err(error::INVALID_ISSUER_CLAIM_HANDLE.code_num),
     }
 }
@@ -465,7 +465,7 @@ pub fn convert_to_map(s:&str) -> Result<serde_json::Map<String, serde_json::Valu
 
 pub fn get_source_id(handle: u32) -> Result<String, u32> {
     match ISSUER_CLAIM_MAP.lock().unwrap().get(&handle) {
-        Some(c) => Ok(c.get_source_id()),
+        Some(c) => Ok(c.get_source_id().clone()),
         None => Err(error::INVALID_ISSUER_CLAIM_HANDLE.code_num),
     }
 }
