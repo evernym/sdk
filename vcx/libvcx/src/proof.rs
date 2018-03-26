@@ -165,12 +165,12 @@ impl Proof {
     }
 
     fn proof_validation(&mut self) -> Result<u32, u32> {
-        let proof_req_msg = match self.proof_request.as_ref() {
-            Some(x) => x.to_owned(),
+        let proof_req_msg = match self.proof_request {
+            Some(ref x) => x.clone(),
             None => return Err(error::INVALID_PROOF.code_num),
         };
-        let proof_msg = match self.proof.as_ref() {
-            Some(x) => x.to_owned(),
+        let proof_msg = match self.proof {
+            Some(ref x) => x.clone(),
             None => return Err(error::INVALID_PROOF.code_num),
         };
         let claim_data = proof_msg.get_claim_info()?;
