@@ -28,9 +28,10 @@ lazy_static! {
     static ref PROOF_MAP: Mutex<HashMap<u32, Box<Proof>>> = Default::default();
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
-struct Proof {
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+pub struct Proof {
     source_id: String,
+    #[serde(skip_serializing, default)]
     handle: u32,
     requested_attrs: String,
     requested_predicates: String,
@@ -306,21 +307,20 @@ impl Proof {
 
     fn get_proof_uuid(&self) -> String { self.msg_uid.clone() }
 
+    fn get_source_id(&self) -> String { self.source_id.clone() }
 }
 
-pub fn create_proof(source_id: Option<String>,
+pub fn create_proof(source_id: String,
                     requested_attrs: String,
                     requested_predicates: String,
                     name: String) -> Result<u32, u32> {
 
     let new_handle = rand::thread_rng().gen::<u32>();
-    debug!("creating proof with name: {}, requested_attrs: {}, requested_predicates: {}", name, requested_attrs, requested_predicates);
-
-    let source_id_unwrap = source_id.unwrap_or("".to_string());
+    debug!("creating proof with source_id: {}, name: {}, requested_attrs: {}, requested_predicates: {}", source_id, name, requested_attrs, requested_predicates);
 
     let mut new_proof = Box::new(Proof {
         handle: new_handle,
-        source_id: source_id_unwrap,
+        source_id,
         msg_uid: String::new(),
         ref_msg_id: String::new(),
         requested_attrs,
@@ -401,19 +401,26 @@ pub fn to_string(handle: u32) -> Result<String, u32> {
     }
 }
 
+pub fn get_source_id(handle: u32) -> Result<String, u32> {
+    match PROOF_MAP.lock().unwrap().get(&handle) {
+        Some(p) => Ok(p.get_source_id()),
+        None => Err(error::INVALID_PROOF_HANDLE.code_num)
+    }
+}
+
 pub fn from_string(proof_data: &str) -> Result<u32, u32> {
     let derived_proof: Proof = serde_json::from_str(proof_data).map_err(|err| {
         warn!("{} with serde error: {}",error::INVALID_JSON.message, err);
         error::INVALID_JSON.code_num
     })?;
-    let new_handle = derived_proof.handle;
 
-    if is_valid_handle(new_handle) {return Ok(new_handle);}
+    let new_handle = rand::thread_rng().gen::<u32>();
+    let source_id = derived_proof.source_id.clone();
     let proof = Box::from(derived_proof);
 
     {
         let mut m = PROOF_MAP.lock().unwrap();
-        debug!("inserting handle {} into proof table", new_handle);
+        debug!("inserting handle {} with source_id {:?} into proof table", new_handle, source_id);
         m.insert(new_handle, proof);
     }
     Ok(new_handle)
@@ -474,7 +481,7 @@ pub fn get_proof(handle: u32) -> Result<String,u32> {
 pub fn generate_nonce() -> Result<String, u32> {
     let mut bn = BigNum::new().map_err(|err| error::BIG_NUMBER_ERROR.code_num)?;
 
-    BigNumRef::rand(&mut bn, LARGE_NONCE as i32, openssl::bn::MSB_MAYBE_ZERO, false)
+    BigNumRef::rand(&mut bn, LARGE_NONCE as i32, openssl::bn::MsbOption::MAYBE_ZERO, false)
         .map_err(|_| error::BIG_NUMBER_ERROR.code_num)?;
     Ok(bn.to_dec_str().map_err(|err| error::BIG_NUMBER_ERROR.code_num)?.to_string())
 }
@@ -504,7 +511,7 @@ mod tests {
     fn test_create_proof_succeeds() {
         set_default_and_enable_test_mode();
 
-        create_proof(None,
+        create_proof("1".to_string(),
                      REQUESTED_ATTRS.to_owned(),
                      REQUESTED_PREDICATES.to_owned(),
                      "Optional".to_owned()).unwrap();
@@ -520,7 +527,7 @@ mod tests {
     fn test_to_string_succeeds() {
         set_default_and_enable_test_mode();
 
-        let handle = create_proof(None,
+        let handle = create_proof("1".to_string(),
                                   REQUESTED_ATTRS.to_owned(),
                                   REQUESTED_PREDICATES.to_owned(),
                                   "Optional".to_owned()).unwrap();
@@ -531,23 +538,23 @@ mod tests {
     #[test]
     fn test_from_string_succeeds() {
         set_default_and_enable_test_mode();
-        let handle = create_proof(None,
+        let handle = create_proof("1".to_string(),
                                   REQUESTED_ATTRS.to_owned(),
                                   REQUESTED_PREDICATES.to_owned(),
                                   "Optional".to_owned()).unwrap();
         let proof_data = to_string(handle).unwrap();
-        assert!(!proof_data.is_empty());
+        let mut proof1: Proof = serde_json::from_str(&proof_data).unwrap();
         release(handle);
         let new_handle = from_string(&proof_data).unwrap();
-        let new_proof_data = to_string(new_handle).unwrap();
-        assert_eq!(new_handle, handle);
-        assert_eq!(new_proof_data, proof_data);
+        let proof2 : Proof = serde_json::from_str(&to_string(new_handle).unwrap()).unwrap();
+        proof1.handle = proof2.handle;
+        assert_eq!(proof1, proof2);
     }
 
     #[test]
     fn test_release_proof() {
         set_default_and_enable_test_mode();
-        let handle = create_proof(Some("1".to_string()),
+        let handle = create_proof("1".to_string(),
                                   REQUESTED_ATTRS.to_owned(),
                                   REQUESTED_PREDICATES.to_owned(),
                                   "Optional".to_owned()).unwrap();
@@ -565,7 +572,7 @@ mod tests {
         connection::set_agent_did(connection_handle, DID);
         connection::set_their_pw_verkey(connection_handle, VERKEY);
 
-        let handle = create_proof(Some("1".to_string()),
+        let handle = create_proof("1".to_string(),
                                   REQUESTED_ATTRS.to_owned(),
                                   REQUESTED_PREDICATES.to_owned(),
                                   "Optional".to_owned()).unwrap();
@@ -586,7 +593,7 @@ mod tests {
         let connection_handle = build_connection("test_send_proof_request").unwrap();
         connection::set_pw_did(connection_handle, "");
 
-        let handle = create_proof(Some("1".to_string()),
+        let handle = create_proof("1".to_string(),
                                   REQUESTED_ATTRS.to_owned(),
                                   REQUESTED_PREDICATES.to_owned(),
                                   "Optional".to_owned()).unwrap();
@@ -599,7 +606,7 @@ mod tests {
     #[test]
     fn test_get_proof_fails_with_no_proof() {
         set_default_and_enable_test_mode();
-        let handle = create_proof(Some("1".to_string()),
+        let handle = create_proof("1".to_string(),
                                   REQUESTED_ATTRS.to_owned(),
                                   REQUESTED_PREDICATES.to_owned(),
                                   "Optional".to_owned()).unwrap();
@@ -871,11 +878,11 @@ mod tests {
     fn test_release_all() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
-        let h1 = create_proof(None, REQUESTED_ATTRS.to_owned(), REQUESTED_PREDICATES.to_owned(), "Optional".to_owned()).unwrap();
-        let h2 = create_proof(None, REQUESTED_ATTRS.to_owned(), REQUESTED_PREDICATES.to_owned(), "Optional".to_owned()).unwrap();
-        let h3 = create_proof(None, REQUESTED_ATTRS.to_owned(), REQUESTED_PREDICATES.to_owned(), "Optional".to_owned()).unwrap();
-        let h4 = create_proof(None, REQUESTED_ATTRS.to_owned(), REQUESTED_PREDICATES.to_owned(), "Optional".to_owned()).unwrap();
-        let h5 = create_proof(None, REQUESTED_ATTRS.to_owned(), REQUESTED_PREDICATES.to_owned(), "Optional".to_owned()).unwrap();
+        let h1 = create_proof("1".to_string(), REQUESTED_ATTRS.to_owned(), REQUESTED_PREDICATES.to_owned(), "Optional".to_owned()).unwrap();
+        let h2 = create_proof("1".to_string(), REQUESTED_ATTRS.to_owned(), REQUESTED_PREDICATES.to_owned(), "Optional".to_owned()).unwrap();
+        let h3 = create_proof("1".to_string(), REQUESTED_ATTRS.to_owned(), REQUESTED_PREDICATES.to_owned(), "Optional".to_owned()).unwrap();
+        let h4 = create_proof("1".to_string(), REQUESTED_ATTRS.to_owned(), REQUESTED_PREDICATES.to_owned(), "Optional".to_owned()).unwrap();
+        let h5 = create_proof("1".to_string(), REQUESTED_ATTRS.to_owned(), REQUESTED_PREDICATES.to_owned(), "Optional".to_owned()).unwrap();
         release_all();
         assert_eq!(release(h1), error::INVALID_PROOF_HANDLE.code_num);
         assert_eq!(release(h2), error::INVALID_PROOF_HANDLE.code_num);
@@ -935,7 +942,7 @@ mod tests {
         connection::set_agent_did(connection_handle, DID);
         connection::set_their_pw_verkey(connection_handle, VERKEY);
 
-        let handle = create_proof(Some("1".to_string()),
+        let handle = create_proof("1".to_string(),
                                   REQUESTED_ATTRS.to_owned(),
                                   REQUESTED_PREDICATES.to_owned(),
                                   "Optional".to_owned()).unwrap();

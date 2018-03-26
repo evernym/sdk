@@ -55,6 +55,7 @@ pub struct LedgerSchema {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct CreateSchema {
     data: SchemaTransaction,
+    #[serde(skip_serializing, default)]
     handle: u32,
     name: String,
     source_id: String,
@@ -220,9 +221,11 @@ impl CreateSchema {
 
     pub fn get_sequence_num(&self) -> u32 {let sequence_num = self.sequence_num as u32; sequence_num}
 
+    pub fn get_source_id(&self) -> String { self.source_id.clone() }
+
 }
 
-pub fn create_new_schema(source_id: String,
+pub fn create_new_schema(source_id: &str,
                          schema_name: String,
                          issuer_did: String,
                          data: String) -> Result<u32, SchemaError> {
@@ -234,7 +237,7 @@ pub fn create_new_schema(source_id: String,
 
     let new_handle = rand::thread_rng().gen::<u32>();
     let mut new_schema = Box::new(CreateSchema {
-        source_id,
+        source_id: source_id.to_string(),
         handle: new_handle,
         name: schema_name,
         data: CreateSchema::parse_schema_data(&sign_response)?,
@@ -257,7 +260,7 @@ pub fn create_new_schema(source_id: String,
     Ok(new_handle)
 }
 
-pub fn get_schema_attrs(source_id: String, sequence_num: u32) -> Result<String, SchemaError> {
+pub fn get_schema_attrs(source_id: String, sequence_num: u32) -> Result<(u32, String), SchemaError> {
     let new_handle = rand::thread_rng().gen::<u32>();
     let new_schema = Box::new(CreateSchema {
         source_id,
@@ -272,8 +275,7 @@ pub fn get_schema_attrs(source_id: String, sequence_num: u32) -> Result<String, 
         debug!("inserting handle {} into schema table", new_handle);
         m.insert(new_handle, new_schema);
     }
-
-    to_string(new_handle)
+    Ok((new_handle, to_string(new_handle)?))
 }
 
 pub fn is_valid_handle(handle: u32) -> bool {
@@ -297,20 +299,27 @@ pub fn to_string(handle: u32) -> Result<String, SchemaError> {
     }
 }
 
+pub fn get_source_id(handle: u32) -> Result<String, u32> {
+    match SCHEMA_MAP.lock().unwrap().get(&handle) {
+        Some(s) => Ok(s.get_source_id()),
+        None => Err(error::INVALID_SCHEMA_HANDLE.code_num),
+    }
+}
+
 pub fn from_string(schema_data: &str) -> Result<u32, SchemaError> {
     let derived_schema: CreateSchema = serde_json::from_str(schema_data)
         .map_err(|_| {
             error!("Invalid Json format for CreateSchema string");
             SchemaError::CommonError(error::INVALID_JSON.code_num)
         })?;
-    let new_handle = derived_schema.handle;
 
-    if is_valid_handle(new_handle) {return Ok(new_handle);}
+    let new_handle = rand::thread_rng().gen::<u32>();
+    let source_id = derived_schema.source_id.clone();
     let schema = Box::from(derived_schema);
 
     {
         let mut m = SCHEMA_MAP.lock().unwrap();
-        debug!("inserting handle {} into schema table", new_handle);
+        debug!("inserting handle {} with source_id {:?} into schema table", new_handle, source_id);
         m.insert(new_handle, schema);
     }
     Ok(new_handle)
@@ -517,7 +526,7 @@ mod tests {
             name: "schema_name".to_string(),
             sequence_num: 306,
         };
-        let create_schema_str = r#"{"data":{"seqNo":15,"identifier":"4fUDR9R7fjwELRvH9JT6HH","txnTime":1510246647,"type":"101","data":{"name":"Home Address","version":"0.1","attr_names":["address1","address2","city","state","zip"]}},"handle":1,"name":"schema_name","source_id":"testId","sequence_num":306}"#;
+        let create_schema_str = r#"{"data":{"seqNo":15,"identifier":"4fUDR9R7fjwELRvH9JT6HH","txnTime":1510246647,"type":"101","data":{"name":"Home Address","version":"0.1","attr_names":["address1","address2","city","state","zip"]}},"name":"schema_name","source_id":"testId","sequence_num":306}"#;
         assert_eq!(create_schema.to_string(), create_schema_str.to_string());
     }
 
@@ -525,13 +534,14 @@ mod tests {
     fn test_create_schema_success(){
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
         let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#.to_string();
-        assert!(create_new_schema("1".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data).is_ok());
+        assert!(create_new_schema("1", "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data).is_ok());
     }
 
     #[test]
     fn test_get_schema_attrs_success(){
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
-        let schema_attrs = get_schema_attrs("Check For Success".to_string(), 999).unwrap();
+        let (handle, schema_attrs ) = get_schema_attrs("Check For Success".to_string(), 999).unwrap();
+        assert!(handle > 0);
         assert!(schema_attrs.contains(SCHEMA_TXN));
         assert!(schema_attrs.contains("\"source_id\":\"Check For Success\""));
         assert!(schema_attrs.contains("\"sequence_num\":999"));
@@ -541,7 +551,7 @@ mod tests {
     fn test_create_schema_fails(){
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-        let schema = create_new_schema("1".to_string(),
+        let schema = create_new_schema("1",
                                        "name".to_string(),
                                        "VsKV7grR1BUE29mG2Fm2kX".to_string(),
                                        "".to_string());
@@ -565,13 +575,13 @@ mod tests {
         settings::set_defaults();
         pool::open_sandbox_pool();
         let data = r#""data":{"name":"New Claim - Claim5","version":"1.0","attr_names":["New Claim","claim5","a5","b5","c5","d5"]}"#.to_string();
-        init_wallet("a_test_wallet").unwrap();
+        init_wallet("test_get_schema_attrs_from_ledger").unwrap();
         let wallet_handle = get_wallet_handle();
         let schema_attrs = get_schema_attrs("id".to_string(), 74).unwrap();
         println!("Schema_attrs: \n\n{:?}", schema_attrs);
 //        assert!(schema_attrs.contains(&data));
 //        assert!(schema_attrs.contains("\"seqNo\":116"));
-        delete_wallet("a_test_wallet").unwrap();
+        delete_wallet("test_get_schema_attrs_from_ledger").unwrap();
     }
 
     #[ignore]
@@ -580,12 +590,12 @@ mod tests {
         settings::set_defaults();
         pool::open_sandbox_pool();
         let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#.to_string();
-        init_wallet("a_test_wallet").unwrap();
+        init_wallet("test_create_schema").unwrap();
         let wallet_handle = get_wallet_handle();
         let (my_did, _) = SignusUtils::create_and_store_my_did(wallet_handle, Some(DEMO_ISSUER_PW_SEED)).unwrap();
         SignusUtils::create_and_store_my_did(wallet_handle, Some(DEMO_AGENT_PW_SEED)).unwrap();
-        let handle = create_new_schema("id".to_string(), "name".to_string(), my_did, data).unwrap();
-        delete_wallet("a_test_wallet").unwrap();
+        let handle = create_new_schema("id", "name".to_string(), my_did, data).unwrap();
+        delete_wallet("test_create_schema").unwrap();
         assert!(handle > 0);
         assert!(get_sequence_num(handle).unwrap() > 0);
 }
@@ -603,11 +613,11 @@ mod tests {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
         let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#;
-        let h1 = create_new_schema("1".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
-        let h2 = create_new_schema("2".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
-        let h3 = create_new_schema("3".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
-        let h4 = create_new_schema("4".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
-        let h5 = create_new_schema("5".to_string(), "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
+        let h1 = create_new_schema("1", "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
+        let h2 = create_new_schema("2", "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
+        let h3 = create_new_schema("3", "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
+        let h4 = create_new_schema("4", "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
+        let h5 = create_new_schema("5", "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
         release_all();
         assert_eq!(release(h1).err(),Some(SchemaError::InvalidHandle()));
         assert_eq!(release(h2).err(),Some(SchemaError::InvalidHandle()));

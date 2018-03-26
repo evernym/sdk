@@ -41,7 +41,8 @@ struct ConnectionOptions {
 #[derive(Serialize, Deserialize)]
 struct Connection {
     source_id: String,
-    handle: u32,
+    #[serde(skip_serializing, default)]
+    pub handle: u32,
     pw_did: String,
     pw_verkey: String,
     state: VcxStateType,
@@ -193,6 +194,8 @@ impl Connection {
     fn get_invite_detail(&self) -> Option<InviteDetail> { self.invite_detail.clone() }
     fn set_invite_detail(&mut self, invite_detail: InviteDetail) { self.invite_detail = Some(invite_detail); }
 
+    fn get_source_id(&self) -> String { self.source_id.clone() }
+
     fn ready_to_connect(&self) -> bool {
         if self.state == VcxStateType::VcxStateNone || self.state == VcxStateType::VcxStateAccepted {
             false
@@ -335,6 +338,13 @@ pub fn set_state(handle: u32, state: VcxStateType) {
     };
 }
 
+pub fn get_source_id(handle: u32) -> Result<String, ConnectionError> {
+    match CONNECTION_MAP.lock().unwrap().get(&handle) {
+        Some(cxn) => Ok(cxn.get_source_id()),
+        None => Err(ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num)),
+    }
+}
+
 pub fn create_agent_pairwise(handle: u32) -> Result<u32, u32> {
     debug!("creating pairwise keys on agent for connection handle {}", handle);
     let pw_did = get_pw_did(handle)?;
@@ -407,7 +417,7 @@ fn init_connection(handle: u32) -> Result<u32, ConnectionError> {
         },
     };
 
-    info!("handle: {} did: {} verkey: {}", handle, my_did, my_verkey);
+    info!("handle: {} did: {} verkey: {}, source id: {}", handle, my_did, my_verkey, get_source_id(handle)?);
     set_pw_did(handle, &my_did);
     set_pw_verkey(handle, &my_verkey);
 
@@ -567,13 +577,12 @@ pub fn from_string(connection_data: &str) -> Result<u32, ConnectionError> {
         Err(_) => return Err(ConnectionError::CommonError(error::INVALID_JSON.code_num)),
     };
 
-    let new_handle = derived_connection.handle;
 
-    if is_valid_handle(new_handle) { return Ok(new_handle); }
-
+    let new_handle = rand::thread_rng().gen::<u32>();
+    let source_id = derived_connection.source_id.clone();
     let connection = Box::from(derived_connection);
 
-    debug!("inserting handle {} into connection table", new_handle);
+    debug!("inserting handle {} source_id {:?} into connection table", new_handle, source_id);
 
     CONNECTION_MAP.lock().unwrap().insert(new_handle, connection);
 
@@ -1063,21 +1072,25 @@ mod tests {
         assert_eq!(release(h5).err(),Some(ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num)));
     }
 
+    #[ignore]
     #[test]
     fn test_two_connections() {
         settings::set_to_defaults();
+        //BE INSTITUTION AND GENERATE INVITE FOR CONSUMER
         ::utils::devsetup::setup_dev_env("test_two_connections");
         let faber = build_connection("faber").unwrap();
         connect(faber, Some("{}".to_string())).unwrap();
         let details = get_invite_details(faber,true).unwrap();
         println!("details: {}", details);
+        //BE CONSUMER AND ACCEPT INVITE FROM INSTITUTION
         ::utils::devsetup::be_consumer();
         let alice = build_connection_with_invite("alice", &details).unwrap();
         assert_eq!(VcxStateType::VcxStateRequestReceived as u32, get_state(alice));
         assert_eq!(VcxStateType::VcxStateOfferSent as u32, get_state(faber));
         connect(alice, Some("{}".to_string())).unwrap();
+        //BE INSTITUTION AND CHECK THAT INVITE WAS ACCEPTED
         ::utils::devsetup::be_institution();
-        thread::sleep(Duration::from_millis(5000));
+        thread::sleep(Duration::from_millis(2000));
         update_state(faber).unwrap();
         assert_eq!(VcxStateType::VcxStateAccepted as u32, get_state(faber));
         ::utils::devsetup::cleanup_dev_env("test_two_connections");

@@ -7,6 +7,8 @@ pub mod utils;
 pub mod proof;
 pub mod claim_def;
 pub mod schema;
+pub mod claim;
+pub mod disclosed_proof;
 
 use std::fmt;
 

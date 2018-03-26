@@ -49,6 +49,7 @@ pub extern fn vcx_issuer_create_claim(command_handle: u32,
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
     check_useful_c_str!(claim_data, error::INVALID_OPTION.code_num);
     check_useful_c_str!(claim_name, error::INVALID_OPTION.code_num);
+    check_useful_c_str!(source_id, error::INVALID_OPTION.code_num);
 
     let issuer_did: String = if !issuer_did.is_null() {
         check_useful_c_str!(issuer_did, error::INVALID_OPTION.code_num);
@@ -60,25 +61,19 @@ pub extern fn vcx_issuer_create_claim(command_handle: u32,
         }
     };
 
-    let source_id_opt = if !source_id.is_null() {
-        check_useful_c_str!(source_id, error::INVALID_OPTION.code_num);
-        let val = source_id.to_owned();
-        Some(val)
-    } else { None };
-
-    info!("vcx_issuer_create_claim(command_handle: {}, source_id: {:?}, schema_seq_no: {}, issuer_did: {}, claim_data: {}, claim_name: {})",
+    info!("vcx_issuer_create_claim(command_handle: {}, source_id: {}, schema_seq_no: {}, issuer_did: {}, claim_data: {}, claim_name: {})",
           command_handle,
-          source_id_opt,
+          source_id,
           schema_seq_no,
           issuer_did,
           claim_data,
           claim_name);
 
     thread::spawn(move|| {
-        let (rc, handle) = match issuer_claim::issuer_claim_create(schema_seq_no, source_id_opt, issuer_did, claim_name, claim_data) {
+        let (rc, handle) = match issuer_claim::issuer_claim_create(schema_seq_no, source_id, issuer_did, claim_name, claim_data) {
             Ok(x) => {
-                info!("vcx_issuer_create_claim_cb(command_handle: {}, rc: {}, handle: {})",
-                      command_handle, error_string(0), x);
+                info!("vcx_issuer_create_claim_cb(command_handle: {}, rc: {}, handle: {}), source_id: {:?}",
+                      command_handle, error_string(0), x, issuer_claim::get_source_id(x).unwrap_or_default());
                 (error::SUCCESS.code_num, x)
             },
             Err(x) => {
@@ -115,6 +110,10 @@ pub extern fn vcx_issuer_send_claim_offer(command_handle: u32,
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
+    let source_id = issuer_claim::get_source_id(claim_handle).unwrap_or_default();
+    info!("vcx_issuer_send_claim(command_handle: {}, claim_handle: {}, connection_handle: {}), source_id: {:?}",
+          command_handle, claim_handle, connection_handle, source_id);
+
     if !issuer_claim::is_valid_handle(claim_handle) {
         return error::INVALID_ISSUER_CLAIM_HANDLE.code_num;
     }
@@ -123,14 +122,11 @@ pub extern fn vcx_issuer_send_claim_offer(command_handle: u32,
         return error::INVALID_CONNECTION_HANDLE.code_num;
     }
 
-    info!("vcx_issuer_send_claim(command_handle: {}, claim_handle: {}, connection_handle: {})",
-          command_handle, claim_handle, connection_handle);
-
     thread::spawn(move|| {
         let err = match issuer_claim::send_claim_offer(claim_handle, connection_handle) {
             Ok(x) => {
-                info!("vcx_issuer_send_claim_cb(command_handle: {}, claim_handle: {}, rc: {})",
-                      command_handle, claim_handle, error_string(x));
+                info!("vcx_issuer_send_claim_cb(command_handle: {}, claim_handle: {}, rc: {}), source_id: {:?}",
+                      command_handle, claim_handle, error_string(x), source_id);
                 x
             },
             Err(x) => {
@@ -164,6 +160,7 @@ pub extern fn vcx_issuer_claim_update_state(command_handle: u32,
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
+    let source_id = issuer_claim::get_source_id(claim_handle).unwrap_or_default();
     info!("vcx_issuer_claim_update_state(command_handle: {}, claim_handle: {})",
           command_handle, claim_handle);
 
@@ -174,8 +171,8 @@ pub extern fn vcx_issuer_claim_update_state(command_handle: u32,
     thread::spawn(move|| {
         issuer_claim::update_state(claim_handle);
 
-        info!("vcx_issuer_claim_update_state_cb(command_handle: {}, claim_handle: {}, rc: {}, state: {})",
-              command_handle, claim_handle, error_string(0), issuer_claim::get_state(claim_handle));
+        info!("vcx_issuer_claim_update_state_cb(command_handle: {}, claim_handle: {}, rc: {}, state: {}), source_id: {:?}",
+              command_handle, claim_handle, error_string(0), issuer_claim::get_state(claim_handle), source_id);
         cb(command_handle, error::SUCCESS.code_num, issuer_claim::get_state(claim_handle));
     });
 
@@ -189,16 +186,17 @@ pub extern fn vcx_issuer_claim_get_state(command_handle: u32,
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
-    info!("vcx_issuer_claim_get_state(command_handle: {}, claim_handle: {})",
-          command_handle, claim_handle);
+    let source_id = issuer_claim::get_source_id(claim_handle).unwrap_or_default();
+    info!("vcx_issuer_claim_get_state(command_handle: {}, claim_handle: {}), source_id: {:?}",
+          command_handle, claim_handle, source_id);
 
     if !issuer_claim::is_valid_handle(claim_handle) {
         return error::INVALID_ISSUER_CLAIM_HANDLE.code_num;
     }
 
     thread::spawn(move|| {
-        info!("vcx_issuer_claim_get_state_cb(command_handle: {}, claim_handle: {}, rc: {}, state: {})",
-              command_handle, claim_handle, error_string(0), issuer_claim::get_state(claim_handle));
+        info!("vcx_issuer_claim_get_state_cb(command_handle: {}, claim_handle: {}, rc: {}, state: {}), source_id: {:?}",
+              command_handle, claim_handle, error_string(0), issuer_claim::get_state(claim_handle), source_id);
         cb(command_handle, error::SUCCESS.code_num, issuer_claim::get_state(claim_handle));
     });
 
@@ -231,9 +229,6 @@ pub extern fn vcx_issuer_send_claim(command_handle: u32,
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
-    info!("vcx_issuer_send_claim(command_handle: {}, claim_handle: {}, connection_handle: {})",
-          command_handle, claim_handle, connection_handle);
-
     if !issuer_claim::is_valid_handle(claim_handle) {
         return error::INVALID_ISSUER_CLAIM_HANDLE.code_num;
     }
@@ -242,6 +237,9 @@ pub extern fn vcx_issuer_send_claim(command_handle: u32,
         return error::INVALID_CONNECTION_HANDLE.code_num;
     }
 
+    let source_id = issuer_claim::get_source_id(claim_handle).unwrap_or_default();
+    info!("vcx_issuer_send_claim(command_handle: {}, claim_handle: {}, connection_handle: {}), source_id: {:?}",
+          command_handle, claim_handle, connection_handle, source_id);
     thread::spawn(move|| {
         let err = match issuer_claim::send_claim(claim_handle, connection_handle) {
             Ok(x) => {
@@ -283,17 +281,18 @@ pub extern fn vcx_issuer_claim_serialize(command_handle: u32,
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
-    info!("vcx_issuer_claim_serialize(claim_serialize(command_handle: {}, claim_handle: {})",
-          command_handle, claim_handle);
     if !issuer_claim::is_valid_handle(claim_handle) {
         return error::INVALID_ISSUER_CLAIM_HANDLE.code_num;
     }
 
+    let source_id = issuer_claim::get_source_id(claim_handle).unwrap_or_default();
+    info!("vcx_issuer_claim_serialize(claim_serialize(command_handle: {}, claim_handle: {}), source_id: {:?}",
+          command_handle, claim_handle, source_id);
     thread::spawn(move|| {
         match issuer_claim::to_string(claim_handle) {
             Ok(x) => {
-                info!("vcx_issuer_claim_serialize_cb(command_handle: {}, claim_handle: {}, rc: {}, state: {})",
-                      command_handle, claim_handle, error_string(0), x);
+                info!("vcx_issuer_claim_serialize_cb(command_handle: {}, claim_handle: {}, rc: {}, state: {}), source_id: {:?}",
+                      command_handle, claim_handle, error_string(0), x, source_id);
                 let msg = CStringUtils::string_to_cstring(x);
                 cb(command_handle, error::SUCCESS.code_num,msg.as_ptr());
             },
@@ -334,13 +333,13 @@ pub extern fn vcx_issuer_claim_deserialize(command_handle: u32,
     thread::spawn(move|| {
         let (rc, handle) = match issuer_claim::from_string(&claim_data) {
             Ok(x) => {
-                info!("vcx_issuer_claim_deserialize_cb(command_handle: {}, rc: {}, handle: {})",
-                      command_handle, error_string(0), x);
+                info!("vcx_issuer_claim_deserialize_cb(command_handle: {}, rc: {}, handle: {}), source_id: {:?}",
+                      command_handle, error_string(0), x, issuer_claim::get_source_id(x).unwrap_or_default());
                 (error::SUCCESS.code_num, x)
             },
             Err(x) => {
-                warn!("vcx_issuer_claim_deserialize_cb(command_handle: {}, rc: {}, handle: {})",
-                      command_handle, error_string(x), 0);
+                warn!("vcx_issuer_claim_deserialize_cb(command_handle: {}, rc: {}, handle: {}), source_id: {:?}",
+                      command_handle, error_string(x), 0, issuer_claim::get_source_id(x));
                 (x, 0)
             },
         };
@@ -408,7 +407,7 @@ mod tests {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
         assert_eq!(vcx_issuer_create_claim(0,
-                                           ptr::null(),
+                                           CString::new(DEFAULT_CLAIM_NAME).unwrap().into_raw(),
                                            32,
                                            ptr::null(),
                                            CString::new(DEFAULT_ATTR).unwrap().into_raw(),
@@ -423,7 +422,7 @@ mod tests {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
         assert_eq!(vcx_issuer_create_claim(
             0,
-            ptr::null(),
+            CString::new(DEFAULT_CLAIM_NAME).unwrap().into_raw(),
             32,
             ptr::null(),
             ptr::null(),
@@ -445,7 +444,7 @@ mod tests {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
         assert_eq!(vcx_issuer_create_claim(0,
-                                           ptr::null(),
+                                           CString::new(DEFAULT_CLAIM_NAME).unwrap().into_raw(),
                                            DEFAULT_SCHEMA_SEQ_NO,
                                            CString::new(DEFAULT_DID).unwrap().into_raw(),
                                            CString::new(DEFAULT_ATTR).unwrap().into_raw(),
@@ -472,11 +471,6 @@ mod tests {
         thread::sleep(Duration::from_millis(1000));
     }
 
-    extern "C" fn init_cb(command_handle: u32, err: u32) {
-        if err != 0 {panic!("create_cb failed: {}", err)}
-        println!("successfully called init_cb")
-    }
-
     #[test]
     fn test_vcx_issuer_send_a_claim() {
         settings::set_defaults();
@@ -484,9 +478,6 @@ mod tests {
         settings::set_config_value(settings::CONFIG_INSTITUTION_DID, DEFAULT_DID);
 
         let test_name = "test_vcx_issuer_send_a_claim";
-
-        //let result = vcx_init(0,ptr::null(),Some(init_cb));
-        thread::sleep(Duration::from_secs(1));
 
         let handle = issuer_claim::from_string(ISSUER_CLAIM_STATE_ACCEPTED).unwrap();
 
@@ -517,7 +508,8 @@ mod tests {
         assert_eq!(err, 0);
         assert!(claim_handle > 0);
         println!("successfully called deserialize_cb");
-        let original = formatter(DEFAULT_SERIALIZED_ISSUER_CLAIM);
+        let serialized_issuer_claim = r#"{"source_id":"test_claim_serialize","claim_attributes":"{\"attr\":\"value\"}","msg_uid":"","schema_seq_no":32,"issuer_did":"8XFh8yBzrpJQmNyZzgoTqB","state":1,"claim_request":null,"claim_name":"claim name","claim_id":"1737199584","ref_msg_id":"abc123","agent_did":"","agent_vk":"","issued_did":"","issued_vk":"","remote_did":"","remote_vk":""}"#;
+        let original = formatter(&serialized_issuer_claim);
         let new = formatter(&issuer_claim::to_string(claim_handle).unwrap());
         assert_eq!(original, new);
     }
@@ -531,70 +523,13 @@ mod tests {
         thread::sleep(Duration::from_millis(200));
     }
 
-    // TODO: Need to get this test working
-    /*
-    #[test]
-    fn test_vcx_issue_claim_fails_without_claim_def_in_wallet(){
-
-        let test_name = "test_vcx_issue_claim_fails_without_claim_def_in_wallet";
-        let schema_seq_num = 32 as u32;
-
-        let result = vcx_init(0,ptr::null(),Some(init_cb));
-        thread::sleep(Duration::from_secs(1));
-
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
-        settings::set_config_value(settings::CONFIG_AGENCY_ENDPOINT, mockito::SERVER_URL);
-        settings::set_config_value(settings::CONFIG_INSTITUTION_DID,"8XFh8yBzrpJQmNyZzgoTqB");
-
-        let original_issuer_claim_str = "{\"source_id\":\"test_vcx_issue_claim_fails_without_claim_def_in_wallet\",\"handle\":123,\"claim_attributes\":\"{\\\"attr\\\":\\\"value\\\"}\",\"msg_uid\":\"\",\"schema_seq_no\":32,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"issued_did\":\"\",\"state\":3}";
-        let handle = issuer_claim::from_string(original_issuer_claim_str).unwrap();
-        let connection_handle = connection::create_connection(test_name.to_owned());
-        /* align claim request and claim def ***********************************/
-        let mut claim_request = create_claim_request_from_str(CLAIM_REQ_STRING);
-        // set claim request to have the same did as enterprise did (and sam as claim def)
-        claim_request.issuer_did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).clone().unwrap();
-        // set claim request to have the same sequence number as the schema sequence number
-        claim_request.schema_seq_no = schema_seq_num as i32;
-        assert_eq!(claim_request.schema_seq_no, schema_seq_num as i32);
-        issuer_claim::set_claim_request(handle, &claim_request).unwrap();
-        assert_eq!(issuer_claim::get_state(handle),VcxStateType::VcxStateRequestReceived as u32);
-        let schema = create_default_schema(schema_seq_num);
-        let wallet_name = create_dummy_wallet(test_name);
-//        put_claim_def_in_issuer_wallet(&settings::get_config_value(
-//            settings::CONFIG_INSTITUTION_DID).unwrap(), &schema, get_wallet_handle());
-        /**********************************************************************/
-        connection::set_pw_did(connection_handle, "8XFh8yBzrpJQmNyZzgoTqB");
-
-        let command_handle = 0;
-        // create closure for send claim
-
-
-        // wait for response, response should be error
-
-        assert_eq!(vcx_issuer_send_claim(command_handle, handle, connection_handle, Some(send_offer_cb)), error::SUCCESS.code_num);
-        thread::sleep(Duration::from_millis(1000));
-    }
-    */
-
-    // TODO: Need to get this test working
-    /*
-    #[test]
-    fn test_calling_send_claim_without_claim_request_errors(){
-        assert_eq!(0,1);
-    }
-    */
-
     #[test]
     fn test_create_claim_arguments_correct(){
-        let result = vcx_init(0,ptr::null(),Some(init_cb));
-        thread::sleep(Duration::from_secs(1));
-
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
         settings::set_config_value(settings::CONFIG_INSTITUTION_DID, DEFAULT_DID);
         assert_eq!(vcx_issuer_create_claim(0,
-                                           ptr::null(),
+                                           CString::new(DEFAULT_CLAIM_NAME).unwrap().into_raw(),
                                            DEFAULT_SCHEMA_SEQ_NO,
                                            CString::new(DEFAULT_DID).unwrap().into_raw(),
                                            CString::new(DEFAULT_ATTR).unwrap().into_raw(),

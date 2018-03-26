@@ -11,12 +11,13 @@ use messages;
 use settings;
 use messages::GeneralMessage;
 use messages::MessageResponseCode::{ MessageAccepted };
+use messages::send_message::parse_msg_uid;
 use connection;
 use claim_request::ClaimRequest;
 use utils::libindy::wallet;
 use utils::openssl::encode;
 use utils::httpclient;
-use utils::constants::SEND_CLAIM_OFFER_RESPONSE;
+use utils::constants::SEND_MESSAGE_RESPONSE;
 use utils::libindy::anoncreds::{ libindy_issuer_create_claim };
 use error::issuer_cred::IssuerCredError;
 use utils::error::INVALID_JSON;
@@ -31,6 +32,7 @@ static CLAIM_OFFER_ID_KEY: &str = "claim_offer_id";
 #[derive(Serialize, Deserialize, Debug)]
 pub struct IssuerClaim {
     source_id: String,
+    #[serde(skip_serializing, default)]
     handle: u32,
     claim_attributes: String,
     msg_uid: String,
@@ -40,7 +42,7 @@ pub struct IssuerClaim {
     pub claim_request: Option<ClaimRequest>,
     claim_name: String,
     pub claim_id: String,
-    ref_msg_id: String,
+    ref_msg_id: Option<String>,
     // the following 6 are pulled from the connection object
     agent_did: String, //agent_did for this relationship
     agent_vk: String,
@@ -52,16 +54,16 @@ pub struct IssuerClaim {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ClaimOffer {
-    msg_type: String,
-    version: String,
-    to_did: String,
-    from_did: String,
-    claim: serde_json::Map<String, serde_json::Value>,
-    schema_seq_no: u32,
-    issuer_did: String,
-    claim_name: String,
-    claim_id: String,
-
+    pub msg_type: String,
+    pub version: String,
+    pub to_did: String,
+    pub from_did: String,
+    pub claim: serde_json::Map<String, serde_json::Value>,
+    pub schema_seq_no: u32,
+    pub issuer_did: String,
+    pub claim_name: String,
+    pub claim_id: String,
+    pub msg_ref_id: Option<String>,
 }
 
 impl IssuerClaim {
@@ -97,7 +99,7 @@ impl IssuerClaim {
 
         debug!("claim offer data: {}", payload);
 
-        if settings::test_agency_mode_enabled() { httpclient::set_next_u8_response(SEND_CLAIM_OFFER_RESPONSE.to_vec()); }
+        if settings::test_agency_mode_enabled() { httpclient::set_next_u8_response(SEND_MESSAGE_RESPONSE.to_vec()); }
 
         let data = connection::generate_encrypted_payload(&self.issued_vk, &self.remote_vk, &payload, "CLAIM_OFFER")
             .map_err(|x| IssuerCredError::CommonError(x))?;
@@ -108,7 +110,6 @@ impl IssuerClaim {
             .edge_agent_payload(&data)
             .agent_did(&self.agent_did)
             .agent_vk(&self.agent_vk)
-            .ref_msg_id(&self.ref_msg_id)
             .status_code(&MessageAccepted.as_string())
             .send_secure() {
             Err(x) => {
@@ -116,7 +117,7 @@ impl IssuerClaim {
                 return Err(IssuerCredError::CommonError(x));
             },
             Ok(response) => {
-                self.msg_uid = get_offer_details(&response[0])?;
+                self.msg_uid = parse_msg_uid(&response[0]).map_err(|ec| IssuerCredError::CommonError(ec))?;
                 self.state = VcxStateType::VcxStateOfferSent;
                 debug!("sent claim offer for: {}", self.handle);
                 return Ok(error::SUCCESS.code_num);
@@ -160,12 +161,10 @@ impl IssuerClaim {
 
         let data = connection::generate_encrypted_payload(&self.issued_vk, &self.remote_vk, &data, "CLAIM")
             .map_err(|x| IssuerCredError::CommonError(x))?;
-
-        if settings::test_agency_mode_enabled() { httpclient::set_next_u8_response(SEND_CLAIM_OFFER_RESPONSE.to_vec()); }
+        if settings::test_agency_mode_enabled() { httpclient::set_next_u8_response(SEND_MESSAGE_RESPONSE.to_vec()); }
 
         match messages::send_message().to(&self.issued_did)
             .to_vk(&self.issued_vk)
-            .ref_msg_id(&self.ref_msg_id)
             .msg_type("claim")
             .status_code((&MessageAccepted.as_string()))
             .edge_agent_payload(&data)
@@ -177,7 +176,7 @@ impl IssuerClaim {
                 return Err(IssuerCredError::CommonError(x));
             },
             Ok(response) => {
-                self.msg_uid = get_offer_details(&response[0])?;
+                self.msg_uid = parse_msg_uid(&response[0]).map_err(|ec| IssuerCredError::CommonError(ec))?;
                 self.state = VcxStateType::VcxStateAccepted;
                 debug!("issued claim: {}", self.handle);
                 return Ok(error::SUCCESS.code_num);
@@ -240,9 +239,9 @@ impl IssuerClaim {
             return Ok(error::SUCCESS.code_num);
         }
         else if self.state != VcxStateType::VcxStateOfferSent || self.msg_uid.is_empty() || self.issued_did.is_empty() {
+
             return Ok(error::SUCCESS.code_num);
         }
-
         let payload = messages::get_message::get_ref_msg(&self.msg_uid, &self.issued_did, &self.issued_vk, &self.agent_did, &self.agent_vk)?;
 
         self.claim_request = Some(parse_claim_req_payload(&payload)?);
@@ -263,6 +262,7 @@ impl IssuerClaim {
         self.claim_request = Some(claim_request);
     }
 
+    fn get_source_id(&self) -> String { self.source_id.clone() }
     fn generate_claim_offer(&self, to_did: &str) -> Result<ClaimOffer, IssuerCredError> {
         let attr_map = convert_to_map(&self.claim_attributes)?;
 
@@ -276,6 +276,7 @@ impl IssuerClaim {
             issuer_did: String::from(self.issuer_did.to_owned()),
             claim_name: String::from(self.claim_name.to_owned()),
             claim_id: String::from(self.claim_id.to_owned()),
+            msg_ref_id: None,
         })
     }
 }
@@ -329,18 +330,16 @@ fn parse_claim_req_payload(payload: &Vec<u8>) -> Result<ClaimRequest, u32> {
 
 // TODO: The error arm of this Result is never thrown.  aka this method is never Err.
 pub fn issuer_claim_create(schema_seq_no: u32,
-                           source_id: Option<String>,
+                           source_id: String,
                            issuer_did: String,
                            claim_name: String,
                            claim_data: String) -> Result<u32, IssuerCredError> {
 
     let new_handle = rand::thread_rng().gen::<u32>();
 
-    let source_id_unwrap = source_id.unwrap_or("".to_string());
-
     let mut new_issuer_claim = Box::new(IssuerClaim {
         handle: new_handle,
-        source_id: source_id_unwrap,
+        source_id,
         msg_uid: String::new(),
         claim_attributes: claim_data,
         issuer_did,
@@ -349,7 +348,7 @@ pub fn issuer_claim_create(schema_seq_no: u32,
         claim_request: None,
         claim_name,
         claim_id: new_handle.to_string(),
-        ref_msg_id: String::new(),
+        ref_msg_id: None,
         issued_did: String::new(),
         issued_vk: String::new(),
         remote_did: String::new(),
@@ -415,14 +414,14 @@ pub fn from_string(claim_data: &str) -> Result<u32,u32> {
         Err(_) => return Err(error::INVALID_JSON.code_num),
     };
 
-    let new_handle = derived_claim.handle;
-
-    if is_valid_handle(new_handle) {return Ok(new_handle);}
+    let new_handle = rand::thread_rng().gen::<u32>();
+    let source_id = derived_claim.source_id.clone();
     let claim = Box::from(derived_claim);
 
     {
         let mut m = ISSUER_CLAIM_MAP.lock().unwrap();
-        debug!("inserting handle {} into claim_issuer table", new_handle);
+        debug!("inserting handle {} with source_id {:?} into claim_issuer table",
+               new_handle, source_id);
         m.insert(new_handle, claim);
     }
 
@@ -495,6 +494,12 @@ pub fn convert_to_map(s:&str) -> Result<serde_json::Map<String, serde_json::Valu
     Ok(v)
 }
 
+pub fn get_source_id(handle: u32) -> Result<String, u32> {
+    match ISSUER_CLAIM_MAP.lock().unwrap().get(&handle) {
+        Some(c) => Ok(c.get_source_id()),
+        None => Err(error::INVALID_ISSUER_CLAIM_HANDLE.code_num),
+    }
+}
 
 #[cfg(test)]
 pub mod tests {
@@ -558,7 +563,7 @@ pub mod tests {
             claim_name: DEFAULT_CLAIM_NAME.to_owned(),
             claim_request: Some(claim_req.to_owned()),
             claim_id: String::from(DEFAULT_CLAIM_ID),
-            ref_msg_id: String::new(),
+            ref_msg_id: None,
             remote_did: DID.to_string(),
             remote_vk: VERKEY.to_string(),
             agent_did: DID.to_string(),
@@ -586,7 +591,7 @@ pub mod tests {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
         match issuer_claim_create(0,
-                                  None,
+                                  "1".to_string(),
                                   "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
                                   "claim_name".to_string(),
                                   "{\"attr\":\"value\"}".to_owned()) {
@@ -600,7 +605,7 @@ pub mod tests {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
         let handle = issuer_claim_create(0,
-                                         None,
+                                         "1".to_string(),
                                          "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
                                          "claim_name".to_string(),
                                          "{\"attr\":\"value\"}".to_owned()).unwrap();
@@ -618,7 +623,7 @@ pub mod tests {
         let claim_id = DEFAULT_CLAIM_ID;
 
         let handle = issuer_claim_create(0,
-                                         None,
+                                         "1".to_string(),
                                          "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
                                          "claim_name".to_string(),
                                          "{\"attr\":\"value\"}".to_owned()).unwrap();
@@ -638,7 +643,7 @@ pub mod tests {
         let claim_id = DEFAULT_CLAIM_ID;
 
         let handle = issuer_claim_create(0,
-                                         None,
+                                         "1".to_string(),
                                          "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
                                          "claim_name".to_string(),
                                          "{\"attr\":\"value\"}".to_owned()).unwrap();
@@ -726,7 +731,7 @@ pub mod tests {
     fn test_from_string_succeeds() {
         set_default_and_enable_test_mode();
         let handle = issuer_claim_create(0,
-                                         None,
+                                         "1".to_string(),
                                          "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
                                          "claim_name".to_string(),
                                          "{\"attr\":\"value\"}".to_owned()).unwrap();
@@ -735,7 +740,6 @@ pub mod tests {
         release(handle);
         let new_handle = from_string(&string).unwrap();
         let new_string = to_string(new_handle).unwrap();
-        assert_eq!(new_handle, handle);
         assert_eq!(new_string, string);
     }
 
@@ -759,7 +763,7 @@ pub mod tests {
             claim_request: Some(claim_req.to_owned()),
             claim_name: DEFAULT_CLAIM_NAME.to_owned(),
             claim_id: String::from(DEFAULT_CLAIM_ID),
-            ref_msg_id: String::new(),
+            ref_msg_id: None,
             remote_did: DID.to_string(),
             remote_vk: VERKEY.to_string(),
             agent_did: DID.to_string(),
@@ -784,7 +788,7 @@ pub mod tests {
     fn test_issuer_claim_changes_state_after_being_validated() {
         set_default_and_enable_test_mode();
         let handle = issuer_claim_create(0,
-                                         None,
+                                         "1".to_string(),
                                          "8XFh8yBzrpJQmNyZzgoTqB".to_owned(),
                                          "claim_name".to_string(),
                                          "{\"att\":\"value\"}".to_owned()).unwrap();
@@ -803,16 +807,16 @@ pub mod tests {
     fn test_issuer_claim_can_build_claim_from_correct_parts() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-        wallet::init_wallet("a_test_wallet").unwrap();
         let issuer_did = "NcYxiDXkpYi6ov5FcYDi1e".to_owned();
         settings::set_config_value(settings::CONFIG_INSTITUTION_DID, &issuer_did);
         let schema_str = SCHEMA;
         let mut issuer_claim = create_standard_issuer_claim();
         issuer_claim.claim_id = String::from(DEFAULT_CLAIM_ID);
         assert_eq!(issuer_claim.claim_id, DEFAULT_CLAIM_ID);
-        let wallet_handle = wallet::get_wallet_handle();
-        SignusUtils::create_and_store_my_did(wallet_handle, None).unwrap();
-        util_put_claim_def_in_issuer_wallet(15, wallet_handle);
+        let handle = wallet::init_wallet("correct_parts").unwrap();
+        println!("handle: {}", handle);
+        SignusUtils::create_and_store_my_did(handle, None).unwrap();
+        util_put_claim_def_in_issuer_wallet(15, handle);
 
         // set the claim request issuer did to the correct (enterprise) did.
         let mut claim_req = issuer_claim.claim_request.clone().unwrap();
@@ -833,7 +837,7 @@ pub mod tests {
 
         assert_eq!(serde_json::to_string(&n1).unwrap(), serde_json::to_string(&n2).unwrap());
 
-        wallet::delete_wallet("a_test_wallet").unwrap();
+        wallet::delete_wallet("correct_parts").unwrap();
     }
 
     #[test]
@@ -926,11 +930,11 @@ pub mod tests {
     fn test_release_all() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
-        let h1 = issuer_claim_create(0,None,"8XFh8yBzrpJQmNyZzgoTqB".to_owned(),"claim_name".to_string(),"{\"attr\":\"value\"}".to_owned()).unwrap();
-        let h2 = issuer_claim_create(0,None,"8XFh8yBzrpJQmNyZzgoTqB".to_owned(),"claim_name".to_string(),"{\"attr\":\"value\"}".to_owned()).unwrap();
-        let h3 = issuer_claim_create(0,None,"8XFh8yBzrpJQmNyZzgoTqB".to_owned(),"claim_name".to_string(),"{\"attr\":\"value\"}".to_owned()).unwrap();
-        let h4 = issuer_claim_create(0,None,"8XFh8yBzrpJQmNyZzgoTqB".to_owned(),"claim_name".to_string(),"{\"attr\":\"value\"}".to_owned()).unwrap();
-        let h5 = issuer_claim_create(0,None,"8XFh8yBzrpJQmNyZzgoTqB".to_owned(),"claim_name".to_string(),"{\"attr\":\"value\"}".to_owned()).unwrap();
+        let h1 = issuer_claim_create(0,"1".to_string(),"8XFh8yBzrpJQmNyZzgoTqB".to_owned(),"claim_name".to_string(),"{\"attr\":\"value\"}".to_owned()).unwrap();
+        let h2 = issuer_claim_create(0,"1".to_string(),"8XFh8yBzrpJQmNyZzgoTqB".to_owned(),"claim_name".to_string(),"{\"attr\":\"value\"}".to_owned()).unwrap();
+        let h3 = issuer_claim_create(0,"1".to_string(),"8XFh8yBzrpJQmNyZzgoTqB".to_owned(),"claim_name".to_string(),"{\"attr\":\"value\"}".to_owned()).unwrap();
+        let h4 = issuer_claim_create(0,"1".to_string(),"8XFh8yBzrpJQmNyZzgoTqB".to_owned(),"claim_name".to_string(),"{\"attr\":\"value\"}".to_owned()).unwrap();
+        let h5 = issuer_claim_create(0,"1".to_string(),"8XFh8yBzrpJQmNyZzgoTqB".to_owned(),"claim_name".to_string(),"{\"attr\":\"value\"}".to_owned()).unwrap();
         release_all();
         assert_eq!(release(h1),Err(IssuerCredError::InvalidHandle()));
         assert_eq!(release(h2),Err(IssuerCredError::InvalidHandle()));

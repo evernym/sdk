@@ -32,7 +32,8 @@ pub struct RetrieveClaimDef {
 #[derive(Deserialize, Debug, Serialize, PartialEq)]
 pub struct CreateClaimDef {
     claim_def: ClaimDefinition,
-    handle: u32,
+    #[serde(skip_serializing, default)]
+    pub handle: u32,
     name: String,
     source_id: String,
 }
@@ -186,6 +187,8 @@ impl CreateClaimDef {
         }
     }
 
+    pub fn get_source_id(&self) -> String { self.source_id.clone() }
+
     pub fn set_handle(&mut self, handle: u32) { self.handle = handle; }
 
     pub fn set_claim_def(&mut self, claim_def: ClaimDefinition) { self.claim_def = claim_def.clone(); }
@@ -314,17 +317,23 @@ pub fn from_string(claimdef_data: &str) -> Result<u32, u32> {
             error!("{} with: {}", error::INVALID_CLAIM_DEF_JSON.message, err);
             error::INVALID_CLAIM_DEF_JSON.code_num
         })?;
-    let new_handle = derived_claimdef.handle;
-
-    if is_valid_handle(new_handle) {return Ok(new_handle);}
+    let new_handle = rand::thread_rng().gen::<u32>();
+    let source_id = derived_claimdef.source_id.clone();
     let claimdef = Box::from(derived_claimdef);
 
     {
         let mut m = CLAIMDEF_MAP.lock().unwrap();
-        debug!("inserting handle {} into claimdef table", new_handle);
+        debug!("inserting handle {} with source_id {:?} into claimdef table", new_handle, source_id);
         m.insert(new_handle, claimdef);
     }
     Ok(new_handle)
+}
+
+pub fn get_source_id(handle: u32) -> Result<String, u32> {
+    match CLAIMDEF_MAP.lock().unwrap().get(&handle) {
+        Some(c) => Ok(c.get_source_id()),
+        None => Err(error::INVALID_CLAIM_DEF_HANDLE.code_num),
+    }
 }
 
 pub fn release(handle: u32) -> u32 {
@@ -423,10 +432,10 @@ pub mod tests {
     #[test]
     fn test_create_claim_def_and_store_in_wallet() {
         settings::set_defaults();
-        assert!(init_wallet("a_test_wallet").unwrap() > 0);
+        assert!(init_wallet("test_claim_def").unwrap() > 0);
         let wallet_handle = get_wallet_handle();
         let claim_def_json = create_and_store_claim_def(SCHEMAS_JSON, ISSUER_DID, Some(SigTypes::CL), false).unwrap();
-        delete_wallet("a_test_wallet").unwrap();
+        delete_wallet("test_claim_def").unwrap();
         let claim_def_obj = ClaimDefinition::from_str(&claim_def_json).unwrap();
         assert_eq!(claim_def_obj.schema_seq_no, 15);
         assert_eq!(claim_def_obj.issuer_did, ISSUER_DID.to_string());
@@ -480,6 +489,7 @@ pub mod tests {
         let wallet_handle = get_wallet_handle();
         // Needs to be invalid schema_seq_no
         assert_eq!(get_schema_data(1).err(), Some(CredDefError::CommonError(INVALID_SCHEMA_SEQ_NO.code_num)));
+        delete_wallet("a_test_wallet").unwrap();
     }
 
     #[test]
@@ -515,9 +525,9 @@ pub mod tests {
         release(handle);
         let new_handle = from_string(&claimdef_data).unwrap();
         let new_claimdef_data = to_string(new_handle).unwrap();
-        assert_eq!(new_handle,handle);
-        let claimdef1: CreateClaimDef = serde_json::from_str(&claimdef_data).unwrap();
+        let mut claimdef1: CreateClaimDef = serde_json::from_str(&claimdef_data).unwrap();
         let claimdef2: CreateClaimDef = serde_json::from_str(&new_claimdef_data).unwrap();
+        claimdef1.handle = claimdef2.handle;
         assert_eq!(claimdef1,claimdef2);
     }
 

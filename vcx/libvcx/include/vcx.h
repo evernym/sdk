@@ -115,7 +115,7 @@ vcx_error_t vcx_claimdef_get(vcx_claimdef_handle_t claimdef_handle, char *data);
  */
 
 /** Creates a connection object to a specific identity owner. Populates a handle to the new connection. */
-vcx_error_t vcx_connection_create(vcx_command_handle_t command_handle, const char *recipient_info, void (*cb)(vcx_command_handle_t command_handle, vcx_error_t err, vcx_connection_handle_t connection_handle));
+vcx_error_t vcx_connection_create(vcx_command_handle_t command_handle, const char *source_id, void (*cb)(vcx_command_handle_t command_handle, vcx_error_t err, vcx_connection_handle_t connection_handle));
 
 /** Asynchronously request a connection be made. */
 vcx_error_t vcx_connection_connect(vcx_command_handle_t command_handle, vcx_connection_handle_t connection_handle, const char *connection_type, void (*cb)(vcx_command_handle_t, vcx_error_t err));
@@ -137,6 +137,9 @@ vcx_error_t vcx_connection_release(vcx_connection_handle_t connection_handle);
 
 /** Get the invite details for the connection. */
 vcx_error_t vcx_connection_invite_details(vcx_command_handle_t command_handle, vcx_connection_handle_t connection_handle, int abbreviated, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, const char *details));
+
+/** Creates a connection from the invite details. */
+vcx_error_t vcx_connection_create_with_invite(vcx_command_handle_t command_handle, const char *source_id, const char *invite_details, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, vcx_connection_handle_t connection_handle));
 
 
 /**
@@ -202,14 +205,74 @@ vcx_error_t vcx_proof_update_state(vcx_command_handle_t command_handle, vcx_proo
 /** Retrieves the state of the proof. */
 vcx_error_t vcx_proof_get_state(vcx_command_handle_t command_handle, vcx_proof_handle_t proof_handle, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, vcx_state_t state));
 
-/** Populates status with the current state of this claim. */
+/** Populates status with the current state of this proof. */
 vcx_error_t vcx_proof_serialize(vcx_command_handle_t command_handle, vcx_proof_handle_t proof_handle, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, const char *state));
 
-/** Re-creates a claim object from the specified serialization. */
+/** Re-creates a proof object from the specified serialization. */
 vcx_error_t vcx_proof_deserialize(vcx_command_handle_t command_handle, const char *serialized_proof, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, vcx_proof_handle_t proof_handle));
 
 /** Releases the proof from memory. */
 vcx_error_t vcx_proof_release(vcx_proof_handle_t proof_handle);
+
+/**
+ * disclosed_proof object
+ *
+ * Used for sending a disclosed_proof to an identity owner.
+ */
+
+/** Creates a disclosed_proof object.  Populates a handle to the new disclosed_proof. */
+vcx_error_t vcx_disclosed_proof_create(vcx_command_handle_t command_handle, const char *source_id, const char *requested_attrs, const char *requested_predicates, const char *name, void (*cb)(vcx_command_handle_t command_handle, vcx_error_t err, vcx_proof_handle_t proof_handle));
+
+/** Asynchronously send a proof to the connection. */
+vcx_error_t vcx_disclosed_proof_send_proof(vcx_command_handle_t command_handle, vcx_proof_handle_t proof_handle, vcx_connection_handle_t connection_handle, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err));
+
+/** Populates status with the current state of this disclosed_proof request. */
+vcx_error_t vcx_disclosed_proof_update_state(vcx_command_handle_t command_handle, vcx_proof_handle_t proof_handle, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, vcx_state_t state));
+
+/** Check for any proof requests from the connection. */
+vcx_error_t vcx_disclosed_proof_get_requests(vcx_command_handle_t command_handle, vcx_connection_handle_t connection_handle, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, const char *offers));
+
+/** Retrieves the state of the disclosed_proof. */
+vcx_error_t vcx_disclosed_proof_get_state(vcx_command_handle_t command_handle, vcx_proof_handle_t proof_handle, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, vcx_state_t state));
+
+/** Populates status with the current state of this disclosed_proof. */
+vcx_error_t vcx_disclosed_proof_serialize(vcx_command_handle_t command_handle, vcx_proof_handle_t proof_handle, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, const char *state));
+
+/** Re-creates a disclosed_proof object from the specified serialization. */
+vcx_error_t vcx_disclosed_proof_deserialize(vcx_command_handle_t command_handle, const char *serialized_proof, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, vcx_proof_handle_t proof_handle));
+
+/** Releases the disclosed_proof from memory. */
+vcx_error_t vcx_disclosed_proof_release(vcx_proof_handle_t proof_handle);
+
+/**
+ * claim object
+ *
+ * Used for accepting and requesting a claim with an identity owner.
+ */
+
+/** Creates a claim object from the specified claimdef handle. Populates a handle the new claim. */
+vcx_error_t vcx_claim_create_with_offer(vcx_command_handle_t command_handle, const char *source_id, const char *claim_offer,void (*cb)(vcx_command_handle_t command_handle, vcx_error_t err, vcx_claim_handle_t claim_handle));
+
+/** Asynchronously sends the claim request to the connection. */
+vcx_error_t vcx_claim_send_request(vcx_command_handle_t command_handle, vcx_claim_handle_t claim_handle, vcx_connection_handle_t connection_handle, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err));
+
+/** Check for any claim offers from the connection. */
+vcx_error_t vcx_claim_get_offers(vcx_command_handle_t command_handle, vcx_connection_handle_t connection_handle, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, const char *offers));
+
+/** Updates the state of the claim from the agency. */
+vcx_error_t vcx_claim_update_state(vcx_command_handle_t command_handle, vcx_claim_handle_t claim_handle, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, vcx_state_t state));
+
+/** Retrieves the state of the claim - including storing the claim if it has been sent. */
+vcx_error_t vcx_claim_get_state(vcx_command_handle_t command_handle, vcx_claim_handle_t claim_handle, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, vcx_state_t state));
+
+/** Populates status with the current state of this claim. */
+vcx_error_t vcx_claim_serialize(vcx_command_handle_t command_handle, vcx_claim_handle_t claim_handle, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, const char *state));
+
+/** Re-creates a claim from the specified serialization. */
+vcx_error_t vcx_claim_deserialize(vcx_command_handle_t, const char *serialized_claim, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, vcx_claim_handle_t claim_handle));
+
+/** Releases the claim from memory. */
+vcx_error_t vcx_claim_release(vcx_claim_handle_t claim_handle);
 
 void vcx_set_next_agency_response(int);
 #ifdef __cplusplus
