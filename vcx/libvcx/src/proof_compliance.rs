@@ -324,7 +324,7 @@ mod tests {
                                          Attr{ name: "dog".to_string(), issuer_did: None, schema_seq_no: None});
         proof_req.requested_attrs.insert("bbb".to_string(),
                                          Attr{ name: "cat".to_string(), issuer_did: None, schema_seq_no: None});
-        assert_eq!(proof_compliance(&proof_req, &proof_obj).err(), Some(ProofError::FailedProofCompliance()));
+        proof_compliance(&proof_req, &proof_obj).unwrap();
     }
 
     #[test]
