@@ -193,7 +193,7 @@ impl Proof {
         debug!("*******\n{}\n********", schemas_json);
         debug!("*******\n{}\n********", proof_json);
         debug!("*******\n{}\n********", proof_req_json);
-        proof_compliance(&proof_req_msg.proof_request_data, &proof_msg).map_err(|ec| ProofError::CommonError(ec))?;
+        proof_compliance(&proof_req_msg.proof_request_data, &proof_msg)?;
         self.validate_proof_indy(&proof_req_json, &proof_json, &schemas_json, &claim_def_msg, INDY_REVOC_REGS_JSON)
     }
 

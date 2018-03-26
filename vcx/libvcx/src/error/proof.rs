@@ -2,7 +2,7 @@ use std::fmt;
 use error::ToErrorCode;
 use error::connection::ConnectionError;
 use utils::error::{INVALID_PROOF_HANDLE, INVALID_PROOF, INVALID_PROOF_CLAIM_DATA, INVALID_SCHEMA,
-NOT_READY, INVALID_CONNECTION_HANDLE, CONNECTION_ERROR};
+NOT_READY, INVALID_CONNECTION_HANDLE, CONNECTION_ERROR, FAILED_PROOF_COMPLIANCE};
 
 
 #[derive(Debug)]
@@ -16,6 +16,7 @@ pub enum ProofError{
     ProofConnectionError(),
     // TODO: this could take a parameter
     InvalidConnection(),
+    FailedProofCompliance(),
     CommonError(u32),
 }
 
@@ -29,6 +30,7 @@ impl fmt::Display for ProofError {
             ProofError::InvalidConnection() => write!(f, "{}",  CONNECTION_ERROR.message),
             ProofError::ProofNotReadyError() => write!(f, "{}", NOT_READY.message),
             ProofError::ProofConnectionError() => write!(f, "{}", INVALID_CONNECTION_HANDLE.message),
+            ProofError::FailedProofCompliance() => write!(f, "{}", FAILED_PROOF_COMPLIANCE.message),
             ProofError::ProofMessageError(x) => write!(f, "Proof Error: Message Error value: , {}", x),
             ProofError::CommonError(x) => write!(f, "This Proof Error Common Error had value: {}", x),
         }
@@ -51,6 +53,7 @@ impl ToErrorCode for ProofError {
             ProofError::InvalidConnection() => CONNECTION_ERROR.code_num,
             ProofError::ProofNotReadyError() => NOT_READY.code_num,
             ProofError::ProofConnectionError() => INVALID_CONNECTION_HANDLE.code_num,
+            ProofError::FailedProofCompliance() => FAILED_PROOF_COMPLIANCE.code_num,
             ProofError::ProofMessageError(x) => x,
             ProofError::CommonError(x) => x,
         }
