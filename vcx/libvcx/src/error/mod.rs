@@ -3,6 +3,7 @@ pub mod base;
 pub mod schema;
 pub mod cred_def;
 pub mod issuer_cred;
+pub mod proof;
 
 
 pub trait ToErrorCode {
