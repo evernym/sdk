@@ -21,7 +21,6 @@ use utils::constants::SEND_MESSAGE_RESPONSE;
 use utils::libindy::anoncreds::{ libindy_issuer_create_claim };
 use error::issuer_cred::IssuerCredError;
 use utils::error::INVALID_JSON;
-use error::ToErrorCode;
 
 lazy_static! {
     static ref ISSUER_CLAIM_MAP: Mutex<HashMap<u32, Box<IssuerClaim>>> = Default::default();
@@ -503,6 +502,7 @@ pub fn get_source_id(handle: u32) -> Result<String, u32> {
 
 #[cfg(test)]
 pub mod tests {
+    use super::*;
     use settings;
     use connection::build_connection;
     use utils::libindy::{ set_libindy_rc };
@@ -511,7 +511,7 @@ pub mod tests {
     use claim_request::ClaimRequest;
     use utils::constants::*;
     use error::issuer_cred::IssuerCredError;
-    use super::*;
+    use error::ToErrorCode;
 
     static DEFAULT_CLAIM_NAME: &str = "Claim";
     static DEFAULT_CLAIM_ID: &str = "defaultClaimId";
@@ -737,7 +737,7 @@ pub mod tests {
                                          "{\"attr\":\"value\"}".to_owned()).unwrap();
         let string = to_string(handle).unwrap();
         assert!(!string.is_empty());
-        release(handle);
+        assert!(release(handle).is_ok());
         let new_handle = from_string(&string).unwrap();
         let new_string = to_string(new_handle).unwrap();
         assert_eq!(new_string, string);

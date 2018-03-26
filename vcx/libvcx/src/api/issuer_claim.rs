@@ -378,7 +378,6 @@ mod tests {
     use connection;
     use api::VcxStateType;
     use utils::constants::{DEFAULT_SERIALIZED_ISSUER_CLAIM, CLAIM_REQ_STRING};
-    use api::vcx::vcx_init;
     use claim_request::ClaimRequest;
     use error::issuer_cred::IssuerCredError;
 

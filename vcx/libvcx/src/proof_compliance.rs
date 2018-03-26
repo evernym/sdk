@@ -1,7 +1,6 @@
 use messages::proofs::proof_message::{ ProofMessage, Attr };
 use messages::proofs::proof_request::{ ProofRequestData };
 use std::collections::HashMap;
-use utils::error;
 use error::proof::ProofError;
 
 
@@ -149,7 +148,6 @@ mod tests {
     use ::messages::proofs::proof_message::{ ProofMessage, Proofs };
     use messages::proofs::proof_request::{ ProofRequestData, Attr, Predicate };
     use serde_json::{ from_str };
-    use ::utils::error;
     use ::proof_compliance::check_value;
     use ::std::collections::HashMap;
 

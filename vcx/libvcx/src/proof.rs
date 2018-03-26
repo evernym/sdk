@@ -586,7 +586,7 @@ mod tests {
                                   "Optional".to_owned()).unwrap();
         let proof_data = to_string(handle).unwrap();
         let mut proof1: Proof = serde_json::from_str(&proof_data).unwrap();
-        release(handle);
+        assert!(release(handle).is_ok());
         let new_handle = from_string(&proof_data).unwrap();
         let proof2 : Proof = serde_json::from_str(&to_string(new_handle).unwrap()).unwrap();
         proof1.handle = proof2.handle;

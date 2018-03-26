@@ -1,6 +1,5 @@
 use std::fmt;
 use error::ToErrorCode;
-use error::connection::ConnectionError;
 use utils::error::{INVALID_PROOF_HANDLE, INVALID_PROOF, INVALID_PROOF_CLAIM_DATA, INVALID_SCHEMA,
 NOT_READY, INVALID_CONNECTION_HANDLE, CONNECTION_ERROR, FAILED_PROOF_COMPLIANCE, CREATE_PROOF_ERROR };
 
@@ -57,7 +56,6 @@ impl ToErrorCode for ProofError {
             ProofError::ProofNotReadyError() => NOT_READY.code_num,
             ProofError::ProofConnectionError() => INVALID_CONNECTION_HANDLE.code_num,
             ProofError::FailedProofCompliance() => FAILED_PROOF_COMPLIANCE.code_num,
-            ProofError::CreateProofError() => CREATE_PROOF_ERROR.code_num,
             ProofError::ProofMessageError(x) => x,
             ProofError::CommonError(x) => x,
         }

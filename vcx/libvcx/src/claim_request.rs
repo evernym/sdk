@@ -1,6 +1,5 @@
 extern crate serde_json;
 
-use utils::error;
 use serde_json::Value;
 use error::issuer_cred::IssuerCredError;
 

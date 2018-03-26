@@ -424,7 +424,7 @@ fn init_connection(handle: u32) -> Result<u32, ConnectionError> {
     match create_agent_pairwise(handle) {
         Err(x) => {
             error!("could not create pairwise key on agent: {}", x);
-            release(handle);
+            release(handle)?;
             return Err(ConnectionError::CommonError(x))
         },
         Ok(_) => debug!("created pairwise key on agent"),
@@ -433,7 +433,7 @@ fn init_connection(handle: u32) -> Result<u32, ConnectionError> {
     match update_agent_profile(handle) {
         Err(x) => {
             error!("could not update profile on agent: {}", x);
-            release(handle);
+            release(handle)?;
             return Err(ConnectionError::CommonError(x))
         },
         Ok(_) => debug!("updated profile on agent"),
@@ -450,7 +450,7 @@ pub fn build_connection(source_id: &str) -> Result<u32,ConnectionError> {
     match init_connection(new_handle) {
         Ok(_) => Ok(new_handle),
         Err(x) => {
-            release(new_handle);
+            release(new_handle)?;
             return Err(x)
         }
     }
@@ -470,7 +470,7 @@ pub fn build_connection_with_invite(source_id: &str, details: &str) -> Result<u3
     match init_connection(new_handle){
         Ok(_) => (),
         Err(x) => {
-            release(new_handle);
+            release(new_handle)?;
             return Err(x);
         }
     };
@@ -774,7 +774,8 @@ mod tests {
         assert!(!get_pw_verkey(handle).unwrap().is_empty());
         assert_eq!(get_state(handle), VcxStateType::VcxStateInitialized as u32);
         connect(handle, Some("{}".to_string())).unwrap();
-        release(handle);
+        assert!(release(handle).is_ok());
+
     }
 
     #[test]
@@ -783,12 +784,12 @@ mod tests {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
         let handle = build_connection("test_create_drop_create").unwrap();
         let did1 = get_pw_did(handle).unwrap();
-        release(handle);
+        assert!(release(handle).is_ok());
         let handle2 = build_connection("test_create_drop_create").unwrap();
         assert_ne!(handle,handle2);
         let did2 = get_pw_did(handle2).unwrap();
         assert_eq!(did1, did2);
-        release(handle2);
+        assert!(release(handle2).is_ok());
     }
 
     #[test]
@@ -859,10 +860,10 @@ mod tests {
         let handle = build_connection("test_serialize_deserialize").unwrap();
         assert!(handle > 0);
         let first_string = to_string(handle).unwrap();
-        release(handle);
+        assert!(release(handle).is_ok());
         let handle = from_string(&first_string).unwrap();
         let second_string = to_string(handle).unwrap();
-        release(handle);
+        assert!(release(handle).is_ok());
         println!("{}",first_string);
         println!("{}",second_string);
         assert_eq!(first_string,second_string);

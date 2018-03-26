@@ -19,7 +19,6 @@ use utils::libindy::ledger::{
     libindy_sign_and_submit_request
 };
 use error::schema::SchemaError;
-use error::ToErrorCode;
 
 lazy_static! {
     static ref SCHEMA_MAP: Mutex<HashMap<u32, Box<CreateSchema>>> = Default::default();
@@ -340,14 +339,15 @@ pub fn release_all() {
 
 #[cfg(test)]
 mod tests {
-    use settings;
     use super::*;
+    use settings;
     use utils::libindy::pool;
     use utils::libindy::signus::SignusUtils;
     use utils::libindy::wallet::{ delete_wallet, init_wallet };
     use utils::constants::{ DEMO_AGENT_PW_SEED, DEMO_ISSUER_PW_SEED };
     use std::str::FromStr;
     use utils::error::INVALID_JSON;
+    use error::ToErrorCode;
 
     static  EXAMPLE: &str = r#"{
     "seqNo": 15,
