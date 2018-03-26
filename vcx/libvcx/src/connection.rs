@@ -1012,6 +1012,7 @@ mod tests {
         assert_eq!(release(h5),error::INVALID_CONNECTION_HANDLE.code_num);
     }
 
+    #[ignore]
     #[test]
     fn test_two_connections() {
         settings::set_to_defaults();
