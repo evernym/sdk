@@ -2,12 +2,15 @@
 use std::fmt;
 use error::ToErrorCode;
 use std::error::Error;
+use utils::error::{INVALID_CONNECTION_HANDLE, CONNECTION_ERROR, NOT_READY, INVALID_INVITE_DETAILS, INVALID_MSGPACK};
 
 #[derive(Debug)]
 pub enum ConnectionError {
     GeneralConnectionError(),
     ConnectionNotReady(),
     InviteDetailError(),
+    InvalidHandle(),
+    InvalidMessagePack(),
     CommonError(u32),
 }
 
@@ -15,10 +18,12 @@ pub enum ConnectionError {
 impl fmt::Display for ConnectionError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            ConnectionError::GeneralConnectionError() => write!(f, "Error with Connection"),
-            ConnectionError::InviteDetailError() => write!(f, "Invite Detail Error"),
-            ConnectionError::ConnectionNotReady() => write!(f, "Object not ready for specified action"),
-            ConnectionError::CommonError(x) => write!(f, "This common error had value: {}", x),
+            ConnectionError::InvalidHandle() => write!(f, "{}", INVALID_CONNECTION_HANDLE.message),
+            ConnectionError::GeneralConnectionError() => write!(f, "{}", CONNECTION_ERROR.message),
+            ConnectionError::InviteDetailError() => write!(f, "{}", INVALID_INVITE_DETAILS.message),
+            ConnectionError::ConnectionNotReady() => write!(f, "{}", NOT_READY.message),
+            ConnectionError::InvalidMessagePack() => write!(f, "{}", INVALID_MSGPACK.message),
+            ConnectionError::CommonError(x) => write!(f, "This Common Error had a value: {}", x),
         }
     }
 }
@@ -26,9 +31,11 @@ impl fmt::Display for ConnectionError {
 impl Error for ConnectionError {
     fn cause(&self) -> Option<&Error> {
         match *self {
+            ConnectionError::InvalidHandle() => None,
             ConnectionError::GeneralConnectionError() => None,
             ConnectionError::ConnectionNotReady() => None,
             ConnectionError::InviteDetailError() => None,
+            ConnectionError::InvalidMessagePack() => None,
             ConnectionError::CommonError(x) => None,
         }
     }
@@ -36,9 +43,11 @@ impl Error for ConnectionError {
     // TODO: Either implement this correctly or remove.
     fn description(&self) -> &str {
         match *self {
-            ConnectionError::GeneralConnectionError() => "General Connection Error",
-            ConnectionError::ConnectionNotReady() => "Connection Not Ready",
-            ConnectionError::InviteDetailError() => "Invite Detail Error",
+            ConnectionError::InvalidMessagePack() => INVALID_MSGPACK.message,
+            ConnectionError::InvalidHandle() => INVALID_CONNECTION_HANDLE.message,
+            ConnectionError::GeneralConnectionError() => CONNECTION_ERROR.message,
+            ConnectionError::ConnectionNotReady() => NOT_READY.message,
+            ConnectionError::InviteDetailError() => INVALID_INVITE_DETAILS.message,
             ConnectionError::CommonError(x) => "Common Error",
         }
     }
@@ -47,9 +56,11 @@ impl Error for ConnectionError {
 impl ToErrorCode for ConnectionError {
    fn to_error_code(&self) -> u32 {
        match *self {
-           ConnectionError::GeneralConnectionError() => 1002,
-           ConnectionError::ConnectionNotReady() => 1005,
-           ConnectionError::InviteDetailError() => 9999,
+           ConnectionError::InvalidHandle() => INVALID_CONNECTION_HANDLE.code_num,
+           ConnectionError::GeneralConnectionError() => CONNECTION_ERROR.code_num,
+           ConnectionError::ConnectionNotReady() => NOT_READY.code_num,
+           ConnectionError::InviteDetailError() => INVALID_INVITE_DETAILS.code_num,
+           ConnectionError::InvalidMessagePack() => INVALID_MSGPACK.code_num,
            ConnectionError::CommonError(x) => x,
        }
    }
@@ -67,9 +78,9 @@ mod tests {
     #[test]
     fn test_to_error_code(){
         assert_eq!(ConnectionError::GeneralConnectionError().to_string(), "Error with Connection");
-        assert_eq!(ConnectionError::GeneralConnectionError().to_error_code(), 1002);
+        assert_eq!(ConnectionError::GeneralConnectionError().to_error_code(), CONNECTION_ERROR.code_num);
         assert_eq!(ConnectionError::ConnectionNotReady().to_string(), "Object not ready for specified action");
-        assert_eq!(ConnectionError::ConnectionNotReady().to_error_code(), 1005);
+        assert_eq!(ConnectionError::ConnectionNotReady().to_error_code(), NOT_READY.code_num);
 
     }
 }

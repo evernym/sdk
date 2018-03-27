@@ -9,6 +9,7 @@ use claim;
 use std::thread;
 use std::ptr;
 
+use error::ToErrorCode;
 
 /// Create a Claim object that requests and receives a claim for an institution
 ///
@@ -99,10 +100,10 @@ pub extern fn vcx_claim_send_request(command_handle: u32,
                       command_handle, error_string(0), source_id);
                 cb(command_handle,x);
             },
-            Err(x) => {
+            Err(e) => {
                 warn!("vcx_claim_send_request_cb(command_handle: {}, rc: {}), source_id: {:?}",
-                      command_handle, error_string(x), source_id);
-                cb(command_handle,x);
+                      command_handle, error_string(e.to_error_code()), source_id);
+                cb(command_handle,e.to_error_code());
             },
         };
     });
@@ -146,8 +147,8 @@ pub extern fn vcx_claim_get_offers(command_handle: u32,
             },
             Err(x) => {
                 error!("vcx_claim_get_offers_cb(command_handle: {}, rc: {}, msg: null)",
-                      command_handle, error_string(x));
-                cb(command_handle, x, ptr::null_mut());
+                      command_handle, x.to_string());
+                cb(command_handle, x.to_error_code(), ptr::null_mut());
             },
         };
     });
@@ -201,8 +202,8 @@ pub extern fn vcx_claim_update_state(command_handle: u32,
             },
             Err(e) => {
                 error!("vcx_claim_update_state_cb(command_handle: {}, rc: {}, state: {}), source_id: {:?}",
-                      command_handle, error_string(e), 0, source_id);
-                cb(command_handle, e, 0)
+                      command_handle, error_string(e.to_error_code()), 0, source_id);
+                cb(command_handle, e.to_error_code(), 0)
             }
         };
     });
@@ -233,8 +234,8 @@ pub extern fn vcx_claim_get_state(command_handle: u32,
             },
             Err(e) => {
                 error!("vcx_claim_get_state_cb(command_handle: {}, rc: {}, state: {}), source_id: {:?}",
-                      command_handle, error_string(e), 0, source_id);
-                cb(command_handle, e, 0)
+                      command_handle, error_string(e.to_error_code()), 0, source_id);
+                cb(command_handle, e.to_error_code(), 0)
             }
         };
     });
@@ -348,8 +349,8 @@ pub extern fn vcx_claim_release(handle: u32) -> u32 {
         },
         Err(e) => {
             error!("vcx_claim_release(handle: {}, rc: {}), source_id: {:?}",
-                   handle, error_string(e), source_id);
-            e
+                   handle, error_string(e.to_error_code()), source_id);
+            e.to_error_code()
         }
     }
 }

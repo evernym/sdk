@@ -19,6 +19,7 @@ use utils::libindy::ledger::{libindy_submit_request,
                              libindy_sign_and_submit_request};
 use error::ToErrorCode;
 use error::cred_def::CredDefError;
+use error::base::BaseError;
 
 lazy_static! {
     static ref CLAIMDEF_MAP: Mutex<HashMap<u32, Box<CreateClaimDef>>> = Default::default();
@@ -71,6 +72,7 @@ pub trait ClaimDefCommon {
 
     fn new() -> Self;
 
+    // TODO: This doesnt have proper testing for errors.
     fn retrieve_claim_def(&mut self,
                           submitter_did: &str,
                           schema_num:u32,
@@ -552,6 +554,9 @@ pub mod tests {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
         assert_eq!(CreateClaimDef::new().sign_and_send_request("").err(),
-                   Some(CredDefError::CommonError(NO_POOL_OPEN.code_num)))
+                   Some(CredDefError::CommonError(NO_POOL_OPEN.code_num)));
+        // assert that this returns a BaseError::CredDefError()
+        let mut cred_def = CreateClaimDef::new();
+        assert_eq!(cred_def.retrieve_claim_def("{}", 123, None, "bad").err(), Some(CredDefError::BuildCredDefRequestError())); // This isnt the correct CredDefError subtype, yet
     }
 }
