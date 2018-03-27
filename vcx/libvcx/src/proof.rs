@@ -654,7 +654,7 @@ mod tests {
                                   REQUESTED_PREDICATES.to_owned(),
                                   "Optional".to_owned()).unwrap();
         assert!(is_valid_handle(handle));
-        assert_eq!(get_proof(handle).err(), Some(ProofError::InvalidHandle()))
+        assert!(get_proof(handle).is_err())
     }
 
     #[test]
