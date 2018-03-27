@@ -229,14 +229,14 @@ impl DisclosedProof {
                                                           &proof_req_data_json)
             .map_err(|ec| ProofError::CommonError(ec))?;
 
-        println!("claims: {}", claims);
+        debug!("claims: {}", claims);
         let claims_identifiers = claim_def_identifiers(&claims)?;
         let requested_claims = self._build_requested_claims(&claims_identifiers)?;
 
         let schemas = self._find_schemas(&claims_identifiers)?;
-        println!("schemas: {}", schemas);
+        debug!("schemas: {}", schemas);
         let claim_defs_json = self._find_claim_def(&claims_identifiers)?;
-        println!("claim_defs: {}", claim_defs_json);
+        debug!("claim_defs: {}", claim_defs_json);
         let revoc_regs_json = Some("{}");
 
         let proof = anoncreds::libindy_prover_create_proof(wallet_h,
@@ -316,7 +316,7 @@ impl DisclosedProof {
     }
 
     fn set_source_id(&mut self, id: &str) { self.source_id = id.to_string(); }
-    fn get_source_id(&self) -> String {self.source_id.clone()}
+    fn get_source_id(&self) -> &String { &self.source_id }
 }
 
 //********************************************
@@ -435,7 +435,7 @@ pub fn get_proof_request_messages(connection_handle: u32, match_name: Option<&st
 
 pub fn get_source_id(handle: u32) -> Result<String, u32> {
     HANDLE_MAP.get(handle, |obj| {
-        Ok(obj.get_source_id())
+        Ok(obj.get_source_id().clone())
     }).map_err(handle_err)
 }
 
