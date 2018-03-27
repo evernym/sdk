@@ -77,8 +77,8 @@ pub extern fn vcx_issuer_create_claim(command_handle: u32,
                 (error::SUCCESS.code_num, x)
             },
             Err(x) => {
-                warn!("vcx_issuer_create_claim_cb(command_handle: {}, rc: {}, handle: {})",
-                      command_handle, error_string(x.to_error_code()), 0);
+                warn!("vcx_issuer_create_claim_cb(command_handle: {}, rc: {}, handle: {}, source_id: {:?}",
+                      command_handle, error_string(x.to_error_code()), 0, "");
                 (x.to_error_code(), 0)
             },
         };
@@ -130,8 +130,8 @@ pub extern fn vcx_issuer_send_claim_offer(command_handle: u32,
                 x
             },
             Err(x) => {
-                warn!("vcx_issuer_send_claim_cb(command_handle: {}, claim_handle: {}, rc: {})",
-                      command_handle, claim_handle, error_string(x.to_error_code()));
+                warn!("vcx_issuer_send_claim_cb(command_handle: {}, claim_handle: {}, rc: {}, source_id: {:?})",
+                      command_handle, claim_handle, error_string(x.to_error_code()), source_id);
                 x.to_error_code()
             },
         };
@@ -297,8 +297,8 @@ pub extern fn vcx_issuer_claim_serialize(command_handle: u32,
                 cb(command_handle, error::SUCCESS.code_num,msg.as_ptr());
             },
             Err(x) => {
-                info!("vcx_issuer_claim_serialize_cb(command_handle: {}, claim_handle: {}, rc: {}, state: {})",
-                      command_handle, claim_handle, error_string(x.to_error_code()), "null");
+                info!("vcx_issuer_claim_serialize_cb(command_handle: {}, claim_handle: {}, rc: {}, state: {}, source_id: {:?})",
+                      command_handle, claim_handle, error_string(x.to_error_code()), "null", source_id);
                 cb(command_handle,x.to_error_code(),ptr::null_mut());
             },
         };
@@ -359,7 +359,7 @@ pub extern fn vcx_issuer_claim_deserialize(command_handle: u32,
 /// Error code as a u32
 #[no_mangle]
 pub extern fn vcx_issuer_claim_release(claim_handle: u32) -> u32 {
-    info!("(vcx_issuer_claim_release claim_handle: {})", claim_handle);
+    info!("(vcx_issuer_claim_release claim_handle: {}, source_id: {:?})", claim_handle, issuer_claim::get_source_id(claim_handle).unwrap_or_default());
     match issuer_claim::release(claim_handle) {
         Ok(x) => x,
         Err(e) => e.to_error_code(),
