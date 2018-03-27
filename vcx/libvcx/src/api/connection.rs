@@ -142,8 +142,8 @@ pub extern fn vcx_connection_connect(command_handle:u32,
                 }
             },
             Err(x) => {
-                warn!("vcx_connection_connect_cb(command_handle: {}, connection_handle: {}, rc: {}, details: {})",
-                      command_handle, connection_handle, x.to_string(), "null");
+                warn!("vcx_connection_connect_cb(command_handle: {}, connection_handle: {}, rc: {}, details: {}, source_id: {})",
+                      command_handle, connection_handle, x.to_string(), "null", source_id);
                 cb(command_handle,x.to_error_code(), ptr::null_mut())
             },
         };
@@ -229,7 +229,7 @@ pub extern fn vcx_connection_deserialize(command_handle: u32,
                 (error::SUCCESS.code_num, x)
             },
             Err(x) => {
-                warn!("vcx_connection_deserialize_cb(command_handle: {}, rc: {}, handle: {})",
+                warn!("vcx_connection_deserialize_cb(command_handle: {}, rc: {}, handle: {} )",
                       command_handle, error_string(x.to_error_code()), 0);
                 (x.to_error_code(), 0)
             },
@@ -354,8 +354,8 @@ pub extern fn vcx_connection_invite_details(command_handle: u32,
                 cb(command_handle, error::SUCCESS.code_num, msg.as_ptr());
             },
             Err(x) => {
-                warn!("vcx_connection_invite_details_cb(command_handle: {}, connection_handle: {}, rc: {}, details: {})",
-                      command_handle, connection_handle, error_string(x.to_error_code()), "null");
+                warn!("vcx_connection_invite_details_cb(command_handle: {}, connection_handle: {}, rc: {}, details: {}, source_id: {:?})",
+                      command_handle, connection_handle, error_string(x.to_error_code()), "null", source_id);
                 cb(command_handle, x.to_error_code(), ptr::null_mut());
             }
         }

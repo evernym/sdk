@@ -55,8 +55,8 @@ pub extern fn vcx_schema_create(command_handle: u32,
                 (error::SUCCESS.code_num, x)
             },
             Err(x) => {
-                warn!("vcx_schema_create_cb(command_handle: {}, rc: {}, handle: {})",
-                      command_handle, error_string(x.to_error_code()), 0);
+                warn!("vcx_schema_create_cb(command_handle: {}, rc: {}, handle: {}, source_id: {:?})",
+                      command_handle, error_string(x.to_error_code()), 0, source_id);
                 (x.to_error_code(), 0) },
         };
 
