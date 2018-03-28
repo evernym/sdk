@@ -1,9 +1,9 @@
 // 1 -> create keys response
 // 2 -> update profile response
 // 3 -> get_message response for connection acceptance
-// 4 -> get_message response for claim offer
+// 4 -> get_message response for credential offer
 // 5 -> get_message response for updating proof state
-// 6 -> get_message response with claim req
+// 6 -> get_message response with credential req
 // 7 -> get_message response with proof
 import { rustAPI } from '../rustlib'
 
