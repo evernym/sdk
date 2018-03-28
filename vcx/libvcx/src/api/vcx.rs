@@ -308,7 +308,7 @@ mod tests {
         assert_eq!(::issuer_credential::release(credential),Err(issuer_cred::IssuerCredError::InvalidHandle()));
         assert_eq!(::schema::release(schema).err(),Some(schema::SchemaError::InvalidHandle()));
         assert_eq!(::proof::release(proof).err(),Some(ProofError::InvalidHandle()));
-        assert_eq!(::credential_def::release(credentialdef),error::INVALID_CLAIM_DEF_HANDLE.code_num);
+        assert_eq!(::credential_def::release(credentialdef),error::INVALID_CREDENTIAL_DEF_HANDLE.code_num);
         assert_eq!(wallet::get_wallet_handle(), 0);
     }
 

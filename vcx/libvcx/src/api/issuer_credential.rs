@@ -115,7 +115,7 @@ pub extern fn vcx_issuer_send_credential_offer(command_handle: u32,
           command_handle, credential_handle, connection_handle, source_id);
 
     if !issuer_credential::is_valid_handle(credential_handle) {
-        return error::INVALID_ISSUER_CLAIM_HANDLE.code_num;
+        return error::INVALID_ISSUER_CREDENTIAL_HANDLE.code_num;
     }
 
     if !connection::is_valid_handle(connection_handle) {
@@ -165,7 +165,7 @@ pub extern fn vcx_issuer_credential_update_state(command_handle: u32,
           command_handle, credential_handle);
 
     if !issuer_credential::is_valid_handle(credential_handle) {
-        return error::INVALID_ISSUER_CLAIM_HANDLE.code_num;
+        return error::INVALID_ISSUER_CREDENTIAL_HANDLE.code_num;
     }
 
     thread::spawn(move|| {
@@ -191,7 +191,7 @@ pub extern fn vcx_issuer_credential_get_state(command_handle: u32,
           command_handle, credential_handle, source_id);
 
     if !issuer_credential::is_valid_handle(credential_handle) {
-        return error::INVALID_ISSUER_CLAIM_HANDLE.code_num;
+        return error::INVALID_ISSUER_CREDENTIAL_HANDLE.code_num;
     }
 
     thread::spawn(move|| {
@@ -230,7 +230,7 @@ pub extern fn vcx_issuer_send_credential(command_handle: u32,
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
     if !issuer_credential::is_valid_handle(credential_handle) {
-        return error::INVALID_ISSUER_CLAIM_HANDLE.code_num;
+        return error::INVALID_ISSUER_CREDENTIAL_HANDLE.code_num;
     }
 
     if !connection::is_valid_handle(connection_handle) {
@@ -282,7 +282,7 @@ pub extern fn vcx_issuer_credential_serialize(command_handle: u32,
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
     if !issuer_credential::is_valid_handle(credential_handle) {
-        return error::INVALID_ISSUER_CLAIM_HANDLE.code_num;
+        return error::INVALID_ISSUER_CREDENTIAL_HANDLE.code_num;
     }
 
     let source_id = issuer_credential::get_source_id(credential_handle).unwrap_or_default();

@@ -93,12 +93,12 @@ impl Credential {
         let wallet_h = wallet::get_wallet_handle();
 
         let prover_did = self.my_did.as_ref().ok_or(error::INVALID_DID.code_num)?;
-        let credential_offer = self.credential_offer.as_ref().ok_or(error::INVALID_CLAIM_JSON.code_num)?;
+        let credential_offer = self.credential_offer.as_ref().ok_or(error::INVALID_CREDENTIAL_JSON.code_num)?;
 
         let credential_def = self._find_credential_def(&credential_offer.issuer_did,
                                              credential_offer.schema_seq_no)?;
 
-        let credential_offer = serde_json::to_string(credential_offer).or(Err(error::INVALID_CLAIM_JSON.code_num))?;
+        let credential_offer = serde_json::to_string(credential_offer).or(Err(error::INVALID_CREDENTIAL_JSON.code_num))?;
 
         debug!("storing credential offer: {}", credential_offer);
         libindy_prover_store_credential_offer(wallet_h, &credential_offer)?;
@@ -125,7 +125,7 @@ impl Credential {
             warn!("Unable to create credential request -- invalid json from libindy");
             return Err(error::UNKNOWN_LIBINDY_ERROR.code_num);
         }
-        Ok(serde_json::from_value(req).or(Err(error::INVALID_CLAIM_JSON.code_num))?)
+        Ok(serde_json::from_value(req).or(Err(error::INVALID_CREDENTIAL_JSON.code_num))?)
     }
 
     fn send_request(&mut self, connection_handle: u32) -> Result<u32, u32> {
@@ -154,9 +154,9 @@ impl Credential {
         let local_my_vk = self.my_vk.as_ref().ok_or(e_code)?;
 
         let req: CredentialRequest = self._build_request(local_my_did, local_their_did)?;
-        let req = serde_json::to_string(&req).or(Err(error::INVALID_CLAIM_JSON.code_num))?;
+        let req = serde_json::to_string(&req).or(Err(error::INVALID_CREDENTIAL_JSON.code_num))?;
         let data: Vec<u8> = connection::generate_encrypted_payload(local_my_vk, local_their_vk, &req, "CLAIM_REQ")?;
-        let offer_msg_id = self.credential_offer.as_ref().unwrap().msg_ref_id.as_ref().ok_or(error::CREATE_CLAIM_REQUEST_ERROR.code_num)?;
+        let offer_msg_id = self.credential_offer.as_ref().unwrap().msg_ref_id.as_ref().ok_or(error::CREATE_CREDENTIAL_REQUEST_ERROR.code_num)?;
 
         if settings::test_agency_mode_enabled() { httpclient::set_next_u8_response(SEND_MESSAGE_RESPONSE.to_vec()); }
 
@@ -203,7 +203,7 @@ impl Credential {
                         let data = crypto::parse_msg(wallet::get_wallet_handle(), &my_vk, data.as_slice())?;
 
                         let credential = extract_json_payload(&data)?;
-                        let credential: Value = serde_json::from_str(&credential).or(Err(error::INVALID_CLAIM_JSON.code_num)).unwrap();
+                        let credential: Value = serde_json::from_str(&credential).or(Err(error::INVALID_CREDENTIAL_JSON.code_num)).unwrap();
 
                         let wallet_h = wallet::get_wallet_handle();
 
@@ -250,7 +250,7 @@ impl Credential {
 //********************************************
 fn handle_err(code_num: u32) -> u32 {
     if code_num == error::INVALID_OBJ_HANDLE.code_num {
-        error::INVALID_CLAIM_HANDLE.code_num
+        error::INVALID_CREDENTIAL_HANDLE.code_num
     }
     else {
         code_num
@@ -414,7 +414,7 @@ mod tests {
         release(handle).unwrap();
         match release(handle) {
             Ok(_) => panic!("should have failed"),
-            Err(x) => assert_eq!(x,error::INVALID_CLAIM_HANDLE.code_num),
+            Err(x) => assert_eq!(x,error::INVALID_CREDENTIAL_HANDLE.code_num),
         };
         let handle = from_string(&credential_string).unwrap();
         assert_eq!(credential_string,to_string(handle).unwrap());

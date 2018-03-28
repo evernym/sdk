@@ -222,8 +222,8 @@ impl CredentialDefinition {
 
     fn from_str(credential_def: &str) -> Result<Self, CredDefError> {
         serde_json::from_str(credential_def).map_err(|err| {
-            error!("{} with serde error: {}",error::INVALID_CLAIM_DEF_JSON.message, err);
-            CredDefError::CommonError(error::INVALID_CLAIM_DEF_JSON.code_num)
+            error!("{} with serde error: {}",error::INVALID_CREDENTIAL_DEF_JSON.message, err);
+            CredDefError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num)
         })
     }
 }
@@ -284,7 +284,7 @@ fn create_and_store_credential_def(schema_json: &str,
                                        sig_type,
                                        create_non_revoc)
         .map_err(|err| {
-            error!("{} with: {}", error::CREATE_CLAIM_DEF_ERR.message, err);
+            error!("{} with: {}", error::CREATE_CREDENTIAL_DEF_ERR.message, err);
             CredDefError::CreateCredDefError()
         })
 }
@@ -306,15 +306,15 @@ pub fn is_valid_handle(handle: u32) -> bool {
 pub fn to_string(handle: u32) -> Result<String, u32> {
     match CREDENTIALDEF_MAP.lock().unwrap().get(&handle) {
         Some(p) => Ok(serde_json::to_string(&p).unwrap().to_owned()),
-        None => Err(error::INVALID_CLAIM_DEF_HANDLE.code_num)
+        None => Err(error::INVALID_CREDENTIAL_DEF_HANDLE.code_num)
     }
 }
 
 pub fn from_string(credentialdef_data: &str) -> Result<u32, u32> {
     let derived_credentialdef: CreateCredentialDef = serde_json::from_str(credentialdef_data)
         .map_err(|err| {
-            error!("{} with: {}", error::INVALID_CLAIM_DEF_JSON.message, err);
-            error::INVALID_CLAIM_DEF_JSON.code_num
+            error!("{} with: {}", error::INVALID_CREDENTIAL_DEF_JSON.message, err);
+            error::INVALID_CREDENTIAL_DEF_JSON.code_num
         })?;
     let new_handle = rand::thread_rng().gen::<u32>();
     let source_id = derived_credentialdef.source_id.clone();
@@ -331,14 +331,14 @@ pub fn from_string(credentialdef_data: &str) -> Result<u32, u32> {
 pub fn get_source_id(handle: u32) -> Result<String, u32> {
     match CREDENTIALDEF_MAP.lock().unwrap().get(&handle) {
         Some(c) => Ok(c.get_source_id().clone()),
-        None => Err(error::INVALID_CLAIM_DEF_HANDLE.code_num),
+        None => Err(error::INVALID_CREDENTIAL_DEF_HANDLE.code_num),
     }
 }
 
 pub fn release(handle: u32) -> u32 {
     match CREDENTIALDEF_MAP.lock().unwrap().remove(&handle) {
         Some(t) => error::SUCCESS.code_num,
-        None => error::INVALID_CLAIM_DEF_HANDLE.code_num,
+        None => error::INVALID_CREDENTIAL_DEF_HANDLE.code_num,
     }
 }
 
@@ -540,11 +540,11 @@ pub mod tests {
         let h4 = create_new_credentialdef("SID".to_string(),"NAME".to_string(),15,ISSUER_DID.to_string(),false).unwrap();
         let h5 = create_new_credentialdef("SID".to_string(),"NAME".to_string(),15,ISSUER_DID.to_string(),false).unwrap();
         release_all();
-        assert_eq!(release(h1),error::INVALID_CLAIM_DEF_HANDLE.code_num);
-        assert_eq!(release(h2),error::INVALID_CLAIM_DEF_HANDLE.code_num);
-        assert_eq!(release(h3),error::INVALID_CLAIM_DEF_HANDLE.code_num);
-        assert_eq!(release(h4),error::INVALID_CLAIM_DEF_HANDLE.code_num);
-        assert_eq!(release(h5),error::INVALID_CLAIM_DEF_HANDLE.code_num);
+        assert_eq!(release(h1),error::INVALID_CREDENTIAL_DEF_HANDLE.code_num);
+        assert_eq!(release(h2),error::INVALID_CREDENTIAL_DEF_HANDLE.code_num);
+        assert_eq!(release(h3),error::INVALID_CREDENTIAL_DEF_HANDLE.code_num);
+        assert_eq!(release(h4),error::INVALID_CREDENTIAL_DEF_HANDLE.code_num);
+        assert_eq!(release(h5),error::INVALID_CREDENTIAL_DEF_HANDLE.code_num);
     }
 
     #[test]

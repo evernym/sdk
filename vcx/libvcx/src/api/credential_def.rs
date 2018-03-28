@@ -102,7 +102,7 @@ pub extern fn vcx_credentialdef_serialize(command_handle: u32,
           command_handle, credentialdef_handle, source_id);
 
     if !credential_def::is_valid_handle(credentialdef_handle) {
-        return error::INVALID_CLAIM_DEF_HANDLE.code_num;
+        return error::INVALID_CREDENTIAL_DEF_HANDLE.code_num;
     };
 
     thread::spawn( move|| {
@@ -207,7 +207,7 @@ mod tests {
     }
 
     extern "C" fn credential_def_on_ledger_err_cb(command_handle: u32, err: u32, credentialdef_handle: u32) {
-        assert_eq!(err, error::CLAIM_DEF_ALREADY_CREATED.code_num);
+        assert_eq!(err, error::CREDENTIAL_DEF_ALREADY_CREATED.code_num);
         println!("successfully called credential_def_on_ledger_err_cb")
     }
 

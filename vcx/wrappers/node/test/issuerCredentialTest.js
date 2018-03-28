@@ -114,7 +114,7 @@ describe('An IssuerCredential', async function () {
       await credential.serialize()
     } catch (error) {
       assert.equal(error.vcxCode, Error.INVALID_ISSUER_CREDENTIAL_HANDLE)
-      assert.equal(error.message, 'Invalid Claim Issuer Handle')
+      assert.equal(error.message, 'Invalid Credential Issuer Handle')
     }
   })
 
@@ -155,7 +155,7 @@ describe('An IssuerCredential', async function () {
       await credential.sendCredential(connection)
     } catch (error) {
       assert.equal(error.vcxCode, Error.INVALID_ISSUER_CREDENTIAL_HANDLE)
-      assert.equal(error.message, 'Invalid Claim Issuer Handle')
+      assert.equal(error.message, 'Invalid Credential Issuer Handle')
     }
   })
 

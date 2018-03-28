@@ -51,7 +51,7 @@ describe('A CredentialDef', function () {
     } catch (error) {
       assert.equal(error.vcxCode, 1037)
       assert.equal(error.vcxFunction, 'vcx_credentialdef_serialize')
-      assert.equal(error.message, 'Invalid Claim Definition handle')
+      assert.equal(error.message, 'Invalid Credential Definition handle')
     }
   })
 

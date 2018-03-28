@@ -97,15 +97,15 @@ impl Proof {
         for credential in credential_data.iter() {
             let schema_seq_no = match credential.schema_seq_no {
                 Some(x) => x,
-                None => return Err(ProofError::CommonError(error::INVALID_CLAIM_DEF_JSON.code_num))
+                None => return Err(ProofError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num))
             };
             let issuer_did = match credential.issuer_did {
                 Some(ref x) => x,
-                None => return Err(ProofError::CommonError(error::INVALID_CLAIM_DEF_JSON.code_num))
+                None => return Err(ProofError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num))
             };
             let credential_uuid = match credential.credential_uuid {
                 Some(ref x) => x,
-                None => return Err(ProofError::CommonError(error::INVALID_CLAIM_DEF_JSON.code_num))
+                None => return Err(ProofError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num))
             };
 
             let credential_def = RetrieveCredentialDef::new()
@@ -121,8 +121,8 @@ impl Proof {
         }
 
         serde_json::to_string(&credential_json).map_err(|err| {
-            warn!("{} with serde error: {}",error::INVALID_CLAIM_DEF_JSON.message, err);
-            ProofError::CommonError(error::INVALID_CLAIM_DEF_JSON.code_num)
+            warn!("{} with serde error: {}",error::INVALID_CREDENTIAL_DEF_JSON.message, err);
+            ProofError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num)
         })
     }
 

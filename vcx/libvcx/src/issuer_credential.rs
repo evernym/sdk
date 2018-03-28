@@ -309,7 +309,7 @@ pub fn create_credential_payload_using_wallet<'a>(credential_id: &str, credentia
 pub fn get_offer_uid(handle: u32) -> Result<String,u32> {
     match ISSUER_CREDENTIAL_MAP.lock().unwrap().get(&handle) {
         Some(credential) => Ok(credential.get_offer_uid().clone()),
-        None => Err(error::INVALID_ISSUER_CLAIM_HANDLE.code_num),
+        None => Err(error::INVALID_ISSUER_CREDENTIAL_HANDLE.code_num),
     }
 }
 
@@ -496,7 +496,7 @@ pub fn convert_to_map(s:&str) -> Result<serde_json::Map<String, serde_json::Valu
 pub fn get_source_id(handle: u32) -> Result<String, u32> {
     match ISSUER_CREDENTIAL_MAP.lock().unwrap().get(&handle) {
         Some(c) => Ok(c.get_source_id().clone()),
-        None => Err(error::INVALID_ISSUER_CLAIM_HANDLE.code_num),
+        None => Err(error::INVALID_ISSUER_CREDENTIAL_HANDLE.code_num),
     }
 }
 

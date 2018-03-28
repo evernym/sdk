@@ -163,12 +163,12 @@ impl ProofMessage {
         self.requested_proof.revealed_attrs.iter().map(|(attr_id, attr_data)| {
             let credential_uuid: String = serde_json::from_value(attr_data[0].clone())
                 .map_err(|err| {
-                    error!("{} with serde error: {}",error::INVALID_PROOF_CLAIM_DATA.message, err);
-                    error::INVALID_PROOF_CLAIM_DATA.code_num
+                    error!("{} with serde error: {}",error::INVALID_PROOF_CREDENTIAL_DATA.message, err);
+                    error::INVALID_PROOF_CREDENTIAL_DATA.code_num
                 })?;
             let credential_info = match self.proofs.get(&credential_uuid) {
                 Some(x) => x,
-                None => return Err(error::INVALID_PROOF_CLAIM_DATA.code_num)
+                None => return Err(error::INVALID_PROOF_CREDENTIAL_DATA.code_num)
             };
             let revealed_attr_value = attr_data[1].clone();
             let revealed_attr_name = credential_info.proof.primary_proof
@@ -195,7 +195,7 @@ impl ProofMessage {
                 credentials_with_predicates.insert(credential_uuid.to_string());
                 let credential_info = match self.proofs.get(credential_uuid) {
                     Some(x) => x,
-                    None => return Err(error::INVALID_PROOF_CLAIM_DATA.code_num)
+                    None => return Err(error::INVALID_PROOF_CREDENTIAL_DATA.code_num)
                 };
                 credential_data.append(credential_info.proof.primary_proof
                     .get_predicates_from_credential(credential_uuid)?.as_mut())
@@ -275,7 +275,7 @@ impl EqAndGeProof {
         for (name, cmp_attr) in &self.eq_proof.revealed_attrs {
             if attr_value == cmp_attr { return Ok(name.to_string()) }
         }
-        Err(error::INVALID_PROOF_CLAIM_DATA.code_num)
+        Err(error::INVALID_PROOF_CREDENTIAL_DATA.code_num)
     }
 
     pub fn get_predicates_from_credential(&self, uuid: &str) -> Result<Vec<CredentialData>, u32> {
@@ -490,7 +490,7 @@ pub mod tests {
         proof.proofs.insert("claim2_uuid".to_string(), add_credential);
         let revealed_list:  Vec<Value> = serde_json::from_str(r#"["claim2_uuid","t2_val","Wrong Hash for 2"]"#).unwrap();
         proof.requested_proof.revealed_attrs.insert("revealed_attr".to_string(), revealed_list);
-        assert_eq!(proof.get_proof_attributes(), Err(error::INVALID_PROOF_CLAIM_DATA.code_num));
+        assert_eq!(proof.get_proof_attributes(), Err(error::INVALID_PROOF_CREDENTIAL_DATA.code_num));
     }
 
     #[test]
@@ -514,6 +514,6 @@ pub mod tests {
     fn test_predicate_fails_with_no_credential() {
         let mut proof = create_default_proof();
         proof.requested_proof.predicates.insert("attr1".to_string(), "NO_CREDENTIAL".to_string());
-        assert_eq!(proof.get_proof_attributes(), Err(error::INVALID_PROOF_CLAIM_DATA.code_num));
+        assert_eq!(proof.get_proof_attributes(), Err(error::INVALID_PROOF_CREDENTIAL_DATA.code_num));
     }
 }
