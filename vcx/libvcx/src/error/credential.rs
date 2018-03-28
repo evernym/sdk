@@ -1,10 +1,7 @@
 
 use std::fmt;
 use error::ToErrorCode;
-use std::error::Error;
 use utils::error::{INVALID_CLAIM_HANDLE, NOT_READY, INVALID_JSON};
-use error::base::BaseError;
-use error::cred_def;
 
 #[derive(Debug)]
 pub enum CredentialError {

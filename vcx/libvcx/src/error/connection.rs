@@ -25,15 +25,17 @@ impl fmt::Display for ConnectionError {
             ConnectionError::ConnectionNotReady() => write!(f, "{}", NOT_READY.message),
             ConnectionError::InvalidMessagePack() => write!(f, "{}", INVALID_MSGPACK.message),
             ConnectionError::InvalidWalletSetup() => write!(f, "Invalid wallet keys...have you provisioned correctly?"),
-            ConnectionError::CommonError(x) => connection_message(f, x), //write!(f, connection_message),//"Connection Error -> Common Error had a value: {}", x),
+            ConnectionError::CommonError(x) => connection_message(f, x),
         }
     }
 }
 fn connection_message(f: &mut fmt::Formatter, error_code: u32) -> fmt::Result {
     if error_code == UNKNOWN_LIBINDY_ERROR.code_num {
-        write!(f, "Error with wallet Check your keys!")
+        // TODO: Make ths better, right now its just example code.
+        write!(f, "{}: Code: {} .. starting recovery steps.", UNKNOWN_LIBINDY_ERROR.message, UNKNOWN_LIBINDY_ERROR.code_num)
     } else {
-        write!(f, "Common Error had a value: {}", error_code)
+        // TODO: Make ths better, right now its just example code.
+        write!(f, "Common Error had a value: {}.", error_code)
     }
 }
 impl Error for ConnectionError {
