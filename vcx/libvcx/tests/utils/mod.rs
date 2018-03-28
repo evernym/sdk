@@ -2,7 +2,7 @@
 #[macro_use]
 pub mod cstring;
 pub mod timeout;
-pub mod demo;
+pub mod demo_utils;
 pub mod claim_def_wallet;
 //use std::fs;
 //use std::path::Path;

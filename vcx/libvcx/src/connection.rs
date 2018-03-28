@@ -351,13 +351,10 @@ pub fn create_agent_pairwise(handle: u32) -> Result<u32, ConnectionError> {
     let pw_did = get_pw_did(handle)?;
     let pw_verkey = get_pw_verkey(handle)?;
 
-    let result = match messages::create_keys()
+    let result = messages::create_keys()
         .for_did(&pw_did)
         .for_verkey(&pw_verkey)
-        .send_secure() {
-        Ok(x) => x,
-        Err(ec) => return Err(ConnectionError::CommonError(ec)),
-    };
+        .send_secure().or(Err(ConnectionError::InvalidWalletSetup()))?;
     debug!("create key for handle: {} with did/vk: {:?}",  handle,  result);
     set_agent_did(handle,&result[0]);
     set_agent_verkey(handle,&result[1]);
@@ -423,10 +420,10 @@ fn init_connection(handle: u32) -> Result<u32, ConnectionError> {
     set_pw_verkey(handle, &my_verkey);
 
     match create_agent_pairwise(handle) {
-        Err(x) => {
-            error!("could not create pairwise key on agent: {}", x);
+        Err(err) => {
+            error!("Creating Agent Pairwise: {}", err);
             release(handle)?;
-            return Err(x)
+            return Err(err)
         },
         Ok(_) => debug!("created pairwise key on agent"),
     };

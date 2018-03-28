@@ -2,7 +2,7 @@
 use std::fmt;
 use error::ToErrorCode;
 use std::error::Error;
-use utils::error::{INVALID_CONNECTION_HANDLE, CONNECTION_ERROR, NOT_READY, INVALID_INVITE_DETAILS, INVALID_MSGPACK};
+use utils::error::{INVALID_CONNECTION_HANDLE, CONNECTION_ERROR, NOT_READY, INVALID_INVITE_DETAILS, INVALID_MSGPACK, UNKNOWN_LIBINDY_ERROR};
 
 #[derive(Debug)]
 pub enum ConnectionError {
@@ -10,6 +10,7 @@ pub enum ConnectionError {
     ConnectionNotReady(),
     InviteDetailError(),
     InvalidHandle(),
+    InvalidWalletSetup(),
     InvalidMessagePack(),
     CommonError(u32),
 }
@@ -23,11 +24,18 @@ impl fmt::Display for ConnectionError {
             ConnectionError::InviteDetailError() => write!(f, "{}", INVALID_INVITE_DETAILS.message),
             ConnectionError::ConnectionNotReady() => write!(f, "{}", NOT_READY.message),
             ConnectionError::InvalidMessagePack() => write!(f, "{}", INVALID_MSGPACK.message),
-            ConnectionError::CommonError(x) => write!(f, "This Common Error had a value: {}", x),
+            ConnectionError::InvalidWalletSetup() => write!(f, "Invalid wallet keys...have you provisioned correctly?"),
+            ConnectionError::CommonError(x) => connection_message(f, x), //write!(f, connection_message),//"Connection Error -> Common Error had a value: {}", x),
         }
     }
 }
-
+fn connection_message(f: &mut fmt::Formatter, error_code: u32) -> fmt::Result {
+    if error_code == UNKNOWN_LIBINDY_ERROR.code_num {
+        write!(f, "Error with wallet Check your keys!")
+    } else {
+        write!(f, "Common Error had a value: {}", error_code)
+    }
+}
 impl Error for ConnectionError {
     fn cause(&self) -> Option<&Error> {
         match *self {
@@ -36,6 +44,7 @@ impl Error for ConnectionError {
             ConnectionError::ConnectionNotReady() => None,
             ConnectionError::InviteDetailError() => None,
             ConnectionError::InvalidMessagePack() => None,
+            ConnectionError::InvalidWalletSetup() => None,
             ConnectionError::CommonError(x) => None,
         }
     }
@@ -48,6 +57,7 @@ impl Error for ConnectionError {
             ConnectionError::GeneralConnectionError() => CONNECTION_ERROR.message,
             ConnectionError::ConnectionNotReady() => NOT_READY.message,
             ConnectionError::InviteDetailError() => INVALID_INVITE_DETAILS.message,
+            ConnectionError::InvalidWalletSetup() => "Provision your wallet and retry.",
             ConnectionError::CommonError(x) => "Common Error",
         }
     }
@@ -61,6 +71,7 @@ impl ToErrorCode for ConnectionError {
            ConnectionError::ConnectionNotReady() => NOT_READY.code_num,
            ConnectionError::InviteDetailError() => INVALID_INVITE_DETAILS.code_num,
            ConnectionError::InvalidMessagePack() => INVALID_MSGPACK.code_num,
+           ConnectionError::InvalidWalletSetup() => 9999,
            ConnectionError::CommonError(x) => x,
        }
    }

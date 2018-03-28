@@ -45,7 +45,7 @@ pub struct Proof {
     name: String,
     version: String,
     nonce: String,
-    proof: Option<ProofMessage>,
+    proof_message: Option<ProofMessage>,
     proof_request: Option<ProofRequestMessage>,
     remote_did: String,
     remote_vk: String,
@@ -128,7 +128,7 @@ impl Proof {
 
     fn build_proof_json(&self) -> Result<String, ProofError> {
         debug!("building proof json for proof validation");
-        match self.proof {
+        match self.proof_message {
             Some(ref x) => x.to_string().map_err(|ec| ProofError::CommonError(ec)),
             None => Err(ProofError::InvalidProof()),
         }
@@ -177,7 +177,7 @@ impl Proof {
             None => return Err(ProofError::InvalidProof()),
         };
 
-        let proof_msg = match self.proof.clone() {
+        let proof_msg = match self.proof_message.clone() {
             Some(x) => x,
             None => return Err(ProofError::InvalidProof()),
         };
@@ -259,11 +259,11 @@ impl Proof {
     }
 
     fn get_proof(&self) -> Result<String, ProofError> {
-        let proof = match self.proof {
+        let proof = match self.proof_message {
             Some(ref x) => x,
             None => return Err(ProofError::InvalidHandle()),
         };
-        proof.get_proof_attributes().map_err(|ec| ProofError::CommonError(ec))
+        proof.get_proof_attributes().map_err(|ec| ProofError::ProofMessageError(ec))
     }
 
     fn get_proof_request_status(&mut self) -> Result<u32, ProofError> {
@@ -280,7 +280,7 @@ impl Proof {
                                                          &self.agent_vk)
             .map_err(|ec| ProofError::ProofMessageError(ec))?;
 
-        self.proof = match parse_proof_payload(&payload) {
+        self.proof_message = match parse_proof_payload(&payload) {
             Err(_) => return Ok(error::SUCCESS.code_num),
             Ok(x) => Some(x),
         };
@@ -350,7 +350,7 @@ pub fn create_proof(source_id: String,
         name,
         version: String::from("1.0"),
         nonce: generate_nonce().map_err(|ec| ProofError::CommonError(ec))?,
-        proof: None,
+        proof_message: None,
         proof_request: None,
         remote_did: String::new(),
         remote_vk: String::new(),
@@ -542,7 +542,7 @@ mod tests {
             name: String::new(),
             version: String::from("1.0"),
             nonce: generate_nonce().unwrap(),
-            proof: Some(ProofMessage::from_str(PROOF_MSG).unwrap()),
+            proof_message: Some(ProofMessage::from_str(PROOF_MSG).unwrap()),
             proof_request: None,
             remote_did: DID.to_string(),
             remote_vk: VERKEY.to_string(),
@@ -679,7 +679,7 @@ mod tests {
             name: String::new(),
             version: String::from("1.0"),
             nonce: generate_nonce().unwrap(),
-            proof: None,
+            proof_message: None,
             proof_request: None,
             remote_did: DID.to_string(),
             remote_vk: VERKEY.to_string(),
@@ -717,7 +717,7 @@ mod tests {
             name: String::new(),
             version: String::from("1.0"),
             nonce: generate_nonce().unwrap(),
-            proof: Some(ProofMessage::from_str(&proof_msg).unwrap()),
+            proof_message: Some(ProofMessage::from_str(&proof_msg).unwrap()),
             proof_request: None,
             remote_did: DID.to_string(),
             remote_vk: VERKEY.to_string(),
@@ -758,7 +758,7 @@ mod tests {
             name: String::new(),
             version: String::from("1.0"),
             nonce: generate_nonce().unwrap(),
-            proof: None,
+            proof_message: None,
             proof_request: None,
             remote_did: DID.to_string(),
             remote_vk: VERKEY.to_string(),
@@ -829,7 +829,7 @@ mod tests {
             name: String::new(),
             version: String::from("1.0"),
             nonce: generate_nonce().unwrap(),
-            proof: None,
+            proof_message: None,
             proof_request: None,
             remote_did: DID.to_string(),
             remote_vk: VERKEY.to_string(),
@@ -897,7 +897,7 @@ mod tests {
             name: String::new(),
             version: String::from("1.0"),
             nonce: generate_nonce().unwrap(),
-            proof: Some(ProofMessage::from_str(proof_msg).unwrap()),
+            proof_message: Some(ProofMessage::from_str(proof_msg).unwrap()),
             proof_request: None,
             remote_did: DID.to_string(),
             remote_vk: VERKEY.to_string(),
@@ -953,7 +953,7 @@ mod tests {
             name: String::new(),
             version: String::from("1.0"),
             nonce: generate_nonce().unwrap(),
-            proof: Some(proof_msg),
+            proof_message: Some(proof_msg),
             proof_request: Some(proof_req_msg),
             remote_did: DID.to_string(),
             remote_vk: VERKEY.to_string(),
@@ -1026,7 +1026,7 @@ mod tests {
     }
 
     #[test]
-    fn test_errors() {
+    fn test_proof_errors() {
         use utils::error::INVALID_JSON;
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
@@ -1055,6 +1055,8 @@ mod tests {
         assert_eq!(to_string(bad_handle).err(), Some(ProofError::InvalidHandle()));
         assert_eq!(get_source_id(bad_handle).err(), Some(ProofError::InvalidHandle()));
         assert_eq!(from_string(empty).err(), Some(ProofError::CommonError(INVALID_JSON.code_num)));
+        let mut proof_good = create_boxed_proof();
+        assert_eq!(proof_good.get_proof_request_status().err(), Some(ProofError::ProofMessageError(1)));
     }
 }
 

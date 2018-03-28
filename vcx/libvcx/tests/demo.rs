@@ -6,7 +6,7 @@ extern crate serde_json;
 #[macro_use]
 extern crate lazy_static;
 mod utils;
-use utils::demo::*;
+use utils::demo_utils::*;
 use utils::timeout::TimeoutUtils;
 
 use std::time::Duration;
@@ -154,7 +154,7 @@ fn receive_request_send_claim(connection_handle: u32, claim_handle:u32){
 
 
     // Send claim *********************************************************************
-    let err = utils::demo::send_claim(claim_handle, connection_handle);
+    let err = utils::demo_utils::send_claim(claim_handle, connection_handle);
     assert_eq!(err, 0);
 }
 
@@ -165,7 +165,7 @@ fn send_proof_request_and_receive_proof(connection_handle: u32, proof_handle:u32
     let target_state = 4;
 
     // Send Proof Request *************************************************************
-    let err = utils::demo::send_proof_request(proof_handle, connection_handle);
+    let err = utils::demo_utils::send_proof_request(proof_handle, connection_handle);
     assert_eq!(err, 0);
 
     let state = wait_for_updated_state(proof_handle, target_state, api::proof::vcx_proof_update_state);
@@ -173,6 +173,6 @@ fn send_proof_request_and_receive_proof(connection_handle: u32, proof_handle:u32
     assert_eq!(state, target_state);
 
     // Receive Proof
-    let err = utils::demo::get_proof(proof_handle, connection_handle);
+    let err = utils::demo_utils::get_proof(proof_handle, connection_handle);
     assert_eq!(err, 0);
 }
