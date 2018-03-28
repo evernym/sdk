@@ -19,7 +19,6 @@ use utils::libindy::ledger::{libindy_submit_request,
                              libindy_sign_and_submit_request};
 use error::ToErrorCode;
 use error::cred_def::CredDefError;
-use error::base::BaseError;
 
 lazy_static! {
     static ref CLAIMDEF_MAP: Mutex<HashMap<u32, Box<CreateClaimDef>>> = Default::default();

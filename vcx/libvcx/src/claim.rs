@@ -32,7 +32,6 @@ use utils::constants::SEND_MESSAGE_RESPONSE;
 use serde_json::Value;
 use error::ToErrorCode;
 use error::credential::CredentialError;
-use error::base::BaseError;
 
 lazy_static! {
     static ref HANDLE_MAP: ObjectCache<Claim>  = Default::default();
