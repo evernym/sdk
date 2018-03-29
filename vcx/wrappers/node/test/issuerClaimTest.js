@@ -207,12 +207,13 @@ describe('An issuerClaim', async function () {
   })
 
   const acceptClaimOffer = async ({ claim }) => {
+    VCXMock.setVcxMock(VCXMockMessage.ClaimReq)
     VCXMock.setVcxMock(VCXMockMessage.UpdateClaim)
     await claim.updateState()
     const newState = await claim.getState()
     assert.equal(newState, StateType.RequestReceived)
   }
-  it(`upadting claim's state with mocked agent reply should return ${StateType.RequestReceived}`, async function () {
+  it(`updating claim's state with mocked agent reply should return ${StateType.RequestReceived}`, async function () {
     const { claim } = await sendClaimOffer()
     await acceptClaimOffer({ claim })
   })

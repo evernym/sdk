@@ -96,12 +96,13 @@ describe('A Proof', function () {
   })
 
   const acceptProofOffer = async ({ proof }) => {
+    VCXMock.setVcxMock(VCXMockMessage.Proof)
     VCXMock.setVcxMock(VCXMockMessage.UpdateProof)
     await proof.updateState()
     const newState = await proof.getState()
-    assert.equal(newState, StateType.Accepted)
+    assert.equal(newState, StateType.RequestReceived) // VcxMock can't verify a proof currently
   }
-  it(`upadting proof's state with mocked agent reply should return ${StateType.Accepted}`, async () => {
+  it(`updating proof's state with mocked agent reply should return ${StateType.RequestReceived}`, async () => {
     const { proof } = await proofSendOffer()
     await acceptProofOffer({ proof })
   })
