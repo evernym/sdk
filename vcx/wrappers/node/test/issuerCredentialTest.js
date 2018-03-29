@@ -4,9 +4,9 @@ const ffi = require('ffi')
 const vcx = require('../dist')
 const { stubInitVCX, shouldThrow } = require('./helpers')
 
-const { IssuerCredential, Connection, StateType, Error, rustAPI } = vcx
+const { IssuerCredential, Connection, StateType, Error, rustAPI, VCXMock, VCXMockMessage } = vcx
 
-const config = {
+const credentialConfigDefault = {
   sourceId: 'jsonCreation',
   schemaNum: 1234,
   issuerDid: 'arandomdidfoobar',
@@ -16,6 +16,9 @@ const config = {
     key3: 'value3'
   },
   credentialName: 'Credential Name'
+}
+const connectionConfigDefault = {
+  id: '123'
 }
 const formattedAttrs = {
   key: ['value'],
@@ -56,32 +59,39 @@ describe('An IssuerCredential', async function () {
 
   it('has a credentialHandle and a sourceId after it is created', async function () {
     const sourceId = 'credential'
-    const credential = await IssuerCredential.create({ ...config, sourceId })
+    const credential = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
     assert(credential.handle > 0)
     assert.equal(credential.sourceId, sourceId)
   })
 
   it('has state that can be found', async function () {
     const sourceId = 'TestState'
-    const credential = await IssuerCredential.create({ ...config, sourceId })
+    const credential = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
     await credential.updateState()
     assert.equal(await credential.getState(), 1)
   })
 
-  it('can be sent with a valid connection', async function () {
-    const sourceId = 'Bank Credential'
-    let connection = await Connection.create({ id: '234' })
-    await connection.connect()
-    assert.equal(StateType.OfferSent, await connection.getState())
-    const credential = await IssuerCredential.create({ ...config, sourceId })
+  const sendCredentialOffer = async ({
+    credentialConfig = credentialConfigDefault,
+    connectionConfig = connectionConfigDefault
+  } = {}) => {
+    const connection = await Connection.create(connectionConfig)
+    await connection.connect({ sms: true })
+    const credential = await IssuerCredential.create(credentialConfig)
     await credential.sendOffer(connection)
-    await credential.updateState()
     assert.equal(await credential.getState(), StateType.OfferSent)
+    return {
+      credential,
+      connection
+    }
+  }
+  it('can be sent with a valid connection', async function () {
+    await sendCredentialOffer()
   })
 
   it('can be created, then serialized, then deserialized and have the same sourceId and state', async function () {
     const sourceId = 'SerializeDeserialize'
-    const credential = await IssuerCredential.create({ ...config, sourceId })
+    const credential = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
     const jsonCredential = await credential.serialize()
     assert.equal(jsonCredential.state, StateType.Initialized)
     const credential2 = await IssuerCredential.deserialize(jsonCredential)
@@ -95,7 +105,7 @@ describe('An IssuerCredential', async function () {
     await connection.connect()
 
     const sourceId = 'SendSerializeDeserialize'
-    const credential = await IssuerCredential.create({ ...config, sourceId })
+    const credential = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
 
     await credential.sendOffer(connection)
     const credentialData = await credential.serialize()
@@ -120,20 +130,20 @@ describe('An IssuerCredential', async function () {
 
   it('is created from a static method', async function () {
     const sourceId = 'staticMethodCreation'
-    const credential = await IssuerCredential.create({ ...config, sourceId })
+    const credential = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
     assert(credential.sourceId, sourceId)
   })
 
   it('will have different credential handles even with the same sourceIds', async function () {
     const sourceId = 'sameSourceIds'
-    const credential = await IssuerCredential.create({ ...config, sourceId })
-    const credential2 = await IssuerCredential.create({ ...config, sourceId })
+    const credential = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
+    const credential2 = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
     assert.notEqual(credential.handle, credential2.handle)
   })
 
   it('deserialize is a static method', async function () {
     const sourceId = 'deserializeStatic'
-    const credential = await IssuerCredential.create({ ...config, sourceId })
+    const credential = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
     const serializedJson = await credential.serialize()
 
     const credentialDeserialized = await IssuerCredential.deserialize(serializedJson)
@@ -142,14 +152,14 @@ describe('An IssuerCredential', async function () {
 
   it('accepts credential attributes and schema sequence number', async function () {
     const sourceId = 'attributesAndSequenceNumber'
-    const credential = await IssuerCredential.create({ ...config, sourceId })
+    const credential = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
     assert.equal(credential.sourceId, sourceId)
-    assert.equal(credential.schemaNum, config.schemaNum)
+    assert.equal(credential.schemaNum, credentialConfigDefault.schemaNum)
     assert.deepEqual(credential.attr, formattedAttrs)
   })
 
   it('throws exception for sending credential with invalid credential handle', async function () {
-    let connection = await Connection.create({id: '123'})
+    let connection = await Connection.create(connectionConfigDefault)
     const credential = new IssuerCredential(null, {})
     try {
       await credential.sendCredential(connection)
@@ -163,7 +173,7 @@ describe('An IssuerCredential', async function () {
     let releasedConnection = await Connection.create({id: '123'})
     await releasedConnection.release()
     const sourceId = 'Credential'
-    const credential = await IssuerCredential.create({ ...config, sourceId })
+    const credential = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
     try {
       await credential.sendCredential(releasedConnection)
     } catch (error) {
@@ -175,7 +185,7 @@ describe('An IssuerCredential', async function () {
   it('sending credential with no credential offer should throw exception', async function () {
     let connection = await Connection.create({id: '123'})
     const sourceId = 'credential'
-    const credential = await IssuerCredential.create({ ...config, sourceId })
+    const credential = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
     const error = await shouldThrow(() => credential.sendCredential(connection))
     assert.equal(error.vcxCode, Error.NOT_READY)
     assert.equal(error.vcxFunction, 'vcx_issuer_send_credential')
@@ -185,7 +195,7 @@ describe('An IssuerCredential', async function () {
   it('will throw error on serialize when issuer_credential has been released', async () => {
     const sourceId = 'SendSerializeDeserialize'
     const connection = await Connection.create({id: '123'})
-    const credential = await IssuerCredential.create({ ...config, sourceId })
+    const credential = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
     await credential.sendOffer(connection)
     try {
       await credential.serialize()
@@ -196,33 +206,39 @@ describe('An IssuerCredential', async function () {
     }
   })
 
-  it('sending credential with valid credential offer should have state VcxStateAccepted', async function () {
-    let connection = await Connection.create({id: '123'})
-    await connection.connect({ sms: true })
-    const sourceId = 'Credential'
-    let credential = await IssuerCredential.create({ ...config, sourceId })
-    await credential.sendOffer(connection)
-    assert.equal(await credential.getState(), StateType.OfferSent)
-    // we serialize and deserialize because this is the only
-    // way to fool libvcx into thinking we've received a
-    // valid credential requset.
-    let jsonCredential = await credential.serialize()
-    jsonCredential.state = StateType.RequestReceived
-    credential = await IssuerCredential.deserialize(jsonCredential)
+  const acceptCredentialOffer = async ({ credential }) => {
+    VCXMock.setVcxMock(VCXMockMessage.CredentialReq)
+    VCXMock.setVcxMock(VCXMockMessage.UpdateCredential)
+    await credential.updateState()
+    const newState = await credential.getState()
+    assert.equal(newState, StateType.RequestReceived)
+  }
+  it(`updating credential's state with mocked agent reply should return ${StateType.RequestReceived}`, async function () {
+    const { credential } = await sendCredentialOffer()
+    await acceptCredentialOffer({ credential })
+  })
+
+  const sendCredential = async ({ credential, connection }) => {
     await credential.sendCredential(connection)
     assert.equal(await credential.getState(), StateType.Accepted)
+  }
+
+  it('sending credential with valid credential offer should have state VcxStateAccepted', async function () {
+    const { credential, connection } = await sendCredentialOffer()
+    await acceptCredentialOffer({ credential })
+    await sendCredential({ credential, connection })
   })
 
   it('can be created from a json', async function () {
-    const credential = await IssuerCredential.create(config)
-    expect(credential.sourceId).to.equal(config.sourceId)
+    const credential = await IssuerCredential.create(credentialConfigDefault)
+    expect(credential.sourceId).to.equal(credentialConfigDefault.sourceId)
   })
 
   const issuerCredentialOfferCheckAndDelete = async () => {
     let connection = await Connection.create({id: '123'})
     await connection.connect({ sms: true })
     const sourceId = 'credential'
-    let credential = await IssuerCredential.create({ ...config, sourceId })
+    let credential = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
     await credential.sendOffer(connection)
     const serialize = rustAPI().vcx_issuer_credential_serialize
     const handle = credential._handle
