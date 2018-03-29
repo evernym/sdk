@@ -11,7 +11,7 @@ use utils::error;
 use settings;
 
 extern {
-    fn indy_prep_msg(command_handle: i32,
+    fn indy_crypto_auth_crypt(command_handle: i32,
                      wallet_handle: i32,
                      sender_vk: *const c_char,
                      recipient_vk: *const c_char,
@@ -19,22 +19,22 @@ extern {
                      msg_len: u32,
                      cb: Option<extern fn(command_handle_: i32, err: i32, encrypted_msg: *const u8, encrypted_len: u32)>) -> i32;
 
-    fn indy_prep_anonymous_msg(command_handle: i32,
+    fn indy_crypto_anon_crypt(command_handle: i32,
                                recipient_vk: *const c_char,
                                msg_data: *const u8,
                                msg_len: u32,
                                cb: Option<extern fn(command_handle_: i32, err: i32, encrypted_msg: *const u8, encrypted_len: u32)>) -> i32;
 
-    fn indy_parse_msg(command_handle: i32,
+    fn indy_crypto_auth_decrypt(command_handle: i32,
                       wallet_handle: i32,
                       recipient_vk: *const c_char,
                       encrypted_msg: *const u8,
                       encrypted_len: u32,
                       cb: Option<extern fn(command_handle_: i32, err: i32, sender_vk: *const c_char, msg_data: *const u8, msg_len: u32)>) -> i32;
 
-    fn indy_sign(command_handle: i32,
+    fn indy_crypto_sign(command_handle: i32,
                  wallet_handle: i32,
-                 did: *const c_char,
+                 my_vk: *const c_char,
                  message_raw: *const u8,
                  message_len: u32,
                  cb: Option<extern fn(xcommand_handle: i32, err: i32, signature_raw: *const u8, signature_len: u32)>) -> i32;
@@ -55,7 +55,7 @@ pub fn prep_msg(wallet_handle: i32, sender_vk: &str, recipient_vk: &str, msg: &[
 
     unsafe {
         indy_function_eval(
-            indy_prep_msg(rtn_obj.command_handle,
+            indy_crypto_auth_crypt(rtn_obj.command_handle,
                           wallet_handle as i32,
                           sender_vk.as_ptr(),
                           recipient_vk.as_ptr(),
@@ -78,7 +78,7 @@ pub fn prep_anonymous_msg(recipient_vk: &str, msg: &[u8]) -> Result<Vec<u8>, u32
 
     unsafe {
         indy_function_eval(
-            indy_prep_anonymous_msg(rtn_obj.command_handle,
+            indy_crypto_anon_crypt(rtn_obj.command_handle,
                                     recipient_vk.as_ptr(),
                                     msg.as_ptr() as *const u8,
                                     msg.len() as u32,
@@ -99,7 +99,7 @@ pub fn parse_msg(wallet_handle: i32, recipient_vk: &str, msg: &[u8]) -> Result<V
 
     unsafe {
             indy_function_eval(
-                indy_parse_msg(rtn_obj.command_handle,
+                indy_crypto_auth_decrypt(rtn_obj.command_handle,
                                    wallet_handle,
                                   recipient_vk.as_ptr(),
                                   msg.as_ptr() as *const u8,
@@ -114,19 +114,19 @@ pub fn parse_msg(wallet_handle: i32, recipient_vk: &str, msg: &[u8]) -> Result<V
 }
 
 
-pub fn sign(wallet_handle: i32, their_did: &str, msg: &[u8]) -> Result<Vec<u8>, u32> {
+pub fn sign(wallet_handle: i32, my_vk: &str, msg: &[u8]) -> Result<Vec<u8>, u32> {
     if settings::test_indy_mode_enabled() {return Ok(Vec::from(msg).to_owned())}
 
-    debug!("sign msg did: {}", their_did);
+    debug!("sign msg vk: {}", my_vk);
 
     let rtn_obj = Return_I32_BIN::new()?;
-    let their_did = CString::new(their_did).map_err(map_string_error)?;
+    let my_vk = CString::new(my_vk).map_err(map_string_error)?;
 
     unsafe {
         indy_function_eval(
-            indy_sign(rtn_obj.command_handle,
+            indy_crypto_sign(rtn_obj.command_handle,
                           wallet_handle,
-                         their_did.as_ptr(),
+                         my_vk.as_ptr(),
                          msg.as_ptr() as *const u8,
                          msg.len() as u32,
                                     Some(rtn_obj.get_callback()))
