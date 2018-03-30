@@ -395,13 +395,8 @@ fn receive_request_send_credential(connection_handle: u32, credential_handle:u32
     assert_eq!(credential_state, target_credential_state);
 
 
-<<<<<<< HEAD
-    // Send claim *********************************************************************
-    let err = utils::demo_utils::send_claim(claim_handle, connection_handle);
-=======
     // Send credential *********************************************************************
     let err = utils::demo::send_credential(credential_handle, connection_handle);
->>>>>>> upstream/master
     assert_eq!(err, 0);
 }
 

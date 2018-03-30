@@ -80,21 +80,21 @@ pub struct Credential {
 impl Credential {
 
     fn _find_claim_def(&self, issuer_did: &str, schema_seq_num: u32) -> Result<String, CredentialError> {
-        RetrieveClaimDef::new()
-            .retrieve_claim_def("GGBDg1j8bsKmr4h5T9XqYf",
+        RetrieveCredentialDef::new()
+            .retrieve_credential_def("GGBDg1j8bsKmr4h5T9XqYf",
                                 schema_seq_num,
                                 Some(SigTypes::CL),
                                 issuer_did).map_err(|e| CredentialError::CommonError(e.to_error_code()))
     }
 
-    fn _build_request(&self, my_did: &str, their_did: &str) -> Result<ClaimRequest, CredentialError> {
+    fn _build_request(&self, my_did: &str, their_did: &str) -> Result<CredentialRequest, CredentialError> {
 
         if self.state != VcxStateType::VcxStateRequestReceived { return Err(CredentialError::NotReady())}
 
         let wallet_h = wallet::get_wallet_handle();
 
         let prover_did = self.my_did.as_ref().ok_or(CredentialError::CommonError(error::INVALID_DID.code_num))?;
-        let claim_offer = self.claim_offer.as_ref().ok_or(CredentialError::InvalidCredentialJson())?;
+        let claim_offer = self.credential_offer.as_ref().ok_or(CredentialError::InvalidCredentialJson())?;
 
         // TODO: Make this mapping a trait?
         let claim_def = self._find_claim_def(&claim_offer.issuer_did,
@@ -103,7 +103,7 @@ impl Credential {
         let claim_offer = serde_json::to_string(claim_offer).or(Err(CredentialError::InvalidCredentialJson()))?;
 
         debug!("storing claim offer: {}", claim_offer);
-        libindy_prover_store_claim_offer(wallet_h, &claim_offer).map_err(|ec| CredentialError::CommonError(ec))?;
+        libindy_prover_store_credential_offer(wallet_h, &claim_offer).map_err(|ec| CredentialError::CommonError(ec))?;
 
         let req = libindy_prover_create_and_store_credential_req(wallet_h,
                                                             &prover_did,
@@ -153,10 +153,10 @@ impl Credential {
         let local_my_did = self.my_did.as_ref().ok_or(CredentialError::InvalidHandle())?;
         let local_my_vk = self.my_vk.as_ref().ok_or(CredentialError::InvalidHandle())?;
 
-        let req: ClaimRequest = self._build_request(local_my_did, local_their_did)?;
+        let req: CredentialRequest = self._build_request(local_my_did, local_their_did)?;
         let req = serde_json::to_string(&req).or(Err(CredentialError::InvalidCredentialJson()))?;
         let data: Vec<u8> = connection::generate_encrypted_payload(local_my_vk, local_their_vk, &req, "CLAIM_REQ").map_err(|e| CredentialError::CommonError(e.to_error_code()))?;
-        let offer_msg_id = self.claim_offer.as_ref().unwrap().msg_ref_id.as_ref().ok_or(CredentialError::CommonError(error::CREATE_CLAIM_REQUEST_ERROR.code_num))?;
+        let offer_msg_id = self.credential_offer.as_ref().unwrap().msg_ref_id.as_ref().ok_or(CredentialError::CommonError(error::CREATE_CREDENTIAL_REQUEST_ERROR.code_num))?;
 
         if settings::test_agency_mode_enabled() { httpclient::set_next_u8_response(SEND_MESSAGE_RESPONSE.to_vec()); }
 
@@ -293,13 +293,13 @@ pub fn get_state(handle: u32) -> Result<u32, CredentialError> {
     }).map_err(handle_err)
 }
 
-pub fn send_claim_request(handle: u32, connection_handle: u32) -> Result<u32, CredentialError> {
+pub fn send_credential_request(handle: u32, connection_handle: u32) -> Result<u32, CredentialError> {
     HANDLE_MAP.get_mut(handle, |obj| {
         obj.send_request(connection_handle).map_err(|e| e.to_error_code())
     }).map_err(handle_err)
 }
 
-pub fn get_claim_offer_messages(connection_handle: u32, match_name: Option<&str>) -> Result<String, CredentialError> {
+pub fn get_credential_offer_messages(connection_handle: u32, match_name: Option<&str>) -> Result<String, CredentialError> {
     let my_did = connection::get_pw_did(connection_handle).map_err(|e| CredentialError::CommonError(e.to_error_code()))?;
     let my_vk = connection::get_pw_verkey(connection_handle).map_err(|e| CredentialError::CommonError(e.to_error_code()))?;
     let agent_did = connection::get_agent_did(connection_handle).map_err(|e| CredentialError::CommonError(e.to_error_code()))?;
@@ -324,7 +324,7 @@ pub fn get_claim_offer_messages(connection_handle: u32, match_name: Option<&str>
 
             let offer = extract_json_payload(&msg_data).map_err(|ec| CredentialError::CommonError(ec))?;
 
-            let mut offer: ClaimOffer = serde_json::from_str(&offer)
+            let mut offer: CredentialOffer = serde_json::from_str(&offer)
                 .or(Err(CredentialError::InvalidCredentialJson()))?;
 
             offer.msg_ref_id = Some(msg.uid.to_owned());
@@ -377,16 +377,13 @@ mod tests {
     extern crate serde_json;
     use super::*;
     use utils::httpclient;
-    use issuer_credential;
-    use std::thread;
-    use std::time::Duration;
     use api::VcxStateType;
 
     pub const BAD_CREDENTIAL_OFFER: &str = r#"{"version": "0.1","to_did": "LtMgSjtFcyPwenK9SHCyb8","from_did": "LtMgSjtFcyPwenK9SHCyb8","claim": {"account_num": ["8BEaoLf8TBmK4BUyX8WWnA"],"name_on_account": ["Alice"]},"schema_seq_no": 48,"issuer_did": "Pd4fnFtRBcMKRVC2go5w3j","claim_name": "Account Certificate","claim_id": "3675417066","msg_ref_id": "ymy5nth"}"#;
 
     #[test]
     fn test_credential_defaults() {
-        let claim = Claim::default();
+        let claim = Credential::default();
         assert_eq!(claim._build_request("test1","test2").err(), Some(CredentialError::NotReady()));
     }
 
@@ -410,8 +407,8 @@ mod tests {
         let credential_string = to_string(handle).unwrap();
         release(handle).unwrap();
         assert_eq!(release(handle).err(), Some(CredentialError::InvalidHandle()));
-        let handle = from_string(&claim_string).unwrap();
-        assert_eq!(claim_string,to_string(handle).unwrap());
+        let handle = from_string(&credential_string).unwrap();
+        assert_eq!(credential_string,to_string(handle).unwrap());
     }
 
     #[test]
