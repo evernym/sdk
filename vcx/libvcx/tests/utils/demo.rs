@@ -10,11 +10,11 @@ use self::libc::c_char;
 use std::thread;
 use std::time::Duration;
 use std::ffi::CString;
-use vcx::api;
-use vcx::utils::cstring::CStringUtils;
-use vcx::utils::timeout::TimeoutUtils;
 use std::sync::Mutex;
 use std::sync::mpsc::channel;
+use self::vcx::api;
+use self::vcx::utils::cstring::CStringUtils;
+use self::vcx::utils::timeout::TimeoutUtils;
 
 macro_rules! check_useful_c_str {
     ($x:ident, $e:expr) => {
@@ -437,6 +437,6 @@ pub fn create_schema(source_id: &str, schema_name: &str, schema_data: &str) -> (
                                                      cb);
     assert_eq!(rc, 0);
     let (rc, handle) = receiver.recv_timeout(TimeoutUtils::long_timeout()).unwrap();
-    let schema_no = ::vcx::schema::get_sequence_num(handle).unwrap();
+    let schema_no = vcx::schema::get_sequence_num(handle).unwrap();
     (rc, handle, schema_no)
 }
