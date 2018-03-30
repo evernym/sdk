@@ -45,7 +45,7 @@ pub struct Proof {
     name: String,
     version: String,
     nonce: String,
-    proof_message: Option<ProofMessage>,
+    proof: Option<ProofMessage>, // Refactoring this name to 'proof_message' causes some tests to fail.
     proof_request: Option<ProofRequestMessage>,
     remote_did: String,
     remote_vk: String,
@@ -128,7 +128,7 @@ impl Proof {
 
     fn build_proof_json(&self) -> Result<String, ProofError> {
         debug!("building proof json for proof validation");
-        match self.proof_message {
+        match self.proof {
             Some(ref x) => x.to_string().map_err(|ec| ProofError::CommonError(ec)),
             None => Err(ProofError::InvalidProof()),
         }
@@ -177,7 +177,7 @@ impl Proof {
             None => return Err(ProofError::InvalidProof()),
         };
 
-        let proof_msg = match self.proof_message.clone() {
+        let proof_msg = match self.proof.clone() {
             Some(x) => x,
             None => return Err(ProofError::InvalidProof()),
         };
@@ -259,9 +259,11 @@ impl Proof {
     }
 
     fn get_proof(&self) -> Result<String, ProofError> {
-        let proof = match self.proof_message {
+        let proof = match self.proof {
             Some(ref x) => x,
-            None => return Err(ProofError::InvalidHandle()),
+            None => {
+                return Err(ProofError::InvalidHandle())
+            },
         };
         proof.get_proof_attributes().map_err(|ec| ProofError::ProofMessageError(ec))
     }
@@ -280,7 +282,7 @@ impl Proof {
                                                          &self.agent_vk)
             .map_err(|ec| ProofError::ProofMessageError(ec))?;
 
-        self.proof_message = match parse_proof_payload(&payload) {
+        self.proof = match parse_proof_payload(&payload) {
             Err(_) => return Ok(error::SUCCESS.code_num),
             Ok(x) => Some(x),
         };
@@ -350,7 +352,7 @@ pub fn create_proof(source_id: String,
         name,
         version: String::from("1.0"),
         nonce: generate_nonce().map_err(|ec| ProofError::CommonError(ec))?,
-        proof_message: None,
+        proof: None,
         proof_request: None,
         remote_did: String::new(),
         remote_vk: String::new(),
@@ -381,7 +383,7 @@ pub fn is_valid_handle(handle: u32) -> bool {
 pub fn update_state(handle: u32) {
     match PROOF_MAP.lock().unwrap().get_mut(&handle) {
         Some(t) => t.update_state(),
-        None => {}
+        None => {},
     };
 }
 
@@ -439,6 +441,7 @@ pub fn from_string(proof_data: &str) -> Result<u32, ProofError> {
     {
         let mut m = PROOF_MAP.lock().unwrap();
         debug!("inserting handle {} with source_id {:?} into proof table", new_handle, source_id);
+        println!("INSERTED INTO MAP, new_handle: {}", new_handle);
         m.insert(new_handle, proof);
     }
     Ok(new_handle)
@@ -541,7 +544,7 @@ mod tests {
             name: String::new(),
             version: String::from("1.0"),
             nonce: generate_nonce().unwrap(),
-            proof_message: Some(ProofMessage::from_str(PROOF_MSG).unwrap()),
+            proof: Some(ProofMessage::from_str(PROOF_MSG).unwrap()),
             proof_request: None,
             remote_did: DID.to_string(),
             remote_vk: VERKEY.to_string(),
@@ -678,7 +681,7 @@ mod tests {
             name: String::new(),
             version: String::from("1.0"),
             nonce: generate_nonce().unwrap(),
-            proof_message: None,
+            proof: None,
             proof_request: None,
             remote_did: DID.to_string(),
             remote_vk: VERKEY.to_string(),
@@ -716,7 +719,7 @@ mod tests {
             name: String::new(),
             version: String::from("1.0"),
             nonce: generate_nonce().unwrap(),
-            proof_message: Some(ProofMessage::from_str(&proof_msg).unwrap()),
+            proof: Some(ProofMessage::from_str(&proof_msg).unwrap()),
             proof_request: None,
             remote_did: DID.to_string(),
             remote_vk: VERKEY.to_string(),
@@ -757,7 +760,7 @@ mod tests {
             name: String::new(),
             version: String::from("1.0"),
             nonce: generate_nonce().unwrap(),
-            proof_message: None,
+            proof: None,
             proof_request: None,
             remote_did: DID.to_string(),
             remote_vk: VERKEY.to_string(),
@@ -828,7 +831,7 @@ mod tests {
             name: String::new(),
             version: String::from("1.0"),
             nonce: generate_nonce().unwrap(),
-            proof_message: None,
+            proof: None,
             proof_request: None,
             remote_did: DID.to_string(),
             remote_vk: VERKEY.to_string(),
@@ -896,7 +899,7 @@ mod tests {
             name: String::new(),
             version: String::from("1.0"),
             nonce: generate_nonce().unwrap(),
-            proof_message: Some(ProofMessage::from_str(proof_msg).unwrap()),
+            proof: Some(ProofMessage::from_str(proof_msg).unwrap()),
             proof_request: None,
             remote_did: DID.to_string(),
             remote_vk: VERKEY.to_string(),
@@ -952,7 +955,7 @@ mod tests {
             name: String::new(),
             version: String::from("1.0"),
             nonce: generate_nonce().unwrap(),
-            proof_message: Some(proof_msg),
+            proof: Some(proof_msg),
             proof_request: Some(proof_req_msg),
             remote_did: DID.to_string(),
             remote_vk: VERKEY.to_string(),

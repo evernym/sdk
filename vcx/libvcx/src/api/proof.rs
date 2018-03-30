@@ -318,7 +318,7 @@ pub extern fn vcx_get_proof(command_handle: u32,
                 cb(command_handle, error::SUCCESS.code_num, proof::get_proof_state(proof_handle), msg.as_ptr());
             },
             Err(x) => {
-                warn!("vcx_get_proof_cb(command_handle: {}, proof_handle: {}, rc: {}, proof: {})", command_handle, proof_handle, x, "null");
+                warn!("vcx_get_proof_cb(command_handle: {}, proof_handle: {}, rc: {}, proof: {})", command_handle, proof_handle, x.to_error_code(), "null");
                 cb(command_handle, x.to_error_code(), proof::get_proof_state(proof_handle), ptr::null_mut());
             },
         };
@@ -536,9 +536,13 @@ mod tests {
         thread::sleep(Duration::from_millis(300));
 
         let proof_handle = proof::from_string(PROOF_WITH_INVALID_STATE).unwrap();
+        println!("PROOF HANDLE {}", proof_handle);
         let rc = vcx_get_proof(0, proof_handle, connection_handle, Some(verify_invalid_proof_cb));
-        thread::sleep(Duration::from_millis(900));
+        println!("ABOUT TO SLEEP ....");
+        thread::sleep(Duration::from_millis(1900));
+        println!("SLEEP DONE.");
         assert_eq!(rc, 0);
+        vcx_proof_release(proof_handle);
     }
 
     extern "C" fn get_state_cb(command_handle: u32, err: u32, state: u32) {
