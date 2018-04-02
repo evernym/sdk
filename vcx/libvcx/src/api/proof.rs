@@ -3,6 +3,7 @@ extern crate libc;
 use self::libc::c_char;
 use utils::cstring::CStringUtils;
 use utils::error;
+use utils::error::error_string;
 use proof;
 use connection;
 use std::thread;

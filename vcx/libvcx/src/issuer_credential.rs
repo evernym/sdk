@@ -166,7 +166,7 @@ impl IssuerCredential {
         match messages::send_message().to(&self.issued_did)
             .to_vk(&self.issued_vk)
             .msg_type("claim")
-            .status_code((&MessageAccepted.as_string()))
+            .status_code(&MessageAccepted.as_string())
             .edge_agent_payload(&data)
             .agent_did(&self.agent_did)
             .agent_vk(&self.agent_vk)
