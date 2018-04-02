@@ -245,7 +245,6 @@ pub fn create_new_schema(source_id: &str,
 
     match new_schema.data.sequence_num {
         Some(x) => {
-            println!("seq_no: {:?}", x);
             new_schema.set_sequence_num(x as u32);
             debug!("created schema object with sequence_num: {}", new_schema.sequence_num);
         },
