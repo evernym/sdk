@@ -536,11 +536,8 @@ mod tests {
         thread::sleep(Duration::from_millis(300));
 
         let proof_handle = proof::from_string(PROOF_WITH_INVALID_STATE).unwrap();
-        println!("PROOF HANDLE {}", proof_handle);
         let rc = vcx_get_proof(0, proof_handle, connection_handle, Some(verify_invalid_proof_cb));
-        println!("ABOUT TO SLEEP ....");
-        thread::sleep(Duration::from_millis(1900));
-        println!("SLEEP DONE.");
+        thread::sleep(Duration::from_millis(900));
         assert_eq!(rc, 0);
         vcx_proof_release(proof_handle);
     }
