@@ -109,7 +109,7 @@ impl Proof {
             };
 
             let credential_def = RetrieveCredentialDef::new()
-                .retrieve_credential_def("GGBDg1j8bsKmr4h5T9XqYf",
+                .retrieve_credential_def(issuer_did,
                                     schema_seq_no,
                                     Some(SigTypes::CL),
                                     issuer_did)
@@ -767,7 +767,7 @@ mod tests {
         };
         let credential1 = CredentialData {
             schema_seq_no: Some(1),
-            issuer_did: Some("11".to_string()),
+            issuer_did: Some("GxtnGN6ypZYgEqcftSQFnC".to_string()),
             credential_uuid: Some("credential1".to_string()),
             attr_info: Some(Attr {
                 name: "credential1Name".to_string(),
@@ -778,7 +778,7 @@ mod tests {
         };
         let credential2 = CredentialData {
             schema_seq_no: Some(2),
-            issuer_did: Some("22".to_string()),
+            issuer_did: Some("GxtnGN6ypZYgEqcftSQFnC".to_string()),
             credential_uuid: Some("credential2".to_string()),
             attr_info: Some(Attr {
                 name: "credential2Name".to_string(),
@@ -789,7 +789,7 @@ mod tests {
         };
         let credential3 = CredentialData {
             schema_seq_no: Some(3),
-            issuer_did: Some("33".to_string()),
+            issuer_did: Some("GxtnGN6ypZYgEqcftSQFnC".to_string()),
             credential_uuid: Some("credential3".to_string()),
             attr_info: Some(Attr {
                 name: "credential3Name".to_string(),
