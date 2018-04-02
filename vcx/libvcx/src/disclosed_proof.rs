@@ -394,7 +394,7 @@ pub fn is_valid_handle(handle: u32) -> bool {
     HANDLE_MAP.has_handle(handle)
 }
 
-//TODO one function with claim
+//TODO one function with credential
 pub fn get_proof_request_messages(connection_handle: u32, match_name: Option<&str>) -> Result<String, ProofError> {
     let my_did = connection::get_pw_did(connection_handle).map_err(|e| ProofError::CommonError(e.to_error_code()))?;
     let my_vk = connection::get_pw_verkey(connection_handle).map_err(|e| ProofError::CommonError(e.to_error_code()))?;

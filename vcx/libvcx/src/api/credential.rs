@@ -96,13 +96,13 @@ pub extern fn vcx_credential_send_request(command_handle: u32,
     thread::spawn(move|| {
         match credential::send_credential_request(credential_handle, connection_handle) {
             Ok(x) => {
-                info!("vcx_credential_send_request_cb(command_handle: {}, rc: {}), source_id: {:?}",
-                      command_handle, error_string(0), source_id);
+                info!("vcx_credential_send_request_cb(command_handle: {}, rc: {}, source_id: {:?})",
+                      command_handle, x.to_string(), source_id);
                 cb(command_handle,x);
             },
             Err(e) => {
-                warn!("vcx_claim_send_request_cb(command_handle: {}, rc: {}), source_id: {:?}",
-                      command_handle, error_string(e.to_error_code()), source_id);
+                warn!("vcx_credential_send_request_cb(command_handle: {}, rc: {}), source_id: {:?}",
+                      command_handle, e.to_string(), source_id);
                 cb(command_handle,e.to_error_code());
             },
         };
@@ -141,12 +141,12 @@ pub extern fn vcx_credential_get_offers(command_handle: u32,
         match credential::get_credential_offer_messages(connection_handle, None) {
             Ok(x) => {
                 info!("vcx_credential_get_offers_cb(command_handle: {}, rc: {}, msg: {})",
-                      command_handle, error_string(0), x);
+                      command_handle, x.to_string(), x);
                 let msg = CStringUtils::string_to_cstring(x);
                 cb(command_handle, error::SUCCESS.code_num, msg.as_ptr());
             },
             Err(x) => {
-                error!("vcx_claim_get_offers_cb(command_handle: {}, rc: {}, msg: null)",
+                error!("vcx_credential_get_offers_cb(command_handle: {}, rc: {}, msg: null)",
                       command_handle, x.to_string());
                 cb(command_handle, x.to_error_code(), ptr::null_mut());
             },
@@ -201,7 +201,7 @@ pub extern fn vcx_credential_update_state(command_handle: u32,
                 cb(command_handle, error::SUCCESS.code_num, s)
             },
             Err(e) => {
-                error!("vcx_claim_update_state_cb(command_handle: {}, rc: {}, state: {}), source_id: {:?}",
+                error!("vcx_credential_update_state_cb(command_handle: {}, rc: {}, state: {}), source_id: {:?}",
                       command_handle, error_string(e.to_error_code()), 0, source_id);
                 cb(command_handle, e.to_error_code(), 0)
             }
@@ -233,7 +233,7 @@ pub extern fn vcx_credential_get_state(command_handle: u32,
                 cb(command_handle, error::SUCCESS.code_num, s)
             },
             Err(e) => {
-                error!("vcx_claim_get_state_cb(command_handle: {}, rc: {}, state: {}), source_id: {:?}",
+                error!("vcx_credential_get_state_cb(command_handle: {}, rc: {}, state: {}), source_id: {:?}",
                       command_handle, error_string(e.to_error_code()), 0, source_id);
                 cb(command_handle, e.to_error_code(), 0)
             }
@@ -348,7 +348,7 @@ pub extern fn vcx_credential_release(handle: u32) -> u32 {
             error::SUCCESS.code_num
         },
         Err(e) => {
-            error!("vcx_claim_release(handle: {}, rc: {}), source_id: {:?}",
+            error!("vcx_credential_release(handle: {}, rc: {}), source_id: {:?}",
                    handle, error_string(e.to_error_code()), source_id);
             e.to_error_code()
         }
@@ -429,9 +429,10 @@ mod tests {
 
     #[test]
     fn test_vcx_credential_send_request() {
+        use utils;
+        utils::logger::LoggerUtils::init();
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
-
         let handle = credential::credential_create_with_offer("test_send_request",::utils::constants::CREDENTIAL_OFFER_JSON).unwrap();
         assert_eq!(credential::get_state(handle).unwrap(),VcxStateType::VcxStateRequestReceived as u32);
 

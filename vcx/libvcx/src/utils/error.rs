@@ -176,12 +176,12 @@ pub fn error_message(code_num:&u32) -> String {
     }
 }
 
-pub fn error_string(code_num:u32) -> String {
-    match ERROR_C_MESSAGES.get(&code_num) {
-        Some(msg) => format!("{}-{}", code_num, msg.to_str().unwrap_or(UNKNOWN_ERROR.message)),
-        None => format!("{}-{}", code_num, UNKNOWN_ERROR.message),
-    }
-}
+//pub fn error_string(code_num:u32) -> String {
+//    match ERROR_C_MESSAGES.get(&code_num) {
+//        Some(msg) => format!("{}-{}", code_num, msg.to_str().unwrap_or(UNKNOWN_ERROR.message)),
+//        None => format!("{}-{}", code_num, UNKNOWN_ERROR.message),
+//    }
+//}
 
 pub fn map_libindy_err(check_rtn: u32, default_rtn: u32) -> u32 {
     match check_rtn {

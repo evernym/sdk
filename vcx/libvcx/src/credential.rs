@@ -79,7 +79,7 @@ pub struct Credential {
 
 impl Credential {
 
-    fn _find_claim_def(&self, issuer_did: &str, schema_seq_num: u32) -> Result<String, CredentialError> {
+    fn _find_credential_def(&self, issuer_did: &str, schema_seq_num: u32) -> Result<String, CredentialError> {
         RetrieveCredentialDef::new()
             .retrieve_credential_def("GGBDg1j8bsKmr4h5T9XqYf",
                                 schema_seq_num,
@@ -94,25 +94,25 @@ impl Credential {
         let wallet_h = wallet::get_wallet_handle();
 
         let prover_did = self.my_did.as_ref().ok_or(CredentialError::CommonError(error::INVALID_DID.code_num))?;
-        let claim_offer = self.credential_offer.as_ref().ok_or(CredentialError::InvalidCredentialJson())?;
+        let credential_offer = self.credential_offer.as_ref().ok_or(CredentialError::InvalidCredentialJson())?;
 
         // TODO: Make this mapping a trait?
-        let claim_def = self._find_claim_def(&claim_offer.issuer_did,
-                                             claim_offer.schema_seq_no)?;
+        let credential_def = self._find_credential_def(&credential_offer.issuer_did,
+                                                  credential_offer.schema_seq_no)?;
 
-        let claim_offer = serde_json::to_string(claim_offer).or(Err(CredentialError::InvalidCredentialJson()))?;
+        let credential_offer = serde_json::to_string(credential_offer).or(Err(CredentialError::InvalidCredentialJson()))?;
 
-        debug!("storing claim offer: {}", claim_offer);
-        libindy_prover_store_credential_offer(wallet_h, &claim_offer).map_err(|ec| CredentialError::CommonError(ec))?;
+        debug!("storing credential offer: {}", credential_offer);
+        libindy_prover_store_credential_offer(wallet_h, &credential_offer).map_err(|ec| CredentialError::CommonError(ec))?;
 
         let req = libindy_prover_create_and_store_credential_req(wallet_h,
                                                             &prover_did,
-                                                            &claim_offer,
-                                                            &claim_def).map_err(|ec| CredentialError::CommonError(ec))?;
+                                                            &credential_offer,
+                                                            &credential_def).map_err(|ec| CredentialError::CommonError(ec))?;
 
         let mut  req : Value = serde_json::from_str(&req)
             .or_else(|e|{
-                error!("Unable to create claim request - libindy error: {}", e);
+                error!("Unable to create credential request - libindy error: {}", e);
                 Err(CredentialError::CommonError(error::UNKNOWN_LIBINDY_ERROR.code_num))
             })?;
 
@@ -124,14 +124,14 @@ impl Credential {
             map.insert(String::from("mid"), Value::from(""));
         }
         else {
-            warn!("Unable to create claim request -- invalid json from libindy");
+            warn!("Unable to create credential request -- invalid json from libindy");
             return Err(CredentialError::CommonError(error::UNKNOWN_LIBINDY_ERROR.code_num));
         }
         Ok(serde_json::from_value(req).or(Err(CredentialError::InvalidCredentialJson()))?)
     }
 
     fn send_request(&mut self, connection_handle: u32) -> Result<u32, CredentialError> {
-        debug!("sending claim request via connection: {}", connection_handle);
+        debug!("sending credential request via connection: {}", connection_handle);
         self.my_did = Some(connection::get_pw_did(connection_handle).map_err(|ec| CredentialError::CommonError(ec.to_error_code()))?);
         self.my_vk = Some(connection::get_pw_verkey(connection_handle).map_err(|ec| CredentialError::CommonError(ec.to_error_code()))?);
         self.agent_did = Some(connection::get_agent_did(connection_handle).map_err(|ec| CredentialError::CommonError(ec.to_error_code()))?);
@@ -383,8 +383,8 @@ mod tests {
 
     #[test]
     fn test_credential_defaults() {
-        let claim = Credential::default();
-        assert_eq!(claim._build_request("test1","test2").err(), Some(CredentialError::NotReady()));
+        let credential = Credential::default();
+        assert_eq!(credential._build_request("test1","test2").err(), Some(CredentialError::NotReady()));
     }
 
     #[test]
