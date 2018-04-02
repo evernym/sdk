@@ -245,6 +245,7 @@ pub fn create_new_schema(source_id: &str,
 
     match new_schema.data.sequence_num {
         Some(x) => {
+            println!("seq_no: {:?}", x);
             new_schema.set_sequence_num(x as u32);
             debug!("created schema object with sequence_num: {}", new_schema.sequence_num);
         },
@@ -342,9 +343,7 @@ mod tests {
     use super::*;
     use settings;
     use utils::libindy::pool;
-    use utils::libindy::signus::SignusUtils;
     use utils::libindy::wallet::{ delete_wallet, init_wallet };
-    use utils::constants::{ DEMO_AGENT_PW_SEED, DEMO_ISSUER_PW_SEED };
     use utils::error::INVALID_JSON;
     use error::ToErrorCode;
 
@@ -587,13 +586,9 @@ mod tests {
     #[test]
     fn test_create_schema(){
         settings::set_defaults();
-        pool::open_sandbox_pool();
-        let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#.to_string();
-        init_wallet("test_create_schema").unwrap();
-        let wallet_handle = get_wallet_handle();
-        let (my_did, _) = SignusUtils::create_and_store_my_did(wallet_handle, Some(DEMO_ISSUER_PW_SEED)).unwrap();
-        SignusUtils::create_and_store_my_did(wallet_handle, Some(DEMO_AGENT_PW_SEED)).unwrap();
-        let handle = create_new_schema("id", "name".to_string(), my_did, data).unwrap();
+        let data = r#"{"name":"gvt","version":"1.1","attr_names":["address1","address2","zip","city","state"]}"#.to_string();
+        ::utils::devsetup::setup_dev_env("test_create_schema");
+        let handle = create_new_schema("id", "name".to_string(), "2hoqvcwupRTUNkXn6ArYzs".to_string(), data).unwrap();
         delete_wallet("test_create_schema").unwrap();
         assert!(handle > 0);
         assert!(get_sequence_num(handle).unwrap() > 0);
