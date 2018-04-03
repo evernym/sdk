@@ -10,14 +10,15 @@ use settings;
 use messages::{ GeneralMessage, MessageResponseCode::MessageAccepted, send_message::parse_msg_uid };
 use connection;
 use credential_request::CredentialRequest;
+use schema::LedgerSchema;
 use utils::{ error,
              error::INVALID_JSON,
-             libindy::{ anoncreds::libindy_issuer_create_credential, wallet},
+             libindy::{ anoncreds::{ libindy_issuer_create_credential, libindy_issuer_create_credential_offer }, wallet},
              httpclient,
              constants::SEND_MESSAGE_RESPONSE,
              openssl::encode
 };
-use error::issuer_cred::IssuerCredError;
+use error::{ issuer_cred::IssuerCredError, ToErrorCode };
 
 lazy_static! {
     static ref ISSUER_CREDENTIAL_MAP: Mutex<HashMap<u32, Box<IssuerCredential>>> = Default::default();
@@ -88,6 +89,7 @@ pub struct LibindyCredOffer{
 pub struct NewCredentialOffer {
     pub msg_type: String,
     pub version: String, //vcx version of cred_offer
+    pub to_did: String,
     pub from_did: String, //my_pw_did for this relationship
     pub libindy_offer: LibindyCredOffer,
     pub credential_attrs: serde_json::Map<String, serde_json::Value>, //promised attributes revealed in credential
@@ -295,20 +297,30 @@ impl IssuerCredential {
     }
 
     fn get_source_id(&self) -> &String { &self.source_id }
-    fn generate_credential_offer(&self, to_did: &str) -> Result<CredentialOffer, IssuerCredError> {
+    fn generate_credential_offer(&self, to_did: &str) -> Result<NewCredentialOffer, IssuerCredError> {
         let attr_map = convert_to_map(&self.credential_attributes)?;
+        // Todo: Better error conversion
+        let schema_json = LedgerSchema::new_from_ledger(self.schema_seq_no as i32)
+            .map_err(|err| IssuerCredError::CommonError(err.to_error_code()))?
+            .to_string();
 
-        Ok(CredentialOffer {
+        let libindy_offer_str = libindy_issuer_create_credential_offer(wallet::get_wallet_handle(),
+                                                                   &schema_json,
+                                                                   &self.issuer_did,
+                                                                   &to_did).map_err(|err| IssuerCredError::CommonError(err))?;
+        let libindy_offer: LibindyCredOffer = serde_json::from_str(&libindy_offer_str)
+            .or(Err(IssuerCredError::InvalidJson()))?;
+        Ok(NewCredentialOffer {
             msg_type: String::from("CLAIM_OFFER"),
             version: String::from("0.1"),
             to_did: to_did.to_owned(),
             from_did: self.issued_did.to_owned(),
-            claim: attr_map,
+            credential_attrs: attr_map,
             schema_seq_no: self.schema_seq_no.to_owned(),
-            issuer_did: String::from(self.issuer_did.to_owned()),
             claim_name: String::from(self.credential_name.to_owned()),
             claim_id: String::from(self.credential_id.to_owned()),
             msg_ref_id: None,
+            libindy_offer,
         })
     }
 }
@@ -538,13 +550,14 @@ pub mod tests {
     use super::*;
     use settings;
     use connection::build_connection;
-    use utils::libindy::{ set_libindy_rc };
-    use utils::libindy::signus::SignusUtils;
-    use utils::libindy::anoncreds::libindy_create_and_store_credential_def;
     use credential_request::CredentialRequest;
-    use utils::constants::*;
-    use error::issuer_cred::IssuerCredError;
-    use error::ToErrorCode;
+    use utils::{ constants::*,
+                 libindy::{ set_libindy_rc,
+                          signus::SignusUtils,
+                          anoncreds::libindy_create_and_store_credential_def,
+                          wallet::get_wallet_handle },
+    };
+    use error::{ ToErrorCode, issuer_cred::IssuerCredError };
 
     static DEFAULT_CREDENTIAL_NAME: &str = "Credential";
     static DEFAULT_CREDENTIAL_ID: &str = "defaultCredentialId";
@@ -664,6 +677,44 @@ pub mod tests {
         assert_eq!(send_credential_offer(handle, connection_handle).unwrap(), error::SUCCESS.code_num);
         assert_eq!(get_state(handle), VcxStateType::VcxStateOfferSent as u32);
         assert_eq!(get_offer_uid(handle).unwrap(), "ntc2ytb");
+    }
+
+    #[test]
+    fn test_generate_cred_offer() {
+        ::utils::logger::LoggerUtils::init();
+        settings::set_defaults();
+        ::utils::devsetup::setup_dev_env("test_create_cred_offer");
+        ::utils::libindy::anoncreds::libindy_prover_create_master_secret(get_wallet_handle(), settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
+        let issuer_did = &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
+        let to_did = "8XFh8yBzrpJQmNyZzgoTqB";
+        let issuer_cred = IssuerCredential {
+            handle: 123,
+            source_id: "standard_credential".to_owned(),
+            schema_seq_no: 1487,
+            msg_uid: "1234".to_owned(),
+            credential_attributes: CREDENTIAL_DATA.to_owned(),
+            issuer_did: issuer_did.to_owned(),
+            issued_did: to_did.to_owned(),
+            issued_vk: VERKEY.to_string(),
+            state: VcxStateType::VcxStateInitialized,
+            credential_name: DEFAULT_CREDENTIAL_NAME.to_owned(),
+            credential_request: None,
+            credential_id: String::from(DEFAULT_CREDENTIAL_ID),
+            ref_msg_id: None,
+            remote_did: DID.to_string(),
+            remote_vk: VERKEY.to_string(),
+            agent_did: DID.to_string(),
+            agent_vk: VERKEY.to_string(),
+        };
+        let cred_offer = issuer_cred.generate_credential_offer(to_did).unwrap();
+        ::utils::devsetup::cleanup_dev_env("test_create_cred_offer");
+        let check_schema_key = SchemaKey {
+            name: "Home Address".to_string(),
+            version: "1.4".to_string(),
+            did: issuer_did.to_string()
+        };
+        assert_eq!(cred_offer.libindy_offer.schema_key, check_schema_key);
+        assert_eq!(cred_offer.libindy_offer.issuer_did, issuer_did.to_string());
     }
 
     #[test]

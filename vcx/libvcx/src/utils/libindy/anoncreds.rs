@@ -156,7 +156,7 @@ pub fn libindy_create_and_store_credential_def(wallet_handle: i32,
     rtn_obj.receive(TimeoutUtils::some_long()).and_then(check_str)
 }
 
-fn libindy_issuer_create_credential_offer(wallet_handle: i32,
+pub fn libindy_issuer_create_credential_offer(wallet_handle: i32,
                                           schema_json: &str,
                                           issuer_did: &str,
                                           prover_did: &str) -> Result<String, u32> {
@@ -383,6 +383,7 @@ mod tests {
 
     #[test]
     fn simple_libindy_create_credential_offer_test() {
+        // Todo: take out setup_dev_env
         ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
         ::utils::devsetup::setup_dev_env("test_libindy_create_cred_offer");

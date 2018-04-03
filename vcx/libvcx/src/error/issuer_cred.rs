@@ -1,5 +1,5 @@
 use std::fmt;
-use utils::error::{NOT_READY, INVALID_ISSUER_CREDENTIAL_HANDLE, INVALID_CREDENTIAL_REQUEST};
+use utils::error::{NOT_READY, INVALID_ISSUER_CREDENTIAL_HANDLE, INVALID_CREDENTIAL_REQUEST, INVALID_JSON};
 use error::ToErrorCode;
 #[derive(Debug)]
 pub enum IssuerCredError {
@@ -7,6 +7,7 @@ pub enum IssuerCredError {
     NotReadyError(),
     InvalidHandle(),
     InvalidCredRequest(),
+    InvalidJson(),
 }
 
 impl fmt::Display for IssuerCredError {
@@ -16,6 +17,7 @@ impl fmt::Display for IssuerCredError {
             IssuerCredError::NotReadyError() => write!(f, "{}", NOT_READY.message),
             IssuerCredError::InvalidHandle() => write!(f, "{}", INVALID_ISSUER_CREDENTIAL_HANDLE.message),
             IssuerCredError::InvalidCredRequest() => write!(f, "{}", INVALID_CREDENTIAL_REQUEST.message),
+            IssuerCredError::InvalidJson() => write!(f, "{}", INVALID_JSON.message),
         }
     }
 }
@@ -25,6 +27,7 @@ impl ToErrorCode for IssuerCredError {
             IssuerCredError::NotReadyError() => NOT_READY.code_num,
             IssuerCredError::InvalidHandle() => INVALID_ISSUER_CREDENTIAL_HANDLE.code_num,
             IssuerCredError::InvalidCredRequest() => INVALID_CREDENTIAL_REQUEST.code_num,
+            IssuerCredError::InvalidJson() => INVALID_JSON.code_num,
             IssuerCredError::CommonError(x) => x,
         }
     }
