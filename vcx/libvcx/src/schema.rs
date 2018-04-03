@@ -26,23 +26,22 @@ lazy_static! {
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SchemaTransaction {
+    #[serde(rename(deserialize = "identifier", serialize = "dest"))]
+    identifier: Option<String>,
     #[serde(rename = "seqNo")]
     sequence_num: Option<usize>,
-    #[serde(rename = "identifier")]
-    sponsor: Option<String>,
     #[serde(rename = "txnTime")]
     txn_timestamp: Option<usize>,
     #[serde(rename = "type")]
     txn_type: Option<String>,
-    data: Option<SchemaData>
-
+    data: Option<SchemaData>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 struct SchemaData {
     name: String,
     version: String,
-    attr_names: Vec<String>
+    attr_names: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -147,9 +146,9 @@ impl Schema for CreateSchema {
 
 impl fmt::Display for LedgerSchema {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        let data = &self.data;
-        if data.is_some() {
-            match serde_json::to_string(data){
+        let schema_txn = &self.data;
+        if schema_txn .is_some() {
+            match serde_json::to_string(schema_txn ){
                 Ok(s) => {
                     write!(f, "{}", s)
                 },
@@ -184,9 +183,8 @@ impl LedgerSchema {
     pub fn new_from_ledger(sequence_num: i32) -> Result<LedgerSchema, SchemaError>
     {
         Ok(LedgerSchema{
-            sequence_num: sequence_num,
+            sequence_num,
             data: Some(LedgerSchema::retrieve_schema(sequence_num)?)
-
         })
     }
 }
@@ -437,7 +435,7 @@ mod tests {
         let data: SchemaTransaction = serde_json::from_str(EXAMPLE).unwrap();
 
         assert_eq!(15, data.sequence_num.unwrap());
-        assert_eq!("4fUDR9R7fjwELRvH9JT6HH", data.sponsor.unwrap().as_str());
+        assert_eq!("4fUDR9R7fjwELRvH9JT6HH", data.identifier.unwrap().as_str());
         assert_eq!(1510246647, data.txn_timestamp.unwrap());
         assert_eq!("107", data.txn_type.unwrap().as_str());
 
@@ -447,7 +445,7 @@ mod tests {
         println!("{:?}", data);
 
         assert_eq!(15, data.sequence_num.unwrap());
-        assert_eq!("4fUDR9R7fjwELRvH9JT6HH", data.sponsor.unwrap().as_str());
+        assert_eq!("4fUDR9R7fjwELRvH9JT6HH", data.identifier.unwrap().as_str());
         assert_eq!(1510246647, data.txn_timestamp.unwrap());
         assert_eq!("101", data.txn_type.unwrap().as_str());
 
@@ -458,7 +456,7 @@ mod tests {
         let data: SchemaTransaction = serde_json::from_str(EXAMPLE_OPTIONAL).unwrap();
 
         assert!(data.sequence_num.is_none());
-        assert!(data.sponsor.is_none());
+        assert!(data.identifier.is_none());
     }
 
     #[test]
@@ -511,7 +509,7 @@ mod tests {
         let schema_txn = CreateSchema::parse_schema_data(CREATE_SCHEMA_RESULT).unwrap();
         assert_eq!(schema_txn.sequence_num, Some(299));
         assert_eq!(schema_txn.txn_type, Some("101".to_string()));
-        assert_eq!(schema_txn.sponsor, Some("VsKV7grR1BUE29mG2Fm2kX".to_string()));
+        assert_eq!(schema_txn.identifier, Some("VsKV7grR1BUE29mG2Fm2kX".to_string()));
     }
 
     #[test]
@@ -523,7 +521,7 @@ mod tests {
             name: "schema_name".to_string(),
             sequence_num: 306,
         };
-        let create_schema_str = r#"{"data":{"seqNo":15,"identifier":"4fUDR9R7fjwELRvH9JT6HH","txnTime":1510246647,"type":"101","data":{"name":"Home Address","version":"0.1","attr_names":["address1","address2","city","state","zip"]}},"name":"schema_name","source_id":"testId","sequence_num":306}"#;
+        let create_schema_str = r#"{"data":{"dest":"4fUDR9R7fjwELRvH9JT6HH","seqNo":15,"txnTime":1510246647,"type":"101","data":{"name":"Home Address","version":"0.1","attr_names":["address1","address2","city","state","zip"]}},"name":"schema_name","source_id":"testId","sequence_num":306}"#;
         assert_eq!(create_schema.to_string(), create_schema_str.to_string());
     }
 
@@ -539,7 +537,7 @@ mod tests {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
         let (handle, schema_attrs ) = get_schema_attrs("Check For Success".to_string(), 999).unwrap();
         assert!(handle > 0);
-        assert!(schema_attrs.contains(SCHEMA_TXN));
+        assert!(schema_attrs.contains(r#""dest":"VsKV7grR1BUE29mG2Fm2kX""#));
         assert!(schema_attrs.contains("\"source_id\":\"Check For Success\""));
         assert!(schema_attrs.contains("\"sequence_num\":999"));
     }
@@ -633,5 +631,15 @@ mod tests {
 //        assert_eq!(test.err(), Some(SchemaError::CommonError(NO_POOL_OPEN.code_num)));
         let bad_schema = EXAMPLE;
         assert_eq!(from_string(bad_schema).err(), Some(SchemaError::CommonError(INVALID_JSON.code_num)));
+    }
+
+    #[test]
+    fn test_schema_transaction_serde(){
+        let indy_schema_txn = r#"{"auditPath":["58jAfc4uYEkuQS8qygS49gNqJSa2Aku1jJ3h4CJ3dnvw","kwuwk6AUMbvnw82wsjydtxpfNMvVMfY3yzUw6yuKfcd","Cjqkwhh2wxV1JCng5FSrq2tTaXMSaDPFa2r9yWtfjamc","C4KkySkb27QCbLZkPvrYFC3zi84nbnFFJr9HQGptR27s","EwLq63RqEByjfkMLCVkwvLVzsiA6WEYjC6RAKUB1s9RT","EcyRXZihbC3qWKgSQKdzcrPAW72MwS5GoDc9qYjGayHt","B4iS54dgjPWV1gkRCk7aVNJNt8ztXTn2F94wmhVE4oNs"],"data":{"attr_names":["address1","address2","city","state","zip"],"name":"Credential For Driver's License","version":"1.71234"},"identifier":"2hoqvcwupRTUNkXn6ArYzs","reqId":1522773347465606477,"rootHash":"4YuTVar99Z2TuFo6JU1ET7nUhBb1tNJzyZMvowb4Zx2X","seqNo":1498,"signature":"2JgpR7LSF7a1hZrAcomVkSqN9zc1rt6BaUn37rAiqYiyjwHr9xb95bmH7VgNmFg9BaAyg8v3yh5rL9vnLYssbZxU","signatures":null,"txnTime":1522773347,"type":"101"}"#;
+        let schema_txn : SchemaTransaction = serde_json::from_str(indy_schema_txn ).unwrap();
+        let schema_txn_str = serde_json::to_string(&schema_txn).unwrap();
+        assert_eq!(schema_txn.identifier, Some("2hoqvcwupRTUNkXn6ArYzs".to_string()));
+        println!("{:?}", schema_txn);
+        assert!(schema_txn_str.contains(r#""dest":"2hoqvcwupRTUNkXn6ArYzs"#))
     }
 }

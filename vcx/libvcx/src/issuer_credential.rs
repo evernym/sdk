@@ -2,25 +2,22 @@ extern crate rand;
 extern crate serde_json;
 extern crate libc;
 
-use std::sync::Mutex;
-use std::collections::HashMap;
+use std::{ sync::Mutex, collections::HashMap };
 use rand::Rng;
 use api::VcxStateType;
-use utils::error;
 use messages;
 use settings;
-use messages::GeneralMessage;
-use messages::MessageResponseCode::{ MessageAccepted };
-use messages::send_message::parse_msg_uid;
+use messages::{ GeneralMessage, MessageResponseCode::MessageAccepted, send_message::parse_msg_uid };
 use connection;
 use credential_request::CredentialRequest;
-use utils::libindy::wallet;
-use utils::openssl::encode;
-use utils::httpclient;
-use utils::constants::SEND_MESSAGE_RESPONSE;
-use utils::libindy::anoncreds::{ libindy_issuer_create_credential };
+use utils::{ error,
+             error::INVALID_JSON,
+             libindy::{ anoncreds::libindy_issuer_create_credential, wallet},
+             httpclient,
+             constants::SEND_MESSAGE_RESPONSE,
+             openssl::encode
+};
 use error::issuer_cred::IssuerCredError;
-use utils::error::INVALID_JSON;
 
 lazy_static! {
     static ref ISSUER_CREDENTIAL_MAP: Mutex<HashMap<u32, Box<IssuerCredential>>> = Default::default();
@@ -65,6 +62,41 @@ pub struct CredentialOffer {
     pub msg_ref_id: Option<String>,
 }
 
+#[derive(Debug, PartialEq, Deserialize, Serialize)]
+pub struct KeyCorrectnessProof {
+    c: String,
+    xz_cap: String,
+    xr_cap: HashMap<String, String>
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash)]
+pub struct SchemaKey {
+    pub name: String,
+    pub version: String,
+    pub did: String
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct LibindyCredOffer{
+    pub issuer_did: String,
+    pub schema_key: SchemaKey,
+    pub key_correctness_proof: KeyCorrectnessProof,
+    pub nonce: String
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct NewCredentialOffer {
+    pub msg_type: String,
+    pub version: String, //vcx version of cred_offer
+    pub from_did: String, //my_pw_did for this relationship
+    pub libindy_offer: LibindyCredOffer,
+    pub credential_attrs: serde_json::Map<String, serde_json::Value>, //promised attributes revealed in credential
+    pub schema_seq_no: u32,
+    pub claim_name: String,
+    pub claim_id: String, //handle of IssuerCredential object
+    pub msg_ref_id: Option<String>,
+}
+
 impl IssuerCredential {
     fn validate_credential_offer(&self) -> Result<u32, IssuerCredError> {
         //TODO: validate credential_attributes against credential_def
@@ -90,6 +122,7 @@ impl IssuerCredential {
         self.issued_vk = connection::get_pw_verkey(connection_handle).map_err(|x| IssuerCredError::CommonError(x))?;
         self.remote_vk = connection::get_their_pw_verkey(connection_handle).map_err(|x| IssuerCredError::CommonError(x))?;
 
+        //RTM
         let credential_offer = self.generate_credential_offer(&self.issued_did)?;
         let payload = match serde_json::to_string(&credential_offer) {
             Ok(p) => p,

@@ -30,6 +30,15 @@ extern {
                                                        err: i32,
                                                        valid: bool)>) -> i32;
 
+    fn indy_issuer_create_claim_offer(command_handle: i32,
+                                      wallet_handle: i32,
+                                      schema_json: *const c_char,
+                                      issuer_did: *const c_char,
+                                      prover_did: *const c_char,
+                                      cb: Option<extern fn(xcommand_handle: i32,
+                                                           err: i32,
+                                                           credential_offer_json: *const c_char)>) -> i32;
+
     fn indy_issuer_create_claim(command_handle: i32,
                                 wallet_handle: i32,
                                 credential_req_json: *const c_char,
@@ -140,6 +149,28 @@ pub fn libindy_create_and_store_credential_def(wallet_handle: i32,
                                                    schema_json.as_ptr(),
                                                    s_type.as_ptr(),
                                                    create_non_revoc,
+                                                   Some(rtn_obj.get_callback()))
+        ).map_err(map_indy_error_code)?;
+    }
+
+    rtn_obj.receive(TimeoutUtils::some_long()).and_then(check_str)
+}
+
+fn libindy_issuer_create_credential_offer(wallet_handle: i32,
+                                          schema_json: &str,
+                                          issuer_did: &str,
+                                          prover_did: &str) -> Result<String, u32> {
+    let rtn_obj = Return_I32_STR::new()?;
+    let schema_json = CString::new(schema_json).map_err(map_string_error)?;
+    let i_did = CString::new(issuer_did).map_err(map_string_error)?;
+    let p_did = CString::new(prover_did).map_err(map_string_error)?;
+    unsafe {
+        indy_function_eval(
+            indy_issuer_create_claim_offer(rtn_obj.command_handle,
+                                               wallet_handle,
+                                               schema_json.as_ptr(),
+                                                   i_did.as_ptr(),
+                                                   p_did.as_ptr(),
                                                    Some(rtn_obj.get_callback()))
         ).map_err(map_indy_error_code)?;
     }
@@ -326,6 +357,7 @@ mod tests {
     use serde_json;
     use issuer_credential::tests::{create_standard_issuer_credential, util_put_credential_def_in_issuer_wallet };
     use utils::libindy::wallet::{ init_wallet, get_wallet_handle, delete_wallet};
+    use schema::{ LedgerSchema };
     use utils::constants::{ INDY_PROOF_REQ_JSON,
                             INDY_PROOF_JSON,
                             INDY_SCHEMAS_JSON,
@@ -345,6 +377,24 @@ mod tests {
                                                              None,
                                                              false);
         delete_wallet("wallet_simple").unwrap();
+        assert!(result.is_ok());
+        println!("{}", result.unwrap());
+    }
+
+    #[test]
+    fn simple_libindy_create_credential_offer_test() {
+        ::utils::logger::LoggerUtils::init();
+        settings::set_defaults();
+        ::utils::devsetup::setup_dev_env("test_libindy_create_cred_offer");
+        libindy_prover_create_master_secret(get_wallet_handle(), settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
+        let issuer_did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
+        let schema_no = 1487;
+        let schema_json = LedgerSchema::new_from_ledger(schema_no as i32).unwrap().to_string();
+        let result = libindy_issuer_create_credential_offer(get_wallet_handle(),
+                                                            &schema_json,
+                                                            &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
+                                                           "DunkM3x1y7S4ECgSL4Wkru");
+        ::utils::devsetup::cleanup_dev_env("test_libindy_create_cred_offer");
         assert!(result.is_ok());
         println!("{}", result.unwrap());
     }
