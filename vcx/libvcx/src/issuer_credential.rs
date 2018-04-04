@@ -679,6 +679,7 @@ pub mod tests {
         assert_eq!(get_offer_uid(handle).unwrap(), "ntc2ytb");
     }
 
+    #[ignore]
     #[test]
     fn test_generate_cred_offer() {
         ::utils::logger::LoggerUtils::init();

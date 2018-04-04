@@ -1057,5 +1057,6 @@ mod tests {
         assert_eq!(get_source_id(bad_handle).err(), Some(ProofError::InvalidHandle()));
         assert_eq!(from_string(empty).err(), Some(ProofError::CommonError(INVALID_JSON.code_num)));
     }
+
 }
 
