@@ -483,6 +483,8 @@ mod tests {
                                            cxn,
                                            Some(get_offers_cb)));
         thread::sleep(Duration::from_millis(300));
+        //Todo: Fix NEW_CREDENTIAL_OFFER_RESPONSE
+        assert_eq!(0, 1);
     }
 
     extern "C" fn get_state_cb(command_handle: u32, err: u32, state: u32) {

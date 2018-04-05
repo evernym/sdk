@@ -264,7 +264,7 @@ fn setup_new_wallet_with_new_credential(wallet_name: &str) {
     create_new_credentialdef("anything".to_string(), "anything".to_string(), schema_seq_no, issuer_did, false).unwrap();
 }
 
-fn setup_wallet(wallet_name: &str) {
+pub fn setup_wallet(wallet_name: &str) {
     use std::path::Path;
     use self::rusqlite::Connection;
     use std::env::home_dir;

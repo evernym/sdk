@@ -486,8 +486,8 @@ mod tests {
             Err(_) => panic!("error with credential request"),
         };
         // set credential request to have the same did as enterprise did (and sam as credential def)
-        credential_request.issuer_did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).clone().unwrap();
-        credential_request.schema_seq_no = 15;
+        credential_request.libindy_cred_req.issuer_did = Some(settings::get_config_value(settings::CONFIG_INSTITUTION_DID).clone().unwrap());
+        credential_request.schema_seq_no = Some(15);
         issuer_credential::set_credential_request(handle, credential_request).unwrap();
         assert_eq!(issuer_credential::get_state(handle),VcxStateType::VcxStateRequestReceived as u32);
         /**********************************************************************/

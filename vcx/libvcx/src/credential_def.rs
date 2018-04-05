@@ -248,6 +248,7 @@ pub fn create_new_credentialdef(source_id: String,
                                                     &issuer_did,
                                                     Some(SigTypes::CL),
                                                     create_non_revoc)?;
+    //Todo: move creating and sending txn to its own function
     new_credentialdef.set_credential_def(CredentialDefinition::from_str(&credential_def_json)?);
 
     let credential_def_txn = new_credentialdef.build_create_txn(&new_credentialdef

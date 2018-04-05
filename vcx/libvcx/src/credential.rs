@@ -9,7 +9,7 @@ use api::VcxStateType;
 use utils::error;
 use issuer_credential::CredentialOffer;
 
-use credential_request::CredentialRequest;
+use credential_request::{ CredentialRequest, IndyCredReq };
 
 use messages;
 use messages::to_u8;
@@ -58,7 +58,7 @@ impl Default for Credential {
 }
 
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Credential {
     source_id: String,
     state: VcxStateType,
@@ -94,11 +94,12 @@ impl Credential {
 
         let prover_did = self.my_did.as_ref().ok_or(error::INVALID_DID.code_num)?;
         let credential_offer = self.credential_offer.as_ref().ok_or(error::INVALID_CREDENTIAL_JSON.code_num)?;
+        let schema_seq_no = credential_offer.schema_seq_no;
 
-        let credential_def = self._find_credential_def(&credential_offer.issuer_did,
+        let credential_def = self._find_credential_def(&credential_offer.libindy_offer.issuer_did,
                                              credential_offer.schema_seq_no)?;
 
-        let credential_offer = serde_json::to_string(credential_offer).or(Err(error::INVALID_CREDENTIAL_JSON.code_num))?;
+        let credential_offer = serde_json::to_string(&credential_offer.libindy_offer).or(Err(error::INVALID_CREDENTIAL_JSON.code_num))?;
 
         debug!("storing credential offer: {}", credential_offer);
         libindy_prover_store_credential_offer(wallet_h, &credential_offer)?;
@@ -108,24 +109,21 @@ impl Credential {
                                                             &credential_offer,
                                                             &credential_def)?;
 
-        let mut  req : Value = serde_json::from_str(&req)
+        let req: IndyCredReq = serde_json::from_str(&req)
             .or_else(|e|{
                 error!("Unable to create credential request - libindy error: {}", e);
                 Err(error::UNKNOWN_LIBINDY_ERROR.code_num)
             })?;
 
-        if let Value::Object(ref mut map) = req {
-            map.insert(String::from("version"), Value::from("0.1"));
-            map.insert(String::from("tid"), Value::from(""));
-            map.insert(String::from("to_did"), Value::from(their_did));
-            map.insert(String::from("from_did"), Value::from(my_did));
-            map.insert(String::from("mid"), Value::from(""));
-        }
-        else {
-            warn!("Unable to create credential request -- invalid json from libindy");
-            return Err(error::UNKNOWN_LIBINDY_ERROR.code_num);
-        }
-        Ok(serde_json::from_value(req).or(Err(error::INVALID_CREDENTIAL_JSON.code_num))?)
+        Ok(CredentialRequest {
+            libindy_cred_req: req,
+            schema_seq_no: Some(schema_seq_no as i32),
+            tid: String::new(),
+            to_did: String::from(their_did),
+            from_did: String::from(my_did),
+            mid: String::new(),
+            version: String::from("0.1"),
+        })
     }
 
     fn send_request(&mut self, connection_handle: u32) -> Result<u32, u32> {
@@ -193,7 +191,6 @@ impl Credential {
                                                          my_vk,
                                                          agent_did,
                                                          agent_vk)?;
-
 
         for msg in payload {
             if msg.msg_type.eq("claim") {
@@ -323,7 +320,6 @@ pub fn get_credential_offer_messages(connection_handle: u32, match_name: Option<
             };
 
             let offer = extract_json_payload(&msg_data)?;
-
             let mut offer: CredentialOffer = serde_json::from_str(&offer)
                 .or(Err(error::INVALID_JSON.code_num))?;
 
@@ -414,7 +410,9 @@ mod tests {
             Err(x) => assert_eq!(x,error::INVALID_CREDENTIAL_HANDLE.code_num),
         };
         let handle = from_string(&credential_string).unwrap();
-        assert_eq!(credential_string,to_string(handle).unwrap());
+        let cred1: Credential = serde_json::from_str(&credential_string).unwrap();
+        let cred2: Credential = serde_json::from_str(&to_string(handle).unwrap()).unwrap();
+        assert_eq!(cred1, cred2);
     }
 
     #[test]
@@ -446,4 +444,5 @@ mod tests {
 
         wallet::delete_wallet("full_credential_test").unwrap();
     }
+
 }

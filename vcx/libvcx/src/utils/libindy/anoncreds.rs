@@ -2,7 +2,8 @@ extern crate libc;
 use self::libc::c_char;
 use settings;
 use std::ffi::CString;
-use utils::libindy::{indy_function_eval, check_str};
+use utils::constants::LIBINDY_CRED_OFFER;
+use utils::libindy::{indy_function_eval, check_str, mock_libindy_rc};
 use utils::libindy::return_types::{ Return_I32_STR, Return_I32_BOOL, Return_I32_STR_STR, Return_I32 };
 use utils::libindy::SigTypes;
 use utils::libindy::error_codes::{map_indy_error_code, map_string_error};
@@ -160,6 +161,11 @@ pub fn libindy_issuer_create_credential_offer(wallet_handle: i32,
                                           schema_json: &str,
                                           issuer_did: &str,
                                           prover_did: &str) -> Result<String, u32> {
+    if settings::test_indy_mode_enabled() {
+        let rc = mock_libindy_rc();
+        if rc != 0 { return Err(rc) };
+        return Ok(LIBINDY_CRED_OFFER.to_string());
+    }
     let rtn_obj = Return_I32_STR::new()?;
     let schema_json = CString::new(schema_json).map_err(map_string_error)?;
     let i_did = CString::new(issuer_did).map_err(map_string_error)?;
@@ -353,11 +359,7 @@ pub fn libindy_prover_create_master_secret(wallet_handle: i32,
 mod tests {
     use super::*;
     use settings;
-    use utils::libindy::signus::SignusUtils;
-    use serde_json;
-    use issuer_credential::tests::{create_standard_issuer_credential, util_put_credential_def_in_issuer_wallet };
     use utils::libindy::wallet::{ init_wallet, get_wallet_handle, delete_wallet};
-    use schema::{ LedgerSchema };
     use utils::constants::{ INDY_PROOF_REQ_JSON,
                             INDY_PROOF_JSON,
                             INDY_SCHEMAS_JSON,
@@ -383,19 +385,19 @@ mod tests {
 
     #[test]
     fn simple_libindy_create_credential_offer_test() {
-        // Todo: take out setup_dev_env
         ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
-        ::utils::devsetup::setup_dev_env("test_libindy_create_cred_offer");
+        let wallet_name = "test_libindy_create_cred_offer";
+        ::utils::devsetup::setup_wallet(wallet_name);
+        init_wallet(wallet_name).unwrap();
         libindy_prover_create_master_secret(get_wallet_handle(), settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
-        let issuer_did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
         let schema_no = 1487;
-        let schema_json = LedgerSchema::new_from_ledger(schema_no as i32).unwrap().to_string();
+        let schema_json = r#"{"dest":"2hoqvcwupRTUNkXn6ArYzs","seqNo":1487,"txnTime":1522769798,"type":"101","data":{"name":"Home Address","version":"1.4","attr_names":["address1","address2","city","zip","state"]}}"#;
         let result = libindy_issuer_create_credential_offer(get_wallet_handle(),
                                                             &schema_json,
                                                             &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
                                                            "DunkM3x1y7S4ECgSL4Wkru");
-        ::utils::devsetup::cleanup_dev_env("test_libindy_create_cred_offer");
+        delete_wallet(wallet_name).unwrap();
         assert!(result.is_ok());
         println!("{}", result.unwrap());
     }
@@ -404,26 +406,36 @@ mod tests {
     fn simple_libindy_issuer_create_credential_test() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-        let mut issuer_credential = create_standard_issuer_credential();
-        issuer_credential.credential_id = String::from("id");
-        let issuer_did = "NcYxiDXkpYi6ov5FcYDi1e".to_owned();
-        settings::set_config_value(settings::CONFIG_INSTITUTION_DID, &issuer_did);
-        init_wallet("test_wallet").unwrap();
-        let wallet_handle = get_wallet_handle();
-        SignusUtils::create_and_store_my_did(wallet_handle, None).unwrap();
-        let mut credential_req = issuer_credential.credential_request.clone().unwrap();
-        credential_req.issuer_did = issuer_did.to_owned();
-        issuer_credential.credential_request = Some(credential_req.clone());
-        let encoded_credential_data = issuer_credential.create_attributes_encodings().unwrap();
-        util_put_credential_def_in_issuer_wallet(15, wallet_handle);
-        let result = libindy_issuer_create_credential(get_wallet_handle(),
-                                                      &serde_json::to_string(&credential_req).unwrap(),
-                                                      &encoded_credential_data,
+        let wallet_name = "test_libindy_create_credential";
+        ::utils::devsetup::setup_wallet(wallet_name);
+        init_wallet(wallet_name).unwrap();
+
+        let libindy_cred_def = ::utils::constants::LIBINDY_CRED_DEF;
+        let schema_json = r#"{"dest":"2hoqvcwupRTUNkXn6ArYzs","seqNo":1487,"txnTime":1522769798,"type":"101","data":{"name":"Home Address","version":"1.4","attr_names":["address1","address2","city","zip","state"]}}"#;
+        let encoded_cred_data = r#"{"address1":["101TelaLane","63690509275174663089934667471948380740244018358024875547775652380902762701972"],"address2":["101WilsonLane","68086943237164982734333428280784300550565381723532936263016368251445461241953"],"city":["SLC","101327353979588246869873249766058188995681113722618593621043638294296500696424"],"state":["UT","93856629670657830351991220989031130499313559332549427637940645777813964461231"],"zip":["87121","87121"]}"#;
+        let wallet_h = get_wallet_handle();
+        println!("wallet_h: {}", wallet_h);
+        let schema_no = 1487;
+
+        libindy_prover_create_master_secret(wallet_h, settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
+        let libindy_offer = libindy_issuer_create_credential_offer(get_wallet_handle(),
+                                                                   &schema_json,
+                                                                   &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
+                                                                   "DunkM3x1y7S4ECgSL4Wkru").unwrap();
+        println!("CredOffer: \n{:?}", libindy_offer);
+        let libindy_cred_req = libindy_prover_create_and_store_credential_req(wallet_h,
+                                                                              "DunkM3x1y7S4ECgSL4Wkru",
+                                                                              &libindy_offer,
+                                                                              &libindy_cred_def).unwrap();
+        println!("CredReq: \n{:?}", libindy_cred_req);
+        let result = libindy_issuer_create_credential(wallet_h,
+                                                      &libindy_cred_req,
+                                                      encoded_cred_data,
                                                       -1);
-        delete_wallet("test_wallet").unwrap();
+        delete_wallet(wallet_name).unwrap();
         assert!(result.is_ok());
         let (str1, str2) = result.unwrap();
-        println!("{}, {}", str1, str2);
+        println!("{}\n{}", str1, str2);
     }
 
     #[test]
