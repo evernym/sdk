@@ -176,3 +176,40 @@ fn send_proof_request_and_receive_proof(connection_handle: u32, proof_handle:u32
     let err = utils::demo::get_proof(proof_handle, connection_handle);
     assert_eq!(err, 0);
 }
+
+
+#[test]
+fn test_libindy_direct(){
+    use ::vcx::utils::libindy::pool;
+    use ::vcx::utils::libindy::wallet;
+    use ::vcx::utils::libindy::signus;
+    use ::vcx::settings;
+    let expected_did ="Niaxv2v4mPr1HdTeJkQxuU";
+    let did_seed = "000000000000000000000000Issuer02";
+    let wallet_name = "libindy_direct";
+    let wallet_key = "libindy";
+    let config_name = "libindy_config";
+    let pool_name = "libindy_pool";
+    let config_file_path = std::path::Path::new("/var/lib/indy/verity-dev/pool_transactions_genesis");
+
+    settings::set_config_value("wallet_name", wallet_name);
+    settings::set_config_value("wallet_key", wallet_key);
+
+    // create a pool config
+    assert_eq!(pool::create_pool_ledger_config(config_name, Some(config_file_path)).unwrap(), 0);
+    // open a pool
+    let pool_handle = pool::open_pool_ledger(config_name, Some(config_name)).unwrap();
+    assert!(pool_handle > 0);
+    // connect to a pool
+    // open a wallet
+    assert!(wallet::create_wallet(wallet_name, pool_name, None).is_ok());
+    let wallet_handle = wallet::open_wallet(wallet_name, None).unwrap();
+
+    assert!(wallet_handle > 0);
+    assert_eq!(signus::SignusUtils::create_and_store_my_did(wallet_handle, Some(did_seed)).unwrap().0, expected_did);
+
+    wallet::delete_wallet(wallet_name);
+
+
+
+}

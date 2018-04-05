@@ -673,45 +673,46 @@ pub mod tests {
         assert_eq!(get_offer_uid(handle).unwrap(), "ntc2ytb");
     }
 
-//    #[test]
-//    fn test_generate_cred_offer() {
-//        ::utils::logger::LoggerUtils::init();
-//        settings::set_defaults();
-//        ::utils::devsetup::setup_dev_env("test_create_cred_offer");
-//        ::utils::libindy::anoncreds::libindy_prover_create_master_secret(get_wallet_handle(), settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
-//        let issuer_did = &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
-//        let to_did = "8XFh8yBzrpJQmNyZzgoTqB";
-//        let mut issuer_cred = IssuerCredential {
-//            handle: 123,
-//            source_id: "standard_credential".to_owned(),
-//            schema_seq_no: 1487,
-//            msg_uid: "1234".to_owned(),
-//            credential_attributes: CREDENTIAL_DATA.to_owned(),
-//            issuer_did: issuer_did.to_owned(),
-//            issued_did: to_did.to_owned(),
-//            issued_vk: "vrWGArMA3toVoZrYGSAMjR2i9KjBS66bZWyWuYJJYPf".to_string(),
-//            state: VcxStateType::VcxStateInitialized,
-//            credential_name: DEFAULT_CREDENTIAL_NAME.to_owned(),
-//            credential_request: None,
-//            credential_id: String::from(DEFAULT_CREDENTIAL_ID),
-//            ref_msg_id: None,
-//            remote_did: DID.to_string(),
-//            remote_vk: VERKEY.to_string(),
-//            agent_did: DID.to_string(),
-//            agent_vk: VERKEY.to_string(),
-//        };
-//        let connection_handle = create_connection("456");
-//        issuer_cred.send_credential_offer(connection_handle).unwrap();
-////        let cred_offer = issuer_cred.generate_credential_offer(to_did).unwrap();
-//        ::utils::devsetup::cleanup_dev_env("test_create_cred_offer");
-////        let check_schema_key = SchemaKey {
-////             name: "Home Address".to_string(),
-////           version: "1.4".to_string(),
-////         did: issuer_did.to_string()
-////   };
-////        assert_eq!(cred_offer.libindy_offer.schema_key, check_schema_key);
-////         assert_eq!(cred_offer.libindy_offer.issuer_did, issuer_did.to_string());
-//    }
+    #[ignore]
+    #[test]
+    fn test_generate_cred_offer() {
+        ::utils::logger::LoggerUtils::init();
+        settings::set_defaults();
+        ::utils::devsetup::setup_dev_env("test_create_cred_offer");
+        ::utils::libindy::anoncreds::libindy_prover_create_master_secret(get_wallet_handle(), settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
+        let issuer_did = &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
+        let to_did = "8XFh8yBzrpJQmNyZzgoTqB";
+        let mut issuer_cred = IssuerCredential {
+            handle: 123,
+            source_id: "standard_credential".to_owned(),
+            schema_seq_no: 1487,
+            msg_uid: "1234".to_owned(),
+            credential_attributes: CREDENTIAL_DATA.to_owned(),
+            issuer_did: issuer_did.to_owned(),
+            issued_did: to_did.to_owned(),
+            issued_vk: "vrWGArMA3toVoZrYGSAMjR2i9KjBS66bZWyWuYJJYPf".to_string(),
+            state: VcxStateType::VcxStateInitialized,
+            credential_name: DEFAULT_CREDENTIAL_NAME.to_owned(),
+            credential_request: None,
+            credential_id: String::from(DEFAULT_CREDENTIAL_ID),
+            ref_msg_id: None,
+            remote_did: DID.to_string(),
+            remote_vk: VERKEY.to_string(),
+            agent_did: DID.to_string(),
+            agent_vk: VERKEY.to_string(),
+        };
+        let connection_handle = create_connection("456");
+        issuer_cred.send_credential_offer(connection_handle).unwrap();
+//        let cred_offer = issuer_cred.generate_credential_offer(to_did).unwrap();
+        ::utils::devsetup::cleanup_dev_env("test_create_cred_offer");
+//        let check_schema_key = SchemaKey {
+//             name: "Home Address".to_string(),
+//           version: "1.4".to_string(),
+//         did: issuer_did.to_string()
+//   };
+//        assert_eq!(cred_offer.libindy_offer.schema_key, check_schema_key);
+//         assert_eq!(cred_offer.libindy_offer.issuer_did, issuer_did.to_string());
+    }
 
     #[test]
     fn test_retry_send_credential_offer() {
