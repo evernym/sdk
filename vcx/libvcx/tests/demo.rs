@@ -189,7 +189,7 @@ fn test_libindy_direct(){
     use ::vcx::proof;
     self::vcx::utils::logger::LoggerUtils::init();
 
-    let version = "1.0099";
+    let version = "1.0100";
     let expected_did ="Niaxv2v4mPr1HdTeJkQxuU";
     let did_seed = "000000000000000000000000Issuer02";
     let wallet_name = "libindy_direct";

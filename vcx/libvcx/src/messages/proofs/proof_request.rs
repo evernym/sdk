@@ -186,18 +186,25 @@ impl ProofRequestMessage {
 
 
     pub fn requested_attrs(&mut self, attrs: &str) -> &mut Self {
+        let mut check_req_attrs: HashMap<String, AttrInfo> = HashMap::new();
+
         //Todo: Update with latest libindy attributes
-//        let mut proof_attrs = ProofAttrs::create();
-//        proof_attrs.attrs = match serde_json::from_str(attrs) {
-//            Ok(x) => x,
-//            Err(x) => {
-//                self.validate_rc = error::INVALID_JSON.code_num;
-//                return self;
-//            }
-//        };
-//        for (i, attr) in proof_attrs.attrs.iter().enumerate() {
-//            self.proof_request_data.requested_attrs.insert(format!("{}_{}", attr.name, i), attr.clone());
-//        }
+        let proof_attrs:Vec<serde_json::Value> = match serde_json::from_str(attrs) {
+            Ok(x) => x,
+            Err(x) => {
+                self.validate_rc = error::INVALID_JSON.code_num;
+                return self
+            }
+        };
+
+        let mut index = 1;
+        for attr in &proof_attrs {
+            let attr_info: AttrInfo = serde_json::from_str(&attr.to_string()).unwrap();
+            let key = format!("{}_{}",attr_info.name.clone(), &index.to_string());
+            index= index + 1;
+            check_req_attrs.insert(key.to_string(), serde_json::from_str(&attr.to_string()).unwrap());
+        }
+        self.proof_request_data.requested_attrs = check_req_attrs;
         self
     }
 
@@ -385,8 +392,7 @@ mod tests {
         check_req_attrs.insert("age_1".to_string(), attr_info1);
         check_req_attrs.insert("name_2".to_string(), attr_info2);
 
-        let mut request = proof_request()
-            .requested_attrs(REQUESTED_ATTRS).clone();
+        let mut request = proof_request().requested_attrs(new_req_attrs).clone();
         assert_eq!(request.proof_request_data.requested_attrs, check_req_attrs);
     }
 
