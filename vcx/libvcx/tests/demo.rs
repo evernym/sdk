@@ -214,7 +214,7 @@ fn test_libindy_direct(){
     assert!(wallet_handle > 0);
     assert_eq!(signus::SignusUtils::create_and_store_my_did(wallet_handle, Some(did_seed)).unwrap().0, expected_did);
     use ::vcx::schema;
-    let schema_data = r#"{"name":"Faber Student Info","version":"1.0060","attr_names":["name","gpa"]}"#;
+    let schema_data = r#"{"name":"Faber Student Info","version":"1.0067","attr_names":["name","gpa"]}"#;
     let schema_handle = schema::create_new_schema("Schema1", "Faber Student Info".to_string(), expected_did.to_string(), schema_data.to_string()).unwrap();
     assert!(schema_handle>0);
     println!("SCHEMA TO STRING: {:?}", schema::to_string(schema_handle));
@@ -262,6 +262,11 @@ fn test_libindy_direct(){
     let (_, issuer_credential) = anoncreds::libindy_issuer_create_credential(wallet_handle, &credential_request_string, &encoded_attributes, -1).unwrap();
 //    let credential = issuer_credential::create_credential_payload_using_wallet("SomeID", &credential_request_string, encoded_attributes, wallet_handle).unwrap();
     println!("issuer_credential: {}", issuer_credential);
-    wallet::delete_wallet(wallet_name);
+    let wallet_name2 = "prover_wallet";
+    assert!(wallet::create_wallet(wallet_name2, pool_name, None).is_ok());
+    let wallet_handle2 = wallet::open_wallet(wallet_name2, None).unwrap();
+    assert!(anoncreds::libindy_prover_store_credential(wallet_handle, &issuer_credential).is_ok());
+    assert!(wallet::delete_wallet(wallet_name).is_ok());
+    assert!(wallet::delete_wallet(wallet_name2).is_ok());
 
 }

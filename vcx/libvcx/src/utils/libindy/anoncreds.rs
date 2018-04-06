@@ -2,6 +2,7 @@ extern crate libc;
 use self::libc::c_char;
 use settings;
 use std::ffi::CString;
+use std::ptr::null;
 use utils::constants::LIBINDY_CRED_OFFER;
 use utils::libindy::{indy_function_eval, check_str, mock_libindy_rc};
 use utils::libindy::return_types::{ Return_I32_STR, Return_I32_BOOL, Return_I32_STR_STR, Return_I32 };
@@ -100,6 +101,7 @@ extern {
     fn indy_prover_store_claim(command_handle: i32,
                                wallet_handle: i32,
                                credentials_json: *const c_char,
+                               rev_reg_json: *const c_char,
                                cb: Option<extern fn(xcommand_handle: i32,
                                                     err: i32)>
     ) -> i32;
@@ -306,6 +308,7 @@ pub fn libindy_prover_store_credential(wallet_handle: i32,
             indy_prover_store_claim(rtn_obj.command_handle,
                                     wallet_handle,
                                     credential_json.as_ptr(),
+                                    null(),
                                     Some(rtn_obj.get_callback()))
         ).map_err(map_indy_error_code)?;
     }
