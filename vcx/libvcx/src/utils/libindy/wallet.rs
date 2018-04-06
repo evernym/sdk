@@ -137,7 +137,7 @@ pub fn init_wallet(wallet_name: &str) -> Result<i32, u32> {
         Ok(x) => x,
         Err(_) => "default".to_owned(),
     };
-    let mut use_key = false;
+    let use_key = false;
 
 
     let c_pool_name = CString::new(pool_name.clone()).map_err(map_string_error)?;

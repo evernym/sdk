@@ -516,4 +516,9 @@ pub mod tests {
         proof.requested_proof.predicates.insert("attr1".to_string(), "NO_CREDENTIAL".to_string());
         assert_eq!(proof.get_proof_attributes(), Err(error::INVALID_PROOF_CREDENTIAL_DATA.code_num));
     }
+
+    #[test]
+    fn test_proof_message_complies_with_indy() {
+        let proof: ProofMessage = serde_json::from_str(::utils::constants::INDY_PROOF_JSON).unwrap();
+    }
 }

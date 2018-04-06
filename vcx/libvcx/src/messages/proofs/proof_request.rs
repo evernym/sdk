@@ -24,7 +24,7 @@ struct ProofTopic {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-pub struct Attr {
+pub struct OldAttr {
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub schema_seq_no: Option<u32>,
@@ -32,9 +32,29 @@ pub struct Attr {
     pub issuer_did: Option<String>,
 }
 
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct AttrInfo {
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub restrictions: Option<Vec<Filter>>,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct Filter {
+    pub issuer_did: Option<String>, //Issuer of Credential
+    pub schema_key: Option<SchemaKeyFilter>
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct SchemaKeyFilter {
+    pub name: Option<String>, // Schema Name
+    pub version: Option<String>,
+    pub did: Option<String> //Schema DID
+}
+
 //Todo: Move Predicate to a common place for both proof_req and proof msg
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-pub struct Predicate {
+pub struct OldPredicate {
     pub attr_name: String,
     pub p_type: String,
     pub value: i32,
@@ -45,13 +65,23 @@ pub struct Predicate {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct PredicateInfo {
+    pub attr_name: String,
+    pub p_type: String,
+    pub value: i32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub restrictions: Option<Vec<Filter>>,
+}
+
+// Todo: Remove -> no longer needed with libindy format
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct ProofAttrs {
-    attrs: Vec<Attr>
+    attrs: Vec<AttrInfo>
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct ProofPredicates {
-    predicates: Vec<Predicate>
+    predicates: Vec<PredicateInfo>
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -60,8 +90,8 @@ pub struct ProofRequestData{
     name: String,
     #[serde(rename = "version")]
     data_version: String,
-    pub requested_attrs: HashMap<String, Attr>,
-    pub requested_predicates: HashMap<String, Predicate>,
+    pub requested_attrs: HashMap<String, AttrInfo>,
+    pub requested_predicates: HashMap<String, PredicateInfo>,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
@@ -155,34 +185,36 @@ impl ProofRequestMessage {
 
 
     pub fn requested_attrs(&mut self, attrs: &str) -> &mut Self {
-        let mut proof_attrs = ProofAttrs::create();
-        proof_attrs.attrs = match serde_json::from_str(attrs) {
-            Ok(x) => x,
-            Err(x) => {
-                self.validate_rc = error::INVALID_JSON.code_num;
-                return self;
-            }
-        };
-        for (i, attr) in proof_attrs.attrs.iter().enumerate() {
-            self.proof_request_data.requested_attrs.insert(format!("{}_{}", attr.name, i), attr.clone());
-        }
+        //Todo: Update with latest libindy attributes
+//        let mut proof_attrs = ProofAttrs::create();
+//        proof_attrs.attrs = match serde_json::from_str(attrs) {
+//            Ok(x) => x,
+//            Err(x) => {
+//                self.validate_rc = error::INVALID_JSON.code_num;
+//                return self;
+//            }
+//        };
+//        for (i, attr) in proof_attrs.attrs.iter().enumerate() {
+//            self.proof_request_data.requested_attrs.insert(format!("{}_{}", attr.name, i), attr.clone());
+//        }
         self
     }
 
     pub fn requested_predicates(&mut self, predicates: &str) -> &mut Self {
-        let mut proof_predicates = ProofPredicates::create();
-        proof_predicates.predicates = match serde_json::from_str(predicates) {
-            Ok(x) => x,
-            Err(x) => {
-                warn!("Invalid predicate JSON");
-                self.validate_rc = error::INVALID_JSON.code_num;
-                return self;
-            }
-        };
-        for (i, attr) in proof_predicates.predicates.iter().enumerate() {
-            self.proof_request_data.requested_predicates.insert(
-                format!("{}_{}", attr.attr_name, i), attr.clone());
-        }
+        //Todo: Update with latest libindy Predicates
+//        let mut proof_predicates = ProofPredicates::create();
+//        proof_predicates.predicates = match serde_json::from_str(predicates) {
+//            Ok(x) => x,
+//            Err(x) => {
+//                warn!("Invalid predicate JSON");
+//                self.validate_rc = error::INVALID_JSON.code_num;
+//                return self;
+//            }
+//        };
+//        for (i, attr) in proof_predicates.predicates.iter().enumerate() {
+//            self.proof_request_data.requested_predicates.insert(
+//                format!("{}_{}", attr.attr_name, i), attr.clone());
+//        }
         self
     }
 
@@ -215,8 +247,8 @@ mod tests {
     use super::*;
     use messages::{proof_request};
 
-    static REQUESTED_ATTRS: &'static str = "[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]";
-    static REQUESTED_PREDICATES: &'static str = "[{\"attr_name\":\"age\",\"p_type\":\"GE\",\"value\":18,\"schema_seq_no\":1,\"issuer_did\":\"DID1\"}]";
+    static REQUESTED_ATTRS: &'static str = r#"[{"name":"person name"},{"schema_seq_no":1,"name":"address_1"},{"schema_seq_no":2,"issuer_did":"8XFh8yBzrpJQmNyZzgoTqB","name":"address_2"},{"schema_seq_no":1,"name":"city"},{"schema_seq_no":1,"name":"state"},{"schema_seq_no":1,"name":"zip"}]"#;
+    static REQUESTED_PREDICATES: &'static str = r#"[{"attr_name":"age","p_type":"GE","value":18,"schema_seq_no":1,"issuer_did":"DID1"}]"#;
 
     #[test]
     fn test_create_proof_request_data() {
@@ -298,5 +330,98 @@ mod tests {
         assert!(serialized_msg.contains(r#"proof_request_data":{"nonce":"123432421212","name":"Test","version":"3.75","requested_attrs""#));
         assert!(serialized_msg.contains(r#""zip_5":{"name":"zip","schema_seq_no":1}"#));
         assert!(serialized_msg.contains(r#""age_0":{"attr_name":"age","p_type":"GE","value":18,"schema_seq_no":1,"issuer_did":"DID1"}"#));
+    }
+
+    #[test]
+    fn test_requested_attrs_constructed_correctly() {
+        let new_req_attrs = r#"[
+                                       {
+                                          "name":"age",
+                                          "restrictions":[
+                                             {
+                                                "issuer_did":"8XFh8yBzrpJQmNyZzgoTqB",
+                                                "schema_key":{
+                                                   "name":"Faber Student Info",
+                                                   "version":"1.0",
+                                                   "did":"6XFh8yBzrpJQmNyZzgoTqB"
+                                                }
+                                             },
+                                             {
+                                                "issuer_did":"66Fh8yBzrpJQmNyZzgoTqB",
+                                                "schema_key":{
+                                                   "name":"BYU Student Info",
+                                                   "version":"1.0",
+                                                   "did":"5XFh8yBzrpJQmNyZzgoTqB"
+                                                }
+                                             }
+                                          ]
+                                       },
+                                       {
+                                          "name":"name",
+                                          "restrictions":[
+                                             {
+                                                "issuer_did":"77Fh8yBzrpJQmNyZzgoTqB",
+                                                "schema_key":{
+                                                   "name":"Faber Student Info",
+                                                   "version":"1.0",
+                                                   "did":"6XFh8yBzrpJQmNyZzgoTqB"
+                                                }
+                                             },
+                                             {
+                                                "issuer_did":"66Fh8yBzrpJQmNyZzgoTqB",
+                                                "schema_key":{
+                                                   "name":"BYU Student Info",
+                                                   "version":"1.0",
+                                                   "did":"5XFh8yBzrpJQmNyZzgoTqB"
+                                                }
+                                             }
+                                          ]
+                                       }
+                                    ]"#;
+        let mut check_req_attrs: HashMap<String, AttrInfo> = HashMap::new();
+        let attr_info1: AttrInfo = serde_json::from_str(r#"{ "name":"age", "restrictions":[ { "issuer_did":"8XFh8yBzrpJQmNyZzgoTqB", "schema_key":{ "name":"Faber Student Info", "version":"1.0", "did":"6XFh8yBzrpJQmNyZzgoTqB" } }, { "issuer_did":"66Fh8yBzrpJQmNyZzgoTqB", "schema_key":{ "name":"BYU Student Info", "version":"1.0", "did":"5XFh8yBzrpJQmNyZzgoTqB" } } ] }"#).unwrap();
+        let attr_info2: AttrInfo = serde_json::from_str(r#"{ "name":"name", "restrictions":[ { "issuer_did":"77Fh8yBzrpJQmNyZzgoTqB", "schema_key":{ "name":"Faber Student Info", "version":"1.0", "did":"6XFh8yBzrpJQmNyZzgoTqB" } }, { "issuer_did":"66Fh8yBzrpJQmNyZzgoTqB", "schema_key":{ "name":"BYU Student Info", "version":"1.0", "did":"5XFh8yBzrpJQmNyZzgoTqB" } } ] }"#).unwrap();
+        check_req_attrs.insert("age_1".to_string(), attr_info1);
+        check_req_attrs.insert("name_2".to_string(), attr_info2);
+
+        let mut request = proof_request()
+            .requested_attrs(REQUESTED_ATTRS).clone();
+        assert_eq!(request.proof_request_data.requested_attrs, check_req_attrs);
+    }
+
+    #[test]
+    fn test_requested_predicates_constructed_correctly() {
+        let new_predicates = r#"[
+                                       {
+                                          "attr_name":"age",
+                                          "p_type":"GE",
+                                          "value":22,
+                                          "restrictions":[
+                                             {
+                                                "issuer_did":"8XFh8yBzrpJQmNyZzgoTqB",
+                                                "schema_key":{
+                                                   "name":"Faber Student Info",
+                                                   "version":"1.0",
+                                                   "did":"6XFh8yBzrpJQmNyZzgoTqB"
+                                                }
+                                             },
+                                             {
+                                                "issuer_did":"66Fh8yBzrpJQmNyZzgoTqB",
+                                                "schema_key":{
+                                                   "name":"BYU Student Info",
+                                                   "version":"1.0",
+                                                   "did":"5XFh8yBzrpJQmNyZzgoTqB"
+                                                }
+                                             }
+                                          ]
+                                       }
+                                    ]"#;
+        let mut check_predicates: HashMap<String, PredicateInfo> = HashMap::new();
+        let attr_info1: PredicateInfo = serde_json::from_str(r#"{ "attr_name":"age","p_type":"GE","value":22, "restrictions":[ { "issuer_did":"8XFh8yBzrpJQmNyZzgoTqB", "schema_key":{ "name":"Faber Student Info", "version":"1.0", "did":"6XFh8yBzrpJQmNyZzgoTqB" } }, { "issuer_did":"66Fh8yBzrpJQmNyZzgoTqB", "schema_key":{ "name":"BYU Student Info", "version":"1.0", "did":"5XFh8yBzrpJQmNyZzgoTqB" } } ] }"#).unwrap();
+        check_predicates.insert("age_1".to_string(), attr_info1);
+
+        let mut request = proof_request()
+            .requested_attrs(REQUESTED_ATTRS).clone();
+        assert_eq!(request.proof_request_data.requested_predicates, check_predicates);
     }
 }

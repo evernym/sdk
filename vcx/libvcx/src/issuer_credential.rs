@@ -9,7 +9,7 @@ use messages;
 use settings;
 use messages::{ GeneralMessage, MessageResponseCode::MessageAccepted, send_message::parse_msg_uid };
 use connection;
-use credential_request::CredentialRequest;
+use credential_request::{ CredentialRequest };
 use schema::LedgerSchema;
 use utils::{ error,
              error::INVALID_JSON,
@@ -87,13 +87,22 @@ pub struct CredentialOffer {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
-pub struct Credential {
+pub struct LibIndyCred {
     pub values: HashMap<String, Vec<String>>,
     pub schema_key: SchemaKey,
     pub signature: HashMap<String, serde_json::Value>,
     pub signature_correctness_proof: HashMap<String, serde_json::Value>,
     pub issuer_did: String,
     pub rev_reg_seq_no: Option<i32>,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
+pub struct Credential {
+    pub libindy_cred: LibIndyCred,
+    pub msg_type: String,
+    pub claim_offer_id: String,
+    pub version: String,
+    pub from_did: String,
 }
 
 impl IssuerCredential {
@@ -169,21 +178,12 @@ impl IssuerCredential {
 
         let to = connection::get_pw_did(connection_handle).map_err(|x| IssuerCredError::CommonError(x))?;
         let attrs_with_encodings = self.create_attributes_encodings()?;
-        let mut data;
+        let data;
         if settings::test_indy_mode_enabled() {
             data = String::from("dummytestmodedata");
         } else {
-            data = match self.credential_request.clone() {
-                Some(d) => create_credential_payload_using_wallet(&self.credential_id, &d, &attrs_with_encodings, wallet::get_wallet_handle())?,
-                None => {
-                    warn!("Unable to create credential payload using the wallet");
-                    return Err(IssuerCredError::InvalidCredRequest())
-                },
-            };
-            data = append_value(&data, CREDENTIAL_OFFER_ID_KEY, &self.msg_uid)?;
-            data = append_value(&data, "from_did", &to)?;
-            data = append_value(&data, "version", "0.1")?;
-            data = append_value(&data, "msg_type", "CLAIM")?;
+            let cred = self.generate_credential(&attrs_with_encodings, &to)?;
+            data = serde_json::to_string(&cred).or(Err(IssuerCredError::InvalidCred()))?;
         }
 
         debug!("credential data: {}", data);
@@ -292,6 +292,39 @@ impl IssuerCredential {
     }
 
     fn get_source_id(&self) -> &String { &self.source_id }
+
+    fn generate_credential(&self, credential_data: &str, did: &str) -> Result<Credential, IssuerCredError> {
+        let indy_cred_req = &self.credential_request.as_ref()
+            .ok_or(IssuerCredError::InvalidCredRequest())?.libindy_cred_req;
+
+        debug!("credential data: {}", credential_data);
+
+        let credential_req_str = serde_json::to_string(&indy_cred_req).map_err(|err| {
+            error!("Credential Request is not properly formatted/formed: {}", err);
+            IssuerCredError::CommonError(error::INVALID_JSON.code_num)
+        })?;
+
+        debug!("credential request: {}", credential_req_str);
+
+        let (_, xcredential_json) = libindy_issuer_create_credential(wallet::get_wallet_handle(),
+                                                                     &credential_req_str,
+                                                                     credential_data,
+                                                                     -1)
+            .map_err(|x| IssuerCredError::CommonError(x))?;
+
+        debug!("xcredential_json: {:?}", xcredential_json);
+
+        println!("Cred: {:?}", xcredential_json);
+        Ok(Credential {
+            claim_offer_id: self.msg_uid.clone(),
+            from_did: String::from(did),
+            version: String::from("0.1"),
+            msg_type: String::from("CLAIM"),
+            libindy_cred: serde_json::from_str(&xcredential_json)
+                .or(Err(IssuerCredError::CommonError(error::INVALID_JSON.code_num)))?
+        })
+    }
+
     fn generate_credential_offer(&self, to_did: &str) -> Result<CredentialOffer, IssuerCredError> {
         let attr_map = convert_to_map(&self.credential_attributes)?;
         // Todo: Better error conversion
@@ -318,32 +351,6 @@ impl IssuerCredential {
             libindy_offer,
         })
     }
-}
-
-pub fn create_credential_payload_using_wallet<'a>(credential_id: &str, credential_req: &CredentialRequest,
-                                             credential_data: &str, wallet_handle: i32) -> Result< String, IssuerCredError> {
-    debug!("credential data: {}", credential_data);
-
-    if credential_req.libindy_cred_req.blinded_ms.is_none() {
-        error!("No Master Secret in the Credential Request!");
-        return Err(IssuerCredError::CommonError(error::INVALID_MASTER_SECRET.code_num));
-    }
-
-    let credential_req_str = match serde_json::to_string(&credential_req.libindy_cred_req) {
-        Ok(s) => s,
-        Err(x) => {
-            error!("Credential Request is not properly formatted/formed: {}", x);
-            return Err(IssuerCredError::CommonError(error::INVALID_JSON.code_num));
-        },
-    };
-    debug!("credential request: {}", credential_req_str);
-
-    let (_, xcredential_json) = libindy_issuer_create_credential(wallet_handle,
-                                                       &credential_req_str,
-                                                       credential_data,
-                                                       -1).map_err(|x| IssuerCredError::CommonError(x))?;
-    debug!("xcredential_json: {:?}", xcredential_json);
-    Ok(xcredential_json)
 }
 
 pub fn get_offer_uid(handle: u32) -> Result<String,u32> {
@@ -890,13 +897,9 @@ pub mod tests {
         issuer_credential.issuer_did = String::from("2hoqvcwupRTUNkXn6ArYzs");
 
         let encoded_credential_data = issuer_credential.create_attributes_encodings().unwrap();
-        let credential_json = create_credential_payload_using_wallet(&issuer_credential.credential_id,
-                                                                     &issuer_credential.credential_request.clone().unwrap(),
-                                                                     &encoded_credential_data,
-                                                                     wallet_h).unwrap();
+        let cred = issuer_credential.generate_credential(&encoded_credential_data, "44oqvcwupRTUNkXn6ArYzs");
         wallet::delete_wallet(wallet_name).unwrap();
-        let credential: Credential = serde_json::from_str(&credential_json).unwrap();
-        assert_eq!(credential.issuer_did, issuer_credential.issuer_did);
+        assert!(cred.is_ok());
     }
 
     #[test]
