@@ -110,6 +110,30 @@ fn _match_credential(credentials: &Value, id: &str) -> Option<(String, String, u
     None
 }
 
+// TODO: Make thi swork with this thing here:
+//{
+//   "attrs":{
+//      "attr1_referent":[
+//         {
+//            "referent":"claim::48eb0646-c3d4-4caa-b249-53d140251ffa",
+//            "attrs":{
+//               "name":"frank",
+//               "gpa":"4.0"
+//            },
+//            "schema_key":{
+//               "name":"Faber Student Info",
+//               "version":"1.0080",
+//               "did":"Niaxv2v4mPr1HdTeJkQxuU"
+//            },
+//            "issuer_did":"Niaxv2v4mPr1HdTeJkQxuU",
+//            "revoc_reg_seq_no":null
+//         }
+//      ]
+//   },
+//   "predicates":{
+//
+//   }
+//}
 fn credential_def_identifiers(credentials: &str) -> Result<Vec<(String, String, String, u64)>, ProofError>{
     let mut rtn = Vec::new();
 
@@ -197,7 +221,7 @@ impl DisclosedProof {
             true => Err(ProofError::CommonError(error::INVALID_JSON.code_num))
         }
     }
-
+    // TODO Handle self attested and predicate
     fn _build_requested_credentials(&self, credentials_identifiers: &Vec<(String, String, String, u64)>) -> Result<String, ProofError> {
         let mut rtn: Value = json!({
               "self_attested_attributes":{},

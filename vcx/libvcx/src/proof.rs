@@ -91,6 +91,7 @@ impl Proof {
         Ok(error::SUCCESS.code_num)
     }
 
+    // TODO: Combine disclosed proof and proof credential json creation
     fn build_credential_defs_json(&self, credential_data:&Vec<CredentialData>) -> Result<String, ProofError> {
         debug!("building credentialdef json for proof validation");
         let mut credential_json: HashMap<String, CredentialDefinition> = HashMap::new();
@@ -134,6 +135,7 @@ impl Proof {
         }
     }
 
+    // TODO: Combine disclosed proof and proof schema json creation
     fn build_schemas_json(&self, credential_data:&Vec<CredentialData>) -> Result<String, ProofError> {
         debug!("building schemas json for proof validation");
 
