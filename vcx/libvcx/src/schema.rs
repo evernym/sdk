@@ -107,16 +107,32 @@ pub trait Schema: ToString {
     }
 
     fn extract_result_from_txn(txn:&str) -> Result<serde_json::Value, SchemaError> {
+        struct Reject {
+            op: String,
+            reason: String,
+        }
         let txn_struct: Value = serde_json::from_str(txn).map_err(|err| {
             warn!("{}: {:?}","Parse from json error", err);
             SchemaError::CommonError(error::INVALID_JSON.code_num)
         })?;
         match txn_struct.get("result"){
-            Some(result) => Ok(result.clone()),
+            Some(result) => return Ok(result.clone()),
             None => {
                 warn!("{}","'result' not found in json");
-                return Err(SchemaError::CommonError(error::INVALID_JSON.code_num))
+                warn!("This must be a REJECT message..");
             }
+        };
+        match txn_struct.get("op") {
+            Some(m) => {
+                if m == "REJECT" {
+                    match txn_struct.get("reason") {
+                        Some(r) => Err(SchemaError::DuplicateSchema(r.to_string())),
+                        None => Err(SchemaError::UnknownRejection()),
+                    }
+                } else {
+                    return Err(SchemaError::CommonError(error::INVALID_JSON.code_num))
+                }},
+            None => return Err(SchemaError::CommonError(error::INVALID_JSON.code_num))
         }
     }
 
@@ -641,5 +657,12 @@ mod tests {
         assert_eq!(schema_txn.identifier, Some("2hoqvcwupRTUNkXn6ArYzs".to_string()));
         println!("{:?}", schema_txn);
         assert!(schema_txn_str.contains(r#""dest":"2hoqvcwupRTUNkXn6ArYzs"#))
+    }
+
+    #[test]
+    fn test_schema_returns_schema_error_from_reject_message(){
+        let reject_message =  r#"{"reqId":1522985280628576657,"op":"REJECT","reason":"client request invalid: InvalidClientRequest('Niaxv2v4mPr1HdTeJkQxuU can have one and only one SCHEMA with name Faber Student Info and version 1.0049',)","identifier":"Niaxv2v4mPr1HdTeJkQxuU"}"#;
+        let reason = "client request invalid: InvalidClientRequest('Niaxv2v4mPr1HdTeJkQxuU can have one and only one SCHEMA with name Faber Student Info and version 1.0049";
+        assert_eq!(CreateSchema::extract_result_from_txn(reject_message).err(), Some(SchemaError::DuplicateSchema(reason.to_string())));
     }
 }

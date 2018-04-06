@@ -216,8 +216,9 @@ impl IssuerCredential {
     pub fn create_attributes_encodings(&self) -> Result<String, IssuerCredError> {
         let mut attributes: serde_json::Value = match serde_json::from_str(&self.credential_attributes) {
             Ok(x) => x,
-            Err(x) => {
+            Err(e) => {
                 warn!("Invalid Json for Attribute data");
+                println!("serde json error:\n{}", e);
                 return Err(IssuerCredError::CommonError(INVALID_JSON.code_num))
             }
         };
@@ -291,6 +292,7 @@ impl IssuerCredential {
         self.credential_request = Some(credential_request);
     }
 
+    fn get_credential_attributes(&self) -> &String { &self.credential_attributes}
     fn get_source_id(&self) -> &String { &self.source_id }
     fn generate_credential_offer(&self, to_did: &str) -> Result<CredentialOffer, IssuerCredError> {
         let attr_map = convert_to_map(&self.credential_attributes)?;
@@ -344,6 +346,12 @@ pub fn create_credential_payload_using_wallet<'a>(credential_id: &str, credentia
                                                        -1).map_err(|x| IssuerCredError::CommonError(x))?;
     debug!("xcredential_json: {:?}", xcredential_json);
     Ok(xcredential_json)
+}
+pub fn get_encoded_attributes(handle:u32) -> Result<String, IssuerCredError>{
+    match ISSUER_CREDENTIAL_MAP.lock().unwrap().get(&handle) {
+        Some(credential) => Ok(credential.create_attributes_encodings()?),
+        None => Err(IssuerCredError::InvalidHandle()),
+    }
 }
 
 pub fn get_offer_uid(handle: u32) -> Result<String,u32> {
@@ -533,6 +541,12 @@ pub fn convert_to_map(s:&str) -> Result<serde_json::Map<String, serde_json::Valu
     Ok(v)
 }
 
+pub fn get_credential_attributes(handle:u32) -> Result<String, u32> {
+    match ISSUER_CREDENTIAL_MAP.lock().unwrap().get(&handle) {
+        Some(c) => Ok(c.get_credential_attributes().clone()),
+        None => Err(error::INVALID_ISSUER_CREDENTIAL_HANDLE.code_num),
+    }
+}
 pub fn get_source_id(handle: u32) -> Result<String, u32> {
     match ISSUER_CREDENTIAL_MAP.lock().unwrap().get(&handle) {
         Some(c) => Ok(c.get_source_id().clone()),
@@ -960,5 +974,24 @@ pub mod tests {
         let invalid_handle = 478620;
         assert_eq!(to_string(invalid_handle).err(), Some(IssuerCredError::InvalidHandle()));
         assert_eq!(release(invalid_handle).err(), Some(IssuerCredError::InvalidHandle()));
+    }
+
+    #[test]
+    fn test_encoding(){
+        let issuer_credential_handle = self::issuer_credential_create(1,
+                                                                      "IssuerCredentialName".to_string(),
+                                                                      "000000000000000000000000Issuer02".to_string(),
+                                                                      "CredentialNameHere".to_string(),
+                                                                      r#"["name","gpa"]"#.to_string()).unwrap();
+        assert!(self::get_encoded_attributes(issuer_credential_handle).is_err());
+        let issuer_credential_handle = self::issuer_credential_create(1,
+                                                                     "IssuerCredentialName".to_string(),
+                                                                     "000000000000000000000000Issuer02".to_string(),
+                                                                     "CredentialNameHere".to_string(),
+                                                                     r#"{"name":["frank"],"gpa":["4.0"]}"#.to_string()).unwrap();
+
+        let encoded_attributes = self::get_encoded_attributes(issuer_credential_handle).unwrap();
+        println!("Encoded attributes: \n{}", encoded_attributes);
+
     }
 }
