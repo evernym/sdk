@@ -393,7 +393,6 @@ mod tests {
         let wallet_name = "test_libindy_create_cred_offer";
         ::utils::devsetup::setup_wallet(wallet_name);
         init_wallet(wallet_name).unwrap();
-        libindy_prover_create_master_secret(get_wallet_handle(), settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
         let schema_no = 1487;
         let schema_json = r#"{"dest":"2hoqvcwupRTUNkXn6ArYzs","seqNo":1487,"txnTime":1522769798,"type":"101","data":{"name":"Home Address","version":"1.4","attr_names":["address1","address2","city","zip","state"]}}"#;
         let result = libindy_issuer_create_credential_offer(get_wallet_handle(),
@@ -420,12 +419,14 @@ mod tests {
         println!("wallet_h: {}", wallet_h);
         let schema_no = 1487;
 
-        libindy_prover_create_master_secret(wallet_h, settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
         let libindy_offer = libindy_issuer_create_credential_offer(get_wallet_handle(),
                                                                    &schema_json,
                                                                    &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
                                                                    "DunkM3x1y7S4ECgSL4Wkru").unwrap();
         println!("CredOffer: \n{:?}", libindy_offer);
+
+//        libindy_prover_create_master_secret(wallet_h,settings::CONFIG_LINK_SECRET_ALIAS).unwrap();
+        libindy_prover_create_master_secret(wallet_h, settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
         let libindy_cred_req = libindy_prover_create_and_store_credential_req(wallet_h,
                                                                               "DunkM3x1y7S4ECgSL4Wkru",
                                                                               &libindy_offer,

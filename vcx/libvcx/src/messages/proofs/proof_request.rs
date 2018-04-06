@@ -54,6 +54,7 @@ pub struct ProofPredicates {
     predicates: Vec<Predicate>
 }
 
+// TODO: update format to new libindy
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct ProofRequestData{
     nonce: String,
