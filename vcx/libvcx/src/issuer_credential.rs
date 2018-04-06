@@ -323,8 +323,8 @@ impl IssuerCredential {
 }
 
 pub fn create_credential_payload_using_wallet<'a>(credential_id: &str, credential_req: &CredentialRequest,
-                                             credential_data: &str, wallet_handle: i32) -> Result< String, IssuerCredError> {
-    debug!("credential data: {}", credential_data);
+                                             encoded_credential_data: &str, wallet_handle: i32) -> Result< String, IssuerCredError> {
+    debug!("credential data: {}", encoded_credential_data);
 
     if credential_req.libindy_cred_req.blinded_ms.is_none() {
         error!("No Master Secret in the Credential Request!");
@@ -342,7 +342,7 @@ pub fn create_credential_payload_using_wallet<'a>(credential_id: &str, credentia
 
     let (_, xcredential_json) = libindy_issuer_create_credential(wallet_handle,
                                                        &credential_req_str,
-                                                       credential_data,
+                                                       encoded_credential_data,
                                                        -1).map_err(|x| IssuerCredError::CommonError(x))?;
     debug!("xcredential_json: {:?}", xcredential_json);
     Ok(xcredential_json)
