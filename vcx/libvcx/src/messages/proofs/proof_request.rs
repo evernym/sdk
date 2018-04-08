@@ -294,7 +294,7 @@ mod tests {
             .requested_attrs(REQUESTED_ATTRS)
             .requested_predicates(REQUESTED_PREDICATES)
             .clone();
-
+//        let msg = r#"{"@type":{"name":"PROOF_REQUEST","version":"1.3"},"@topic":{"mid":98,"tid":89},"proof_request_data":{"nonce":"123432421212","name":"Test","version":"3.75","requested_attrs":{"state_5":{"name":"state"},"address_2_3":{"name":"address_2"},"address_1_2":{"name":"address_1"},"person name_1":{"name":"person name"},"city_4":{"name":"city"},"zip_6":{"name":"zip"}},"requested_predicates":{"age_1":{"attr_name":"age","p_type":"GE","value":18}}},"msg_ref_id":null}"#;
         let proof_request_test: serde_json::Value = json!({
             "@type": { "name": "PROOF_REQUEST", "version": "1.3" },
             "@topic": { "tid": 89, "mid": 98 },
@@ -335,6 +335,7 @@ mod tests {
             },
         });
         let serialized_msg = request.serialize_message().unwrap();
+        println!("{}", serialized_msg);
         assert!(serialized_msg.contains(r#""@type":{"name":"PROOF_REQUEST","version":"1.3"}"#));
         assert!(serialized_msg.contains(r#"@topic":{"mid":98,"tid":89}"#));
         assert!(serialized_msg.contains(r#"proof_request_data":{"nonce":"123432421212","name":"Test","version":"3.75","requested_attrs""#));

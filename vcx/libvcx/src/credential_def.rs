@@ -555,4 +555,13 @@ pub mod tests {
         assert_eq!(CreateCredentialDef::new().sign_and_send_request("").err(),
                    Some(CredDefError::CommonError(NO_POOL_OPEN.code_num)))
     }
+    #[test]
+    fn test_get_cred_def_with_no_schema_no() {
+        // indy_build_get_schema_request
+        use schema::Sche
+        let did = "ABC";
+        let schema_key:Sche
+        let cred_def_json = RetrieveCredentialDef::new().retrieve_credential_def(did, schema_key, sigtype)?;
+        cred_def: CredentialDefinition = serde_json::from_str(cred_def_json).unwrap();
+    }
 }

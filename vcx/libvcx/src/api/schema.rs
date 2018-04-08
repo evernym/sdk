@@ -437,7 +437,7 @@ mod tests {
     fn test_vcx_schema_deserialize_succeeds() {
         set_default_and_enable_test_mode();
         let original = r#"{"data":{"seqNo":15,"identifier":"4fUDR9R7fjwELRvH9JT6HH","txnTime":1510246647,"type":"101","data":{"name":"Home Address","version":"0.1","attr_names":["address1","address2","city","state","zip"]}},"handle":1,"name":"schema_name","source_id":"testId","sequence_num":306}"#;
-        vcx_schema_deserialize(0,CString::new(original).unwrap().into_raw(), Some(deserialize_cb));
+        let schema_handle = vcx_schema_deserialize(0,CString::new(original).unwrap().into_raw(), Some(deserialize_cb));
         thread::sleep(Duration::from_millis(200));
     }
 
