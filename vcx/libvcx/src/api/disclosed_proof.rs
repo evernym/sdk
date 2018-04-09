@@ -444,6 +444,7 @@ mod tests {
         let string = DEFAULT_SERIALIZED_PROOF;
         vcx_disclosed_proof_deserialize(0,CString::new(string).unwrap().into_raw(), Some(deserialize_cb));
         thread::sleep(Duration::from_millis(200));
+        assert_eq!(1,0);
     }
 
     extern "C" fn get_requests_cb(command_handle: u32, err:u32, requests: *const c_char) {

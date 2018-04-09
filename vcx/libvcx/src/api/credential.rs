@@ -423,7 +423,7 @@ mod tests {
     }
 
     extern "C" fn send_offer_cb(command_handle: u32, err: u32) {
-        if err != 0 {panic!("failed to send credential(offer) {}",err)}
+        if err != 0 {panic!("failed to send credential offer: {}",err)}
     }
 
     #[test]
@@ -483,8 +483,6 @@ mod tests {
                                            cxn,
                                            Some(get_offers_cb)));
         thread::sleep(Duration::from_millis(300));
-        //Todo: Fix NEW_CREDENTIAL_OFFER_RESPONSE
-        assert_eq!(0, 1);
     }
 
     extern "C" fn get_state_cb(command_handle: u32, err: u32, state: u32) {
@@ -509,7 +507,7 @@ mod tests {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
         let cxn = ::connection::build_connection("test_credential_update_state").unwrap();
         let handle = credential::from_string(DEFAULT_SERIALIZED_CREDENTIAL).unwrap();
-        //::utils::httpclient::set_next_u8_response(::utils::constants::NEW_CREDENTIAL_OFFER_RESPONSE.to_vec());
+        ::utils::httpclient::set_next_u8_response(::utils::constants::NEW_CREDENTIAL_OFFER_RESPONSE.to_vec());
         assert_eq!(vcx_credential_update_state(0, handle, Some(get_state_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(300));
         assert_eq!(vcx_credential_send_request(0, handle, cxn,Some(send_offer_cb)), error::SUCCESS.code_num);

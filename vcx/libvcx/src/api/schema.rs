@@ -412,7 +412,6 @@ mod tests {
         settings::set_defaults();
         pool::open_sandbox_pool();
         init_wallet("a_test_wallet").unwrap();
-        let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#.to_string();
         assert_eq!(vcx_schema_get_attributes(0,
                                      CString::new("Test Source ID").unwrap().into_raw(),
                                      116,
@@ -462,5 +461,6 @@ mod tests {
                                              116,
                                              Some(get_attrs_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
+        assert_eq!(1,0);
     }
 }
