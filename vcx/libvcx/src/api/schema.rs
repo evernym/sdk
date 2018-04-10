@@ -386,24 +386,24 @@ mod tests {
         delete_wallet("a_test_wallet").unwrap();
     }
 
-    #[ignore]
+//    #[ignore]
     #[test]
     fn test_vcx_create_schema_and_create_credentialdef_with_pool() {
         settings::set_defaults();
         pool::open_sandbox_pool();
-        init_wallet("a_test_wallet").unwrap();
+        init_wallet("marks_test_wallet").unwrap();
         let wallet_handle = get_wallet_handle();
         let (my_did, _) = SignusUtils::create_and_store_my_did(wallet_handle, Some(DEMO_ISSUER_PW_SEED)).unwrap();
         SignusUtils::create_and_store_my_did(wallet_handle, Some(DEMO_AGENT_PW_SEED)).unwrap();
         settings::set_config_value(settings::CONFIG_INSTITUTION_DID, &my_did);
-        let data = r#"{"name":"Credential For Driver's License","version":"1.7123456","attr_names":["address1","address2","city","state","zip"]}"#.to_string();
+        let data = r#"{"name":"Marks Schema","version":"0.1","attr_names":["address1","address2","city","state","zip"]}"#.to_string();
         assert_eq!(vcx_schema_create(0,
                                      CString::new("Test Source ID").unwrap().into_raw(),
                                      CString::new("Test Schema").unwrap().into_raw(),
                                      CString::new(data).unwrap().into_raw(),
                                      Some(create_schema_and_credentialdef_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_secs(60));
-        delete_wallet("a_test_wallet").unwrap();
+        delete_wallet("marks_test_wallet").unwrap();
     }
 
     #[ignore]
@@ -436,7 +436,7 @@ mod tests {
     fn test_vcx_schema_deserialize_succeeds() {
         set_default_and_enable_test_mode();
         let original = r#"{"data":{"seqNo":15,"identifier":"4fUDR9R7fjwELRvH9JT6HH","txnTime":1510246647,"type":"101","data":{"name":"Home Address","version":"0.1","attr_names":["address1","address2","city","state","zip"]}},"handle":1,"name":"schema_name","source_id":"testId","sequence_num":306}"#;
-        vcx_schema_deserialize(0,CString::new(original).unwrap().into_raw(), Some(deserialize_cb));
+        let schema_handle = vcx_schema_deserialize(0,CString::new(original).unwrap().into_raw(), Some(deserialize_cb));
         thread::sleep(Duration::from_millis(200));
     }
 

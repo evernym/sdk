@@ -59,6 +59,13 @@ extern {
                                         request_json: *const c_char,
                                         cb: Option<extern fn(xcommand_handle: i32, err: i32,
                                                              request_result_json: *const c_char)>) -> i32;
+
+    pub fn indy_build_get_schema_request(command_handle: i32,
+                                         submitter_did: *const c_char,
+                                         dest: *const c_char,
+                                         data: *const c_char,
+                                         cb: Option<extern fn(xcommand_handle: i32, err: i32,
+                                                              request_json: *const c_char)>) -> i32;
 }
 
 pub fn libindy_sign_and_submit_request(pool_handle: i32,
@@ -97,13 +104,15 @@ fn check_str(str_opt: Option<String>) -> Result<String, u32>{
 
 pub fn libindy_submit_request(pool_handle: i32, request_json: &str) -> Result<String, u32>
 {
+    println!("SUBMIT_REQUEST_BEFORE_CSTRING:\n{}", request_json);
     let rtn_obj = Return_I32_STR::new()?;
-    let json = CString::new(request_json).map_err(map_string_error)?;
+    let request_json = CString::new(request_json).map_err(map_string_error)?;
+    println!("SUBMIT_REQUEST:\n{:?}", request_json);
     unsafe {
         indy_function_eval(
             indy_submit_request(rtn_obj.command_handle,
-                                pool_handle as i32,
-                                json.as_ptr(),
+                                pool_handle,
+                                request_json.as_ptr(),
                                 Some(rtn_obj.get_callback()))
         ).map_err(map_indy_error_code)?;
     }
@@ -190,6 +199,24 @@ pub fn libindy_build_create_credential_def_txn(submitter_did: &str,
     rtn_obj.receive(None).and_then(check_str)
 }
 
+pub fn libindy_build_get_schema_request(submitter_did: &str, dest:&str, data: &str) -> Result<String, u32> {
+    let rtn_obj = Return_I32_STR::new()?;
+    let sub_did = CString::new(submitter_did).map_err(map_string_error)?;
+    let i_did = CString::new(dest).map_err(map_string_error)?;
+    let data_json = CString::new(data).map_err(map_string_error)?;
+    unsafe {
+        indy_function_eval(
+            indy_build_get_schema_request(rtn_obj.command_handle,
+                                         sub_did.as_ptr(),
+                                         i_did.as_ptr(),
+                                         data_json.as_ptr(),
+                                         Some(rtn_obj.get_callback()))
+        ).map_err(map_indy_error_code)?;
+    }
+
+    rtn_obj.receive(None).and_then(check_str)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -224,5 +251,15 @@ mod tests {
         let result = libindy_build_schema_request("GGBDg1j8bsKmr4h5T9XqYf",request);
         assert!(result.is_ok());
         println!("{}",result.unwrap());
+    }
+
+    pub const GET_SCHEMA_DATA: &'static str = r#"{"name":"name","version":"1.0"}"#;
+    // this test cannot pass as a unit test.
+    #[test]
+    fn test_libindy_build_get_schema_request() {
+        let schema_creators_did = "0000000000000SCHEMACREATORS0DID1";
+        let submitter_did = "0000000000000000000submitterDID1";
+        let data = GET_SCHEMA_DATA;
+        assert_eq!(libindy_build_get_schema_request(submitter_did, schema_creators_did, data).unwrap(), "A STRING OF JSON");
     }
 }
