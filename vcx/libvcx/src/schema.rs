@@ -38,7 +38,7 @@ pub struct SchemaTransaction {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
-struct SchemaData {
+pub struct SchemaData {
     name: String,
     version: String,
     attr_names: Vec<String>,
@@ -148,6 +148,7 @@ pub trait Schema: ToString {
     {
         let submitter_did = "GGBDg1j8bsKmr4h5T9XqYf";
 
+        //Todo: Change/Add indy_build_get_schema_request
         libindy_build_get_txn_request(submitter_did, sequence_num).map_err(|x| SchemaError::CommonError(x))
     }
 }

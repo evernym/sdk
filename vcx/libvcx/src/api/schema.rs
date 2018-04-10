@@ -386,24 +386,24 @@ mod tests {
         delete_wallet("a_test_wallet").unwrap();
     }
 
-    #[ignore]
+//    #[ignore]
     #[test]
     fn test_vcx_create_schema_and_create_credentialdef_with_pool() {
         settings::set_defaults();
         pool::open_sandbox_pool();
-        init_wallet("a_test_wallet").unwrap();
+        init_wallet("marks_test_wallet").unwrap();
         let wallet_handle = get_wallet_handle();
         let (my_did, _) = SignusUtils::create_and_store_my_did(wallet_handle, Some(DEMO_ISSUER_PW_SEED)).unwrap();
         SignusUtils::create_and_store_my_did(wallet_handle, Some(DEMO_AGENT_PW_SEED)).unwrap();
         settings::set_config_value(settings::CONFIG_INSTITUTION_DID, &my_did);
-        let data = r#"{"name":"Credential For Driver's License","version":"1.7123456","attr_names":["address1","address2","city","state","zip"]}"#.to_string();
+        let data = r#"{"name":"Marks Schema","version":"0.1","attr_names":["address1","address2","city","state","zip"]}"#.to_string();
         assert_eq!(vcx_schema_create(0,
                                      CString::new("Test Source ID").unwrap().into_raw(),
                                      CString::new("Test Schema").unwrap().into_raw(),
                                      CString::new(data).unwrap().into_raw(),
                                      Some(create_schema_and_credentialdef_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_secs(60));
-        delete_wallet("a_test_wallet").unwrap();
+        delete_wallet("marks_test_wallet").unwrap();
     }
 
     #[ignore]
@@ -412,7 +412,6 @@ mod tests {
         settings::set_defaults();
         pool::open_sandbox_pool();
         init_wallet("a_test_wallet").unwrap();
-        let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#.to_string();
         assert_eq!(vcx_schema_get_attributes(0,
                                      CString::new("Test Source ID").unwrap().into_raw(),
                                      116,
@@ -462,5 +461,6 @@ mod tests {
                                              116,
                                              Some(get_attrs_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
+        assert_eq!(1,0);
     }
 }
