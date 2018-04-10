@@ -2,6 +2,7 @@ extern crate rust_base58;
 extern crate serde_json;
 
 use std::collections::HashMap;
+use std::vec::Vec;
 use utils::error;
 use messages::validation;
 
@@ -186,36 +187,44 @@ impl ProofRequestMessage {
 
 
     pub fn requested_attrs(&mut self, attrs: &str) -> &mut Self {
+        let mut check_req_attrs: HashMap<String, AttrInfo> = HashMap::new();
         //Todo: Update with latest libindy attributes
-//        let mut proof_attrs = ProofAttrs::create();
-//        proof_attrs.attrs = match serde_json::from_str(attrs) {
-//            Ok(x) => x,
-//            Err(x) => {
-//                self.validate_rc = error::INVALID_JSON.code_num;
-//                return self;
-//            }
-//        };
-//        for (i, attr) in proof_attrs.attrs.iter().enumerate() {
-//            self.proof_request_data.requested_attrs.insert(format!("{}_{}", attr.name, i), attr.clone());
-//        }
+        let proof_attrs:Vec<AttrInfo> = match serde_json::from_str(attrs) {
+            Ok(a) => a,
+            Err(e) => {
+                debug!("Cannot parse attributes: {}", e);
+                self.validate_rc = error::INVALID_JSON.code_num;
+                return self
+            }
+        };
+
+        let mut index = 1;
+        for attr in proof_attrs {
+            check_req_attrs.insert(format!("{}_{}", attr.name, index), attr);
+            index= index + 1;
+        }
+        self.proof_request_data.requested_attrs = check_req_attrs;
         self
     }
 
     pub fn requested_predicates(&mut self, predicates: &str) -> &mut Self {
-        //Todo: Update with latest libindy Predicates
-//        let mut proof_predicates = ProofPredicates::create();
-//        proof_predicates.predicates = match serde_json::from_str(predicates) {
-//            Ok(x) => x,
-//            Err(x) => {
-//                warn!("Invalid predicate JSON");
-//                self.validate_rc = error::INVALID_JSON.code_num;
-//                return self;
-//            }
-//        };
-//        for (i, attr) in proof_predicates.predicates.iter().enumerate() {
-//            self.proof_request_data.requested_predicates.insert(
-//                format!("{}_{}", attr.attr_name, i), attr.clone());
-//        }
+        let mut check_predicates: HashMap<String, PredicateInfo> = HashMap::new();
+        let attr_values: Vec<PredicateInfo> = match serde_json::from_str(predicates) {
+            Ok(a) => a,
+            Err(e) => {
+                debug!("Cannot parse predicates: {}", e);
+                self.validate_rc = error::INVALID_JSON.code_num;
+                return self
+            },
+        };
+
+        let mut index = 1;
+        for attr in attr_values {
+            check_predicates.insert(format!("{}_{}", attr.attr_name, index), attr);
+            index = index + 1;
+        }
+
+        self.proof_request_data.requested_predicates = check_predicates;
         self
     }
 
@@ -385,8 +394,7 @@ mod tests {
         check_req_attrs.insert("age_1".to_string(), attr_info1);
         check_req_attrs.insert("name_2".to_string(), attr_info2);
 
-        let mut request = proof_request()
-            .requested_attrs(REQUESTED_ATTRS).clone();
+        let mut request = proof_request().requested_attrs(new_req_attrs).clone();
         assert_eq!(request.proof_request_data.requested_attrs, check_req_attrs);
     }
 
@@ -421,8 +429,7 @@ mod tests {
         let attr_info1: PredicateInfo = serde_json::from_str(r#"{ "attr_name":"age","p_type":"GE","value":22, "restrictions":[ { "issuer_did":"8XFh8yBzrpJQmNyZzgoTqB", "schema_key":{ "name":"Faber Student Info", "version":"1.0", "did":"6XFh8yBzrpJQmNyZzgoTqB" } }, { "issuer_did":"66Fh8yBzrpJQmNyZzgoTqB", "schema_key":{ "name":"BYU Student Info", "version":"1.0", "did":"5XFh8yBzrpJQmNyZzgoTqB" } } ] }"#).unwrap();
         check_predicates.insert("age_1".to_string(), attr_info1);
 
-        let mut request = proof_request()
-            .requested_attrs(REQUESTED_ATTRS).clone();
+        let mut request = proof_request().requested_predicates(new_predicates).clone();
         assert_eq!(request.proof_request_data.requested_predicates, check_predicates);
     }
 }
