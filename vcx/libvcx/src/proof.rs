@@ -739,7 +739,8 @@ mod tests {
         assert_eq!(proof.get_proof_state(), ProofStateType::ProofInvalid as u32);
         assert_eq!(proof.prover_did, "GxtnGN6ypZYgEqcftSQFnC");
         let proof_data = proof.get_proof().unwrap();
-        assert!(proof_data.contains(r#"{"schema_seq_no":15,"issuer_did":"2hoqvcwupRTUNkXn6ArYzs","credential_uuid":"claim::b2bde299-2db7-425d-ac10-840ddbc464b1","attr_info":{"name":"state","value":"UT","type":"revealed"}}"#));
+        assert!(proof_data.contains(r#""issuer_did":"NcYxiDXkpYi6ov5FcYDi1e""#));
+        assert!(proof_data.contains(r#""schema_key":{"name":"gvt","version":"1.0","did":"NcYxiDXkpYi6ov5FcYDi1e"}"#));
         /* converting proof to a string produces non-deterministic results */
     }
 
