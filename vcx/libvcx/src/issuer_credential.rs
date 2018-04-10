@@ -309,7 +309,6 @@ impl IssuerCredential {
 
         debug!("xcredential_json: {:?}", xcredential_json);
 
-        println!("Cred: {:?}", xcredential_json);
         Ok(Credential {
             claim_offer_id: self.msg_uid.clone(),
             from_did: String::from(did),
@@ -559,7 +558,7 @@ pub fn get_source_id(handle: u32) -> Result<String, u32> {
 pub mod tests {
     use super::*;
     use settings;
-    use connection::{ build_connection, create_connection};
+    use connection::{ build_connection };
     use credential_request::CredentialRequest;
     use utils::{ constants::*,
                  libindy::{ set_libindy_rc,
@@ -693,9 +692,18 @@ pub mod tests {
     fn test_generate_cred_offer() {
         ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
-        ::utils::devsetup::setup_dev_env("test_create_cred_offer");
-        ::utils::libindy::anoncreds::libindy_prover_create_master_secret(get_wallet_handle(), settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
+        let wallet_name = "test_create_cred";
+        ::utils::devsetup::setup_wallet(wallet_name);
+        wallet::init_wallet(wallet_name).unwrap();
+        let wallet_h = get_wallet_handle();
+
+        ::utils::libindy::anoncreds::libindy_prover_create_master_secret(wallet_h, settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
         let issuer_did = &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
+        let check_schema_key = SchemaKey {
+            name: "Home Address".to_string(),
+            version: "1.4".to_string(),
+            did: issuer_did.to_string()
+        };
         let to_did = "8XFh8yBzrpJQmNyZzgoTqB";
         let mut issuer_cred = IssuerCredential {
             handle: 123,
@@ -716,17 +724,11 @@ pub mod tests {
             agent_did: DID.to_string(),
             agent_vk: VERKEY.to_string(),
         };
-        let connection_handle = create_connection("456");
-        issuer_cred.send_credential_offer(connection_handle).unwrap();
-//        let cred_offer = issuer_cred.generate_credential_offer(to_did).unwrap();
-        ::utils::devsetup::cleanup_dev_env("test_create_cred_offer");
-//        let check_schema_key = SchemaKey {
-//             name: "Home Address".to_string(),
-//           version: "1.4".to_string(),
-//         did: issuer_did.to_string()
-//   };
-//        assert_eq!(cred_offer.libindy_offer.schema_key, check_schema_key);
-//         assert_eq!(cred_offer.libindy_offer.issuer_did, issuer_did.to_string());
+        let cred_offer = issuer_cred.generate_credential_offer(to_did).unwrap();
+        wallet::delete_wallet(wallet_name).unwrap();
+
+        assert_eq!(cred_offer.libindy_offer.schema_key, check_schema_key);
+        assert_eq!(cred_offer.libindy_offer.issuer_did, issuer_did.to_string());
     }
 
     #[test]

@@ -382,8 +382,7 @@ pub fn update_agent_profile(handle: u32) -> Result<u32, u32> {
 //       you can call create_connection without test_mode and you don't have to build a wallet or
 //       mock the agency during the connection phase
 //
-pub fn create_connection(source_id: &str) -> u32 {
-//Todo: Ryan: Make private after I get Vec from test
+fn create_connection(source_id: &str) -> u32 {
     let new_handle = rand::thread_rng().gen::<u32>();
 
     debug!("creating connection with handle {} and id {}", new_handle, source_id);

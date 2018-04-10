@@ -294,7 +294,7 @@ mod tests {
         check_useful_c_str!(schema_data, ());
         let mut data = r#""data":{"name":"New Credential - Credential5","version":"1.0","attr_names":["New Credential","credential5","a5","b5","c5","d5"]}"#;
         if settings::test_indy_mode_enabled() {
-            data = SCHEMA_TXN;
+            data = r#""data":{"name":"get schema attrs","version":"1.0","attr_names":["test","get","schema","attrs"]}"#;
         }
         assert!(schema_data.contains(&data));
         println!("successfully called get_attrs_cb: {}", schema_data);
@@ -345,7 +345,7 @@ mod tests {
         assert_eq!(err, 0);
         assert!(schema_handle > 0);
         println!("successfully called deserialize_cb");
-        let expected = r#"{"data":{"seqNo":15,"identifier":"4fUDR9R7fjwELRvH9JT6HH","txnTime":1510246647,"type":"101","data":{"name":"Home Address","version":"0.1","attr_names":["address1","address2","city","state","zip"]}},"name":"schema_name","source_id":"testId","sequence_num":306}"#;
+        let expected = r#"{"data":{"dest":"4fUDR9R7fjwELRvH9JT6HH","seqNo":15,"txnTime":1510246647,"type":"101","data":{"name":"Home Address","version":"0.1","attr_names":["address1","address2","city","state","zip"]}},"name":"schema_name","source_id":"testId","sequence_num":306}"#;
         let new = schema::to_string(schema_handle).unwrap();
         assert_eq!(expected, new);
     }
@@ -461,6 +461,5 @@ mod tests {
                                              116,
                                              Some(get_attrs_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
-        assert_eq!(1,0);
     }
 }

@@ -739,7 +739,7 @@ mod tests {
         assert_eq!(proof.get_proof_state(), ProofStateType::ProofInvalid as u32);
         assert_eq!(proof.prover_did, "GxtnGN6ypZYgEqcftSQFnC");
         let proof_data = proof.get_proof().unwrap();
-        assert!(proof_data.contains(r#"{"schema_seq_no":15,"issuer_did":"2hoqvcwupRTUNkXn6ArYzs","credential_uuid":"claim::b2bde299-2db7-425d-ac10-840ddbc464b1","attr_info":{"name":"state","value":"UT","type":"revealed"}}"#));
+        assert!(proof_data.contains(r#"{"issuer_did":"2hoqvcwupRTUNkXn6ArYzs","credential_uuid":"claim::b2bde299-2db7-425d-ac10-840ddbc464b1","attr_info":{"name":"state","value":"UT","type":"revealed"}}"#));
         /* converting proof to a string produces non-deterministic results */
     }
 
@@ -998,6 +998,7 @@ mod tests {
         let proof_data = proof.get_proof().unwrap();
         assert!(proof_data.contains(r#""schema_seq_no":694,"issuer_did":"DunkM3x1y7S4ECgSL4Wkru","credential_uuid":"claim::1f927d68-8905-4188-afd6-374b93202802","attr_info":{"name":"age","value":18,"type":"predicate","predicate_type":"GE"}}"#));
     }
+
     #[ignore]
     #[test]
     fn test_send_proof_request_can_be_retried() {
