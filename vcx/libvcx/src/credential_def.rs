@@ -9,7 +9,7 @@ use utils::libindy::pool;
 use utils::error;
 use settings;
 use schema::LedgerSchema;
-use utils::constants::{ SCHEMAS_JSON, CREDENTIAL_DEF_JSON, STORE_CREDENTIAL_DEF_RESULT };
+use utils::constants::{ SCHEMAS_JSON, CREDENTIAL_DEF_JSON, STORE_CREDENTIAL_DEF_RESULT, LIBINDY_CRED_DEF };
 use utils::libindy::wallet::{ get_wallet_handle };
 use utils::libindy::SigTypes;
 use utils::libindy::anoncreds::{libindy_create_and_store_credential_def};
@@ -17,8 +17,13 @@ use utils::libindy::ledger::{libindy_submit_request,
                              libindy_build_get_credential_def_txn,
                              libindy_build_create_credential_def_txn,
                              libindy_sign_and_submit_request};
+use utils::libindy::ledger;
+use utils::constants;
+
 use error::ToErrorCode;
 use error::cred_def::CredDefError;
+use credential_request;
+use credential_request::SchemaKey;
 
 lazy_static! {
     static ref CREDENTIALDEF_MAP: Mutex<HashMap<u32, Box<CreateCredentialDef>>> = Default::default();
@@ -67,15 +72,15 @@ pub struct PublicKey {
 }
 
 pub trait CredentialDefCommon {
-    type CredentialDefType;
+//    type CredentialDefType;
 
-    fn new() -> Self;
+//    fn new() -> Self;
 
     fn retrieve_credential_def(&mut self,
-                          submitter_did: &str,
-                          schema_num:u32,
-                          sig_type: Option<SigTypes>,
-                          issuer_did: &str) -> Result<String, CredDefError> {
+                               submitter_did: &str,
+                               schema_num:u32,
+                               sig_type: Option<SigTypes>,
+                               issuer_did: &str) -> Result<String, CredDefError> {
         let request = self.build_get_txn(submitter_did, schema_num, sig_type, issuer_did)?;
         match self.send_request(&request) {
             Ok(x) => {
@@ -89,16 +94,40 @@ pub trait CredentialDefCommon {
         }
     }
 
+//    fn retrieve_credential_def_with_schema_key(&mut self,
+//                               submitter_did: &str,
+//                               schema_key: credential_request::SchemaKey,
+//                               sig_type: Option<SigTypes>) -> Result<String, CredDefError> ;
+//        if settings::test_indy_mode_enabled() { return Ok(LIBINDY_CRED_DEF.to_string())}
+//        return Err(CredDefError::CommonError(12345))
+        // get schema sequence number....call retrieve_credential_def
+//        let issuer_did =
+//        let schema_num =
+//        let schema_json = self.
+//        let request = self.retrieve_credential_def(submitter_did, schema_num, sig_type, issuer_did)?;
+//        match self.send_request(&request) {
+//            Ok(x) => {
+//                debug!("Retrieved credential_def from the ledger with SchemaKey: {}", schema_key);
+//                self.extract_result(&x)
+//            },
+//            Err(y) => {
+//                error!("Indy send request for credential_def failed with err: {}", y);
+//                return Err(y)
+//            },
+//        }
+
+
     fn build_get_txn(&mut self,
                      submitter_did: &str,
                      schema_num:u32,
                      sig_type: Option<SigTypes>,
                      issuer_did: &str) -> Result<String, CredDefError> {
-    libindy_build_get_credential_def_txn(submitter_did,
-                                        schema_num as i32,
-                                        sig_type,
-                                        issuer_did).or(Err(CredDefError::BuildCredDefRequestError()))
+        libindy_build_get_credential_def_txn(submitter_did,
+                                             schema_num as i32,
+                                             sig_type,
+                                             issuer_did).or(Err(CredDefError::BuildCredDefRequestError()))
     }
+
 
     fn send_request(&self, request: &str) ->  Result<String, CredDefError> {
         if settings::test_indy_mode_enabled() { return Ok(STORE_CREDENTIAL_DEF_RESULT.to_string()); }
@@ -125,18 +154,37 @@ pub trait CredentialDefCommon {
 }
 
 impl CredentialDefCommon for RetrieveCredentialDef {
-    type CredentialDefType = RetrieveCredentialDef;
+//    type CredentialDefType = RetrieveCredentialDef;
 
-    fn new() -> RetrieveCredentialDef {
+
+}
+
+impl CredentialDefCommon for CreateCredentialDef {
+//    type CredentialDefType = CreateCredentialDef;
+
+}
+impl RetrieveCredentialDef {
+    pub fn new() -> RetrieveCredentialDef {
         RetrieveCredentialDef {
             credential_def: None,
         }
     }
+
+    pub fn retrieve_credential_def_with_schema_key(&mut self,
+                                                   did: &str,
+                                                   schema_key: credential_request::SchemaKey,
+                                                   sig_type: Option<SigTypes>, pool_handle:i32) -> Result<String, CredDefError> {
+        if settings::test_indy_mode_enabled() { return Ok(LIBINDY_CRED_DEF.to_string()) }
+
+        let schema_data = format!(r#"{{"name":"{}","version":"{}","attr_names":["name","gpa"]}}"#,
+                                  schema_key.name, schema_key.version);
+        let schema_json_from_ledger_request = ledger::libindy_build_get_schema_request(&did, &schema_key.did, &schema_data).unwrap();
+        let build_get_schema_result= ledger::libindy_submit_request(pool_handle, &schema_json_from_ledger_request).unwrap();
+        Ok(build_get_schema_result.to_string())
+//        Err(CredDefError::RetrieveCredDefError())
+    }
 }
-
-impl CredentialDefCommon for CreateCredentialDef {
-    type CredentialDefType = CreateCredentialDef;
-
+impl CreateCredentialDef {
     fn new() -> CreateCredentialDef {
         CreateCredentialDef {
             handle: 0,
@@ -145,9 +193,6 @@ impl CredentialDefCommon for CreateCredentialDef {
             source_id: String::new(),
         }
     }
-}
-
-impl CreateCredentialDef {
     pub fn sign_and_send_request(&self, request: &str) ->  Result<String, CredDefError> {
         if settings::test_indy_mode_enabled() { return Ok("{}".to_string()); }
         let pool_handle = pool::get_pool_handle().map_err(|x| CredDefError::CommonError(x))?;
@@ -195,6 +240,32 @@ impl CreateCredentialDef {
     pub fn set_name(&mut self, name: String) { self.name = name.clone(); }
 
     pub fn set_source_id(&mut self, source_id: String) { self.source_id = source_id.clone(); }
+
+
+//        let truncated_schema_data = format!(r#"{{"name":"{}","version":"{}"}}"#, schema_key.name, schema_key.version);
+//        use utils::libindy::ledger::libindy_build_get_schema_request;
+//        let build_get_schema_result = libindy_build_get_schema_request(self.issuer_did, schema_key.did, &truncated_schema_data);
+//        let get_schema_result = libindy_submit_request(pool_handle as i32, &schema_json_from_ledger_request).unwrap();
+
+//         get schema sequence number....call retrieve_credential_def
+//        libindy::le
+
+//        let issuer_did =
+//        let schema_num =
+//        let schema_json = self.
+//        let request = self.retrieve_credential_def(submitter_did, schema_num, sig_type, issuer_did)?;
+//        match self.send_request(&request) {
+//            Ok(x) => {
+//                debug!("Retrieved credential_def from the ledger with SchemaKey: {}", schema_key);
+//                self.extract_result(&x)
+//            },
+//            Err(y) => {
+//                error!("Indy send request for credential_def failed with err: {}", y);
+//                return Err(y)
+//            },
+//        }
+
+//    }
 }
 
 impl CredentialDefinitionData {
@@ -361,6 +432,25 @@ pub mod tests {
     static CREDENTIAL_DEF_NAME: &str = "Test Credential Definition";
     static ISSUER_DID: &str = "4fUDR9R7fjwELRvH9JT6HH";
 
+    #[test]
+    fn test_get_cred_def_with_no_schema_no() {
+        // indy_build_get_schema_request
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
+        use credential_request;
+        let schema_creators_did =   "0000000000000SCHEMACREATORS0DID1";
+        let submitter_did =         "0000000000000000000submitterDID1";
+        let schema_key = credential_request::SchemaKey{
+            name: "DEF".to_string(),
+            version: "1.0".to_string(),
+            did: schema_creators_did.to_string(),
+        };
+        let sig_type = Some(SigTypes::CL);
+
+        let cred_def_string = RetrieveCredentialDef::new().retrieve_credential_def_with_schema_key(submitter_did, schema_key, sig_type).unwrap();
+//        let cred_def: CredentialDefinition = serde_json::from_str(&cred_def_string).unwrap();
+        assert_eq!(cred_def_string, constants::LIBINDY_CRED_DEF);
+    }
     fn set_default_and_enable_test_mode(){
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
@@ -555,13 +645,22 @@ pub mod tests {
         assert_eq!(CreateCredentialDef::new().sign_and_send_request("").err(),
                    Some(CredDefError::CommonError(NO_POOL_OPEN.code_num)))
     }
-    #[test]
-    fn test_get_cred_def_with_no_schema_no() {
-        // indy_build_get_schema_request
-        use schema::Sche
-        let did = "ABC";
-        let schema_key:Sche
-        let cred_def_json = RetrieveCredentialDef::new().retrieve_credential_def(did, schema_key, sigtype)?;
-        cred_def: CredentialDefinition = serde_json::from_str(cred_def_json).unwrap();
-    }
+
+
+//    #[test]
+//    fn test_build_schema_request(){
+//        use utils;
+//        settings::set_defaults();
+//        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
+//        use credential_request;
+//        let schema_creators_did = utils::constants::SCHEMA_CREATOR_DID;
+//        let schema_key = credential_request::SchemaKey{
+//            name: "DEF".to_string(),
+//            version: "1.0".to_string(),
+//            did: schema_creators_did.to_string(),
+//        };
+//        let schema = utils::libindy::ledger::indy_get_schema();
+//        assert_eq!(schema, utils::constants::SCHEMAS_JSON);
+//
+//    }
 }

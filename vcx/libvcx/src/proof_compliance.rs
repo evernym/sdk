@@ -1,4 +1,4 @@
-use messages::proofs::proof_message::{ ProofMessage, Attr };
+use messages::proofs::proof_message::{ ProofMessage };
 use messages::proofs::proof_request::{ ProofRequestData };
 use std::collections::HashMap;
 use error::proof::ProofError;

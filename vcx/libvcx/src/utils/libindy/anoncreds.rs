@@ -144,6 +144,7 @@ pub fn libindy_create_and_store_credential_def(wallet_handle: i32,
     let schema_json = CString::new(schema_json).map_err(map_string_error)?;
     let i_did = CString::new(issuer_did).map_err(map_string_error)?;
     let s_type = CString::new(sig_type.unwrap_or(SigTypes::CL).to_string()).map_err(map_string_error)?;
+    println!("SCHEMA_JSON\n{:?}", schema_json);
     unsafe {
         indy_function_eval(
             indy_issuer_create_and_store_claim_def(rtn_obj.command_handle,

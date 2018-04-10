@@ -24,7 +24,7 @@ lazy_static! {
     static ref SCHEMA_MAP: Mutex<HashMap<u32, Box<CreateSchema>>> = Default::default();
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct SchemaTransaction {
     #[serde(rename(deserialize = "identifier", serialize = "dest"))]
     identifier: Option<String>,
@@ -37,7 +37,7 @@ pub struct SchemaTransaction {
     data: Option<SchemaData>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 struct SchemaData {
     name: String,
     version: String,
@@ -50,7 +50,7 @@ pub struct LedgerSchema {
     pub data: Option<SchemaTransaction>
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct CreateSchema {
     data: SchemaTransaction,
     #[serde(skip_serializing, default)]
@@ -664,5 +664,23 @@ mod tests {
         let reject_message =  r#"{"reqId":1522985280628576657,"op":"REJECT","reason":"client request invalid: InvalidClientRequest('Niaxv2v4mPr1HdTeJkQxuU can have one and only one SCHEMA with name Faber Student Info and version 1.0049',)","identifier":"Niaxv2v4mPr1HdTeJkQxuU"}"#;
         let reason = "client request invalid: InvalidClientRequest('Niaxv2v4mPr1HdTeJkQxuU can have one and only one SCHEMA with name Faber Student Info and version 1.0049";
         assert_eq!(CreateSchema::extract_result_from_txn(reject_message).err(), Some(SchemaError::DuplicateSchema(reason.to_string())));
+    }
+
+    #[test]
+    fn test_partial_eq_for_schema_data() {
+        use utils::constants::SCHEMA_DATA;
+        let schema_data1:SchemaData = serde_json::from_str(SCHEMA_DATA).unwrap();
+        let mut schema_data2:SchemaData = serde_json::from_str(SCHEMA_DATA).unwrap();
+        let mut schema_data3:SchemaData = serde_json::from_str(SCHEMA_DATA).unwrap();
+        assert_eq!(schema_data1, schema_data2);
+        schema_data2.version = "2.0".to_string();
+        assert_ne!(schema_data1, schema_data2);
+        schema_data3.name = "Notthesamename".to_string();
+        assert_ne!(schema_data1, schema_data3);
+        schema_data2 = serde_json::from_str(SCHEMA_DATA).unwrap();
+        let mut schema_data_attr_names = schema_data1.attr_names.clone();
+        schema_data_attr_names.push("AdditionalField".to_string());
+        schema_data2.attr_names = schema_data_attr_names;
+        assert_ne!(schema_data1, schema_data2);
     }
 }

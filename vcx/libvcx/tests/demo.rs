@@ -2,21 +2,35 @@ extern crate vcx;
 extern crate libc;
 #[macro_use]
 extern crate serde_json;
-
+#[macro_use]
+extern crate serde_derive;
 #[macro_use]
 extern crate lazy_static;
 mod utils;
 use utils::demo::*;
 
+use ::vcx::error::base::BaseError;
+use ::vcx::utils::libindy::{SigTypes, pool, signus, anoncreds, wallet, ledger};
+use ::vcx::settings;
+use ::vcx::utils::logger::LoggerUtils;
+use ::vcx::credential_request::SchemaKey;
+use std::vec::Vec;
 use std::time::Duration;
 use std::ffi::CString;
 use vcx::api;
 use vcx::utils::timeout::TimeoutUtils;
 use std::sync::mpsc::channel;
+use ::vcx::credential_def::CredentialDefinition;
 
 static CREDENTIAL_DATA: &str = r#"{"address1": ["123 Main St"], "address2": ["Suite 3"], "city": ["Draper"], "state": ["UT"], "zip": ["84000"]}"#;
 // STAGING is 245, SANDBOX is 36, DEV is 22
 static CREDENTIAL_DEF_SCHEMA_SEQ_NUM: u32 = 22;
+
+fn create_and_open_pool(pool_name:&str, config_file_path: &str) -> Result<u32, BaseError> {
+    let config_file_path = std::path::Path::new(config_file_path);
+    assert_eq!(pool::create_pool_ledger_config(pool_name, Some(config_file_path)).unwrap(), 0);
+    pool::open_pool_ledger(pool_name, Some(pool_name)).or(Err(BaseError::GeneralError()))
+}
 
 #[test]
 fn test_demo(){
@@ -28,6 +42,7 @@ fn test_demo(){
 }
 
 fn demo(){
+
     let wallet_name = "test_demo";
     let serialize_connection_fn = api::connection::vcx_connection_serialize;
     let serialize_credential_fn = api::issuer_credential::vcx_issuer_credential_serialize;
@@ -177,146 +192,257 @@ fn send_proof_request_and_receive_proof(connection_handle: u32, proof_handle:u32
     assert_eq!(err, 0);
 }
 
+fn create_and_open_wallet(wallet_name:&str, pool_name: &str) -> Result<i32, BaseError>{
+    use ::vcx::utils::libindy::wallet;
+    wallet::create_wallet(wallet_name, pool_name, None)
+        .or(Err(BaseError::WalletError("Creating Wallet".to_string())));
+    wallet::open_wallet(wallet_name, None).or(Err(BaseError::WalletError("Opening".to_string())))
+}
+fn get_and_update_version() -> String {
+    let version = format!("{}.0",read_version("/home/mark/version.txt") as u32);
+    version
+}
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct Schema {
+    #[serde(rename = "seqNo")]
+    seq_no: i32,
+    dest: String,
+    data: SchemaData,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+struct SchemaData {
+    name: String,
+    version: String,
+    attr_names: Vec<String>,
+}
+
+#[test]
+fn test_update_version(){
+    read_version("/home/mark/version.txt");
+}
 
 #[test]
 fn test_libindy_direct(){
-    use ::vcx::utils::libindy::pool;
-    use ::vcx::utils::libindy::wallet;
-    use ::vcx::utils::libindy::signus;
-    use ::vcx::utils::libindy::anoncreds;
-    use ::vcx::settings;
-    use ::vcx::issuer_credential;
-    use ::vcx::proof;
-    self::vcx::utils::logger::LoggerUtils::init();
-
-    let version = "1.0100";
+    LoggerUtils::init();
     let expected_did ="Niaxv2v4mPr1HdTeJkQxuU";
-    let did_seed = "000000000000000000000000Issuer02";
+    let did_seed = "000000000000000000000000Trustee1";
+    //    let did_seed = "000000000000000000000000Issuer02";
+
     let wallet_name = "libindy_direct";
     let wallet_key = "libindy";
     let pool_name = "libindy_pool";
+
     let master_secret_alias = "foobar";
-    let config_file_path = std::path::Path::new("/var/lib/indy/verity-dev/pool_transactions_genesis");
+    let sig_type = SigTypes::CL;
+
+    let version = format!("{}.0",read_version("/home/mark/version.txt") as u32);
+    let schema_name = "unknown_schema_name";
+    let schema_data = format!(r#"{{"name":"{}","version":"{}","attr_names":["name","gpa"]}}"#, schema_name, version);
+    let truncated_schema_data = format!(r#"{{"name":"{}", "version":"{}}}"#, schema_name, version);
+    //    let config_file_path = std::path::Path::new("/var/lib/indy/verity-dev/pool_transactions_genesis");
 
     settings::set_config_value("wallet_name", wallet_name);
     settings::set_config_value("wallet_key", wallet_key);
     settings::set_config_value(settings::CONFIG_LINK_SECRET_ALIAS, master_secret_alias);
 
-    // create a pool config
-    assert_eq!(pool::create_pool_ledger_config(pool_name, Some(config_file_path)).unwrap(), 0);
-    // open a pool
-    let pool_handle = pool::open_pool_ledger(pool_name, Some(pool_name)).unwrap();
-    assert!(pool_handle > 0);
-    // connect to a pool
-
-    // open a wallet
-    assert!(wallet::create_wallet(wallet_name, pool_name, None).is_ok());
-    let wallet_handle = wallet::open_wallet(wallet_name, None).unwrap();
-
+    let pool_handle = create_and_open_pool(pool_name, "/home/mark/pool_1.txn").unwrap();
+    let wallet_handle = create_and_open_wallet(wallet_name, pool_name).unwrap();
 
     assert!(wallet_handle > 0);
-    assert_eq!(signus::SignusUtils::create_and_store_my_did(wallet_handle, Some(did_seed)).unwrap().0, expected_did);
-    use ::vcx::schema;
-    let schema_data = format!(r#"{{"name":"Faber Student Info","version":"{}","attr_names":["name","gpa"]}}"#, version);
-    let schema_handle = schema::create_new_schema("Schema1", "Faber Student Info".to_string(), expected_did.to_string(), schema_data.to_string()).unwrap();
-    assert!(schema_handle>0);
-    println!("SCHEMA TO STRING: {:?}", schema::to_string(schema_handle));
-    use std::vec::Vec;
-    use vcx::schema::LedgerSchema;
-    struct Schema {
-        name:String,
-        version: String,
-        attr_names: Vec<String>,
-    }
+    let (expected_did, verkey) = signus::SignusUtils::create_and_store_my_did(wallet_handle, Some(did_seed)).unwrap();
+    let schema_result = create_schema_on_ledger(&expected_did, &schema_data, schema_name, &version, pool_handle as i32, wallet_handle as i32).unwrap();
 
-    struct SchemaJson {
-        seqNo: u32,
-        dest: String,
-        data: LedgerSchema,
-    }
+    let schema_value: serde_json::Value = serde_json::from_str(&schema_result).unwrap();
+    println!("schema_result: {}", schema_result);
+    assert_eq!(schema_value["op"], "REPLY");
+    println!("SCHEMA TO STRING: {:?}", schema_result);
 
-    let schema_json = SchemaJson {
-        seqNo:schema::get_sequence_num(schema_handle).unwrap(),
-        dest: expected_did.to_string(),
-        data: LedgerSchema::new_from_ledger(schema::get_sequence_num(schema_handle).unwrap() as i32).unwrap(),
+    // get the same schema from the ledger
+    let schema_json_from_ledger_request = ::vcx::utils::libindy::ledger::libindy_build_get_schema_request(&expected_did, &expected_did, &schema_data).unwrap();
+    println!("schema_json_from_ledger_request: {}", schema_json_from_ledger_request);
+    let build_get_schema_result= ledger::libindy_submit_request(pool_handle as i32, &schema_json_from_ledger_request).unwrap();
+
+    // rebuild the schema
+    let get_schema_result_value: serde_json::Value = serde_json::from_str(&build_get_schema_result).unwrap();
+    println!("build_get_schema_result: {}", build_get_schema_result);
+    let schema_seq_no = &get_schema_result_value["result"]["seqNo"];
+    println!("sequence number from request: {}", &schema_seq_no);
+    println!("value[\"result\"][\"data\"]: {}", get_schema_result_value["result"]["data"]);
+    // get the same schema back.
+    let schema_data:SchemaData = serde_json::from_str(&get_schema_result_value["result"]["data"].to_string()).unwrap();
+    println!("schema_data: {}", serde_json::to_string(&schema_data).unwrap());
+    let schema = Schema {
+        seq_no: serde_json::from_value(schema_seq_no.clone()).unwrap(),
+        dest: expected_did.clone(),
+        data: schema_data.clone(),
     };
 
-    let data_value:serde_json::Value = serde_json::from_str(&schema::to_string(schema_handle).unwrap()).unwrap();
-    let schema_json = &data_value["data"].to_string();
-    println!("schema_json\n{}\n*******", schema_json);
-    let credential_def_string = anoncreds::libindy_create_and_store_credential_def(wallet_handle, expected_did, schema_json, None, false).unwrap();
+
+    // create cred def on ledger
+    let credential_def_string = anoncreds::libindy_create_and_store_credential_def(wallet_handle, &expected_did, &serde_json::to_string(&schema).unwrap(), None, false).unwrap();
     println!("credential_def_string: {}", credential_def_string);
-    let credential_offer_string = anoncreds::libindy_issuer_create_credential_offer(wallet_handle, schema_json, expected_did, expected_did).unwrap();
+    let credential_offer_string = anoncreds::libindy_issuer_create_credential_offer(wallet_handle, &serde_json::to_string(&schema).unwrap(), &expected_did, &expected_did).unwrap();
     println!("credential_offer_string: {}", credential_offer_string);
+    use ::vcx::credential_def::RetrieveCredentialDef;
+    let schema_key = SchemaKey {
+        name: schema_name.to_string(),
+        version: version.to_string(),
+        did: expected_did.clone(),
+    };
+//    .retrieve_credential_def_with_schema_key(&expected_did, schema_key.clone(), Some(sig_type)).unwrap();
+//    // open prover wallet
+//    let wallet_name2 = "prover_wallet";
+//    assert!(wallet::create_wallet(wallet_name2, pool_name, None).is_ok());
+//    let wallet_handle2 = wallet::open_wallet(wallet_name2, None).unwrap();
+//
+//    assert!(anoncreds::libindy_prover_create_master_secret(wallet_handle2, &settings::get_config_value(settings::CONFIG_LINK_SECRET_ALIAS).unwrap()).is_ok());
+//    let credential_request_string = anoncreds::libindy_prover_create_and_store_credential_req(wallet_handle2, &expected_did, &credential_offer_string, &credential_def_string).unwrap();
+//    println!("credential_request_string: {}", credential_request_string);
+//
+//    let prepped_data = r#"{"name":["frank"],"gpa":["4.0"]}"#.to_string();
+//    let issuer_credential_handle = issuer_credential::issuer_credential_create(schema::get_sequence_num(schema_handle).unwrap(),
+//                                                                               "IssuerCredentialName".to_string(),
+//                                                                               expected_did.to_string(),
+//                                                                               "CredentialNameHere".to_string(),
+//                                                                                prepped_data).unwrap();
+//
+//    println!("issuer credential attributes: {}", issuer_credential::get_credential_attributes(issuer_credential_handle).unwrap());
+//
+//    let encoded_attributes = issuer_credential::get_encoded_attributes(issuer_credential_handle).unwrap();
+//    println!("Encoded Attributes: {}", encoded_attributes);
+//    let (_, issuer_credential) = anoncreds::libindy_issuer_create_credential(wallet_handle, &credential_request_string, &encoded_attributes, -1).unwrap();
+////    let credential = issuer_credential::create_credential_payload_using_wallet("SomeID", &credential_request_string, encoded_attributes, wallet_handle).unwrap();
+//    println!("issuer_credential: {}", issuer_credential);
+//
+//    assert!(anoncreds::libindy_prover_store_credential(wallet_handle2, &issuer_credential).is_ok());
+//
+//    let proof_req_json = format!(r#"{{
+//                                   "nonce":"123432421212",
+//                                   "name":"proof_req_1",
+//                                   "version": "0.1",
+//                                   "requested_attrs":{{
+//                                        "attr1_referent":{{
+//                                            "name":"name",
+//                                            "restrictions":[{{"issuer_did":"{}",
+//                                                            "schema_key":{{
+//                                                                "name":"Faber Student Info",
+//                                                                "version":"{}",
+//                                                                "did":"{}"
+//                                                            }}
+//                                            }}]
+//                                        }}
+//                                   }},
+//                                   "requested_predicates":{{}}
+//                               }}"#, expected_did, version, expected_did );
+//
+//    let prover_credentials = anoncreds::libindy_prover_get_credentials(wallet_handle2, &proof_req_json).unwrap();
+//    let value_of_prover_credential:serde_json::Value = serde_json::from_str(&prover_credentials).unwrap();
+//    println!("value_of_prover_credential: {}", value_of_prover_credential);
+//    println!("attrs: {:?}", &value_of_prover_credential.get("attrs").unwrap());
+//    println!("attr1_referent: {:?}", &value_of_prover_credential.get("attrs").unwrap().get("attr1_referent").unwrap());
+//    println!("prover_credentials: {}", prover_credentials);
+//    let attr1_referent = &value_of_prover_credential.get("attrs").unwrap().get("attr1_referent").unwrap()[0];
+//    let referent = &value_of_prover_credential.get("attrs").unwrap().get("attr1_referent").unwrap()[0].get("referent").unwrap();
+//    println!("referent: {:?}", referent);
+//    let schema_json = format!(r#"{{{}:{}}}"#, referent.to_string(), schema_json);
+//    let credential_def_string = format!(r#"{{{}:{}}}"#, referent, credential_def_string);
+//    let requested_claims = format!(r#"{{
+//                                                  "self_attested_attributes":{{}},
+//                                                  "requested_attrs":{{"attr1_referent":[{},true]}},
+//                                                  "requested_predicates":{{}}
+//                                                }}"#, referent);
+//
+//    let proof = anoncreds::libindy_prover_create_proof(wallet_handle2, &proof_req_json, &requested_claims, &schema_json, &settings::get_config_value(settings::CONFIG_LINK_SECRET_ALIAS).unwrap(), &credential_def_string, Some("{}")).unwrap();
+//
+//
+//
+//    assert!(anoncreds::libindy_verifier_verify_proof(&proof_req_json, &proof, &schema_json, &credential_def_string,"{}" ).unwrap());
+//    println!("proof: {}", proof);
+//    assert!(wallet::delete_wallet(wallet_name).is_ok());
+//    assert!(wallet::delete_wallet(wallet_name2).is_ok());
+}
 
-    // open prover wallet
-    let wallet_name2 = "prover_wallet";
-    assert!(wallet::create_wallet(wallet_name2, pool_name, None).is_ok());
-    let wallet_handle2 = wallet::open_wallet(wallet_name2, None).unwrap();
+#[test]
+fn test_get_cred_def_with_no_schema_no(){
+    use ::vcx::utils::libindy::{ SigTypes, anoncreds};
+    use ::vcx::utils::libindy::signus;
+    use ::vcx::credential_def::RetrieveCredentialDef;
+    use ::vcx::credential_def;
+    let did_seed = "000000000000000000000000Trustee1";
+    let sig_type = SigTypes::CL;
+    let pool_name = "cred_def_1";
+    let wallet_name = "cred_def_1";
+    let schema_name = "Foobar";
+    let version = &get_and_update_version();
+    let truncated_schema_data = format!(r#"{{"name":"{}", "version":"{}}}"#, schema_name, version);
+    let schema_data = format!(r#"{{"name":"{}","version":"{}","attr_names":["name","gpa"]}}"#, schema_name, version);
 
-    assert!(anoncreds::libindy_prover_create_master_secret(wallet_handle2, &settings::get_config_value(settings::CONFIG_LINK_SECRET_ALIAS).unwrap()).is_ok());
-    let credential_request_string = anoncreds::libindy_prover_create_and_store_credential_req(wallet_handle2, expected_did, &credential_offer_string, &credential_def_string).unwrap();
-    println!("credential_request_string: {}", credential_request_string);
+    let pool_handle = create_and_open_pool(pool_name, "/home/mark/pool_1.txn").unwrap();
+    let wallet_handle = create_and_open_wallet(wallet_name, pool_name).unwrap();
+    let (did, _verkey) = signus::SignusUtils::create_and_store_my_did(wallet_handle as i32, Some(did_seed)).unwrap();
+    let _schema_result = create_schema_on_ledger(&did, &schema_data, schema_name, &version, pool_handle as i32, wallet_handle as i32).unwrap();
 
-    let prepped_data = r#"{"name":["frank"],"gpa":["4.0"]}"#.to_string();
-    let issuer_credential_handle = issuer_credential::issuer_credential_create(schema::get_sequence_num(schema_handle).unwrap(),
-                                                                               "IssuerCredentialName".to_string(),
-                                                                               expected_did.to_string(),
-                                                                               "CredentialNameHere".to_string(),
-                                                                                prepped_data).unwrap();
+    // get the same schema from the ledger
+    let schema_json_from_ledger_request = ledger::libindy_build_get_schema_request(&did, &did, &schema_data).unwrap();
+    let build_get_schema_result= ledger::libindy_submit_request(pool_handle as i32, &schema_json_from_ledger_request).unwrap();
+    println!("build_get_schema_result: {}", build_get_schema_result);
+    let get_schema_result_value: serde_json::Value = serde_json::from_str(&build_get_schema_result).unwrap();
 
-    println!("issuer credential attributes: {}", issuer_credential::get_credential_attributes(issuer_credential_handle).unwrap());
+    // rebuild the schema
+    let get_schema_result_value: serde_json::Value = serde_json::from_str(&build_get_schema_result).unwrap();
+    let schema_seq_no = &get_schema_result_value["result"]["seqNo"];
+    // get the same schema back.
+    let schema_data:SchemaData = serde_json::from_str(&get_schema_result_value["result"]["data"].to_string()).unwrap();
+    let schema = Schema {
+        seq_no: serde_json::from_value(schema_seq_no.clone()).unwrap(),
+        dest: did.clone(),
+        data: schema_data.clone(),
+    };
 
-    let encoded_attributes = issuer_credential::get_encoded_attributes(issuer_credential_handle).unwrap();
-    println!("Encoded Attributes: {}", encoded_attributes);
-    let (_, issuer_credential) = anoncreds::libindy_issuer_create_credential(wallet_handle, &credential_request_string, &encoded_attributes, -1).unwrap();
-//    let credential = issuer_credential::create_credential_payload_using_wallet("SomeID", &credential_request_string, encoded_attributes, wallet_handle).unwrap();
-    println!("issuer_credential: {}", issuer_credential);
+    // create cred def on ledger
+    let credential_def_string = anoncreds::libindy_create_and_store_credential_def(wallet_handle, &did, &serde_json::to_string(&schema).unwrap(), None, false).unwrap();
+    println!("build_get_schema_result: {}", build_get_schema_result);
+    let schema_key = SchemaKey {
+        name: schema_name.to_string(),
+        version:version.to_string(),
+        did: did.to_string(),
+    };
+    let schema = Schema {
+        seq_no: serde_json::from_value(schema_seq_no.clone()).unwrap(),
+        dest: did.clone(),
+        data: schema_data.clone(),
+    };
 
-    assert!(anoncreds::libindy_prover_store_credential(wallet_handle2, &issuer_credential).is_ok());
+    // get that same cred def off of ledger
+    let cred_def_retrieved = RetrieveCredentialDef::new()
+        .retrieve_credential_def_with_schema_key(&did, schema_key, Some(sig_type), pool_handle as i32).unwrap();
+    let cred_def: CredentialDefinition = serde_json::from_str(&cred_def_retrieved).unwrap();
+//    assert_eq!(cred_def_retrieved, credential_def_string)
+}
 
-    let proof_req_json = format!(r#"{{
-                                   "nonce":"123432421212",
-                                   "name":"proof_req_1",
-                                   "version": "0.1",
-                                   "requested_attrs":{{
-                                        "attr1_referent":{{
-                                            "name":"name",
-                                            "restrictions":[{{"issuer_did":"{}",
-                                                            "schema_key":{{
-                                                                "name":"Faber Student Info",
-                                                                "version":"{}",
-                                                                "did":"{}"
-                                                            }}
-                                            }}]
-                                        }}
-                                   }},
-                                   "requested_predicates":{{}}
-                               }}"#, expected_did, version, expected_did );
-
-    let prover_credentials = anoncreds::libindy_prover_get_credentials(wallet_handle2, &proof_req_json).unwrap();
-    let value_of_prover_credential:serde_json::Value = serde_json::from_str(&prover_credentials).unwrap();
-    println!("value_of_prover_credential: {}", value_of_prover_credential);
-    println!("attrs: {:?}", &value_of_prover_credential.get("attrs").unwrap());
-    println!("attr1_referent: {:?}", &value_of_prover_credential.get("attrs").unwrap().get("attr1_referent").unwrap());
-    println!("prover_credentials: {}", prover_credentials);
-    let attr1_referent = &value_of_prover_credential.get("attrs").unwrap().get("attr1_referent").unwrap()[0];
-    let referent = &value_of_prover_credential.get("attrs").unwrap().get("attr1_referent").unwrap()[0].get("referent").unwrap();
-    println!("referent: {:?}", referent);
-    let schema_json = format!(r#"{{{}:{}}}"#, referent.to_string(), schema_json);
-    let credential_def_string = format!(r#"{{{}:{}}}"#, referent, credential_def_string);
-    let requested_claims = format!(r#"{{
-                                                  "self_attested_attributes":{{}},
-                                                  "requested_attrs":{{"attr1_referent":[{},true]}},
-                                                  "requested_predicates":{{}}
-                                                }}"#, referent);
-
-    let proof = anoncreds::libindy_prover_create_proof(wallet_handle2, &proof_req_json, &requested_claims, &schema_json, &settings::get_config_value(settings::CONFIG_LINK_SECRET_ALIAS).unwrap(), &credential_def_string, Some("{}")).unwrap();
+fn retrieve_cred_def_with_schema_key_and_attr_list(issuer_did: &str, schema_key:SchemaKey, attr_list: &str ) -> Result<String, BaseError> {
+    Ok("CRED_DEF_".to_string())
+}
+fn read_version(filename:&str)-> i32{
+    use std::fs::File;
+    use std::io::prelude::*;
+    let mut f = File::open(filename).expect("File not found");
+    let mut contents = String::new();
+    f.read_to_string(&mut contents).expect("something went wrong reading the file");
+    contents.pop();
+    let mut my_int = contents.parse::<i32>().unwrap();
+    my_int = my_int + 1;
+    let mut f = File::create(filename).expect("File error");
+    f.write_all(my_int.to_string().as_bytes()).unwrap();
+    f.write_all("\n".as_bytes()).unwrap();
+    my_int
+}
 
 
 
-    assert!(anoncreds::libindy_verifier_verify_proof(&proof_req_json, &proof, &schema_json, &credential_def_string,"{}" ).unwrap());
-    println!("proof: {}", proof);
-    assert!(wallet::delete_wallet(wallet_name).is_ok());
-    assert!(wallet::delete_wallet(wallet_name2).is_ok());
+
+fn create_schema_on_ledger(did: &str, schema_data: &str, schema_name: &str, version: &str, pool_handle: i32, wallet_handle: i32) -> Result<String, u32>{
+    let schema_request = ::vcx::utils::libindy::ledger::libindy_build_schema_request(did, schema_data)?;
+    ::vcx::utils::libindy::ledger::libindy_sign_and_submit_request(pool_handle, wallet_handle, did, &schema_request)
 }
