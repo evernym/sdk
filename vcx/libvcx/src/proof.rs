@@ -19,6 +19,7 @@ use utils::error;
 use utils::constants::*;
 use utils::libindy::SigTypes;
 use utils::libindy::anoncreds::libindy_verifier_verify_proof;
+use utils::types::SchemaKey;
 use credential_def::{ RetrieveCredentialDef, CredentialDefCommon, CredentialDefinition };
 use schema::{ LedgerSchema, SchemaTransaction };
 use proof_compliance::{ proof_compliance };
@@ -96,10 +97,6 @@ impl Proof {
         debug!("building credentialdef json for proof validation");
         let mut credential_json: HashMap<String, CredentialDefinition> = HashMap::new();
         for credential in credential_data.iter() {
-            let schema_seq_no = match credential.schema_seq_no {
-                Some(x) => x,
-                None => return Err(ProofError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num))
-            };
             let issuer_did = match credential.issuer_did {
                 Some(ref x) => x,
                 None => return Err(ProofError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num))
@@ -109,12 +106,14 @@ impl Proof {
                 None => return Err(ProofError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num))
             };
 
-            let credential_def = RetrieveCredentialDef::new()
-                .retrieve_credential_def(issuer_did,
-                                    schema_seq_no,
-                                    Some(SigTypes::CL),
-                                    issuer_did)
-                .map_err(|ec| ProofError::CommonError(ec.to_error_code()))?;
+            //Todo: retrieve schema_seq_no in retrieve_cred_def because of libindy changes. Remove tmp val
+            let credential_def = "";
+//            let credential_def = RetrieveCredentialDef::new()
+//                .retrieve_credential_def(issuer_did,
+//                                    schema_seq_no,
+//                                    Some(SigTypes::CL),
+//                                    issuer_did)
+//                .map_err(|ec| ProofError::CommonError(ec.to_error_code()))?;
 
             let credential_obj: CredentialDefinition = serde_json::from_str(&credential_def)
                 .map_err(|_| ProofError::CommonError(error::INVALID_JSON.code_num))?;
@@ -141,22 +140,24 @@ impl Proof {
 
         let mut schema_json: HashMap<String, SchemaTransaction> = HashMap::new();
         for schema in credential_data.iter() {
-            let schema_seq_no = match schema.schema_seq_no {
-                Some(x) => x,
-                None => return Err(ProofError::InvalidSchema())
-            };
+//            let schema_seq_no = match schema.schema_seq_no {
+//                Some(x) => x,
+//                None => return Err(ProofError::InvalidSchema())
+//            };
             let credential_uuid = match schema.credential_uuid {
                 Some(ref x) => x,
                 None => return Err(ProofError::InvalidSchema())
             };
-            let schema_obj = LedgerSchema::new_from_ledger(schema_seq_no as i32).map_err(|x| ProofError::CommonError(x.to_error_code()))?;
-            let data = match schema_obj.data {
-                Some(x) => x,
-                None => return Err(ProofError::InvalidProof())
-            };
-            schema_json.insert(credential_uuid.to_string(), data);
+            //Todo: Update new_from_ledger to not take schema_seq_no. Need to change get_txn to get_schema_txn
+//            let schema_obj = LedgerSchema::new_from_ledger(schema_seq_no as i32).map_err(|x| ProofError::CommonError(x.to_error_code()))?;
+//            let data = match schema_obj.data {
+//                Some(x) => x,
+//                None => return Err(ProofError::InvalidProof())
+//            };
+//            schema_json.insert(credential_uuid.to_string(), data);
         }
 
+        let schema_json = "";
         serde_json::to_string(&schema_json).map_err(|err| {
             warn!("{} with serde error: {}",error::INVALID_SCHEMA.message, err);
             ProofError::InvalidSchema()
@@ -768,7 +769,6 @@ mod tests {
             agent_vk: VERKEY.to_string(),
         };
         let credential1 = CredentialData {
-            schema_seq_no: Some(1),
             issuer_did: Some("GxtnGN6ypZYgEqcftSQFnC".to_string()),
             credential_uuid: Some("credential1".to_string()),
             attr_info: Some(Attr {
@@ -776,10 +776,14 @@ mod tests {
                 value: serde_json::to_value("val1").unwrap(),
                 attr_type: "attr1".to_string(),
                 predicate_type: None,
+            }),
+            schema_key: Some(SchemaKey {
+                name: "schema1".to_string(),
+                version: "0.1".to_string(),
+                did: "GxtnGN6ypZYgEqcftSQFnC".to_string(),
             })
         };
         let credential2 = CredentialData {
-            schema_seq_no: Some(2),
             issuer_did: Some("GxtnGN6ypZYgEqcftSQFnC".to_string()),
             credential_uuid: Some("credential2".to_string()),
             attr_info: Some(Attr {
@@ -787,10 +791,14 @@ mod tests {
                 value: serde_json::to_value("val2").unwrap(),
                 attr_type: "attr2".to_string(),
                 predicate_type: None,
+            }),
+            schema_key: Some(SchemaKey {
+                name: "schema2".to_string(),
+                version: "0.2".to_string(),
+                did: "GxtnGN6ypZYgEqcftSQFnC".to_string(),
             })
         };
         let credential3 = CredentialData {
-            schema_seq_no: Some(3),
             issuer_did: Some("GxtnGN6ypZYgEqcftSQFnC".to_string()),
             credential_uuid: Some("credential3".to_string()),
             attr_info: Some(Attr {
@@ -798,6 +806,11 @@ mod tests {
                 value: serde_json::to_value("val3").unwrap(),
                 attr_type: "attr3".to_string(),
                 predicate_type: None,
+            }),
+            schema_key: Some(SchemaKey {
+                name: "schema3".to_string(),
+                version: "0.3".to_string(),
+                did: "GxtnGN6ypZYgEqcftSQFnC".to_string(),
             })
         };
         let credentials = vec![credential1.clone(), credential2.clone(), credential3.clone()];
@@ -839,7 +852,6 @@ mod tests {
             agent_vk: VERKEY.to_string(),
         };
         let credential1 = CredentialData {
-            schema_seq_no: Some(1),
             issuer_did: Some("11".to_string()),
             credential_uuid: Some("credential1".to_string()),
             attr_info: Some(Attr {
@@ -847,10 +859,14 @@ mod tests {
                 value: serde_json::to_value("val1").unwrap(),
                 attr_type: "attr1".to_string(),
                 predicate_type: None,
+            }),
+            schema_key: Some(SchemaKey {
+                name: "schema1".to_string(),
+                version: "0.1".to_string(),
+                did: "GxtnGN6ypZYgEqcftSQFnC".to_string(),
             })
         };
         let credential2 = CredentialData {
-            schema_seq_no: Some(2),
             issuer_did: Some("22".to_string()),
             credential_uuid: Some("credential2".to_string()),
             attr_info: Some(Attr {
@@ -858,10 +874,14 @@ mod tests {
                 value: serde_json::to_value("val2").unwrap(),
                 attr_type: "attr2".to_string(),
                 predicate_type: None,
+            }),
+            schema_key: Some(SchemaKey {
+                name: "schema2".to_string(),
+                version: "0.2".to_string(),
+                did: "GxtnGN6ypZYgEqcftSQFnC".to_string(),
             })
         };
         let credential3 = CredentialData {
-            schema_seq_no: Some(3),
             issuer_did: Some("33".to_string()),
             credential_uuid: Some("credential3".to_string()),
             attr_info: Some(Attr {
@@ -869,11 +889,16 @@ mod tests {
                 value: serde_json::to_value("val3").unwrap(),
                 attr_type: "attr3".to_string(),
                 predicate_type: None,
+            }),
+            schema_key: Some(SchemaKey {
+                name: "schema3".to_string(),
+                version: "0.3".to_string(),
+                did: "GxtnGN6ypZYgEqcftSQFnC".to_string(),
             })
         };
         let credentials = vec![credential1.clone(), credential2.clone(), credential3.clone()];
         let schemas_json = proof.build_schemas_json(credentials.as_ref()).unwrap();
-        assert!(schemas_json.contains("\"credential1\":{\"dest\":\"VsKV7grR1BUE29mG2Fm2kX\",\"seqNo\":344,\"txnTime\":1516284381,\"type\":\"101\",\"data\":{\"name\":\"get schema attrs\",\"version\":\"1.0\",\"attr_names\":[\"test\",\"get\",\"schema\",\"attrs\"]}}"));
+        assert!(schemas_json.contains("\"credential1\":{\"dest\":\"VsKV7grR1BUE29mG2Fm2kX\",\"txnTime\":1516284381,\"type\":\"101\",\"data\":{\"name\":\"get schema attrs\",\"version\":\"1.0\",\"attr_names\":[\"test\",\"get\",\"schema\",\"attrs\"]}"));
         assert!(schemas_json.contains("\"credential2\":{\"dest\":\"VsKV7grR1BUE29mG2Fm2kX\",\"seqNo\":344,\"txnTime\":1516284381,\"type\":\"101\",\"data\":{\"name\":\"get schema attrs\",\"version\":\"1.0\",\"attr_names\":[\"test\",\"get\",\"schema\",\"attrs\"]}}"));
         assert!(schemas_json.contains("\"credential3\":{\"dest\":\"VsKV7grR1BUE29mG2Fm2kX\",\"seqNo\":344,\"txnTime\":1516284381,\"type\":\"101\",\"data\":{\"name\":\"get schema attrs\",\"version\":\"1.0\",\"attr_names\":[\"test\",\"get\",\"schema\",\"attrs\"]}}"));
     }

@@ -1,6 +1,7 @@
 extern crate serde_json;
 
 use error::issuer_cred::IssuerCredError;
+use utils::types::SchemaKey;
 
 static ISSUER_DID: &'static str = "issuer_did";
 static SEQUENCE_NUMBER: &'static str = "schema_seq_no";
@@ -22,14 +23,6 @@ pub struct BlindedMasterSecretProofCorrectness {
     c: String,
     v_dash_cap: String,
     ms_cap: String
-}
-
-//Todo: Move To common location. Both CredReq and CredOffer use this
-#[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
-pub struct SchemaKey {
-    pub name: String,
-    pub version: String,
-    pub did: String
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]

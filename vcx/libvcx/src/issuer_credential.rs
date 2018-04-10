@@ -12,6 +12,7 @@ use connection;
 use credential_request::{ CredentialRequest };
 use schema::LedgerSchema;
 use utils::{ error,
+             types::SchemaKey,
              error::INVALID_JSON,
              libindy::{ anoncreds::{ libindy_issuer_create_credential, libindy_issuer_create_credential_offer }, wallet},
              httpclient,
@@ -54,14 +55,6 @@ pub struct KeyCorrectnessProof {
     c: String,
     xz_cap: String,
     xr_cap: HashMap<String, String>
-}
-
-//Todo: Move To common location. Both CredReq and CredOffer use this
-#[derive(Debug, Deserialize, Serialize, PartialEq, Clone)]
-pub struct SchemaKey {
-    pub name: String,
-    pub version: String,
-    pub did: String
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
