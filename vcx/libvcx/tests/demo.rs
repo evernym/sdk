@@ -10,18 +10,17 @@ mod utils;
 use utils::demo::*;
 
 use ::vcx::error::base::BaseError;
-use ::vcx::utils::libindy::{SigTypes, pool, signus, anoncreds, wallet, ledger};
+//use vcx::utils::libindy::SigTypes;
+use ::vcx::utils::libindy::{ pool, signus, anoncreds, ledger};
 use ::vcx::settings;
 use ::vcx::utils::logger::LoggerUtils;
-use ::vcx::utils::types::SchemaKey;
-use std::vec::Vec;
+//use ::vcx::utils::types::SchemaKey;
 use std::time::Duration;
 use std::ffi::CString;
+use vcx::credential_def::CreateCredentialDef;
 use vcx::api;
 use vcx::utils::timeout::TimeoutUtils;
 use std::sync::mpsc::channel;
-use ::vcx::credential_def::CredentialDefinition;
-use ::vcx::credential_def::CreateCredentialDef;
 use ::vcx::schema::SchemaData;
 
 static CREDENTIAL_DATA: &str = r#"{"address1": ["123 Main St"], "address2": ["Suite 3"], "city": ["Draper"], "state": ["UT"], "zip": ["84000"]}"#;
@@ -197,7 +196,7 @@ fn send_proof_request_and_receive_proof(connection_handle: u32, proof_handle:u32
 fn create_and_open_wallet(wallet_name:&str, pool_name: &str) -> Result<i32, BaseError>{
     use ::vcx::utils::libindy::wallet;
     wallet::create_wallet(wallet_name, pool_name, None)
-        .or(Err(BaseError::WalletError("Creating Wallet".to_string())));
+        .or(Err(BaseError::WalletError("Creating Wallet".to_string())))?;
     wallet::open_wallet(wallet_name, None).or(Err(BaseError::WalletError("Opening".to_string())))
 }
 
@@ -224,7 +223,6 @@ fn test_update_version(){
 #[test]
 fn test_libindy_direct(){
     LoggerUtils::init();
-    let expected_did ="Niaxv2v4mPr1HdTeJkQxuU";
     let did_seed = "000000000000000000000000Trustee1";
     //    let did_seed = "000000000000000000000000Issuer02";
 
@@ -233,7 +231,6 @@ fn test_libindy_direct(){
     let pool_name = "libindy_pool";
 
     let master_secret_alias = "foobar";
-    let sig_type = SigTypes::CL;
 
     let version = format!("{}.0",read_version("/home/mark/version.txt") as u32);
     let schema_name = "unknown_schema_name";
@@ -250,8 +247,8 @@ fn test_libindy_direct(){
     let wallet_handle = create_and_open_wallet(wallet_name, pool_name).unwrap();
 
     assert!(wallet_handle > 0);
-    let (expected_did, verkey) = signus::SignusUtils::create_and_store_my_did(wallet_handle, Some(did_seed)).unwrap();
-    let schema_result = create_schema_on_ledger(&expected_did, &schema_data, schema_name, &version, pool_handle as i32, wallet_handle as i32).unwrap();
+    let (expected_did, _) = signus::SignusUtils::create_and_store_my_did(wallet_handle, Some(did_seed)).unwrap();
+    let schema_result = create_schema_on_ledger(&expected_did, &schema_data, pool_handle as i32, wallet_handle as i32).unwrap();
 
     let schema_value: serde_json::Value = serde_json::from_str(&schema_result).unwrap();
     println!("schema_result: {}", schema_result);
@@ -283,12 +280,11 @@ fn test_libindy_direct(){
     println!("credential_def_string: {}", credential_def_string);
     let credential_offer_string = anoncreds::libindy_issuer_create_credential_offer(wallet_handle, &serde_json::to_string(&schema).unwrap(), &expected_did, &expected_did).unwrap();
     println!("credential_offer_string: {}", credential_offer_string);
-    use ::vcx::credential_def::RetrieveCredentialDef;
-    let schema_key = SchemaKey {
-        name: schema_name.to_string(),
-        version: version.to_string(),
-        did: expected_did.clone(),
-    };
+//    let schema_key = SchemaKey {
+//        name: schema_name.to_string(),
+//        version: version.to_string(),
+//        did: expected_did.clone(),
+//    };
 //    .retrieve_credential_def_with_schema_key(&expected_did, schema_key.clone(), Some(sig_type)).unwrap();
 //    // open prover wallet
 //    let wallet_name2 = "prover_wallet";
@@ -361,15 +357,12 @@ fn test_libindy_direct(){
 //    assert!(wallet::delete_wallet(wallet_name).is_ok());
 //    assert!(wallet::delete_wallet(wallet_name2).is_ok());
 }
-
-#[allow(dead_code)]
 #[ignore]
+#[allow(dead_code)]
 #[test]
 fn test_get_cred_def_with_no_schema_no(){
     use ::vcx::utils::libindy::{ SigTypes, anoncreds};
     use ::vcx::utils::libindy::signus;
-    use ::vcx::credential_def::RetrieveCredentialDef;
-    use ::vcx::credential_def;
     let did_seed ="000000000000000000000000Issuer02";
 //    let did_seed = "000000000000000000000000Trustee1";
     let sig_type = SigTypes::CL;
@@ -377,7 +370,7 @@ fn test_get_cred_def_with_no_schema_no(){
     let wallet_name = "pool1";
     let schema_name = "Foobar";
     let version = &get_and_update_version();
-    let truncated_schema_data = format!(r#"{{"name":"{}", "version":"{}}}"#, schema_name, version);
+//    let truncated_schema_data = format!(r#"{{"name":"{}", "version":"{}}}"#, schema_name, version);
     let schema_data = format!(r#"{{"name":"{}","version":"{}","attr_names":["name","gpa"]}}"#, schema_name, version);
 
 //    let pool_handle = create_and_open_pool(pool_name, "/home/mark/pool_1.txn").unwrap();
@@ -385,13 +378,13 @@ fn test_get_cred_def_with_no_schema_no(){
     let pool_handle = ::vcx::utils::libindy::pool::open_sandbox_pool();
     let wallet_handle = create_and_open_wallet(wallet_name, pool_name).unwrap();
     let (did, _verkey) = signus::SignusUtils::create_and_store_my_did(wallet_handle as i32, Some(did_seed)).unwrap();
-    let _schema_result = create_schema_on_ledger(&did, &schema_data, schema_name, &version, pool_handle as i32, wallet_handle as i32).unwrap();
+    let _schema_result = create_schema_on_ledger(&did, &schema_data, pool_handle as i32, wallet_handle as i32).unwrap();
 
     // get the same schema from the ledger
     let schema_json_from_ledger_request = ledger::libindy_build_get_schema_request(&did, &did, &schema_data).unwrap();
     let build_get_schema_result= ledger::libindy_submit_request(pool_handle as i32, &schema_json_from_ledger_request).unwrap();
     println!("build_get_schema_result: {}", build_get_schema_result);
-    let get_schema_result_value: serde_json::Value = serde_json::from_str(&build_get_schema_result).unwrap();
+//    let get_schema_result_value: serde_json::Value = serde_json::from_str(&build_get_schema_result).unwrap();
 
     // rebuild the schema
     let get_schema_result_value: serde_json::Value = serde_json::from_str(&build_get_schema_result).unwrap();
@@ -407,24 +400,12 @@ fn test_get_cred_def_with_no_schema_no(){
         dest: did.clone(),
         data: schema_data.clone(),
     };
-    let schema_key = SchemaKey {
-        name: schema_name.to_string(),
-        version:version.to_string(),
-        did: did.to_string(),
-    };
 
     // create cred def on ledger
     let credential_def_string = anoncreds::libindy_create_and_store_credential_def(wallet_handle, &did, &serde_json::to_string(&schema).unwrap(), None, false).unwrap();
     let cred_def_created_and_stored_value: serde_json::Value = serde_json::from_str(&credential_def_string).unwrap();
     println!("cred_def_created_and_stored_value: {}", serde_json::to_string_pretty(&cred_def_created_and_stored_value).unwrap());
 
-
-
-//    let schema = Schema {
-//        seq_no: serde_json::from_value(schema_seq_no.clone()).unwrap(),
-//        dest: did.clone(),
-//        data: schema_data.clone(),
-//    };
 
     // lets get just a normal credential def, that we know all the parts to firsthand...
     let mut cred_def_retrieved = CreateCredentialDef::new();
@@ -439,7 +420,11 @@ fn test_get_cred_def_with_no_schema_no(){
     let returned_data_field = serde_json::to_string(&cred_def_result_as_value["data"]).unwrap();
     println!("returned_data_field: {}", returned_data_field);
     assert_ne!(returned_data_field, "null");
-    // get that same cred def off of ledger
+//    let schema_key = SchemaKey {
+//        name: schema_name.to_string(),
+//        version:version.to_string(),
+//        did: did.to_string(),
+//    };    // get that same cred def off of ledger
 //    let cred_def_retrieved = RetrieveCredentialDef::new()
 //        .retrieve_credential_def_with_schema_key(&did, schema_key, Some(sig_type), pool_handle as i32).unwrap();
 //    println!("cred_def_retrieved: {}", serde_json::to_string_pretty(&cred_def_retrieved).unwrap());
@@ -448,10 +433,6 @@ fn test_get_cred_def_with_no_schema_no(){
 //    assert_eq!(cred_def_retrieved, credential_def_string)
 }
 
-#[allow(dead_code)]
-fn retrieve_cred_def_with_schema_key_and_attr_list(issuer_did: &str, schema_key:SchemaKey, attr_list: &str ) -> Result<String, BaseError> {
-    Ok("CRED_DEF_".to_string())
-}
 #[allow(dead_code)]
 fn read_version(filename:&str)-> i32{
     use std::fs::File;
@@ -472,7 +453,7 @@ fn read_version(filename:&str)-> i32{
 
 
 #[allow(dead_code)]
-fn create_schema_on_ledger(did: &str, schema_data: &str, schema_name: &str, version: &str, pool_handle: i32, wallet_handle: i32) -> Result<String, u32>{
+fn create_schema_on_ledger(did: &str, schema_data: &str, pool_handle: i32, wallet_handle: i32) -> Result<String, u32>{
     let schema_request = ::vcx::utils::libindy::ledger::libindy_build_schema_request(did, schema_data)?;
     ::vcx::utils::libindy::ledger::libindy_sign_and_submit_request(pool_handle, wallet_handle, did, &schema_request)
 }
