@@ -37,6 +37,7 @@ pub const C_INSTITUTION_VERKEY: &'static str = "9TnFnc8LQ8LhRQjLVjdBR7Sk63yjEkJ3
 
 
 static DEV_ENTRIES: &[[&str; 3]; 26] = &[
+    //Todo: Remove all cred_defs that don't have updated format
     // Credential 1
     [
         "claim_definition::DunkM3x1y7S4ECgSL4Wkru:296",

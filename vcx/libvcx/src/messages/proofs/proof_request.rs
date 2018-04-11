@@ -152,7 +152,6 @@ impl ProofRequestMessage {
 
     pub fn requested_attrs(&mut self, attrs: &str) -> &mut Self {
         let mut check_req_attrs: HashMap<String, AttrInfo> = HashMap::new();
-        //Todo: Update with latest libindy attributes
         let proof_attrs:Vec<AttrInfo> = match serde_json::from_str(attrs) {
             Ok(a) => a,
             Err(e) => {
@@ -288,5 +287,10 @@ mod tests {
 
         let request = proof_request().requested_predicates(REQUESTED_PREDICATES).clone();
         assert_eq!(request.proof_request_data.requested_predicates, check_predicates);
+    }
+
+    #[test]
+    fn test_indy_proof_req_parses_correctly() {
+        let proof_req: ProofRequestData = serde_json::from_str(::utils::constants::INDY_PROOF_REQ_JSON).unwrap();
     }
 }

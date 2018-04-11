@@ -144,7 +144,6 @@ pub fn libindy_create_and_store_credential_def(wallet_handle: i32,
     let schema_json = CString::new(schema_json).map_err(map_string_error)?;
     let i_did = CString::new(issuer_did).map_err(map_string_error)?;
     let s_type = CString::new(sig_type.unwrap_or(SigTypes::CL).to_string()).map_err(map_string_error)?;
-    println!("SCHEMA_JSON\n{:?}", schema_json);
     unsafe {
         indy_function_eval(
             indy_issuer_create_and_store_claim_def(rtn_obj.command_handle,
@@ -417,7 +416,6 @@ mod tests {
         let schema_json = r#"{"dest":"2hoqvcwupRTUNkXn6ArYzs","seqNo":1487,"txnTime":1522769798,"type":"101","data":{"name":"Home Address","version":"1.4","attr_names":["address1","address2","city","zip","state"]}}"#;
         let encoded_cred_data = r#"{"address1":["101TelaLane","63690509275174663089934667471948380740244018358024875547775652380902762701972"],"address2":["101WilsonLane","68086943237164982734333428280784300550565381723532936263016368251445461241953"],"city":["SLC","101327353979588246869873249766058188995681113722618593621043638294296500696424"],"state":["UT","93856629670657830351991220989031130499313559332549427637940645777813964461231"],"zip":["87121","87121"]}"#;
         let wallet_h = get_wallet_handle();
-        println!("wallet_h: {}", wallet_h);
         let schema_no = 1487;
 
         let libindy_offer = libindy_issuer_create_credential_offer(get_wallet_handle(),
@@ -426,7 +424,6 @@ mod tests {
                                                                    "DunkM3x1y7S4ECgSL4Wkru").unwrap();
         println!("CredOffer: \n{:?}", libindy_offer);
 
-//        libindy_prover_create_master_secret(wallet_h,settings::CONFIG_LINK_SECRET_ALIAS).unwrap();
         libindy_prover_create_master_secret(wallet_h, settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
         let libindy_cred_req = libindy_prover_create_and_store_credential_req(wallet_h,
                                                                               "DunkM3x1y7S4ECgSL4Wkru",
@@ -456,4 +453,45 @@ mod tests {
         assert!(result.is_ok());
         println!("{}", result.unwrap());
     }
+
+//    #[test]
+//    fn simple_libindy_prover_get_credentials() {
+//        settings::set_defaults();
+//        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
+//        let wallet_name = "test_libindy_create_credential";
+//        ::utils::devsetup::setup_wallet(wallet_name);
+//        let wallet_h = init_wallet(wallet_name).unwrap();
+//
+//        let libindy_cred_def = ::utils::constants::LIBINDY_CRED_DEF;
+//        let schema_json = r#"{"dest":"2hoqvcwupRTUNkXn6ArYzs","seqNo":1487,"txnTime":1522769798,"type":"101","data":{"name":"Home Address","version":"1.4","attr_names":["address1","address2","city","zip","state"]}}"#;
+//        let encoded_cred_data = r#"{"address1":["101TelaLane","63690509275174663089934667471948380740244018358024875547775652380902762701972"],"address2":["101WilsonLane","68086943237164982734333428280784300550565381723532936263016368251445461241953"],"city":["SLC","101327353979588246869873249766058188995681113722618593621043638294296500696424"],"state":["UT","93856629670657830351991220989031130499313559332549427637940645777813964461231"],"zip":["87121","87121"]}"#;
+//        let proof_req = r#"{  "nonce":"123432421212", "name":"proof_req_1", "version":"0.1", "requested_attrs":{  "address1_1":{  "name":"address1", "restrictions":[  {  "issuer_did":"2hoqvcwupRTUNkXn6ArYzs", "schema_key":{  "name":"Home Address", "version":"1.4", "did":"2hoqvcwupRTUNkXn6ArYzs" } } ] }, "state_2":{  "name":"state", "restrictions":[  {  "issuer_did":"2hoqvcwupRTUNkXn6ArYzs", "schema_key":{  "name":"Home Address", "version":"1.4", "did":"2hoqvcwupRTUNkXn6ArYzs" } } ] } }, "requested_predicates":{  } }"#;
+//        let schema_no = 1487;
+//
+//        Store Cred In wallet
+//        let libindy_offer = libindy_issuer_create_credential_offer(wallet_h,
+//                                                                   &schema_json,
+//                                                                   &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
+//                                                                   "DunkM3x1y7S4ECgSL4Wkru").unwrap();
+//        println!("CredOffer: \n{:?}", libindy_offer);
+//
+//        libindy_prover_create_master_secret(wallet_h, settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
+//        let libindy_cred_req = libindy_prover_create_and_store_credential_req(wallet_h,
+//                                                                              "DunkM3x1y7S4ECgSL4Wkru",
+//                                                                              &libindy_offer,
+//                                                                              &libindy_cred_def).unwrap();
+//        println!("CredReq: \n{:?}", libindy_cred_req);
+//        let (str1, cred) = libindy_issuer_create_credential(wallet_h,
+//                                                      &libindy_cred_req,
+//                                                      encoded_cred_data,
+//                                                      -1).unwrap();
+//        println!("Cred: \n{}", cred);
+//
+//        libindy_prover_store_credential(wallet_h, &cred).unwrap();
+//
+//        Get Credentials
+//        let credentials = libindy_prover_get_credentials(wallet_h, proof_req).unwrap();
+//        println!("Prover Credentials: \n{}", credentials);
+//        delete_wallet(wallet_name).unwrap();
+//    }
 }

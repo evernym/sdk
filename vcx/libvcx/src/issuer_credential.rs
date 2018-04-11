@@ -690,6 +690,7 @@ pub mod tests {
     #[ignore]
     #[test]
     fn test_generate_cred_offer() {
+        //Todo: Move test to integration location
         ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
         let wallet_name = "test_create_cred";
