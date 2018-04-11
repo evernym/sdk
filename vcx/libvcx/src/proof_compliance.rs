@@ -1,6 +1,5 @@
 use messages::proofs::proof_message::{ ProofMessage, Attr, Identifier };
 use messages::proofs::proof_request::{ Filter, ProofRequestData, SchemaKeyFilter };
-use utils::types::SchemaKey;
 use std::collections::HashMap;
 use error::proof::ProofError;
 
@@ -137,6 +136,7 @@ mod tests {
     use messages::proofs::proof_request::{ AttrInfo, PredicateInfo, ProofRequestData };
     use serde_json::{ from_str };
     use ::proof_compliance::check_value;
+    use utils::types::SchemaKey;
 
     static PROOF: &'static str = r#"{
    "proof":{

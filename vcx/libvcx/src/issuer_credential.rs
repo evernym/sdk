@@ -693,8 +693,7 @@ pub mod tests {
         ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
         let wallet_name = "test_create_cred";
-        ::utils::devsetup::setup_wallet(wallet_name);
-        wallet::init_wallet(wallet_name).unwrap();
+        ::utils::devsetup::setup_dev_env(wallet_name);
         let wallet_h = get_wallet_handle();
 
         ::utils::libindy::anoncreds::libindy_prover_create_master_secret(wallet_h, settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
@@ -705,7 +704,7 @@ pub mod tests {
             did: issuer_did.to_string()
         };
         let to_did = "8XFh8yBzrpJQmNyZzgoTqB";
-        let mut issuer_cred = IssuerCredential {
+        let issuer_cred = IssuerCredential {
             handle: 123,
             source_id: "standard_credential".to_owned(),
             schema_seq_no: 1487,
@@ -725,8 +724,7 @@ pub mod tests {
             agent_vk: VERKEY.to_string(),
         };
         let cred_offer = issuer_cred.generate_credential_offer(to_did).unwrap();
-        wallet::delete_wallet(wallet_name).unwrap();
-
+        ::utils::devsetup::cleanup_dev_env(wallet_name);
         assert_eq!(cred_offer.libindy_offer.schema_key, check_schema_key);
         assert_eq!(cred_offer.libindy_offer.issuer_did, issuer_did.to_string());
     }

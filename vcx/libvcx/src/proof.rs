@@ -19,8 +19,7 @@ use utils::error;
 use utils::constants::*;
 use utils::libindy::SigTypes;
 use utils::libindy::anoncreds::libindy_verifier_verify_proof;
-use utils::types::SchemaKey;
-use credential_def::{ RetrieveCredentialDef, CredentialDefCommon, CredentialDefinition };
+use credential_def::{ RetrieveCredentialDef, CredentialDefinition };
 use schema::{ LedgerSchema, SchemaTransaction };
 use proof_compliance::{ proof_compliance };
 use error::ToErrorCode;
@@ -505,6 +504,7 @@ pub fn generate_nonce() -> Result<String, u32> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use utils::types::SchemaKey;
     use connection::build_connection;
     use utils::libindy::{pool, set_libindy_rc};
     use messages::proofs::proof_message::{Attr};

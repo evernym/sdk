@@ -11,7 +11,7 @@ use messages::proofs::proof_request::{ ProofRequestMessage };
 use messages::extract_json_payload;
 use messages::to_u8;
 
-use credential_def::{ RetrieveCredentialDef, CredentialDefCommon };
+use credential_def::{ RetrieveCredentialDef };
 use schema::LedgerSchema;
 
 use utils::libindy::anoncreds;

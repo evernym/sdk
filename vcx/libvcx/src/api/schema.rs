@@ -263,7 +263,7 @@ mod tests {
     use settings;
     use utils::libindy::pool;
     use utils::libindy::signus::SignusUtils;
-    use utils::constants::{ DEMO_AGENT_PW_SEED, DEMO_ISSUER_PW_SEED, SCHEMA_TXN };
+    use utils::constants::{ DEMO_AGENT_PW_SEED, DEMO_ISSUER_PW_SEED };
     use utils::libindy::wallet::{init_wallet, get_wallet_handle, delete_wallet};
 
     extern "C" fn create_cb(command_handle: u32, err: u32, schema_handle: u32) {
