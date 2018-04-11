@@ -18,11 +18,12 @@ use utils::httpclient;
 use utils::error;
 use utils::constants::*;
 use utils::libindy::anoncreds::libindy_verifier_verify_proof;
-use utils::types::SchemaKey;
-use credential_def::CredentialDefinition;
-use schema::SchemaTransaction;
+use credential_def::{ RetrieveCredentialDef, CredentialDefinition };
+use schema::{ LedgerSchema, SchemaTransaction };
 use proof_compliance::{ proof_compliance };
 use error::proof::ProofError;
+use utils::libindy::SigTypes;
+use error::ToErrorCode;
 
 lazy_static! {
     static ref PROOF_MAP: Mutex<HashMap<u32, Box<Proof>>> = Default::default();
@@ -44,7 +45,7 @@ pub struct Proof {
     name: String,
     version: String,
     nonce: String,
-    proof: Option<ProofMessage>,
+    proof: Option<ProofMessage>, // Refactoring this name to 'proof_message' causes some tests to fail.
     proof_request: Option<ProofRequestMessage>,
     remote_did: String,
     remote_vk: String,
@@ -95,23 +96,18 @@ impl Proof {
         debug!("building credentialdef json for proof validation");
         let mut credential_json: HashMap<String, CredentialDefinition> = HashMap::new();
         for credential in credential_data.iter() {
-            let issuer_did = match credential.issuer_did {
-                Some(ref x) => x,
-                None => return Err(ProofError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num))
-            };
-            let credential_uuid = match credential.credential_uuid {
-                Some(ref x) => x,
-                None => return Err(ProofError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num))
-            };
+            let issuer_did = credential.issuer_did.as_ref()
+                .ok_or(ProofError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num))?;
+            let credential_uuid = credential.credential_uuid.as_ref()
+                .ok_or(ProofError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num))?;
+            let schema_key = credential.schema_key.as_ref()
+                .ok_or(ProofError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num))?;
 
-            //Todo: retrieve schema_seq_no in retrieve_cred_def because of libindy changes. Remove tmp val
-            let credential_def = "";
-//            let credential_def = RetrieveCredentialDef::new()
-//                .retrieve_credential_def(issuer_did,
-//                                    schema_seq_no,
-//                                    Some(SigTypes::CL),
-//                                    issuer_did)
-//                .map_err(|ec| ProofError::CommonError(ec.to_error_code()))?;
+            let credential_def = RetrieveCredentialDef::new()
+                .retrieve_credential_def_with_schema_key(issuer_did,
+                                                         schema_key,
+                                                         Some(SigTypes::CL))
+                .map_err(|ec| ProofError::CommonError(ec.to_error_code()))?;
 
             let credential_obj: CredentialDefinition = serde_json::from_str(&credential_def)
                 .map_err(|_| ProofError::CommonError(error::INVALID_JSON.code_num))?;
@@ -136,26 +132,20 @@ impl Proof {
     fn build_schemas_json(&self, credential_data:&Vec<CredentialData>) -> Result<String, ProofError> {
         debug!("building schemas json for proof validation");
 
-        let schema_json: HashMap<String, SchemaTransaction> = HashMap::new();
+        let mut schema_json: HashMap<String, SchemaTransaction> = HashMap::new();
         for schema in credential_data.iter() {
-//            let schema_seq_no = match schema.schema_seq_no {
-//                Some(x) => x,
-//                None => return Err(ProofError::InvalidSchema())
-//            };
-            let credential_uuid = match schema.credential_uuid {
-                Some(ref x) => x,
-                None => return Err(ProofError::InvalidSchema())
-            };
-            //Todo: Update new_from_ledger to not take schema_seq_no. Need to change get_txn to get_schema_txn
-//            let schema_obj = LedgerSchema::new_from_ledger(schema_seq_no as i32).map_err(|x| ProofError::CommonError(x.to_error_code()))?;
-//            let data = match schema_obj.data {
-//                Some(x) => x,
-//                None => return Err(ProofError::InvalidProof())
-//            };
-//            schema_json.insert(credential_uuid.to_string(), data);
+
+            let credential_uuid = schema.credential_uuid.as_ref()
+                .ok_or(ProofError::InvalidSchema())?;
+            let schema_key = schema.schema_key.as_ref()
+                .ok_or(ProofError::InvalidSchema())?;
+            let schema_obj = LedgerSchema::new_from_ledger_with_schema_key(schema_key)
+                .map_err(|x| ProofError::CommonError(x.to_error_code()))?;
+
+            let data = schema_obj.data.as_ref().ok_or(ProofError::InvalidProof())?;
+            schema_json.insert(credential_uuid.to_string(), data.clone());
         }
 
-        let schema_json = "";
         serde_json::to_string(&schema_json).map_err(|err| {
             warn!("{} with serde error: {}",error::INVALID_SCHEMA.message, err);
             ProofError::InvalidSchema()
@@ -262,9 +252,11 @@ impl Proof {
     fn get_proof(&self) -> Result<String, ProofError> {
         let proof = match self.proof {
             Some(ref x) => x,
-            None => return Err(ProofError::InvalidHandle()),
+            None => {
+                return Err(ProofError::InvalidHandle())
+            },
         };
-        proof.get_proof_attributes().map_err(|ec| ProofError::CommonError(ec))
+        proof.get_proof_attributes().map_err(|ec| ProofError::ProofMessageError(ec))
     }
 
     fn get_proof_request_status(&mut self) -> Result<u32, ProofError> {
@@ -384,7 +376,7 @@ pub fn is_valid_handle(handle: u32) -> bool {
 pub fn update_state(handle: u32) {
     match PROOF_MAP.lock().unwrap().get_mut(&handle) {
         Some(t) => t.update_state(),
-        None => {}
+        None => {},
     };
 }
 
@@ -442,6 +434,7 @@ pub fn from_string(proof_data: &str) -> Result<u32, ProofError> {
     {
         let mut m = PROOF_MAP.lock().unwrap();
         debug!("inserting handle {} with source_id {:?} into proof table", new_handle, source_id);
+        println!("INSERTED INTO MAP, new_handle: {}", new_handle);
         m.insert(new_handle, proof);
     }
     Ok(new_handle)
@@ -511,10 +504,10 @@ pub fn generate_nonce() -> Result<String, u32> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use utils::types::SchemaKey;
     use connection::build_connection;
     use utils::libindy::{pool, set_libindy_rc};
     use messages::proofs::proof_message::{Attr};
-    use utils::error::POST_MSG_FAILURE;
     static REQUESTED_ATTRS: &'static str = "[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]";
     static REQUESTED_PREDICATES: &'static str = r#"[{"attr_name":"age","p_type":"GE","value":18,"schema_seq_no":1,"issuer_did":"8XFh8yBzrpJQmNyZzgoTqB"},{"attr_name":"num","p_type":"LE","value":99,"schema_seq_no":1,"issuer_did":"8XFh8yBzrpJQmNyZzgoTqB"}]"#;
     static PROOF_MSG: &str = r#"{"msg_type":"proof","version":"0.1","to_did":"BnRXf8yDMUwGyZVDkSENeq","from_did":"GxtnGN6ypZYgEqcftSQFnC","proof_request_id":"cCanHnpFAD","proofs":{"claim::e5fec91f-d03d-4513-813c-ab6db5715d55":{"proof":{"primary_proof":{"eq_proof":{"revealed_attrs":{"state":"96473275571522321025213415717206189191162"},"a_prime":"22605045280481376895214546474258256134055560453004805058368015338423404000586901936329279496160366852115900235316791489357953785379851822281248296428005020302405076144264617943389810572564188437603815231794326272302243703078443007359698858400857606408856314183672828086906560155576666631125808137726233827430076624897399072853872527464581329767287002222137559918765406079546649258389065217669558333867707240780369514832185660287640444094973804045885379406641474693993903268791773620198293469768106363470543892730424494655747935463337367735239405840517696064464669905860189004121807576749786474060694597244797343224031","e":"70192089123105616042684481760592174224585053817450673797400202710878562748001698340846985261463026529360990669802293480312441048965520897","v":"1148619141217957986496757711054111791862691178309410923416837802801708689012670430650138736456223586898110113348220116209094530854607083005898964558239710027534227973983322542548800291320747321452329327824406430787211689678096549398458892087551551587767498991043777397791000822007896620414888602588897806008609113730393639807814070738699614969916095861363383223421727858670289337712185089527052065958362840287749622133424503902085247641830693297082507827948006947829401008622239294382186995101394791468192083810475776455445579931271665980788474331866572497866962452476638881287668931141052552771328556458489781734943404258692308937784221642452132005267809852656378394530342203469943982066011466088478895643800295937901139711103301249691253510784029114718919483272055970725860849610885050165709968510696738864528287788491998027072378656038991754015693216663830793243584350961586874315757599094357535856429087122365865868729","m":{"address2":"11774234640096848605908744857306447015748098256395922562149769943967941106193320512788344020652220849708117081570187385467979956319507248530701654682748372348387275979419669108338","city":"4853213962270369118453000522408430296589146124488849630769837449684434138367659379663124155088827069418193027370932024893343033367076071757003149452226758383807126385017161888440","address1":"12970590675851114145396120869959510754345567924518524026685086869487243290925032320159287997675756075512889990901552679591155319959039145119122576164798225386578339739435869622811","zip":"8333721522340131864419931745588776943042067606218561135102011966361165456174036379901390244538991611895455576519950813910672825465382312504250936740379785802177629077591444977329"},"m1":"92853615502250003546205004470333326341901175168428906399291824325990659330595200000112546157141090642053863739870044907457400076448073272490169488870502566172795456430489790324815765612798273406119873266684053517977802902202155082987833343670942161987285661291655743810590661447300059024966135828466539810035","m2":"14442362430453309930284822850357071315613831915865367971974791350454381198894252834180803515368579729220423713315556807632571621646127926114010380486713602821529657583905131582938"},"ge_proofs":[]},"non_revoc_proof":null},"schema_seq_no":15,"issuer_did":"4fUDR9R7fjwELRvH9JT6HH"}},"aggregated_proof":{"c_hash":"68430476900085482958838239880418115228681348197588159723604944078288347793331","c_list":[[179,17,2,242,194,227,92,203,28,32,255,113,112,20,5,243,9,111,220,111,21,210,116,12,167,119,253,181,37,40,143,215,140,42,179,97,75,229,96,94,54,248,206,3,48,14,61,219,160,122,139,227,166,183,37,43,197,200,28,220,217,10,65,42,6,195,124,44,164,65,114,206,51,231,254,156,170,141,21,153,50,251,237,65,147,97,243,17,157,116,213,201,80,119,106,70,88,60,55,36,33,160,135,106,60,212,191,235,116,57,78,177,61,86,44,226,205,100,134,118,93,6,26,58,220,66,232,166,202,62,90,174,231,207,19,239,233,223,70,191,199,100,157,62,139,176,28,184,9,70,116,199,142,237,198,183,12,32,53,84,207,202,77,56,97,177,154,169,223,201,212,163,212,101,184,255,215,167,16,163,136,44,25,123,49,15,229,41,149,133,159,86,106,208,234,73,207,154,194,162,141,63,159,145,94,47,174,51,225,91,243,2,221,202,59,11,212,243,197,208,116,42,242,131,221,137,16,169,203,215,239,78,254,150,42,169,202,132,172,106,179,130,178,130,147,24,173,213,151,251,242,44,54,47,208,223]]},"requested_proof":{"revealed_attrs":{"sdf":["claim::e5fec91f-d03d-4513-813c-ab6db5715d55","UT","96473275571522321025213415717206189191162"]},"unrevealed_attrs":{},"self_attested_attrs":{},"predicates":{}}}"#;
@@ -820,9 +813,9 @@ mod tests {
                                       credential1.credential_uuid.unwrap(), data,
                                       credential2.credential_uuid.unwrap(), data,
                                       credential3.credential_uuid.unwrap(), data);
-        assert!(credential_json.contains("\"credential1\":{\"ref\":1,\"origin\":\"NcYxiDXkpYi6ov5FcYDi1e\",\"signature_type\":\"CL\""));
-        assert!(credential_json.contains("\"credential2\":{\"ref\":1,\"origin\":\"NcYxiDXkpYi6ov5FcYDi1e\",\"signature_type\":\"CL\""));
-        assert!(credential_json.contains("\"credential3\":{\"ref\":1,\"origin\":\"NcYxiDXkpYi6ov5FcYDi1e\",\"signature_type\":\"CL\""));
+        assert!(credential_json.contains(r#""credential1":{"ref":1487,"origin":"2hoqvcwupRTUNkXn6ArYzs","signature_type":"CL""#));
+        assert!(credential_json.contains(r#""credential2":{"ref":1487,"origin":"2hoqvcwupRTUNkXn6ArYzs","signature_type":"CL""#));
+        assert!(credential_json.contains(r#""credential3":{"ref":1487,"origin":"2hoqvcwupRTUNkXn6ArYzs","signature_type":"CL""#));
     }
 
     #[test]
@@ -899,9 +892,9 @@ mod tests {
         };
         let credentials = vec![credential1.clone(), credential2.clone(), credential3.clone()];
         let schemas_json = proof.build_schemas_json(credentials.as_ref()).unwrap();
-        assert!(schemas_json.contains("\"credential1\":{\"dest\":\"VsKV7grR1BUE29mG2Fm2kX\",\"txnTime\":1516284381,\"type\":\"101\",\"data\":{\"name\":\"get schema attrs\",\"version\":\"1.0\",\"attr_names\":[\"test\",\"get\",\"schema\",\"attrs\"]}"));
-        assert!(schemas_json.contains("\"credential2\":{\"dest\":\"VsKV7grR1BUE29mG2Fm2kX\",\"seqNo\":344,\"txnTime\":1516284381,\"type\":\"101\",\"data\":{\"name\":\"get schema attrs\",\"version\":\"1.0\",\"attr_names\":[\"test\",\"get\",\"schema\",\"attrs\"]}}"));
-        assert!(schemas_json.contains("\"credential3\":{\"dest\":\"VsKV7grR1BUE29mG2Fm2kX\",\"seqNo\":344,\"txnTime\":1516284381,\"type\":\"101\",\"data\":{\"name\":\"get schema attrs\",\"version\":\"1.0\",\"attr_names\":[\"test\",\"get\",\"schema\",\"attrs\"]}}"));
+        assert!(schemas_json.contains(r#""credential1":{"dest":"VsKV7grR1BUE29mG2Fm2kX","seqNo":344,"txnTime":1516284381,"type":"101","data":{"name":"get schema attrs","version":"1.0","attr_names":["test","get","schema","attrs"]}}"#));
+        assert!(schemas_json.contains(r#""credential2":{"dest":"VsKV7grR1BUE29mG2Fm2kX","seqNo":344,"txnTime":1516284381,"type":"101","data":{"name":"get schema attrs","version":"1.0","attr_names":["test","get","schema","attrs"]}}"#));
+        assert!(schemas_json.contains(r#""credential3":{"dest":"VsKV7grR1BUE29mG2Fm2kX","seqNo":344,"txnTime":1516284381,"type":"101","data":{"name":"get schema attrs","version":"1.0","attr_names":["test","get","schema","attrs"]}}"#));
     }
 
     #[test]
@@ -997,6 +990,7 @@ mod tests {
         let proof_data = proof.get_proof().unwrap();
         assert!(proof_data.contains(r#""schema_seq_no":694,"issuer_did":"DunkM3x1y7S4ECgSL4Wkru","credential_uuid":"claim::1f927d68-8905-4188-afd6-374b93202802","attr_info":{"name":"age","value":18,"type":"predicate","predicate_type":"GE"}}"#));
     }
+
     #[ignore]
     #[test]
     fn test_send_proof_request_can_be_retried() {
@@ -1055,13 +1049,14 @@ mod tests {
         assert_eq!(proof.get_proof_state(), ProofStateType::ProofInvalid as u32);
     }
 
-    #[ignore]
     #[test]
-    fn test_errors() {
-        use utils::error::INVALID_JSON;
+    fn test_proof_errors() {
+        use utils::error::{ INVALID_JSON, POST_MSG_FAILURE };
+        use utils::libindy::wallet;
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
 
+        let my_wallet = wallet::init_wallet("proof_errors").unwrap();
         let mut proof = create_boxed_proof();
 
         assert_eq!(proof.validate_proof_indy("{}", "{}", "{}", "{}","").err(),
@@ -1086,6 +1081,10 @@ mod tests {
         assert_eq!(to_string(bad_handle).err(), Some(ProofError::InvalidHandle()));
         assert_eq!(get_source_id(bad_handle).err(), Some(ProofError::InvalidHandle()));
         assert_eq!(from_string(empty).err(), Some(ProofError::CommonError(INVALID_JSON.code_num)));
+        let mut proof_good = create_boxed_proof();
+        assert_eq!(proof_good.get_proof_request_status().err(), Some(ProofError::ProofMessageError(POST_MSG_FAILURE.code_num)));
+
+        wallet::delete_wallet("proof_errors").unwrap();
     }
 
 }

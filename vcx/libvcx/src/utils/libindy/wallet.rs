@@ -68,7 +68,7 @@ pub fn create_wallet(wallet_name: &str, pool_name: &str, credentials: Option<&st
                                      null(),
                                      if credentials.is_some() { credentials_str.as_ptr() } else { null() },
                                      Some(create_obj.get_callback()));
-        // ignore 203 - wallet already exists
+
         if err != 203 && err != 0 {
             warn!("libindy create wallet returned: {}", err);
             return Err(error::UNKNOWN_LIBINDY_ERROR.code_num);
@@ -87,6 +87,11 @@ pub fn create_wallet(wallet_name: &str, pool_name: &str, credentials: Option<&st
 }
 
 pub fn open_wallet(wallet_name: &str, credentials: Option<&str>) -> Result<i32, u32> {
+    if settings::test_indy_mode_enabled() {
+        unsafe {WALLET_HANDLE = 1;}
+        return Ok(1);
+    }
+
     let open_obj = Return_I32_I32::new()?;
 
     unsafe {
@@ -122,6 +127,7 @@ pub fn open_wallet(wallet_name: &str, credentials: Option<&str>) -> Result<i32, 
         Ok(wallet_handle)
     }
 }
+
 pub fn init_wallet(wallet_name: &str) -> Result<i32, u32> {
     if settings::test_indy_mode_enabled() {
         unsafe {WALLET_HANDLE = 1;}

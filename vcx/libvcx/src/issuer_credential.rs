@@ -117,11 +117,11 @@ impl IssuerCredential {
             return Err(IssuerCredError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num));
         }
 
-        self.agent_did = connection::get_agent_did(connection_handle).map_err(|x| IssuerCredError::CommonError(x))?;
-        self.agent_vk = connection::get_agent_verkey(connection_handle).map_err(|x| IssuerCredError::CommonError(x))?;
-        self.issued_did = connection::get_pw_did(connection_handle).map_err(|x| IssuerCredError::CommonError(x))?;
-        self.issued_vk = connection::get_pw_verkey(connection_handle).map_err(|x| IssuerCredError::CommonError(x))?;
-        self.remote_vk = connection::get_their_pw_verkey(connection_handle).map_err(|x| IssuerCredError::CommonError(x))?;
+        self.agent_did = connection::get_agent_did(connection_handle).map_err(|e| IssuerCredError::CommonError(e.to_error_code()))?;
+        self.agent_vk = connection::get_agent_verkey(connection_handle).map_err(|e| IssuerCredError::CommonError(e.to_error_code()))?;
+        self.issued_did = connection::get_pw_did(connection_handle).map_err(|x| IssuerCredError::CommonError(x.to_error_code()))?;
+        self.issued_vk = connection::get_pw_verkey(connection_handle).map_err(|x| IssuerCredError::CommonError(x.to_error_code()))?;
+        self.remote_vk = connection::get_their_pw_verkey(connection_handle).map_err(|x| IssuerCredError::CommonError(x.to_error_code()))?;
 
         let credential_offer = self.generate_credential_offer(&self.issued_did)?;
         let payload = match serde_json::to_string(&credential_offer) {
@@ -134,7 +134,7 @@ impl IssuerCredential {
         if settings::test_agency_mode_enabled() { httpclient::set_next_u8_response(SEND_MESSAGE_RESPONSE.to_vec()); }
 
         let data = connection::generate_encrypted_payload(&self.issued_vk, &self.remote_vk, &payload, "CLAIM_OFFER")
-            .map_err(|x| IssuerCredError::CommonError(x))?;
+            .map_err(|e| IssuerCredError::CommonError(e.to_error_code()))?;
 
         match messages::send_message().to(&self.issued_did)
             .to_vk(&self.issued_vk)
@@ -169,7 +169,7 @@ impl IssuerCredential {
             return Err(IssuerCredError::InvalidHandle());
         }
 
-        let to = connection::get_pw_did(connection_handle).map_err(|x| IssuerCredError::CommonError(x))?;
+        let to = connection::get_pw_did(connection_handle).map_err(|e| IssuerCredError::CommonError(e.to_error_code()))?;
         let attrs_with_encodings = self.create_attributes_encodings()?;
         let data;
         if settings::test_indy_mode_enabled() {
@@ -182,7 +182,7 @@ impl IssuerCredential {
         debug!("credential data: {}", data);
 
         let data = connection::generate_encrypted_payload(&self.issued_vk, &self.remote_vk, &data, "CLAIM")
-            .map_err(|x| IssuerCredError::CommonError(x))?;
+            .map_err(|e| IssuerCredError::CommonError(e.to_error_code()))?;
         if settings::test_agency_mode_enabled() { httpclient::set_next_u8_response(SEND_MESSAGE_RESPONSE.to_vec()); }
 
         match messages::send_message().to(&self.issued_did)
@@ -309,7 +309,6 @@ impl IssuerCredential {
 
         debug!("xcredential_json: {:?}", xcredential_json);
 
-        println!("Cred: {:?}", xcredential_json);
         Ok(Credential {
             claim_offer_id: self.msg_uid.clone(),
             from_did: String::from(did),
@@ -323,7 +322,7 @@ impl IssuerCredential {
     fn generate_credential_offer(&self, to_did: &str) -> Result<CredentialOffer, IssuerCredError> {
         let attr_map = convert_to_map(&self.credential_attributes)?;
         // Todo: Better error conversion
-        let schema_json = LedgerSchema::new_from_ledger(self.schema_seq_no as i32)
+        let schema_json = LedgerSchema::new_from_ledger_with_seq_no(self.schema_seq_no as i32)
             .map_err(|err| IssuerCredError::CommonError(err.to_error_code()))?
             .to_string();
 
@@ -559,7 +558,7 @@ pub fn get_source_id(handle: u32) -> Result<String, u32> {
 pub mod tests {
     use super::*;
     use settings;
-    use connection::{ build_connection, create_connection};
+    use connection::{ build_connection };
     use credential_request::CredentialRequest;
     use utils::{ constants::*,
                  libindy::{ set_libindy_rc,
@@ -693,11 +692,19 @@ pub mod tests {
     fn test_generate_cred_offer() {
         ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
-        ::utils::devsetup::setup_dev_env("test_create_cred_offer");
-        ::utils::libindy::anoncreds::libindy_prover_create_master_secret(get_wallet_handle(), settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
+        let wallet_name = "test_create_cred";
+        ::utils::devsetup::setup_dev_env(wallet_name);
+        let wallet_h = get_wallet_handle();
+
+        ::utils::libindy::anoncreds::libindy_prover_create_master_secret(wallet_h, settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
         let issuer_did = &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
+        let check_schema_key = SchemaKey {
+            name: "Home Address".to_string(),
+            version: "1.4".to_string(),
+            did: issuer_did.to_string()
+        };
         let to_did = "8XFh8yBzrpJQmNyZzgoTqB";
-        let mut issuer_cred = IssuerCredential {
+        let issuer_cred = IssuerCredential {
             handle: 123,
             source_id: "standard_credential".to_owned(),
             schema_seq_no: 1487,
@@ -716,17 +723,10 @@ pub mod tests {
             agent_did: DID.to_string(),
             agent_vk: VERKEY.to_string(),
         };
-        let connection_handle = create_connection("456");
-        issuer_cred.send_credential_offer(connection_handle).unwrap();
-//        let cred_offer = issuer_cred.generate_credential_offer(to_did).unwrap();
-        ::utils::devsetup::cleanup_dev_env("test_create_cred_offer");
-//        let check_schema_key = SchemaKey {
-//             name: "Home Address".to_string(),
-//           version: "1.4".to_string(),
-//         did: issuer_did.to_string()
-//   };
-//        assert_eq!(cred_offer.libindy_offer.schema_key, check_schema_key);
-//         assert_eq!(cred_offer.libindy_offer.issuer_did, issuer_did.to_string());
+        let cred_offer = issuer_cred.generate_credential_offer(to_did).unwrap();
+        ::utils::devsetup::cleanup_dev_env(wallet_name);
+        assert_eq!(cred_offer.libindy_offer.schema_key, check_schema_key);
+        assert_eq!(cred_offer.libindy_offer.issuer_did, issuer_did.to_string());
     }
 
     #[test]
