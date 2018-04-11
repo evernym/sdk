@@ -97,23 +97,18 @@ impl Proof {
         debug!("building credentialdef json for proof validation");
         let mut credential_json: HashMap<String, CredentialDefinition> = HashMap::new();
         for credential in credential_data.iter() {
-            let issuer_did = match credential.issuer_did {
-                Some(ref x) => x,
-                None => return Err(ProofError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num))
-            };
-            let credential_uuid = match credential.credential_uuid {
-                Some(ref x) => x,
-                None => return Err(ProofError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num))
-            };
+            let issuer_did = credential.issuer_did.as_ref()
+                .ok_or(ProofError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num))?;
+            let credential_uuid = credential.credential_uuid.as_ref()
+                .ok_or(ProofError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num))?;
+            let schema_key = credential.schema_key.as_ref()
+                .ok_or(ProofError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num))?;
 
-            //Todo: retrieve schema_seq_no in retrieve_cred_def because of libindy changes. Remove tmp val
-            let credential_def = "";
-//            let credential_def = RetrieveCredentialDef::new()
-//                .retrieve_credential_def(issuer_did,
-//                                    schema_seq_no,
-//                                    Some(SigTypes::CL),
-//                                    issuer_did)
-//                .map_err(|ec| ProofError::CommonError(ec.to_error_code()))?;
+            let credential_def = RetrieveCredentialDef::new()
+                .retrieve_credential_def_with_schema_key(issuer_did,
+                                                         schema_key,
+                                                         Some(SigTypes::CL))
+                .map_err(|ec| ProofError::CommonError(ec.to_error_code()))?;
 
             let credential_obj: CredentialDefinition = serde_json::from_str(&credential_def)
                 .map_err(|_| ProofError::CommonError(error::INVALID_JSON.code_num))?;
@@ -140,24 +135,18 @@ impl Proof {
 
         let mut schema_json: HashMap<String, SchemaTransaction> = HashMap::new();
         for schema in credential_data.iter() {
-//            let schema_seq_no = match schema.schema_seq_no {
-//                Some(x) => x,
-//                None => return Err(ProofError::InvalidSchema())
-//            };
-            let credential_uuid = match schema.credential_uuid {
-                Some(ref x) => x,
-                None => return Err(ProofError::InvalidSchema())
-            };
-            //Todo: Update new_from_ledger to not take schema_seq_no. Need to change get_txn to get_schema_txn
-//            let schema_obj = LedgerSchema::new_from_ledger(schema_seq_no as i32).map_err(|x| ProofError::CommonError(x.to_error_code()))?;
-//            let data = match schema_obj.data {
-//                Some(x) => x,
-//                None => return Err(ProofError::InvalidProof())
-//            };
-//            schema_json.insert(credential_uuid.to_string(), data);
+
+            let credential_uuid = schema.credential_uuid.as_ref()
+                .ok_or(ProofError::InvalidSchema())?;
+            let schema_key = schema.schema_key.as_ref()
+                .ok_or(ProofError::InvalidSchema())?;
+            let schema_obj = LedgerSchema::new_from_ledger_with_schema_key(schema_key)
+                .map_err(|x| ProofError::CommonError(x.to_error_code()))?;
+
+            let data = schema_obj.data.as_ref().ok_or(ProofError::InvalidProof())?;
+            schema_json.insert(credential_uuid.to_string(), data.clone());
         }
 
-        let schema_json = "";
         serde_json::to_string(&schema_json).map_err(|err| {
             warn!("{} with serde error: {}",error::INVALID_SCHEMA.message, err);
             ProofError::InvalidSchema()
@@ -822,9 +811,9 @@ mod tests {
                                       credential1.credential_uuid.unwrap(), data,
                                       credential2.credential_uuid.unwrap(), data,
                                       credential3.credential_uuid.unwrap(), data);
-        assert!(credential_json.contains("\"credential1\":{\"ref\":1,\"origin\":\"NcYxiDXkpYi6ov5FcYDi1e\",\"signature_type\":\"CL\""));
-        assert!(credential_json.contains("\"credential2\":{\"ref\":1,\"origin\":\"NcYxiDXkpYi6ov5FcYDi1e\",\"signature_type\":\"CL\""));
-        assert!(credential_json.contains("\"credential3\":{\"ref\":1,\"origin\":\"NcYxiDXkpYi6ov5FcYDi1e\",\"signature_type\":\"CL\""));
+        assert!(credential_json.contains(r#""credential1":{"ref":1487,"origin":"2hoqvcwupRTUNkXn6ArYzs","signature_type":"CL""#));
+        assert!(credential_json.contains(r#""credential2":{"ref":1487,"origin":"2hoqvcwupRTUNkXn6ArYzs","signature_type":"CL""#));
+        assert!(credential_json.contains(r#""credential3":{"ref":1487,"origin":"2hoqvcwupRTUNkXn6ArYzs","signature_type":"CL""#));
     }
 
     #[test]
@@ -901,9 +890,9 @@ mod tests {
         };
         let credentials = vec![credential1.clone(), credential2.clone(), credential3.clone()];
         let schemas_json = proof.build_schemas_json(credentials.as_ref()).unwrap();
-        assert!(schemas_json.contains("\"credential1\":{\"dest\":\"VsKV7grR1BUE29mG2Fm2kX\",\"txnTime\":1516284381,\"type\":\"101\",\"data\":{\"name\":\"get schema attrs\",\"version\":\"1.0\",\"attr_names\":[\"test\",\"get\",\"schema\",\"attrs\"]}"));
-        assert!(schemas_json.contains("\"credential2\":{\"dest\":\"VsKV7grR1BUE29mG2Fm2kX\",\"seqNo\":344,\"txnTime\":1516284381,\"type\":\"101\",\"data\":{\"name\":\"get schema attrs\",\"version\":\"1.0\",\"attr_names\":[\"test\",\"get\",\"schema\",\"attrs\"]}}"));
-        assert!(schemas_json.contains("\"credential3\":{\"dest\":\"VsKV7grR1BUE29mG2Fm2kX\",\"seqNo\":344,\"txnTime\":1516284381,\"type\":\"101\",\"data\":{\"name\":\"get schema attrs\",\"version\":\"1.0\",\"attr_names\":[\"test\",\"get\",\"schema\",\"attrs\"]}}"));
+        assert!(schemas_json.contains(r#""credential1":{"dest":"VsKV7grR1BUE29mG2Fm2kX","seqNo":344,"txnTime":1516284381,"type":"101","data":{"name":"get schema attrs","version":"1.0","attr_names":["test","get","schema","attrs"]}}"#));
+        assert!(schemas_json.contains(r#""credential2":{"dest":"VsKV7grR1BUE29mG2Fm2kX","seqNo":344,"txnTime":1516284381,"type":"101","data":{"name":"get schema attrs","version":"1.0","attr_names":["test","get","schema","attrs"]}}"#));
+        assert!(schemas_json.contains(r#""credential3":{"dest":"VsKV7grR1BUE29mG2Fm2kX","seqNo":344,"txnTime":1516284381,"type":"101","data":{"name":"get schema attrs","version":"1.0","attr_names":["test","get","schema","attrs"]}}"#));
     }
 
     #[test]

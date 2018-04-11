@@ -253,13 +253,10 @@ mod tests {
         println!("{}",result.unwrap());
     }
 
-    pub const GET_SCHEMA_DATA: &'static str = r#"{"name":"name","version":"1.0"}"#;
-    // this test cannot pass as a unit test.
     #[test]
     fn test_libindy_build_get_schema_request() {
-        let schema_creators_did = "0000000000000SCHEMACREATORS0DID1";
-        let submitter_did = "0000000000000000000submitterDID1";
-        let data = GET_SCHEMA_DATA;
-        assert_eq!(libindy_build_get_schema_request(submitter_did, schema_creators_did, data).unwrap(), "A STRING OF JSON");
+        let did = "GGBDg1j8bsKmr4h5T9XqYf";
+        let data = r#"{"name":"name","version":"1.0"}"#;
+        assert!(libindy_build_get_schema_request(did, did, data).is_ok())
     }
 }

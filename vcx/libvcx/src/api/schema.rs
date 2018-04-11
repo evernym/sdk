@@ -386,7 +386,7 @@ mod tests {
         delete_wallet("a_test_wallet").unwrap();
     }
 
-//    #[ignore]
+    #[ignore]
     #[test]
     fn test_vcx_create_schema_and_create_credentialdef_with_pool() {
         settings::set_defaults();

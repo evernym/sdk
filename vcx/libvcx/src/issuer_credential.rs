@@ -322,7 +322,7 @@ impl IssuerCredential {
     fn generate_credential_offer(&self, to_did: &str) -> Result<CredentialOffer, IssuerCredError> {
         let attr_map = convert_to_map(&self.credential_attributes)?;
         // Todo: Better error conversion
-        let schema_json = LedgerSchema::new_from_ledger(self.schema_seq_no as i32)
+        let schema_json = LedgerSchema::new_from_ledger_with_seq_no(self.schema_seq_no as i32)
             .map_err(|err| IssuerCredError::CommonError(err.to_error_code()))?
             .to_string();
 

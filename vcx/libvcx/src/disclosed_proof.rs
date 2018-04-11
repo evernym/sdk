@@ -184,7 +184,8 @@ impl DisclosedProof {
         let mut rtn = Map::new();
 
         for &(ref attr_id, ref claim_uuid, ref issuer_did, schema_seq_num) in credentials_identifers {
-            let schema = LedgerSchema::new_from_ledger(schema_seq_num as i32).map_err(|_| ProofError::InvalidSchema())?;
+            let schema = LedgerSchema::new_from_ledger_with_seq_no(schema_seq_num as i32)
+                .map_err(|_| ProofError::InvalidSchema())?;
             let schema = schema.data.ok_or(ProofError::CommonError(error::INVALID_SCHEMA.code_num))?;
 
             let schema: Value = serde_json::to_value(schema)

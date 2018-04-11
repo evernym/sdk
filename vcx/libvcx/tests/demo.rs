@@ -200,6 +200,7 @@ fn create_and_open_wallet(wallet_name:&str, pool_name: &str) -> Result<i32, Base
         .or(Err(BaseError::WalletError("Creating Wallet".to_string())));
     wallet::open_wallet(wallet_name, None).or(Err(BaseError::WalletError("Opening".to_string())))
 }
+
 fn get_and_update_version() -> String {
     let version = format!("{}.0",read_version("/home/mark/version.txt") as u32);
     version
@@ -212,12 +213,14 @@ struct Schema {
     data: SchemaData,
 }
 
-
+#[ignore]
 #[test]
 fn test_update_version(){
     read_version("/home/mark/version.txt");
 }
 
+#[allow(dead_code)]
+#[ignore]
 #[test]
 fn test_libindy_direct(){
     LoggerUtils::init();
@@ -359,6 +362,8 @@ fn test_libindy_direct(){
 //    assert!(wallet::delete_wallet(wallet_name2).is_ok());
 }
 
+#[allow(dead_code)]
+#[ignore]
 #[test]
 fn test_get_cred_def_with_no_schema_no(){
     use ::vcx::utils::libindy::{ SigTypes, anoncreds};
@@ -443,9 +448,11 @@ fn test_get_cred_def_with_no_schema_no(){
 //    assert_eq!(cred_def_retrieved, credential_def_string)
 }
 
+#[allow(dead_code)]
 fn retrieve_cred_def_with_schema_key_and_attr_list(issuer_did: &str, schema_key:SchemaKey, attr_list: &str ) -> Result<String, BaseError> {
     Ok("CRED_DEF_".to_string())
 }
+#[allow(dead_code)]
 fn read_version(filename:&str)-> i32{
     use std::fs::File;
     use std::io::prelude::*;
@@ -464,6 +471,7 @@ fn read_version(filename:&str)-> i32{
 
 
 
+#[allow(dead_code)]
 fn create_schema_on_ledger(did: &str, schema_data: &str, schema_name: &str, version: &str, pool_handle: i32, wallet_handle: i32) -> Result<String, u32>{
     let schema_request = ::vcx::utils::libindy::ledger::libindy_build_schema_request(did, schema_data)?;
     ::vcx::utils::libindy::ledger::libindy_sign_and_submit_request(pool_handle, wallet_handle, did, &schema_request)
