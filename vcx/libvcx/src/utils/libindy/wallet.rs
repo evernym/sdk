@@ -87,6 +87,11 @@ pub fn create_wallet(wallet_name: &str, pool_name: &str, credentials: Option<&st
 }
 
 pub fn open_wallet(wallet_name: &str, credentials: Option<&str>) -> Result<i32, u32> {
+    if settings::test_indy_mode_enabled() {
+        unsafe {WALLET_HANDLE = 1;}
+        return Ok(1);
+    }
+
     let open_obj = Return_I32_I32::new()?;
 
     unsafe {

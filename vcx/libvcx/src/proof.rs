@@ -17,13 +17,13 @@ use messages::GeneralMessage;
 use utils::httpclient;
 use utils::error;
 use utils::constants::*;
-use utils::libindy::SigTypes;
 use utils::libindy::anoncreds::libindy_verifier_verify_proof;
 use credential_def::{ RetrieveCredentialDef, CredentialDefinition };
 use schema::{ LedgerSchema, SchemaTransaction };
 use proof_compliance::{ proof_compliance };
-use error::ToErrorCode;
 use error::proof::ProofError;
+use utils::libindy::SigTypes;
+use error::ToErrorCode;
 
 lazy_static! {
     static ref PROOF_MAP: Mutex<HashMap<u32, Box<Proof>>> = Default::default();

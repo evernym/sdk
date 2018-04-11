@@ -29,14 +29,14 @@ lazy_static! {
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct SchemaTransaction {
     #[serde(rename(deserialize = "identifier", serialize = "dest"))]
-    identifier: Option<String>,
+    pub identifier: Option<String>,
     #[serde(rename = "seqNo")]
     pub sequence_num: Option<usize>,
     #[serde(rename = "txnTime")]
-    txn_timestamp: Option<usize>,
+    pub txn_timestamp: Option<usize>,
     #[serde(rename = "type")]
-    txn_type: Option<String>,
-    data: Option<SchemaData>,
+    pub txn_type: Option<String>,
+    pub data: Option<SchemaData>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]

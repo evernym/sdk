@@ -22,7 +22,7 @@ use utils::libindy::SigTypes;
 use utils::libindy::wallet;
 use utils::libindy::crypto;
 
-use credential_def::{ RetrieveCredentialDef };
+use credential_def::RetrieveCredentialDef;
 use connection;
 
 use settings;

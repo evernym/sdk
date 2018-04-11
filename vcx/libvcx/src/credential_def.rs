@@ -18,6 +18,7 @@ use utils::libindy::ledger::{libindy_submit_request,
                              libindy_build_get_credential_def_txn,
                              libindy_build_create_credential_def_txn,
                              libindy_sign_and_submit_request};
+use utils::libindy::ledger;
 use error::ToErrorCode;
 use error::cred_def::CredDefError;
 
@@ -68,11 +69,6 @@ pub struct PublicKey {
 }
 
 pub trait CredentialDefCommon {
-//    type CredentialDefType;
-
-//    fn new() -> Self;
-
-
 
     fn build_get_txn(&mut self,
                      submitter_did: &str,
@@ -84,7 +80,6 @@ pub trait CredentialDefCommon {
                                              sig_type,
                                              issuer_did).or(Err(CredDefError::BuildCredDefRequestError()))
     }
-
 
     fn send_request(&self, request: &str) ->  Result<String, CredDefError> {
         if settings::test_indy_mode_enabled() { return Ok(STORE_CREDENTIAL_DEF_RESULT.to_string()); }
@@ -160,6 +155,9 @@ impl CreateCredentialDef {
             name: String::new(),
             source_id: String::new(),
         }
+    }
+    pub fn from_str(input: &str) -> Result<CreateCredentialDef, CredDefError> {
+        serde_json::from_str(&input).or(Err(CredDefError::CreateCredDefError()))
     }
     pub fn sign_and_send_request(&self, request: &str) ->  Result<String, CredDefError> {
         if settings::test_indy_mode_enabled() { return Ok("{}".to_string()); }
@@ -251,7 +249,7 @@ impl CredentialDefinition {
         }
     }
 
-    fn from_str(credential_def: &str) -> Result<Self, CredDefError> {
+    pub fn from_str(credential_def: &str) -> Result<Self, CredDefError> {
         serde_json::from_str(credential_def).map_err(|err| {
             error!("{} with serde error: {}",error::INVALID_CREDENTIAL_DEF_JSON.message, err);
             CredDefError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num)
@@ -469,9 +467,9 @@ pub mod tests {
         let wallet_handle = get_wallet_handle();
         let mut retrieve_credential_def = RetrieveCredentialDef::new();
         let credential_def = retrieve_credential_def.retrieve_credential_def("GGBDg1j8bsKmr4h5T9XqYf",
-                                                              1629,
+                                                              1633,
                                                   Some(SigTypes::CL),
-                                                  "2hoqvcwupRTUNkXn6ArYzs").unwrap();
+                                                  "Niaxv2v4mPr1HdTeJkQxuU").unwrap();
         delete_wallet("test_wallet").unwrap();
         retrieve_credential_def.credential_def = Some(CredentialDefinition::from_str(&credential_def).unwrap());
         let ref credential_def_obj = retrieve_credential_def.credential_def.as_ref().unwrap();
@@ -580,6 +578,10 @@ pub mod tests {
         let credentialdef2: CreateCredentialDef = serde_json::from_str(&new_credentialdef_data).unwrap();
         credentialdef1.handle = credentialdef2.handle;
         assert_eq!(credentialdef1,credentialdef2);
+        println!("credentialdef_data: {}", credentialdef_data);
+        let cred_def_struct = CreateCredentialDef::from_str(&credentialdef_data).unwrap().credential_def;
+        assert_eq!(credentialdef1.credential_def, cred_def_struct);
+        assert_eq!(CreateCredentialDef::from_str("{}").err(), Some(CredDefError::CreateCredDefError()));
     }
 
     #[test]
@@ -607,21 +609,4 @@ pub mod tests {
                    Some(CredDefError::CommonError(NO_POOL_OPEN.code_num)))
     }
 
-
-//    #[test]
-//    fn test_build_schema_request(){
-//        use utils;
-//        settings::set_defaults();
-//        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
-//        use credential_request;
-//        let schema_creators_did = utils::constants::SCHEMA_CREATOR_DID;
-//        let schema_key = credential_request::SchemaKey{
-//            name: "DEF".to_string(),
-//            version: "1.0".to_string(),
-//            did: schema_creators_did.to_string(),
-//        };
-//        let schema = utils::libindy::ledger::indy_get_schema();
-//        assert_eq!(schema, utils::constants::SCHEMAS_JSON);
-//
-//    }
 }
