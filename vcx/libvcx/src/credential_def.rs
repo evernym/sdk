@@ -18,7 +18,6 @@ use utils::libindy::ledger::{libindy_submit_request,
                              libindy_build_get_credential_def_txn,
                              libindy_build_create_credential_def_txn,
                              libindy_sign_and_submit_request};
-use utils::libindy::ledger;
 use error::ToErrorCode;
 use error::cred_def::CredDefError;
 
