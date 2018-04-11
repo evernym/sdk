@@ -17,13 +17,11 @@ use messages::GeneralMessage;
 use utils::httpclient;
 use utils::error;
 use utils::constants::*;
-use utils::libindy::SigTypes;
 use utils::libindy::anoncreds::libindy_verifier_verify_proof;
 use utils::types::SchemaKey;
-use credential_def::{ RetrieveCredentialDef, CredentialDefCommon, CredentialDefinition };
-use schema::{ LedgerSchema, SchemaTransaction };
+use credential_def::CredentialDefinition;
+use schema::SchemaTransaction;
 use proof_compliance::{ proof_compliance };
-use error::ToErrorCode;
 use error::proof::ProofError;
 
 lazy_static! {
@@ -138,7 +136,7 @@ impl Proof {
     fn build_schemas_json(&self, credential_data:&Vec<CredentialData>) -> Result<String, ProofError> {
         debug!("building schemas json for proof validation");
 
-        let mut schema_json: HashMap<String, SchemaTransaction> = HashMap::new();
+        let schema_json: HashMap<String, SchemaTransaction> = HashMap::new();
         for schema in credential_data.iter() {
 //            let schema_seq_no = match schema.schema_seq_no {
 //                Some(x) => x,

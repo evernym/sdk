@@ -276,7 +276,7 @@ mod tests {
         check_req_attrs.insert("age_1".to_string(), attr_info1);
         check_req_attrs.insert("name_2".to_string(), attr_info2);
 
-        let mut request = proof_request().requested_attrs(REQUESTED_ATTRS).clone();
+        let request = proof_request().requested_attrs(REQUESTED_ATTRS).clone();
         assert_eq!(request.proof_request_data.requested_attrs, check_req_attrs);
     }
 
@@ -286,7 +286,7 @@ mod tests {
         let attr_info1: PredicateInfo = serde_json::from_str(r#"{ "attr_name":"age","p_type":"GE","value":22, "restrictions":[ { "issuer_did":"8XFh8yBzrpJQmNyZzgoTqB", "schema_key":{ "name":"Faber Student Info", "version":"1.0", "did":"6XFh8yBzrpJQmNyZzgoTqB" } }, { "issuer_did":"66Fh8yBzrpJQmNyZzgoTqB", "schema_key":{ "name":"BYU Student Info", "version":"1.0", "did":"5XFh8yBzrpJQmNyZzgoTqB" } } ] }"#).unwrap();
         check_predicates.insert("age_1".to_string(), attr_info1);
 
-        let mut request = proof_request().requested_predicates(REQUESTED_PREDICATES).clone();
+        let request = proof_request().requested_predicates(REQUESTED_PREDICATES).clone();
         assert_eq!(request.proof_request_data.requested_predicates, check_predicates);
     }
 }
