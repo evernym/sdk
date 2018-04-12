@@ -4,7 +4,7 @@ import { _ } from 'lodash'
 import { VCXInternalError } from '../errors'
 import { rustAPI } from '../rustlib'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
-import { StateType } from './common'
+import { ISchemaKey, StateType } from './common'
 import { Connection } from './connection'
 import { VCXBase } from './VCXBase'
 import { VCXBaseWithState } from './VCXBaseWithState'
@@ -69,9 +69,13 @@ export enum PredicateTypes {
  * @interface
  */
 export interface IProofAttr {
-  issuerDid?: string,
-  schemaSeqNo?: number,
+  restrictions?: IFilter[],
   name: string,
+}
+
+export interface IFilter {
+  issuerDid?: string,
+  schemaKey?: ISchemaKey,
 }
 
 export enum ProofState {
@@ -80,13 +84,12 @@ export enum ProofState {
   Invalid = 2
 }
 
-// export interface IProofPredicate {
-//   attr_name: string,
-//   p_type: string,
-//   value: number,
-//   schema_seq_no: number,
-//   issuer_did: string,
-// }
+export interface IProofPredicate {
+  attr_name: string,
+  p_type: string,
+  value: number,
+  restrictions?: IFilter[],
+}
 
 /**
  * @class Class representing a Connection

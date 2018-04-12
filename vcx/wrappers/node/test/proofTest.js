@@ -5,8 +5,10 @@ const { stubInitVCX } = require('./helpers')
 const { Connection, Proof, StateType, Error, ProofState, rustAPI, VCXMock, VCXMockMessage } = vcx
 
 const connectionConfigDefault = { id: '234' }
-const ATTR = [{issuerDid: '8XFh8yBzrpJQmNyZzgoTqB', schemaSeqNo: 1, name: 'test'}]
-const PROOF_MSG = '{"version":"0.1","to_did":"BnRXf8yDMUwGyZVDkSENeq","from_did":"GxtnGN6ypZYgEqcftSQFnC","proof_request_id":"cCanHnpFAD","proofs":{"claim::f22cc7c8-924f-4541-aeff-29a9aed9c46b":{"proof":{"primary_proof":{"eq_proof":{"revealed_attrs":{"state":"96473275571522321025213415717206189191162"},"a_prime":"921....546","e":"158....756","v":"114....069","m":{"address2":"140....691","city":"209....294","address1":"111...738","zip":"149....066"},"m1":"777....518","m2":"515....229"},"ge_proofs":[]},"non_revoc_proof":null},"schema_seq_no":15,"issuer_did":"4fUDR9R7fjwELRvH9JT6HH"}},"aggregated_proof":{"c_hash":"25105671496406009212798488318112715144459298495509265715919744143493847046467","c_list":[[72,245,38,"....",46,195,18]]},"requested_proof":{"revealed_attrs":{"attr_key_id":["claim::f22cc7c8-924f-4541-aeff-29a9aed9c46b","UT","96473275571522321025213415717206189191162"]},"unrevealed_attrs":{},"self_attested_attrs":{},"predicates":{}}}'
+const schemaKey1 = {name: 'schema name', did: 'schema did', version: '1.0'}
+const restrictions1 = {issuerDid: '8XFh8yBzrpJQmNyZzgoTqB', schemaKey: schemaKey1}
+const ATTR = [{name: 'test', restrictions: [restrictions1]}]
+const PROOF_MSG = '{"version":"0.1","to_did":"BnRXf8yDMUwGyZVDkSENeq","from_did":"GxtnGN6ypZYgEqcftSQFnC","proof_request_id":"cCanHnpFAD","proof":{ "proofs":{ "claim::bb929325-e8e6-4637-ba26-b19807b1f618":{ "primary_proof":{ "eq_proof":{ "revealed_attrs":{ "name":"1139481716457488690172217916278103335" }, "a_prime":"123", "e":"456", "v":"5", "m":{ "age":"456", "height":"4532", "sex":"444" }, "m1":"5432", "m2":"211" }, "ge_proofs":[ { "u":{ "2":"6", "1":"5", "0":"7", "3":"8" }, "r":{ "1":"9", "3":"0", "DELTA":"8", "2":"6", "0":"9" }, "mj":"2", "alpha":"3", "t":{ "DELTA":"4", "1":"5", "0":"6", "2":"7", "3":"8" }, "predicate":{ "attr_name":"age", "p_type":"GE", "value":18 } } ] }, "non_revoc_proof":null } }, "aggregated_proof":{ "c_hash":"31470331269146455873134287006934967606471534525199171477580349873046877989406", "c_list":[ [ 182 ], [ 96, 49 ], [ 1 ] ] } }, "requested_proof":{ "revealed_attrs":{ "attr1_referent":[ "claim::bb929325-e8e6-4637-ba26-b19807b1f618", "Alex", "1139481716457488690172217916278103335" ] }, "unrevealed_attrs":{ }, "self_attested_attrs":{ }, "predicates":{ "predicate1_referent":"claim::bb929325-e8e6-4637-ba26-b19807b1f618" } }, "identifiers":{ "claim::bb929325-e8e6-4637-ba26-b19807b1f618":{ "issuer_did":"NcYxiDXkpYi6ov5FcYDi1e", "schema_key":{ "name":"gvt", "version":"1.0", "did":"NcYxiDXkpYi6ov5FcYDi1e" }, "rev_reg_seq_no":null } }}'
 
 const proofConfigDefault = { sourceId: 'proofConfigDefaultSourceId', attrs: ATTR, name: 'TestProof' }
 
@@ -153,7 +155,7 @@ describe('A Proof', function () {
     await proof2.updateState()
     let proofData = await proof2.getProof(connection)
     assert.equal(proof2.getProofState(), ProofState.Invalid)
-    const attrs = '[{"schema_seq_no":15,"issuer_did":"4fUDR9R7fjwELRvH9JT6HH","credential_uuid":"claim::f22cc7c8-924f-4541-aeff-29a9aed9c46b","attr_info":{"name":"state","value":"UT","type":"revealed"}}]'
+    const attrs = '[{"issuer_did":"NcYxiDXkpYi6ov5FcYDi1e","credential_uuid":"claim::bb929325-e8e6-4637-ba26-b19807b1f618","attr_info":{"name":"name","value":"Alex","type":"revealed"},"schema_key":{"name":"gvt","version":"1.0","did":"NcYxiDXkpYi6ov5FcYDi1e"}},{"issuer_did":"NcYxiDXkpYi6ov5FcYDi1e","credential_uuid":"claim::bb929325-e8e6-4637-ba26-b19807b1f618","attr_info":{"name":"age","value":18,"type":"predicate","predicate_type":"GE"},"schema_key":{"name":"gvt","version":"1.0","did":"NcYxiDXkpYi6ov5FcYDi1e"}}]' 
     const expectedData = {proofAttrs: attrs, proofState: ProofState.Invalid}
     assert.equal(JSON.stringify(proofData.proofAttrs), expectedData.proofAttrs)
     assert.equal(proofData.proofState, expectedData.proofState)

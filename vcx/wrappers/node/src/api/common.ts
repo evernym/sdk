@@ -27,3 +27,9 @@ export enum StateType {
     Expired = 6,
     Revoked = 7
 }
+
+export interface ISchemaKey {
+  name?: string,
+  version?: string,
+  did?: string,
+}
