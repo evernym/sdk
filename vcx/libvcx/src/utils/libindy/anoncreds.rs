@@ -454,6 +454,7 @@ mod tests {
         println!("{}", result.unwrap());
     }
 
+    //Todo: Fix test. Works when run independently but errors out when run with other tests
 //    #[test]
 //    fn simple_libindy_prover_get_credentials() {
 //        settings::set_defaults();
