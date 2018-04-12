@@ -155,7 +155,7 @@ describe('A Proof', function () {
     await proof2.updateState()
     let proofData = await proof2.getProof(connection)
     assert.equal(proof2.getProofState(), ProofState.Invalid)
-    const attrs = '[{"issuer_did":"NcYxiDXkpYi6ov5FcYDi1e","credential_uuid":"claim::bb929325-e8e6-4637-ba26-b19807b1f618","attr_info":{"name":"name","value":"Alex","type":"revealed"},"schema_key":{"name":"gvt","version":"1.0","did":"NcYxiDXkpYi6ov5FcYDi1e"}},{"issuer_did":"NcYxiDXkpYi6ov5FcYDi1e","credential_uuid":"claim::bb929325-e8e6-4637-ba26-b19807b1f618","attr_info":{"name":"age","value":18,"type":"predicate","predicate_type":"GE"},"schema_key":{"name":"gvt","version":"1.0","did":"NcYxiDXkpYi6ov5FcYDi1e"}}]' 
+    const attrs = '[{"issuer_did":"NcYxiDXkpYi6ov5FcYDi1e","credential_uuid":"claim::bb929325-e8e6-4637-ba26-b19807b1f618","attr_info":{"name":"name","value":"Alex","type":"revealed"},"schema_key":{"name":"gvt","version":"1.0","did":"NcYxiDXkpYi6ov5FcYDi1e"}},{"issuer_did":"NcYxiDXkpYi6ov5FcYDi1e","credential_uuid":"claim::bb929325-e8e6-4637-ba26-b19807b1f618","attr_info":{"name":"age","value":18,"type":"predicate","predicate_type":"GE"},"schema_key":{"name":"gvt","version":"1.0","did":"NcYxiDXkpYi6ov5FcYDi1e"}}]'
     const expectedData = {proofAttrs: attrs, proofState: ProofState.Invalid}
     assert.equal(JSON.stringify(proofData.proofAttrs), expectedData.proofAttrs)
     assert.equal(proofData.proofState, expectedData.proofState)

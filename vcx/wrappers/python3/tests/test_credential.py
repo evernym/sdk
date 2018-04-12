@@ -7,42 +7,59 @@ from vcx.api.connection import Connection
 phone_number = '8019119191'
 source_id = '1'
 offer = {
-    'msg_type': 'CLAIM_OFFER',
-    'version': '0.1',
-    'to_did': 'LtMgSjtFcyPwenK9SHCyb8',
-    'from_did': 'LtMgSjtFcyPwenK9SHCyb8',
-    'claim': {
-      'account_num': [
-        '8BEaoLf8TBmK4BUyX8WWnA'
+   "msg_type": "CLAIM_OFFER",
+   "version": "0.1",
+   "to_did": "8XFh8yBzrpJQmNyZzgoTqB",
+   "from_did": "8XFh8yBzrpJQmNyZzgoTqB",
+   "libindy_offer": {
+      "issuer_did": "2hoqvcwupRTUNkXn6ArYzs",
+      "schema_key": {
+         "name": "Home Address",
+         "version": "1.4",
+         "did": "2hoqvcwupRTUNkXn6ArYzs"
+      },
+      "key_correctness_proof": {
+         "c": "2",
+         "xz_cap": "2",
+         "xr_cap": {
+            "city": "2",
+            "zip": "2",
+            "state": "2",
+            "address2": "2",
+            "address1": "1"
+         }
+      },
+      "nonce": "722911015074465265175302"
+   },
+   "credential_attrs": {
+      "address1": [
+         "101 Tela Lane"
       ],
-      'name_on_account': [
-        'Alice'
+      "address2": [
+         "101 Wilson Lane"
+      ],
+      "city": [
+         "SLC"
+      ],
+      "state": [
+         "UT"
+      ],
+      "zip": [
+         "87121"
       ]
-    },
-    'schema_seq_no': 48,
-    'issuer_did': 'Pd4fnFtRBcMKRVC2go5w3j',
-    'claim_name': 'Account Certificate',
-    'claim_id': '3675417066',
-    'msg_ref_id':  None
-  }
+   },
+   "schema_seq_no": 1487,
+   "claim_name": "Credential",
+   "claim_id": "defaultCredentialId",
+   "msg_ref_id": None
+}
 
 credential_json = {
     'source_id': 'wrapper_tests',
     'state': 3,
     'credential_name': None,
     'credential_request': None,
-    'credential_offer': {
-        'msg_type': 'CLAIM_OFFER',
-        'version': '0.1',
-        'to_did': 'LtMgSjtFcyPwenK9SHCyb8',
-        'from_did': 'LtMgSjtFcyPwenK9SHCyb8',
-        'claim': {'account_num': ['8BEaoLf8TBmK4BUyX8WWnA'], 'name_on_account': ['Alice']},
-        'schema_seq_no': 48,
-        'issuer_did': 'Pd4fnFtRBcMKRVC2go5w3j',
-        'claim_name': 'Account Certificate',
-        'claim_id': '3675417066',
-        'msg_ref_id': 'ymy5nth'
-    },
+    'credential_offer': { "msg_type": "CLAIM_OFFER", "version": "0.1", "to_did": "8XFh8yBzrpJQmNyZzgoTqB", "from_did": "8XFh8yBzrpJQmNyZzgoTqB", "libindy_offer": { "issuer_did": "2hoqvcwupRTUNkXn6ArYzs", "schema_key": { "name": "Home Address", "version": "1.4", "did": "2hoqvcwupRTUNkXn6ArYzs" }, "key_correctness_proof": { "c": "2", "xz_cap": "2", "xr_cap": { "city": "2", "zip": "2", "state": "2", "address2": "2", "address1": "1" } }, "nonce": "722911015074465265175302" }, "credential_attrs": { "address1": [ "101 Tela Lane" ], "address2": [ "101 Wilson Lane" ], "city": [ "SLC" ], "state": [ "UT" ], "zip": [ "87121" ] }, "schema_seq_no": 1487, "claim_name": "Credential", "claim_id": "defaultCredentialId", "msg_ref_id": '123' },
     'link_secret_alias': 'main',
     'msg_uid': None,
     'agent_did': None,
@@ -151,6 +168,7 @@ async def test_credential_release():
 async def test_send_request():
     connection = await Connection.create(source_id)
     await connection.connect(phone_number)
+    cred_with_msg_id = credential_json
     credential = await Credential.deserialize(credential_json)
     await credential.send_request(connection)
     assert await credential.update_state() == State.OfferSent
@@ -165,6 +183,7 @@ async def test_send_request_with_invalid_state():
         credential = await Credential.create(source_id, offer)
         await credential.send_request(connection)
     assert ErrorCode.CreateCredentialFailed == e.value.error_code
+
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
