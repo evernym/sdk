@@ -42,7 +42,6 @@ struct ConnectionOptions {
 struct Connection {
     source_id: String,
     #[serde(skip_serializing, default)]
-    pub handle: u32,
     pw_did: String,
     pw_verkey: String,
     state: VcxStateType,
@@ -58,7 +57,7 @@ struct Connection {
 
 impl Connection {
     fn _connect_send_invite(&mut self, options: Option<String>) -> Result<u32, ConnectionError> {
-        debug!("\"_connect_send_invite\" for handle {}", self.handle);
+        debug!("\"_connect_send_invite\" for connection {}", self.source_id);
 
         let options_obj: ConnectionOptions = match options{
             Some(opt) => {
@@ -115,7 +114,7 @@ impl Connection {
     }
 
     fn _connect_accept_invite(&mut self, options: Option<String>) -> Result<u32,ConnectionError> {
-        debug!("\"_connect_accept_invite\" for handle {}", self.handle);
+        debug!("\"_connect_send_invite\" for connection {}", self.source_id);
 
         if let Some(ref details) = self.invite_detail {
             match messages::accept_invite()
@@ -156,7 +155,7 @@ impl Connection {
                 | VcxStateType::VcxStateOfferSent => self._connect_send_invite(options),
             VcxStateType::VcxStateRequestReceived => self._connect_accept_invite(options),
             _ => {
-                warn!("connection {} in state {} not ready to connect",self.handle,self.state as u32);
+                warn!("connection {} in state {} not ready to connect",self.source_id, self.state as u32);
                 // TODO: Refactor Error
 //            TODO: Implement Correct Error
                 Err(ConnectionError::GeneralConnectionError())
@@ -289,12 +288,14 @@ pub fn set_endpoint(handle: u32, endpoint: &str) {
 }
 
 pub fn get_agent_verkey(handle: u32) -> Result<String, ConnectionError> {
+    info!("Getting Agent Verkey for Connection with handle {}", handle);
     CONNECTION_MAP.get(handle, |cxn| {
         Ok(cxn.get_agent_verkey().clone())
     }).or(Err(ConnectionError::InvalidHandle()))
 }
 
 pub fn set_agent_verkey(handle: u32, verkey: &str) {
+    info!("Setting Agent Verkey for Connection with handle {}", handle);
     CONNECTION_MAP.get_mut(handle, |cxn| {
         cxn.set_agent_verkey(verkey);
         Ok(())
@@ -378,7 +379,6 @@ fn create_connection(source_id: &str) -> Result<u32, ConnectionError> {
 
     let c = Connection {
         source_id: source_id.to_string(),
-        handle: new_handle,
         pw_did: String::new(),
         pw_verkey: String::new(),
         state: VcxStateType::VcxStateNone,
@@ -594,25 +594,22 @@ pub fn get_invite_details(handle: u32, abbreviated:bool) -> Result<String, Conne
                     .or(Err(ConnectionError::InviteDetailError())))
             },
             true => {
-                let details = serde_json::to_value(&t.invite_detail)
-                    .or(Err(ConnectionError::InviteDetailError()))?;
-                let abbr = abbrv_event_detail(details).to_string()
-                    .or(Err(ConnectionError::InviteDetailError()));
-                Ok(serde_json::to_string(&abbr)
-                    .or(Err(ConnectionError::InviteDetailError())))
+                let details = serde_json::to_value(&t.invite_detail).or(Err(ConnectionError::InviteDetailError().to_error_code()))?;
+                let abbr = abbrv_event_detail(details)?.to_string();
+                Ok(serde_json::to_string(&abbr).or(Err(ConnectionError::InviteDetailError())))
             },
         }
-    }).or(Err(ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num)))
+    }).or(Err(ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num)))?
 
 }
 
 pub fn set_invite_details(handle: u32, invite_detail: InviteDetail) {
-    match CONNECTION_MAP.lock().unwrap().get_mut(&handle) {
-        Some(cxn) => cxn.set_invite_detail(invite_detail),
-        None => {}
-    };
+    CONNECTION_MAP.get_mut(handle, |cxn| {
+        cxn.set_invite_detail(invite_detail);
+//        TODO: Verify that this is ok to do...seems not rusty.
+        Ok(())
+    });
 }
-
 
 pub fn parse_invite_detail(response: &str) -> Result<InviteDetail, ConnectionError> {
 
@@ -807,10 +804,8 @@ mod tests {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
         let test_name = "test_get_qr_code_data";
-        let handle = rand::thread_rng().gen::<u32>();
         let c = Box::new(Connection {
             source_id: test_name.to_string(),
-            handle,
             pw_did: "8XFh8yBzrpJQmNyZzgoTqB".to_string(),
             pw_verkey: "EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A".to_string(),
             state: VcxStateType::VcxStateOfferSent,
@@ -823,7 +818,7 @@ mod tests {
             their_pw_verkey: String::new(),
         });
 
-        CONNECTION_MAP.lock().unwrap().insert(handle, c);
+        let handle = create_connection(test_name).unwrap();
 
         println!("updating state");
         httpclient::set_next_u8_response(GET_MESSAGES_RESPONSE.to_vec());
