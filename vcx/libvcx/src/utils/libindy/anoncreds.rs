@@ -12,7 +12,7 @@ use utils::timeout::TimeoutUtils;
 use utils::libindy::option_cstring_as_ptn;
 
 extern {
-    fn indy_issuer_create_and_store_claim_def(command_handle: i32,
+    fn indy_issuer_create_and_store_credential_def(command_handle: i32,
                                               wallet_handle: i32,
                                               issuer_did: *const c_char,
                                               schema_json: *const c_char,
@@ -32,7 +32,7 @@ extern {
                                                        err: i32,
                                                        valid: bool)>) -> i32;
 
-    fn indy_issuer_create_claim_offer(command_handle: i32,
+    fn indy_issuer_create_credential_offer(command_handle: i32,
                                       wallet_handle: i32,
                                       schema_json: *const c_char,
                                       issuer_did: *const c_char,
@@ -41,7 +41,7 @@ extern {
                                                            err: i32,
                                                            credential_offer_json: *const c_char)>) -> i32;
 
-    fn indy_issuer_create_claim(command_handle: i32,
+    fn indy_issuer_create_credential(command_handle: i32,
                                 wallet_handle: i32,
                                 credential_req_json: *const c_char,
                                 credential_json: *const c_char,
@@ -72,14 +72,16 @@ extern {
                                                              err: i32)>
     ) -> i32;
 
-    fn indy_prover_store_claim_offer(command_handle: i32,
+/*
+    fn indy_prover_store_credential_offer(command_handle: i32,
                                      wallet_handle: i32,
                                      credential_offer_json: *const c_char,
                                      cb: Option<extern fn(xcommand_handle: i32,
                                                           err: i32)>
     ) -> i32;
+*/
 
-    fn indy_prover_get_claims_for_proof_req(command_handle: i32,
+    fn indy_prover_get_credentials_for_proof_req(command_handle: i32,
                                             wallet_handle: i32,
                                             proof_request_json: *const c_char,
                                             cb: Option<extern fn(xcommand_handle: i32,
@@ -87,7 +89,7 @@ extern {
                                                                  credentials_json: *const c_char)>
     ) -> i32;
 
-    fn indy_prover_create_and_store_claim_req(command_handle: i32,
+    fn indy_prover_create_credential_req(command_handle: i32,
                                               wallet_handle: i32,
                                               prover_did: *const c_char,
                                               credential_offer_json: *const c_char,
@@ -98,7 +100,7 @@ extern {
                                                                    credential_req_json: *const c_char)>
     ) -> i32;
 
-    fn indy_prover_store_claim(command_handle: i32,
+    fn indy_prover_store_credential(command_handle: i32,
                                wallet_handle: i32,
                                credentials_json: *const c_char,
                                rev_reg_json: *const c_char,
@@ -146,7 +148,7 @@ pub fn libindy_create_and_store_credential_def(wallet_handle: i32,
     let s_type = CString::new(sig_type.unwrap_or(SigTypes::CL).to_string()).map_err(map_string_error)?;
     unsafe {
         indy_function_eval(
-            indy_issuer_create_and_store_claim_def(rtn_obj.command_handle,
+            indy_issuer_create_and_store_credential_def(rtn_obj.command_handle,
                                                    wallet_handle,
                                                    i_did.as_ptr(),
                                                    schema_json.as_ptr(),
@@ -174,7 +176,7 @@ pub fn libindy_issuer_create_credential_offer(wallet_handle: i32,
     let p_did = CString::new(prover_did).map_err(map_string_error)?;
     unsafe {
         indy_function_eval(
-            indy_issuer_create_claim_offer(rtn_obj.command_handle,
+            indy_issuer_create_credential_offer(rtn_obj.command_handle,
                                                wallet_handle,
                                                schema_json.as_ptr(),
                                                    i_did.as_ptr(),
@@ -195,7 +197,7 @@ pub fn libindy_issuer_create_credential(wallet_handle: i32,
     let credential_json = CString::new(credential_json).map_err(map_string_error)?;
     unsafe {
         indy_function_eval(
-            indy_issuer_create_claim(rtn_obj.command_handle,
+            indy_issuer_create_credential(rtn_obj.command_handle,
                                      wallet_handle,
                                      credential_req_json.as_ptr(),
                                      credential_json.as_ptr(),
@@ -255,7 +257,7 @@ pub fn libindy_prover_get_credentials(wallet_handle: i32,
 
     unsafe {
         indy_function_eval(
-            indy_prover_get_claims_for_proof_req(rtn_obj.command_handle,
+            indy_prover_get_credentials_for_proof_req(rtn_obj.command_handle,
                                                  wallet_handle,
                                                  proof_req.as_ptr(),
                                                  Some(rtn_obj.get_callback()))
@@ -265,7 +267,7 @@ pub fn libindy_prover_get_credentials(wallet_handle: i32,
     rtn_obj.receive(TimeoutUtils::some_medium()).and_then(check_str)
 }
 
-pub fn libindy_prover_create_and_store_credential_req(wallet_handle: i32,
+pub fn libindy_prover_create_credential_req(wallet_handle: i32,
                                                       prover_did: &str,
                                                       credential_offer_json: &str,
                                                       credential_def_json: &str) -> Result<String, u32>
@@ -281,7 +283,7 @@ pub fn libindy_prover_create_and_store_credential_req(wallet_handle: i32,
 
     unsafe {
         indy_function_eval(
-            indy_prover_create_and_store_claim_req(rtn_obj.command_handle,
+            indy_prover_create_credential_req(rtn_obj.command_handle,
                                                    wallet_handle,
                                                    prover_did.as_ptr(),
                                                    credential_offer_json.as_ptr(),
@@ -305,7 +307,7 @@ pub fn libindy_prover_store_credential(wallet_handle: i32,
 
     unsafe {
         indy_function_eval(
-            indy_prover_store_claim(rtn_obj.command_handle,
+            indy_prover_store_credential(rtn_obj.command_handle,
                                     wallet_handle,
                                     credential_json.as_ptr(),
                                     null(),
@@ -316,6 +318,7 @@ pub fn libindy_prover_store_credential(wallet_handle: i32,
     rtn_obj.receive(TimeoutUtils::some_medium())
 }
 
+/*
 pub fn libindy_prover_store_credential_offer(wallet_handle: i32,
                                              credential_offer_json: &str) -> Result<(), u32>
 {
@@ -327,7 +330,7 @@ pub fn libindy_prover_store_credential_offer(wallet_handle: i32,
 
     unsafe {
         indy_function_eval(
-            indy_prover_store_claim_offer(rtn_obj.command_handle,
+            indy_prover_store_credential_offer(rtn_obj.command_handle,
                                           wallet_handle,
                                           credential_offer_json.as_ptr(),
                                           Some(rtn_obj.get_callback()))
@@ -336,6 +339,7 @@ pub fn libindy_prover_store_credential_offer(wallet_handle: i32,
 
     rtn_obj.receive(TimeoutUtils::some_medium())
 }
+*/
 
 pub fn libindy_prover_create_master_secret(wallet_handle: i32,
                                            master_secret_name: &str) -> Result<(), u32>
@@ -425,7 +429,7 @@ mod tests {
         println!("CredOffer: \n{:?}", libindy_offer);
 
         libindy_prover_create_master_secret(wallet_h, settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
-        let libindy_cred_req = libindy_prover_create_and_store_credential_req(wallet_h,
+        let libindy_cred_req = libindy_prover_create_credential_req(wallet_h,
                                                                               "DunkM3x1y7S4ECgSL4Wkru",
                                                                               &libindy_offer,
                                                                               &libindy_cred_def).unwrap();
@@ -477,7 +481,7 @@ mod tests {
 //        println!("CredOffer: \n{:?}", libindy_offer);
 //
 //        libindy_prover_create_master_secret(wallet_h, settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
-//        let libindy_cred_req = libindy_prover_create_and_store_credential_req(wallet_h,
+//        let libindy_cred_req = libindy_prover_create_credential_req(wallet_h,
 //                                                                              "DunkM3x1y7S4ECgSL4Wkru",
 //                                                                              &libindy_offer,
 //                                                                              &libindy_cred_def).unwrap();

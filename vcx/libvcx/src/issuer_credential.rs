@@ -564,7 +564,7 @@ pub mod tests {
                  libindy::{ set_libindy_rc,
                           anoncreds::{ libindy_create_and_store_credential_def,
                                        libindy_issuer_create_credential_offer,
-                                       libindy_prover_create_and_store_credential_req },
+                                       libindy_prover_create_credential_req },
                           wallet::get_wallet_handle },
     };
     use error::{ issuer_cred::IssuerCredError };
@@ -896,7 +896,7 @@ pub mod tests {
                                                                    &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
                                                                    "DunkM3x1y7S4ECgSL4Wkru").unwrap();
 
-        let libindy_cred_req = libindy_prover_create_and_store_credential_req(wallet_h,
+        let libindy_cred_req = libindy_prover_create_credential_req(wallet_h,
                                                                               "DunkM3x1y7S4ECgSL4Wkru",
                                                                               &libindy_offer,
                                                                               &::utils::constants::LIBINDY_CRED_DEF).unwrap();

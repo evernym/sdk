@@ -86,9 +86,8 @@ impl CredentialRequest {
 mod tests {
     use super::*;
     use utils::constants::CREDENTIAL_REQ_STRING;
-    use utils::libindy::{ wallet, anoncreds::{ libindy_prover_create_master_secret,
-                                               libindy_prover_store_credential_offer,
-                                               libindy_prover_create_and_store_credential_req } };
+    use utils::libindy::{ wallet, anoncreds::{ libindy_prover_create_master_secret, 
+                                               libindy_prover_create_credential_req } };
 
     static TEMP_ISSUER_DID: &'static str = "4reqXeZVm7JZAffAoaNLsb";
 
@@ -179,8 +178,8 @@ mod tests {
         println!("CredDef: {:?}", libindy_cred_def );
         let wallet_h = wallet::get_wallet_handle();
         libindy_prover_create_master_secret(wallet_h, ::settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
-        libindy_prover_store_credential_offer(wallet_h, &libindy_offer).unwrap();
-        let req = libindy_prover_create_and_store_credential_req(wallet_h,
+        //libindy_prover_store_credential_offer(wallet_h, &libindy_offer).unwrap();
+        let req = libindy_prover_create_credential_req(wallet_h,
                                                                  &"DDBDg1j8bsKmr4h5T9XqYf",
                                                                  &libindy_offer,
                                                                  &libindy_cred_def ).unwrap();

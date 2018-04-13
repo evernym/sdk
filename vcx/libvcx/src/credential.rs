@@ -17,7 +17,7 @@ use messages::GeneralMessage;
 use messages::send_message::parse_msg_uid;
 use messages::extract_json_payload;
 
-use utils::libindy::anoncreds::{libindy_prover_create_and_store_credential_req, libindy_prover_store_credential_offer, libindy_prover_store_credential};
+use utils::libindy::anoncreds::{libindy_prover_create_credential_req, libindy_prover_store_credential};
 use utils::libindy::SigTypes;
 use utils::libindy::wallet;
 use utils::libindy::crypto;
@@ -103,10 +103,12 @@ impl Credential {
 
         let credential_offer = serde_json::to_string(&credential_offer.libindy_offer).or(Err(CredentialError::CommonError(error::INVALID_CREDENTIAL_JSON.code_num)))?;
 
+/*
         debug!("storing credential offer: {}", credential_offer);
         libindy_prover_store_credential_offer(wallet_h, &credential_offer).map_err(|ec| CredentialError::CommonError(ec))?;
+*/
 
-        let req = libindy_prover_create_and_store_credential_req(wallet_h,
+        let req = libindy_prover_create_credential_req(wallet_h,
                                                             &prover_did,
                                                             &credential_offer,
                                                             &credential_def).map_err(|ec| CredentialError::CommonError(ec))?;

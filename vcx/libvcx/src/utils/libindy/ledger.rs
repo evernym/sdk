@@ -36,7 +36,7 @@ extern {
                                                 request_result_json: *const c_char)>
     ) -> i32;
 
-    fn indy_build_get_claim_def_txn(command_handle: i32,
+    fn indy_build_get_cred_def_request(command_handle: i32,
                                     submitter_did: *const c_char,
                                     xref: i32,
                                     signature_type: *const c_char,
@@ -44,7 +44,7 @@ extern {
                                     cb: Option<extern fn(xcommand_handle: i32, err: i32,
                                                          request_json: *const c_char)>) -> i32;
 
-    fn indy_build_claim_def_txn(command_handle: i32,
+    fn indy_build_cred_def_request(command_handle: i32,
                                 submitter_did: *const c_char,
                                 xref: i32,
                                 signature_type: *const c_char,
@@ -164,7 +164,7 @@ pub fn libindy_build_get_credential_def_txn(submitter_did: &str,
     let s_type = CString::new(sig_type.unwrap_or(SigTypes::CL).to_string()).map_err(map_string_error)?;
     unsafe {
         indy_function_eval(
-            indy_build_get_claim_def_txn(rtn_obj.command_handle,
+            indy_build_get_cred_def_request(rtn_obj.command_handle,
                                          sub_did.as_ptr(),
                                          schema_sequence_num,
                                          s_type.as_ptr(),
@@ -187,7 +187,7 @@ pub fn libindy_build_create_credential_def_txn(submitter_did: &str,
     let credential_def_json = CString::new(credential_def_json).map_err(map_string_error)?;
     unsafe {
         indy_function_eval(
-            indy_build_claim_def_txn(rtn_obj.command_handle,
+            indy_build_cred_def_request(rtn_obj.command_handle,
                                      s_did.as_ptr(),
                                      schema_sequence_num,
                                      s_type.as_ptr(),

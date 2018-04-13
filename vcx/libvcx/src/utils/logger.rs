@@ -4,6 +4,7 @@ extern crate log4rs;
 
 use settings;
 use std::sync::{Once, ONCE_INIT};
+use std::env;
 
 pub struct LoggerUtils {}
 
@@ -22,6 +23,15 @@ static LOGGER_INIT: Once = ONCE_INIT;
 
 impl LoggerUtils {
     pub fn init() {
+
+        // turn libindy logging off if RUST_LOG is not specified
+        match env::var("RUST_LOG") {
+            Err(_) => {
+                env::set_var("RUST_LOG", "off");
+            },
+            Ok(value) =>  (),
+        };
+
         LOGGER_INIT.call_once(|| {
             match settings::get_config_value(settings::CONFIG_LOG_CONFIG) {
                 Err(_) => {/* NO-OP - no logging configured */},

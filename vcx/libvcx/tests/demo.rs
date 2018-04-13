@@ -306,7 +306,7 @@ fn test_libindy_direct(){
     assert!(wallet::create_wallet(wallet_name2, pool_name, None).is_ok());
     let wallet_handle2 = wallet::open_wallet(wallet_name2, None).unwrap();
     assert!(anoncreds::libindy_prover_create_master_secret(wallet_handle2, &settings::get_config_value(settings::CONFIG_LINK_SECRET_ALIAS).unwrap()).is_ok());
-    let credential_request_string = anoncreds::libindy_prover_create_and_store_credential_req(wallet_handle2,
+    let credential_request_string = anoncreds::libindy_prover_create_credential_req(wallet_handle2,
                                                                                               &expected_did,
                                                                                               &credential_offer_string,
                                                                                               &credential_def_string).unwrap();
