@@ -293,7 +293,7 @@ mod tests {
     fn test_reset() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
-        let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#;
+        let data = r#"["name","male"]"#;
         let req_attr = "[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]";
         let req_predicates = "[{\"attr_name\":\"age\",\"p_type\":\"GE\",\"value\":18,\"schema_seq_no\":1,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\"}]";
 
@@ -302,7 +302,7 @@ mod tests {
         let credential = ::issuer_credential::issuer_credential_create(0,"1".to_string(),"8XFh8yBzrpJQmNyZzgoTqB".to_owned(),"credential_name".to_string(),"{\"attr\":\"value\"}".to_owned()).unwrap();
         let proof = ::proof::create_proof("1".to_string(),req_attr.to_owned(),req_predicates.to_owned(),"Optional".to_owned()).unwrap();
         let credentialdef = ::credential_def::create_new_credentialdef("SID".to_string(),"NAME".to_string(),15,"4fUDR9R7fjwELRvH9JT6HH".to_string(),false).unwrap();
-        let schema = ::schema::create_new_schema("5", "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
+        let schema = ::schema::create_new_schema("5",  "VsKV7grR1BUE29mG2Fm2kX".to_string(),"name".to_string(), "0.1".to_string(), data.to_string()).unwrap();
         vcx_reset();
         assert_eq!(::connection::release(connection),Err(connection::ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num)));
         assert_eq!(::issuer_credential::release(credential),Err(issuer_cred::IssuerCredError::InvalidHandle()));

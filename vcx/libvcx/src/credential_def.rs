@@ -153,11 +153,7 @@ impl CreateCredentialDef {
     }
     pub fn sign_and_send_request(&self, request: &str) ->  Result<String, CredDefError> {
         if settings::test_indy_mode_enabled() { return Ok("{}".to_string()); }
-        let pool_handle = pool::get_pool_handle().map_err(|x| CredDefError::CommonError(x))?;
-        let wallet_handle = get_wallet_handle();
-        libindy_sign_and_submit_request(pool_handle,
-                                        wallet_handle,
-                                        &self.credential_def.issuer_did,
+        libindy_sign_and_submit_request(&self.credential_def.issuer_did,
                                         request).map_err(|x| CredDefError::CommonError(x))
     }
 

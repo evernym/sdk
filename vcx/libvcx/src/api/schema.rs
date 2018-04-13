@@ -31,12 +31,15 @@ use error::ToErrorCode;
 pub extern fn vcx_schema_create(command_handle: u32,
                                 source_id: *const c_char,
                                 schema_name: *const c_char,
+                                version: *const c_char,
                                 schema_data: *const c_char,
                                 cb: Option<extern fn(xcommand_handle: u32, err: u32, credentialdef_handle: u32)>) -> u32 {
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
     check_useful_c_str!(schema_name, error::INVALID_OPTION.code_num);
+    check_useful_c_str!(version, error::INVALID_OPTION.code_num);
     check_useful_c_str!(source_id, error::INVALID_OPTION.code_num);
     check_useful_c_str!(schema_data, error::INVALID_OPTION.code_num);
+
     let issuer_did = match settings::get_config_value(settings::CONFIG_INSTITUTION_DID) {
         Ok(x) => x,
         Err(x) => return x
@@ -46,9 +49,10 @@ pub extern fn vcx_schema_create(command_handle: u32,
 
     thread::spawn( move|| {
         let ( rc, handle) = match schema::create_new_schema(&source_id,
-                                                                 schema_name,
-                                                                 issuer_did,
-                                                                 schema_data) {
+                                                            issuer_did,
+                                                            schema_name,
+                                                            version,
+                                                            schema_data) {
             Ok(x) => {
                 info!("vcx_schema_create_cb(command_handle: {}, rc: {}, handle: {}), source_id: {:?}",
                       command_handle, error_string(0), x, &source_id);
@@ -361,7 +365,8 @@ mod tests {
         assert_eq!(vcx_schema_create(0,
                                        CString::new("Test Source ID").unwrap().into_raw(),
                                        CString::new("Test Schema").unwrap().into_raw(),
-                                       CString::new("{}").unwrap().into_raw(),
+                                     CString::new("0.0").unwrap().into_raw(),
+                                       CString::new("[att1, att2]").unwrap().into_raw(),
                                        Some(create_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
@@ -376,10 +381,11 @@ mod tests {
         let (my_did, _) = SignusUtils::create_and_store_my_did(wallet_handle, Some(DEMO_ISSUER_PW_SEED)).unwrap();
         SignusUtils::create_and_store_my_did(wallet_handle, Some(DEMO_AGENT_PW_SEED)).unwrap();
         settings::set_config_value(settings::CONFIG_INSTITUTION_DID, &my_did);
-        let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#.to_string();
+        let data = r#"["name","male"]"#;
         assert_eq!(vcx_schema_create(0,
                                      CString::new("Test Source ID").unwrap().into_raw(),
                                      CString::new("Test Schema").unwrap().into_raw(),
+                                     CString::new("0.0.0").unwrap().into_raw(),
                                      CString::new(data).unwrap().into_raw(),
                                      Some(create_schema_and_credentialdef_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_secs(1));
@@ -396,10 +402,11 @@ mod tests {
         let (my_did, _) = SignusUtils::create_and_store_my_did(wallet_handle, Some(DEMO_ISSUER_PW_SEED)).unwrap();
         SignusUtils::create_and_store_my_did(wallet_handle, Some(DEMO_AGENT_PW_SEED)).unwrap();
         settings::set_config_value(settings::CONFIG_INSTITUTION_DID, &my_did);
-        let data = r#"{"name":"Marks Schema","version":"0.1","attr_names":["address1","address2","city","state","zip"]}"#.to_string();
+        let data = r#"["name","male"]"#;
         assert_eq!(vcx_schema_create(0,
                                      CString::new("Test Source ID").unwrap().into_raw(),
                                      CString::new("Test Schema").unwrap().into_raw(),
+                                     CString::new("0.0.0").unwrap().into_raw(),
                                      CString::new(data).unwrap().into_raw(),
                                      Some(create_schema_and_credentialdef_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_secs(60));
@@ -423,12 +430,13 @@ mod tests {
     #[test]
     fn test_vcx_schema_serialize() {
         set_default_and_enable_test_mode();
-        let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#.to_string();
+        let data = r#"["name","male"]"#;
         assert_eq!(vcx_schema_create(0,
                                      CString::new("Test Source ID").unwrap().into_raw(),
                                      CString::new("Test Schema").unwrap().into_raw(),
+                                     CString::new("0.0.0").unwrap().into_raw(),
                                      CString::new(data).unwrap().into_raw(),
-                                     Some(create_and_serialize_cb)), error::SUCCESS.code_num);
+                                     Some(create_schema_and_credentialdef_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
 
@@ -443,11 +451,13 @@ mod tests {
     #[test]
     fn test_vcx_schema_get_schema_no_succeeds() {
         set_default_and_enable_test_mode();
+        let data = r#"["name","male"]"#;
         assert_eq!(vcx_schema_create(0,
                                      CString::new("Test Source ID").unwrap().into_raw(),
                                      CString::new("Test Schema").unwrap().into_raw(),
-                                     CString::new("{}").unwrap().into_raw(),
-                                     Some(create_cb_get_seq_no)), error::SUCCESS.code_num);
+                                     CString::new("0.0.0").unwrap().into_raw(),
+                                     CString::new(data).unwrap().into_raw(),
+                                     Some(create_schema_and_credentialdef_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
 
     }

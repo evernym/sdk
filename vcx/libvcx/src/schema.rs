@@ -10,15 +10,18 @@ use std::string::ToString;
 use std::collections::HashMap;
 use utils::error;
 use utils::types::SchemaKey;
-use utils::constants::{ SCHEMA_REQ, CREATE_SCHEMA_RESULT, SCHEMA_TXN, SCHEMA_TYPE };
-use utils::libindy::pool::{ get_pool_handle };
-use utils::libindy::wallet::{ get_wallet_handle };
-use utils::libindy::ledger::{
-    libindy_build_get_txn_request,
-    libindy_build_get_schema_request,
-    libindy_submit_request,
-    libindy_build_schema_request,
-    libindy_sign_and_submit_request
+use utils::constants::{ SCHEMA_REQ, CREATE_SCHEMA_RESULT, SCHEMA_TXN, SCHEMA_TYPE, SCHEMA_ID };
+use utils::libindy::{
+    ledger::{
+        libindy_build_get_txn_request,
+        libindy_build_get_schema_request,
+        libindy_submit_request,
+        libindy_build_schema_request,
+        libindy_sign_and_submit_request
+    },
+    pool::{ get_pool_handle },
+    wallet::{ get_wallet_handle },
+    anoncreds::libindy_issuer_create_schema
 };
 use error::schema::SchemaError;
 
@@ -54,7 +57,9 @@ pub struct LedgerSchema {
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct CreateSchema {
-    data: SchemaTransaction,
+    data: String,
+    version: String,
+    schema_id: String,
     #[serde(skip_serializing, default)]
     handle: u32,
     name: String,
@@ -157,7 +162,8 @@ pub trait Schema: ToString {
 
         let schema_data = format!(r#"{{"name":"{}","version":"{}"}}"#,
                                   schema_key.name, schema_key.version);
-        let txn = libindy_build_get_schema_request(submitter_did, &schema_key.did, &schema_data)
+        //Todo: API CHANGE. Takes schema_id
+        let txn = libindy_build_get_schema_request(submitter_did, &schema_key.did)
             .map_err(|x| SchemaError::CommonError(x))?;
         let pool_handle = get_pool_handle().map_err(|x| SchemaError::CommonError(x))?;
 
@@ -237,21 +243,6 @@ impl LedgerSchema {
 }
 
 impl CreateSchema {
-    pub fn create_schema_req(submitter_did: &str, data: &str) -> Result<String, SchemaError> {
-        if settings::test_indy_mode_enabled() { return Ok(SCHEMA_REQ.to_string()); }
-        libindy_build_schema_request(submitter_did, data).or(Err(SchemaError::InvalidSchemaCreation()))
-    }
-
-    pub fn sign_and_send_request(submitter_did: &str, request: &str) ->  Result<String, SchemaError> {
-        if settings::test_indy_mode_enabled() { return Ok(CREATE_SCHEMA_RESULT.to_string()); }
-        let pool_handle = get_pool_handle().map_err(|x| SchemaError::CommonError(x))?;
-        let wallet_handle = get_wallet_handle();
-        libindy_sign_and_submit_request(pool_handle,
-                                        wallet_handle,
-                                        submitter_did,
-                                        request).or(Err(SchemaError::InvalidSchemaCreation()))
-    }
-
     pub fn parse_schema_data(data: &str) -> Result<SchemaTransaction, SchemaError> {
         let result = CreateSchema::extract_result_from_txn(data)?;
         match serde_json::from_str(&result.to_string()) {
@@ -269,31 +260,30 @@ impl CreateSchema {
 }
 
 pub fn create_new_schema(source_id: &str,
-                         schema_name: String,
                          issuer_did: String,
+                         schema_name: String,
+                         version: String,
                          data: String) -> Result<u32, SchemaError> {
     debug!("creating schema with source_id: {}, name: {}, issuer_did: {}", source_id, schema_name, issuer_did);
-    // TODO: Refactor Error
-    let req = CreateSchema::create_schema_req(&issuer_did, &data)?;
-    let sign_response = CreateSchema::sign_and_send_request(&issuer_did, &req)?;
-    debug!("created schema on ledger");
+    let schema_id = _create_schema(&issuer_did,
+                                   &schema_name,
+                                   &version,
+                                   &data)?;
+
+    debug!("created schema on ledger with id: {}", schema_id);
 
     let new_handle = rand::thread_rng().gen::<u32>();
     let mut new_schema = Box::new(CreateSchema {
         source_id: source_id.to_string(),
         handle: new_handle,
         name: schema_name,
-        data: CreateSchema::parse_schema_data(&sign_response)?,
+        data,
+        version,
+        schema_id,
+        //Todo: Take sequence number out. Id will be used instead
         sequence_num: 0,
     });
 
-    match new_schema.data.sequence_num {
-        Some(x) => {
-            new_schema.set_sequence_num(x as u32);
-            debug!("created schema object with sequence_num: {}", new_schema.sequence_num);
-        },
-        None => return Err(SchemaError::InvalidSchemaCreation())
-    };
     {
         let mut m = SCHEMA_MAP.lock().unwrap();
         debug!("inserting handle {} into schema table", new_handle);
@@ -303,14 +293,35 @@ pub fn create_new_schema(source_id: &str,
     Ok(new_handle)
 }
 
+fn _create_schema(submitter_did: &str,
+                  name: &str,
+                  version: &str,
+                  data: &str) -> Result<String, SchemaError> {
+    if settings::test_indy_mode_enabled() { return Ok(SCHEMA_ID.to_string()) }
+
+    let (id, create_schema) = libindy_issuer_create_schema(submitter_did, name, version, data)
+        .or(Err(SchemaError::InvalidSchemaCreation()))?;
+
+    let request = libindy_build_schema_request(submitter_did, &create_schema)
+        .or(Err(SchemaError::InvalidSchemaCreation()))?;
+
+    libindy_sign_and_submit_request(submitter_did, &request)
+        .or(Err(SchemaError::InvalidSchemaCreation()))?;
+
+    Ok(id)
+}
+
 pub fn get_schema_attrs(source_id: String, sequence_num: u32) -> Result<(u32, String), SchemaError> {
     let new_handle = rand::thread_rng().gen::<u32>();
     let new_schema = Box::new(CreateSchema {
         source_id,
         sequence_num,
         handle: new_handle,
+        //Todo: functionality for retrieving version, data, name
         name: String::new(),
-        data: LedgerSchema::retrieve_schema_with_schema_no(sequence_num as i32)?,
+        version: String::new(),
+        data: String::new(),
+        schema_id: String::new(),
     });
 
     {
@@ -528,13 +539,6 @@ mod tests {
     }
 
     #[test]
-    fn test_schema_request(){
-        let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#;
-        let test = CreateSchema::create_schema_req("4fUDR9R7fjwELRvH9JT6HH", data).unwrap();
-        assert!(test.contains("{\"type\":\"101\",\"data\":{\"name\":\"name\",\"version\":\"1.0\",\"attr_names\":[\"name\",\"male\"]}"));
-    }
-
-    #[test]
     fn test_extract_result_from_txn(){
         let test = CreateSchema::extract_result_from_txn(CREATE_SCHEMA_RESULT).unwrap();
         assert_eq!(test.get("type").unwrap(), "101");
@@ -561,12 +565,15 @@ mod tests {
     #[test]
     fn test_create_schema_to_string(){
         let create_schema = CreateSchema {
-            data: serde_json::from_str(DIRTY_EXAMPLE).unwrap(),
+            data: r#"["name", "age", "sex", "height"]"#.to_string(),
+            version: "1.0".to_string(),
+            schema_id: SCHEMA_ID.to_string(),
             source_id: "testId".to_string(),
             handle: 1,
             name: "schema_name".to_string(),
             sequence_num: 306,
         };
+        println!("{}", create_schema.to_string());
         let create_schema_str = r#"{"data":{"dest":"4fUDR9R7fjwELRvH9JT6HH","seqNo":15,"txnTime":1510246647,"type":"101","data":{"name":"Home Address","version":"0.1","attr_names":["address1","address2","city","state","zip"]}},"name":"schema_name","source_id":"testId","sequence_num":306}"#;
         assert_eq!(create_schema.to_string(), create_schema_str.to_string());
     }
@@ -574,8 +581,12 @@ mod tests {
     #[test]
     fn test_create_schema_success(){
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
-        let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#.to_string();
-        assert!(create_new_schema("1", "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data).is_ok());
+        let data = r#"["name","male"]"#;
+        assert!(create_new_schema("1",
+                                  "VsKV7grR1BUE29mG2Fm2kX".to_string(),
+                                  "name".to_string(),
+                                  "1.0".to_string(),
+                                  data.to_string()).is_ok());
     }
 
     #[test]
@@ -592,10 +603,11 @@ mod tests {
     fn test_create_schema_fails(){
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-        let schema = create_new_schema("1",
+        let schema = create_new_schema("1", "VsKV7grR1BUE29mG2Fm2kX".to_string(),
                                        "name".to_string(),
-                                       "VsKV7grR1BUE29mG2Fm2kX".to_string(),
+                                       "1.0".to_string(),
                                        "".to_string());
+
         assert_eq!(schema.err(),Some(SchemaError::InvalidSchemaCreation()));
     }
 
@@ -628,12 +640,15 @@ mod tests {
     #[test]
     fn test_create_schema(){
         settings::set_defaults();
-        let data = r#"{"name":"gvt","version":"1.1","attr_names":["address1","address2","zip","city","state"]}"#.to_string();
+        let data = r#"["address1","address2","zip","city","state"]"#.to_string();
+        let version = r#"0.0.0"#.to_string();
+        let did = r#"2hoqvcwupRTUNkXn6ArYzs"#.to_string();
         ::utils::devsetup::setup_dev_env("test_create_schema");
-        let handle = create_new_schema("id", "name".to_string(), "2hoqvcwupRTUNkXn6ArYzs".to_string(), data).unwrap();
+        let handle = create_new_schema("id", did, "name".to_string(), version,data).unwrap();
         delete_wallet("test_create_schema").unwrap();
         assert!(handle > 0);
-        assert!(get_sequence_num(handle).unwrap() > 0);
+//        assert!(get_schema_id(handle).is_ok());
+        assert_eq!(0, 1);
 }
 
     #[ignore]
@@ -674,12 +689,14 @@ mod tests {
     fn test_release_all() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
-        let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#;
-        let h1 = create_new_schema("1", "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
-        let h2 = create_new_schema("2", "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
-        let h3 = create_new_schema("3", "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
-        let h4 = create_new_schema("4", "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
-        let h5 = create_new_schema("5", "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
+        let data = r#"["address1","address2","zip","city","state"]"#;
+        let version = r#"0.0.0"#;
+        let did = r#"2hoqvcwupRTUNkXn6ArYzs"#;
+        let h1 = create_new_schema("1", did.to_string(), "name".to_string(), version.to_string(),data.to_string()).unwrap();
+        let h2 = create_new_schema("1", did.to_string(), "name".to_string(), version.to_string(),data.to_string()).unwrap();
+        let h3 = create_new_schema("1", did.to_string(), "name".to_string(), version.to_string(),data.to_string()).unwrap();
+        let h4 = create_new_schema("1", did.to_string(), "name".to_string(), version.to_string(),data.to_string()).unwrap();
+        let h5 = create_new_schema("1", did.to_string(), "name".to_string(), version.to_string(),data.to_string()).unwrap();
         release_all();
         assert_eq!(release(h1).err(),Some(SchemaError::InvalidHandle()));
         assert_eq!(release(h2).err(),Some(SchemaError::InvalidHandle()));

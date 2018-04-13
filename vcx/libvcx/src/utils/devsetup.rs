@@ -257,8 +257,10 @@ fn setup_new_wallet_with_new_credential(wallet_name: &str) {
         SignusUtils::create_and_store_my_did(wallet_handle, Some(&seed)).unwrap();
     }
 
-    let data = r#"{"name":"Home Address","version":"0.1","attr_names":["address1","address2","city","state","zip"]}"#.to_string();
-    let schema_handle = create_new_schema("1", "name".to_string(), issuer_did.to_string(), data).unwrap();
+    let data = r#"["address1","address2","city","state","zip"]"#.to_string();
+    let version = "0.1".to_string();
+    let name = "Home Address".to_string();
+    let schema_handle = create_new_schema("1", issuer_did.to_string(), name, version, data).unwrap();
 
     let schema_seq_no = get_sequence_num(schema_handle).unwrap();
 
