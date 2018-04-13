@@ -57,7 +57,7 @@ impl Error for ConnectionError {
     // TODO: Either implement this correctly or remove.
     fn description(&self) -> &str {
         match *self {
-            ConnectionError::CreateError(key) =>  format!("Could not create connection with key: {}", key),
+            ConnectionError::CreateError(ref key) =>  "Could not create connection with key",
             ConnectionError::InvalidMessagePack() => INVALID_MSGPACK.message,
             ConnectionError::InvalidHandle() => INVALID_CONNECTION_HANDLE.message,
             ConnectionError::GeneralConnectionError() => CONNECTION_ERROR.message,
