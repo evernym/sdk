@@ -26,7 +26,6 @@ use error::ToErrorCode;
 use object_cache::ObjectCache;
 
 lazy_static! {
-//    static ref CONNECTION_MAP: Mutex<HashMap<u32, Box<Connection>>> = Default::default();
     static ref CONNECTION_MAP: ObjectCache<Connection> = Default::default();
 }
 

@@ -219,6 +219,7 @@ pub extern fn vcx_connection_deserialize(command_handle: u32,
     check_useful_c_str!(connection_data, error::INVALID_OPTION.code_num);
 
     info!("vcx_connection_deserialize(command_handle: {}, connection_data: {})", command_handle, connection_data);
+    
     thread::spawn(move|| {
         let (rc, handle) = match from_string(&connection_data) {
             Ok(x) => {
@@ -522,7 +523,7 @@ mod tests {
         let string = r#"{"source_id":"test_vcx_connection_deserialialize_succeeds","pw_did":"8XFh8yBzrpJQmNyZzgoTqB","pw_verkey":"EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A","did_endpoint":"","state":1,"uuid":"","endpoint":"","invite_detail":{"statusCode":"","connReqId":"","senderDetail":{"name":"","agentKeyDlgProof":{"agentDID":"","agentDelegatedKey":"","signature":""},"DID":"","logoUrl":"","verKey":""},"senderAgencyDetail":{"DID":"","verKey":"","endpoint":""},"targetName":"","statusMsg":""},"agent_did":"U5LXs4U7P9msh647kToezy","agent_vk":"FktSZg8idAVzyQZrdUppK6FTrfAzW3wWVzAjJAfdUvJq","their_pw_did":"","their_pw_verkey":""}"#;
 
         vcx_connection_deserialize(0,CString::new(string).unwrap().into_raw(), Some(deserialize_cb));
-        thread::sleep(Duration::from_millis(1200));
+        thread::sleep(Duration::from_millis(200));
     }
 
     extern "C" fn get_state_cb(command_handle: u32, err: u32, state: u32) {
