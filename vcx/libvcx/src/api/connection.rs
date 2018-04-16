@@ -219,7 +219,7 @@ pub extern fn vcx_connection_deserialize(command_handle: u32,
     check_useful_c_str!(connection_data, error::INVALID_OPTION.code_num);
 
     info!("vcx_connection_deserialize(command_handle: {}, connection_data: {})", command_handle, connection_data);
-    
+
     thread::spawn(move|| {
         let (rc, handle) = match from_string(&connection_data) {
             Ok(x) => {
