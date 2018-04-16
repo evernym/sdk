@@ -19,9 +19,9 @@ use utils::libindy::ledger::{libindy_submit_request,
                              libindy_sign_and_submit_request};
 use error::ToErrorCode;
 use error::cred_def::CredDefError;
-
+use object_cache::ObjectCache;
 lazy_static! {
-    static ref CREDENTIALDEF_MAP: Mutex<HashMap<u32, Box<CreateCredentialDef>>> = Default::default();
+    static ref OBJECT_MAP: ObjectCache<CreateCredentialDef> = Default::default();
 }
 
 #[derive(Deserialize, Debug, Serialize, PartialEq)]
@@ -29,7 +29,7 @@ pub struct RetrieveCredentialDef {
     credential_def: Option<CredentialDefinition>,
 }
 
-#[derive(Deserialize, Debug, Serialize, PartialEq)]
+#[derive(Deserialize, Debug, Serialize, PartialEq, Clone)]
 pub struct CreateCredentialDef {
     credential_def: CredentialDefinition,
     #[serde(skip_serializing, default)]
@@ -233,7 +233,7 @@ pub fn create_new_credentialdef(source_id: String,
                            schema_seq_no: u32,
                            issuer_did: String,
                            create_non_revoc: bool) -> Result<u32, CredDefError> {
-    let mut new_credentialdef = Box::new(CreateCredentialDef::new());
+    let mut new_credentialdef = CreateCredentialDef::new();
     let schema_data = get_schema_data(schema_seq_no)?;
     //Todo: Libindy should provide ways to manage duplicate credential_defs and access to wallet
     if new_credentialdef.credential_def_on_ledger(Some(&issuer_did),
@@ -259,16 +259,13 @@ pub fn create_new_credentialdef(source_id: String,
     new_credentialdef.sign_and_send_request(&credential_def_txn)?;
     debug!("created new credential def on ledger and stored in wallet");
 
-    let new_handle = rand::thread_rng().gen::<u32>();
     new_credentialdef.set_name(credentialdef_name);
-    new_credentialdef.set_handle(new_handle);
     new_credentialdef.set_source_id(source_id);
-    {
-        let mut m = CREDENTIALDEF_MAP.lock().unwrap();
-        debug!("inserting handle {} into credentialdef table", new_handle);
-        m.insert(new_handle, new_credentialdef);
-    }
-
+    let new_handle = add(new_credentialdef).ok_or(CredDefError::CreateCredDefError())?;
+    debug!("inserting handle {} into credentialdef table", new_handle);
+    // TODO: This object moves, and we dont have access to its handle...which is something
+    // we would like to explore.
+//    new_credentialdef.set_handle(new_handle);
     Ok(new_handle)
 }
 
@@ -297,14 +294,11 @@ pub fn get_schema_data(schema_seq_no: u32) -> Result<String, CredDefError> {
 }
 
 pub fn is_valid_handle(handle: u32) -> bool {
-    match CREDENTIALDEF_MAP.lock().unwrap().get(&handle) {
-        Some(_) => true,
-        None => false,
-    }
+    get(handle).is_some()
 }
 
 pub fn to_string(handle: u32) -> Result<String, u32> {
-    match CREDENTIALDEF_MAP.lock().unwrap().get(&handle) {
+    match get(handle) {
         Some(p) => Ok(serde_json::to_string(&p).unwrap().to_owned()),
         None => Err(error::INVALID_CREDENTIAL_DEF_HANDLE.code_num)
     }
@@ -316,36 +310,43 @@ pub fn from_string(credentialdef_data: &str) -> Result<u32, u32> {
             error!("{} with: {}", error::INVALID_CREDENTIAL_DEF_JSON.message, err);
             error::INVALID_CREDENTIAL_DEF_JSON.code_num
         })?;
-    let new_handle = rand::thread_rng().gen::<u32>();
-    let source_id = derived_credentialdef.source_id.clone();
-    let credentialdef = Box::from(derived_credentialdef);
-
-    {
-        let mut m = CREDENTIALDEF_MAP.lock().unwrap();
-        debug!("inserting handle {} with source_id {:?} into credentialdef table", new_handle, source_id);
-        m.insert(new_handle, credentialdef);
-    }
-    Ok(new_handle)
+    debug!("inserting credential definition with source_id {:?} into credentialdef table", derived_credentialdef.source_id.clone());
+    add(derived_credentialdef).ok_or(8001)
 }
 
 pub fn get_source_id(handle: u32) -> Result<String, u32> {
-    match CREDENTIALDEF_MAP.lock().unwrap().get(&handle) {
+    match get(handle) {
         Some(c) => Ok(c.get_source_id().clone()),
         None => Err(error::INVALID_CREDENTIAL_DEF_HANDLE.code_num),
     }
 }
 
 pub fn release(handle: u32) -> u32 {
-    match CREDENTIALDEF_MAP.lock().unwrap().remove(&handle) {
+    match get(handle) {
         Some(t) => error::SUCCESS.code_num,
         None => error::INVALID_CREDENTIAL_DEF_HANDLE.code_num,
     }
 }
 
 pub fn release_all() {
-    let mut map = CREDENTIALDEF_MAP.lock().unwrap();
+    match drain() {
+        Some(err) => warn!("Error while releasing all of the cred def handles: {}", err),
+        None => (),
+    }
+}
 
-    map.drain();
+pub fn drain() -> Option<CredDefError> {
+    // drain returns a None on success, otherwise returns Some(u32) as err condition.
+    OBJECT_MAP.drain().and(Some(CredDefError::ReleaseAllError()))
+}
+pub fn add(create_credential_def:CreateCredentialDef) -> Option<u32> {
+    OBJECT_MAP.add(create_credential_def).ok()
+}
+
+pub fn get(handle: u32) -> Option<CreateCredentialDef> {
+    OBJECT_MAP.get(handle, |ccd| {
+        Ok(ccd.clone())
+    }).ok()
 }
 
 #[cfg(test)]
@@ -553,5 +554,19 @@ pub mod tests {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
         assert_eq!(CreateCredentialDef::new().sign_and_send_request("").err(),
                    Some(CredDefError::CommonError(NO_POOL_OPEN.code_num)))
+    }
+
+    #[test]
+    fn test_object_cache(){
+        let mut new_credential_def = CreateCredentialDef::new();
+        new_credential_def.source_id = "FOOBAR".to_string();
+        let handle = add(new_credential_def.clone()).unwrap();
+        assert!(handle > 0);
+        assert_eq!(new_credential_def.source_id, get(handle).unwrap().source_id);
+        let mut new_cred_def_2 = CreateCredentialDef::new();
+        new_cred_def_2.source_id = "BLARG".to_string();
+        let handle2 = add(new_cred_def_2.clone()).unwrap();
+        assert_eq!(new_cred_def_2.source_id, get(handle2).unwrap().source_id);
+        assert!(is_valid_handle(handle2));
     }
 }

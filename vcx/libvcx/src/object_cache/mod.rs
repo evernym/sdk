@@ -91,6 +91,15 @@ impl<T> ObjectCache<T> {
             None => Err(error::INVALID_OBJ_HANDLE.code_num)
         }
     }
+
+    pub fn drain(&self) -> Option<u32> {
+        let mut store = match self._lock_store() {
+            Ok(s) => s,
+            Err(ec) => return Some(ec),
+        };
+        store.clear();
+        None
+    }
 }
 
 #[cfg(test)]
