@@ -20,6 +20,7 @@ use utils::libindy::ledger::{libindy_submit_request,
 use error::ToErrorCode;
 use error::cred_def::CredDefError;
 use object_cache::ObjectCache;
+
 lazy_static! {
     static ref OBJECT_MAP: ObjectCache<CreateCredentialDef> = Default::default();
 }
@@ -263,9 +264,7 @@ pub fn create_new_credentialdef(source_id: String,
     new_credentialdef.set_source_id(source_id);
     let new_handle = add(new_credentialdef).ok_or(CredDefError::CreateCredDefError())?;
     debug!("inserting handle {} into credentialdef table", new_handle);
-    // TODO: This object moves, and we dont have access to its handle...which is something
-    // we would like to explore.
-//    new_credentialdef.set_handle(new_handle);
+    // TODO: This object moves, and we dont have access to its handle...which is something we would like to explore.
     Ok(new_handle)
 }
 
@@ -335,15 +334,16 @@ pub fn release_all() {
     }
 }
 
-pub fn drain() -> Option<CredDefError> {
-    // drain returns a None on success, otherwise returns Some(u32) as err condition.
+// Returns a None on Success
+fn drain() -> Option<CredDefError> {
     OBJECT_MAP.drain().and(Some(CredDefError::ReleaseAllError()))
 }
-pub fn add(create_credential_def:CreateCredentialDef) -> Option<u32> {
+
+fn add(create_credential_def:CreateCredentialDef) -> Option<u32> {
     OBJECT_MAP.add(create_credential_def).ok()
 }
 
-pub fn get(handle: u32) -> Option<CreateCredentialDef> {
+fn get(handle: u32) -> Option<CreateCredentialDef> {
     OBJECT_MAP.get(handle, |ccd| {
         Ok(ccd.clone())
     }).ok()
@@ -568,5 +568,10 @@ pub mod tests {
         let handle2 = add(new_cred_def_2.clone()).unwrap();
         assert_eq!(new_cred_def_2.source_id, get(handle2).unwrap().source_id);
         assert!(is_valid_handle(handle2));
+        // This is a test that would help up test that the handle is being added
+        // to the object as it is being put into the object map.
+//        let new_cred_def_3 = get(handle2).unwrap();
+//        assert_eq!(new_cred_def_3.handle, handle2);
+
     }
 }

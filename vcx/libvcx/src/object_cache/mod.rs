@@ -92,6 +92,7 @@ impl<T> ObjectCache<T> {
         }
     }
 
+    // returns a Some(u32) on error.
     pub fn drain(&self) -> Option<u32> {
         let mut store = match self._lock_store() {
             Ok(s) => s,
