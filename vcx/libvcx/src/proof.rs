@@ -18,8 +18,8 @@ use utils::httpclient;
 use utils::error;
 use utils::constants::*;
 use utils::libindy::anoncreds::libindy_verifier_verify_proof;
-use credential_def::{ RetrieveCredentialDef, CredentialDefinition };
-use schema::{ LedgerSchema, SchemaTransaction };
+use credential_def::{ retrieve_credential_def };
+use schema::{ LedgerSchema };
 use proof_compliance::{ proof_compliance };
 use error::proof::ProofError;
 use utils::libindy::SigTypes;
@@ -94,30 +94,32 @@ impl Proof {
     // TODO: Combine disclosed proof and proof credential json creation
     fn build_credential_defs_json(&self, credential_data:&Vec<CredentialData>) -> Result<String, ProofError> {
         debug!("building credentialdef json for proof validation");
-        let mut credential_json: HashMap<String, CredentialDefinition> = HashMap::new();
-        for credential in credential_data.iter() {
-            let issuer_did = credential.issuer_did.as_ref()
-                .ok_or(ProofError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num))?;
-            let credential_uuid = credential.credential_uuid.as_ref()
-                .ok_or(ProofError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num))?;
-            let schema_key = credential.schema_key.as_ref()
-                .ok_or(ProofError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num))?;
-
-            let credential_def = RetrieveCredentialDef::new()
-                .retrieve_credential_def_with_schema_key(issuer_did,
-                                                         schema_key,
-                                                         Some(SigTypes::CL))
-                .map_err(|ec| ProofError::CommonError(ec.to_error_code()))?;
-
-            let credential_obj: CredentialDefinition = serde_json::from_str(&credential_def)
-                .map_err(|_| ProofError::CommonError(error::INVALID_JSON.code_num))?;
-            credential_json.insert(credential_uuid.to_string(), credential_obj);
-        }
-
-        serde_json::to_string(&credential_json).map_err(|err| {
-            warn!("{} with serde error: {}",error::INVALID_CREDENTIAL_DEF_JSON.message, err);
-            ProofError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num)
-        })
+//        let mut credential_json: HashMap<String, CredentialDefinition> = HashMap::new();
+        //Todo: schema_key is no longer used to retrieve schema from ledger
+//        for credential in credential_data.iter() {
+//            let issuer_did = credential.issuer_did.as_ref()
+//                .ok_or(ProofError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num))?;
+//            let credential_uuid = credential.credential_uuid.as_ref()
+//                .ok_or(ProofError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num))?;
+//            let schema_key = credential.schema_key.as_ref()
+//                .ok_or(ProofError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num))?;
+//
+//            let credential_def = RetrieveCredentialDef::new()
+//                .retrieve_credential_def_with_schema_key(issuer_did,
+//                                                         schema_key,
+//                                                         Some(SigTypes::CL))
+//                .map_err(|ec| ProofError::CommonError(ec.to_error_code()))?;
+//
+//            let credential_obj: CredentialDefinition = serde_json::from_str(&credential_def)
+//                .map_err(|_| ProofError::CommonError(error::INVALID_JSON.code_num))?;
+//            credential_json.insert(credential_uuid.to_string(), credential_obj);
+//        }
+//
+//        serde_json::to_string(&credential_json).map_err(|err| {
+//            warn!("{} with serde error: {}",error::INVALID_CREDENTIAL_DEF_JSON.message, err);
+//            ProofError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num)
+//        })
+        Err(ProofError::CommonError(0))
     }
 
     fn build_proof_json(&self) -> Result<String, ProofError> {
@@ -132,24 +134,26 @@ impl Proof {
     fn build_schemas_json(&self, credential_data:&Vec<CredentialData>) -> Result<String, ProofError> {
         debug!("building schemas json for proof validation");
 
-        let mut schema_json: HashMap<String, SchemaTransaction> = HashMap::new();
-        for schema in credential_data.iter() {
+//        let mut schema_json: HashMap<String, SchemaTransaction> = HashMap::new();
+        //Todo: schema_key is no longer used to retrieve schema from ledger
+//        for schema in credential_data.iter() {
+//
+//            let credential_uuid = schema.credential_uuid.as_ref()
+//                .ok_or(ProofError::InvalidSchema())?;
+//            let schema_key = schema.schema_key.as_ref()
+//                .ok_or(ProofError::InvalidSchema())?;
+//            let schema_obj = LedgerSchema::new_from_ledger_with_schema_key(schema_key)
+//                .map_err(|x| ProofError::CommonError(x.to_error_code()))?;
+//
+//            let data = schema_obj.data.as_ref().ok_or(ProofError::InvalidProof())?;
+//            schema_json.insert(credential_uuid.to_string(), data.clone());
+//        }
 
-            let credential_uuid = schema.credential_uuid.as_ref()
-                .ok_or(ProofError::InvalidSchema())?;
-            let schema_key = schema.schema_key.as_ref()
-                .ok_or(ProofError::InvalidSchema())?;
-            let schema_obj = LedgerSchema::new_from_ledger_with_schema_key(schema_key)
-                .map_err(|x| ProofError::CommonError(x.to_error_code()))?;
-
-            let data = schema_obj.data.as_ref().ok_or(ProofError::InvalidProof())?;
-            schema_json.insert(credential_uuid.to_string(), data.clone());
-        }
-
-        serde_json::to_string(&schema_json).map_err(|err| {
-            warn!("{} with serde error: {}",error::INVALID_SCHEMA.message, err);
-            ProofError::InvalidSchema()
-        })
+//        serde_json::to_string(&schema_json).map_err(|err| {
+//            warn!("{} with serde error: {}",error::INVALID_SCHEMA.message, err);
+//            ProofError::InvalidSchema()
+//        })
+        Err(ProofError::CommonError(0))
     }
 
     fn build_proof_req_json(&self) -> Result<String, ProofError> {

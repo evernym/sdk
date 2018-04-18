@@ -31,15 +31,20 @@ use error::ToErrorCode;
 /// Error code as a u32
 #[no_mangle]
 pub extern fn vcx_credentialdef_create(command_handle: u32,
-                                  source_id: *const c_char,
-                                  credentialdef_name: *const c_char,
-                                  schema_seq_no: u32,
-                                  issuer_did: *const c_char,
-                                  create_non_revoc: bool,
-                                  cb: Option<extern fn(xcommand_handle: u32, err: u32, credentialdef_handle: u32)>) -> u32 {
+                                       source_id: *const c_char,
+                                       credentialdef_name: *const c_char,
+                                       schema_id: *const c_char,
+                                       issuer_did: *const c_char,
+                                       tag: *const c_char,
+                                       config: *const c_char,
+                                       cb: Option<extern fn(xcommand_handle: u32, err: u32, credentialdef_handle: u32)>) -> u32 {
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
     check_useful_c_str!(credentialdef_name, error::INVALID_OPTION.code_num);
     check_useful_c_str!(source_id, error::INVALID_OPTION.code_num);
+    check_useful_c_str!(schema_id, error::INVALID_OPTION.code_num);
+    check_useful_c_str!(tag, error::INVALID_OPTION.code_num);
+    check_useful_c_str!(config, error::INVALID_OPTION.code_num);
+
     let issuer_did: String = if !issuer_did.is_null() {
         check_useful_c_str!(issuer_did, error::INVALID_OPTION.code_num);
         issuer_did.to_owned()
@@ -49,20 +54,22 @@ pub extern fn vcx_credentialdef_create(command_handle: u32,
             Err(x) => return x
         }
     };
-    info!("vcx_credential_def_create(command_handle: {}, source_id: {}, credentialdef_name: {} schema_seq_no: {}, issuer_did: {}, create_non_rev: {})",
+    info!("vcx_credential_def_create(command_handle: {}, source_id: {}, credentialdef_name: {} schema_id: {}, issuer_did: {}, tag: {}, config: {})",
           command_handle,
           source_id,
           credentialdef_name,
-          schema_seq_no,
+          schema_id,
           issuer_did,
-          create_non_revoc);
+          tag,
+          config);
 
     thread::spawn( move|| {
         let ( rc, handle) = match credential_def::create_new_credentialdef(source_id,
                                                                  credentialdef_name,
-                                                                 schema_seq_no,
                                                                  issuer_did,
-                                                                 create_non_revoc) {
+                                                                 schema_id,
+                                                                 tag,
+                                                                 config) {
             Ok(x) => {
                 info!("vcx_credential_def_create_cb(command_handle: {}, rc: {}, credentialdef_handle: {}), source_id: {:?}",
                       command_handle, error_string(0), x, credential_def::get_source_id(x).unwrap_or_default());
@@ -193,7 +200,7 @@ mod tests {
     use utils::libindy::pool;
     use utils::libindy::wallet::{ init_wallet, get_wallet_handle, delete_wallet };
     use utils::libindy::signus::SignusUtils;
-    use utils::constants::{ DEMO_AGENT_PW_SEED, DEMO_ISSUER_PW_SEED };
+    use utils::constants::{ DEMO_AGENT_PW_SEED, DEMO_ISSUER_PW_SEED, SCHEMA_ID};
 
     extern "C" fn create_cb(command_handle: u32, err: u32, credentialdef_handle: u32) {
         assert_eq!(err, 0);
@@ -232,10 +239,10 @@ mod tests {
         assert_eq!(err, 0);
         assert!(credentialdef_handle > 0);
         println!("successfully called deserialize_cb");
-        let expected = "{\"credential_def\":{\"ref\":15,\"origin\":\"4fUDR9R7fjwELRvH9JT6HH\",\"signature_type\":\"CL\",\"data\":{\"primary\":{\"n\":\"9\",\"s\":\"5\",\"rms\":\"4\",\"r\":{\"zip\":\"1\",\"address1\":\"7\",\"address2\":\"8\",\"city\":\"6\",\"state\":\"6\"},\"rctxt\":\"7\",\"z\":\"7\"},\"revocation\":null}},\"name\":\"NAME\",\"source_id\":\"test id\"}";
+        let expected = r#"{"id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:1697","tag":"tag","name":"Test Credential Definition","source_id":"SourceId"}"#;
         let new = credential_def::to_string(credentialdef_handle).unwrap();
-        let mut def1: credential_def::CreateCredentialDef = serde_json::from_str(expected).unwrap();
-        let def2: credential_def::CreateCredentialDef = serde_json::from_str(&new).unwrap();
+        let mut def1: credential_def::CredentialDef = serde_json::from_str(expected).unwrap();
+        let def2: credential_def::CredentialDef = serde_json::from_str(&new).unwrap();
         def1.handle = def2.handle;
         assert_eq!(def1,def2);
     }
@@ -251,32 +258,12 @@ mod tests {
         assert_eq!(vcx_credentialdef_create(0,
                                        CString::new("Test Source ID").unwrap().into_raw(),
                                        CString::new("Test Credential Def").unwrap().into_raw(),
-                                       15,
+                                            CString::new(SCHEMA_ID).unwrap().into_raw(),
                                        CString::new("6vkhW3L28AophhA68SSzRS").unwrap().into_raw(),
-                                       false,
+                                            CString::new("tag").unwrap().into_raw(),
+                                            CString::new("{}").unwrap().into_raw(),
                                        Some(create_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
-    }
-
-    #[ignore]
-    #[test]
-    fn test_vcx_create_credentialdef_with_pool() {
-        settings::set_defaults();
-        pool::open_sandbox_pool();
-        init_wallet("test_vcx_create_credentialdef_with_pool").unwrap();
-        let wallet_handle = get_wallet_handle();
-        let (my_did, _) = SignusUtils::create_and_store_my_did(wallet_handle, Some(DEMO_ISSUER_PW_SEED)).unwrap();
-        SignusUtils::create_and_store_my_did(wallet_handle, Some(DEMO_AGENT_PW_SEED)).unwrap();
-        settings::set_config_value(settings::CONFIG_INSTITUTION_DID, &my_did);
-        assert_eq!(vcx_credentialdef_create(0,
-                                       CString::new("qqqqq").unwrap().into_raw(),
-                                       CString::new("Test Credential Def").unwrap().into_raw(),
-                                       22,
-                                       ptr::null(),
-                                       false,
-                                       Some(credential_def_on_ledger_err_cb)), error::SUCCESS.code_num);
-        thread::sleep(Duration::from_secs(1));
-        delete_wallet("test_vcx_create_credentialdef_with_pool").unwrap();
     }
 
     #[test]
@@ -284,12 +271,13 @@ mod tests {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         assert_eq!(vcx_credentialdef_create(0,
-                                       CString::new("Test Source ID").unwrap().into_raw(),
-                                       CString::new("Test Credential Def").unwrap().into_raw(),
-                                       0,
-                                       ptr::null(),
-                                       false,
-                                       Some(create_cb_err)), error::SUCCESS.code_num);
+                                            CString::new("Test Source ID").unwrap().into_raw(),
+                                            CString::new("Test Credential Def").unwrap().into_raw(),
+                                            CString::new(SCHEMA_ID).unwrap().into_raw(),
+                                            ptr::null(),
+                                            CString::new("tag").unwrap().into_raw(),
+                                            CString::new("{}").unwrap().into_raw(),
+                                            Some(create_cb_err)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
 
@@ -297,19 +285,20 @@ mod tests {
     fn test_vcx_credentialdef_serialize() {
         set_default_and_enable_test_mode();
         assert_eq!(vcx_credentialdef_create(0,
-                                       CString::new("Test Source ID").unwrap().into_raw(),
-                                       CString::new("Test Credential Def").unwrap().into_raw(),
-                                       15,
-                                       ptr::null(),
-                                       false,
-                                       Some(create_and_serialize_cb)), error::SUCCESS.code_num);
+                                            CString::new("Test Source ID").unwrap().into_raw(),
+                                            CString::new("Test Credential Def").unwrap().into_raw(),
+                                            CString::new(SCHEMA_ID).unwrap().into_raw(),
+                                            ptr::null(),
+                                            CString::new("tag").unwrap().into_raw(),
+                                            CString::new("{}").unwrap().into_raw(),
+                                            Some(create_and_serialize_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
 
     #[test]
     fn test_vcx_credentialdef_deserialize_succeeds() {
         set_default_and_enable_test_mode();
-        let original = "{\"source_id\":\"test id\",\"credential_def\":{\"ref\":15,\"origin\":\"4fUDR9R7fjwELRvH9JT6HH\",\"signature_type\":\"CL\",\"data\":{\"primary\":{\"n\":\"9\",\"s\":\"5\",\"rms\":\"4\",\"r\":{\"city\":\"6\",\"address2\":\"8\",\"address1\":\"7\",\"state\":\"6\",\"zip\":\"1\"},\"rctxt\":\"7\",\"z\":\"7\"},\"revocation\":null}},\"name\":\"NAME\"}";
+        let original = r#"{"id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:1697","tag":"tag","name":"Test Credential Definition","source_id":"SourceId"}"#;
         vcx_credentialdef_deserialize(0,CString::new(original).unwrap().into_raw(), Some(deserialize_cb));
         thread::sleep(Duration::from_millis(200));
     }

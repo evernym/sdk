@@ -321,15 +321,17 @@ impl IssuerCredential {
 
     fn generate_credential_offer(&self, to_did: &str) -> Result<CredentialOffer, IssuerCredError> {
         let attr_map = convert_to_map(&self.credential_attributes)?;
-        // Todo: Better error conversion
-        let schema_json = LedgerSchema::new_from_ledger_with_seq_no(self.schema_seq_no as i32)
-            .map_err(|err| IssuerCredError::CommonError(err.to_error_code()))?
-            .to_string();
+        // Todo: retrieve schema with id
+        let schema_json = "".to_string();
+//        let schema_json = LedgerSchema::new_from_ledger_with_seq_no(self.schema_seq_no as i32)
+//            .map_err(|err| IssuerCredError::CommonError(err.to_error_code()))?
+//            .to_string();
 
-        let libindy_offer_str = libindy_issuer_create_credential_offer(wallet::get_wallet_handle(),
-                                                                   &schema_json,
-                                                                   &self.issuer_did,
-                                                                   &to_did).map_err(|err| IssuerCredError::CommonError(err))?;
+//        let libindy_offer_str = libindy_issuer_create_credential_offer(wallet::get_wallet_handle(),
+//                                                                   &schema_json,
+//                                                                   &self.issuer_did,
+//                                                                   &to_did).map_err(|err| IssuerCredError::CommonError(err))?;
+        let libindy_offer_str = "".to_string();
         let libindy_offer: LibindyCredOffer = serde_json::from_str(&libindy_offer_str)
             .or(Err(IssuerCredError::InvalidJson()))?;
         Ok(CredentialOffer {
@@ -595,8 +597,10 @@ pub mod tests {
         let stored_xcredential = String::from("");
 
         let issuer_did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
+        let tag = "test_tag";
+        let config = "{support_revocation: false}";
 
-        libindy_create_and_store_credential_def(wallet_handle, &issuer_did, SCHEMAS_JSON, None, false).unwrap();
+        libindy_create_and_store_credential_def(&issuer_did, SCHEMAS_JSON, tag, None, config).unwrap();
     }
 
     fn set_default_and_enable_test_mode() {
@@ -697,7 +701,7 @@ pub mod tests {
         ::utils::devsetup::setup_dev_env(wallet_name);
         let wallet_h = get_wallet_handle();
 
-        ::utils::libindy::anoncreds::libindy_prover_create_master_secret(wallet_h, settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
+        ::utils::libindy::anoncreds::libindy_prover_create_master_secret(settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
         let issuer_did = &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
         let check_schema_key = SchemaKey {
             name: "Home Address".to_string(),
@@ -886,29 +890,30 @@ pub mod tests {
         wallet::init_wallet(wallet_name).unwrap();
         let wallet_h = get_wallet_handle();
 
-        ::utils::libindy::anoncreds::libindy_prover_create_master_secret(wallet_h, settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
+        ::utils::libindy::anoncreds::libindy_prover_create_master_secret(settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
         let schema_json = r#"{"dest":"2hoqvcwupRTUNkXn6ArYzs","seqNo":1487,"txnTime":1522769798,"type":"101","data":{"name":"Home Address","version":"1.4","attr_names":["address1","address2","city","zip","state"]}}"#;
         let mut issuer_credential = create_standard_issuer_credential();
         let mut cred_req = CredentialRequest::new(None, None, None, &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(), 1487);
 
-        let libindy_offer = libindy_issuer_create_credential_offer(wallet_h,
-                                                                   &schema_json,
-                                                                   &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
-                                                                   "DunkM3x1y7S4ECgSL4Wkru").unwrap();
+//        let libindy_offer = libindy_issuer_create_credential_offer(wallet_h,
+//                                                                   &schema_json,
+//                                                                   &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
+//                                                                   "DunkM3x1y7S4ECgSL4Wkru").unwrap();
 
-        let libindy_cred_req = libindy_prover_create_credential_req(wallet_h,
-                                                                              "DunkM3x1y7S4ECgSL4Wkru",
-                                                                              &libindy_offer,
-                                                                              &::utils::constants::LIBINDY_CRED_DEF).unwrap();
-
-        cred_req.libindy_cred_req = serde_json::from_str(&libindy_cred_req).unwrap();
-        issuer_credential.credential_request = Some(cred_req);
-        issuer_credential.issuer_did = String::from("2hoqvcwupRTUNkXn6ArYzs");
-
-        let encoded_credential_data = issuer_credential.create_attributes_encodings().unwrap();
-        let cred = issuer_credential.generate_credential(&encoded_credential_data, "44oqvcwupRTUNkXn6ArYzs");
-        wallet::delete_wallet(wallet_name).unwrap();
-        assert!(cred.is_ok());
+//        let libindy_cred_req = libindy_prover_create_credential_req(wallet_h,
+//                                                                              "DunkM3x1y7S4ECgSL4Wkru",
+//                                                                              &libindy_offer,
+//                                                                              &::utils::constants::LIBINDY_CRED_DEF).unwrap();
+//
+//        cred_req.libindy_cred_req = serde_json::from_str(&libindy_cred_req).unwrap();
+//        issuer_credential.credential_request = Some(cred_req);
+//        issuer_credential.issuer_did = String::from("2hoqvcwupRTUNkXn6ArYzs");
+//
+//        let encoded_credential_data = issuer_credential.create_attributes_encodings().unwrap();
+//        let cred = issuer_credential.generate_credential(&encoded_credential_data, "44oqvcwupRTUNkXn6ArYzs");
+//        wallet::delete_wallet(wallet_name).unwrap();
+//        assert!(cred.is_ok());
+        assert_eq!(0, 1)
     }
 
     #[test]

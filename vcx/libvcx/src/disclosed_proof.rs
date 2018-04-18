@@ -12,8 +12,8 @@ use messages::proofs::proof_request::{ ProofRequestMessage };
 use messages::extract_json_payload;
 use messages::to_u8;
 
-use credential_def::{ RetrieveCredentialDef };
-use schema::{ LedgerSchema, SchemaTransaction };
+use credential_def::{ retrieve_credential_def };
+use schema::{ LedgerSchema };
 
 use utils::libindy::anoncreds;
 use utils::libindy::wallet;
@@ -105,21 +105,22 @@ impl DisclosedProof {
     fn set_state(&mut self, state: VcxStateType) {self.state = state}
 
     fn _find_schemas(&self, credentials_identifers: &Vec<(String, String, String, SchemaKey)>) -> Result<String, ProofError> {
-        let mut rtn: HashMap<String, SchemaTransaction> = HashMap::new();
+//        let mut rtn: HashMap<String, SchemaTransaction> = HashMap::new();
 
-        for &(ref attr_id, ref claim_uuid, ref issuer_did, ref schema_key) in credentials_identifers {
-            let schema = LedgerSchema::new_from_ledger_with_schema_key(schema_key )
-                .map_err(|_| ProofError::InvalidSchema())?;
-            let schema = schema.data.ok_or(ProofError::CommonError(error::INVALID_SCHEMA.code_num))?;
+//        for &(ref attr_id, ref claim_uuid, ref issuer_did, ref schema_key) in credentials_identifers {
+//            let schema = LedgerSchema::new_from_ledger_with_schema_key(schema_key )
+//                .map_err(|_| ProofError::InvalidSchema())?;
+//            let schema = schema.data.ok_or(ProofError::CommonError(error::INVALID_SCHEMA.code_num))?;
+//
+//            rtn.insert(claim_uuid.to_owned(), schema);
+//        }
 
-            rtn.insert(claim_uuid.to_owned(), schema);
-        }
-
-        match rtn.is_empty() {
-            false => Ok(serde_json::to_string(&rtn)
-                .or(Err(ProofError::CommonError(error::INVALID_JSON.code_num)))?),
-            true => Err(ProofError::CommonError(error::INVALID_JSON.code_num))
-        }
+//        match rtn.is_empty() {
+//            false => Ok(serde_json::to_string(&rtn)
+//                .or(Err(ProofError::CommonError(error::INVALID_JSON.code_num)))?),
+//            true => Err(ProofError::CommonError(error::INVALID_JSON.code_num))
+//        }
+        Err(ProofError::CommonError(0))
     }
 
     fn _find_credential_def(&self, credentials_identifers: &Vec<(String, String, String, SchemaKey)>) -> Result<String, ProofError> {
@@ -128,11 +129,13 @@ impl DisclosedProof {
 
         for &(ref attr_id, ref claim_uuid, ref issuer_did, ref schema_key) in credentials_identifers {
 
-            let credential_def = RetrieveCredentialDef::new().retrieve_credential_def_with_schema_key(
-                issuer_did,
-                schema_key,
-                Some(SigTypes::CL)).map_err(|_| ProofError::InvalidCredData())?;
+            //Todo: need to use retrieve_cred_def with schema_id
+//            let credential_def = RetrieveCredentialDef::new().retrieve_credential_def_with_schema_key(
+//                issuer_did,
+//                schema_key,
+//                Some(SigTypes::CL)).map_err(|_| ProofError::InvalidCredData())?;
 
+            let credential_def = "".to_string();
             rtn.insert(claim_uuid.to_owned(), credential_def);
         }
 

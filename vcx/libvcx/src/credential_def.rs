@@ -10,183 +10,41 @@ use utils::types::SchemaKey;
 use utils::error;
 use settings;
 use schema::LedgerSchema;
-use utils::constants::{ SCHEMAS_JSON, CREDENTIAL_DEF_JSON, STORE_CREDENTIAL_DEF_RESULT, LIBINDY_CRED_DEF };
+use utils::constants::{ SCHEMAS_JSON, CREDENTIAL_DEF_JSON, STORE_CREDENTIAL_DEF_RESULT, LIBINDY_CRED_DEF, CRED_DEF_ID, CRED_DEF_JSON };
 use utils::libindy::wallet::{ get_wallet_handle };
 use utils::libindy::SigTypes;
 use utils::libindy::anoncreds::{libindy_create_and_store_credential_def};
 use utils::libindy::ledger::{libindy_submit_request,
                              libindy_build_get_credential_def_txn,
                              libindy_build_create_credential_def_txn,
-                             libindy_sign_and_submit_request};
+                             libindy_sign_and_submit_request,
+                             libindy_parse_get_cred_def_response};
 use error::ToErrorCode;
 use error::cred_def::CredDefError;
 
 lazy_static! {
-    static ref CREDENTIALDEF_MAP: Mutex<HashMap<u32, Box<CreateCredentialDef>>> = Default::default();
+    static ref CREDENTIALDEF_MAP: Mutex<HashMap<u32, Box<CredentialDef>>> = Default::default();
 }
 
 #[derive(Deserialize, Debug, Serialize, PartialEq)]
-pub struct RetrieveCredentialDef {
-    credential_def: Option<CredentialDefinition>,
-}
-
-#[derive(Deserialize, Debug, Serialize, PartialEq)]
-pub struct CreateCredentialDef {
-    credential_def: CredentialDefinition,
+pub struct CredentialDef {
+    id: String,
+    tag: String,
     #[serde(skip_serializing, default)]
     pub handle: u32,
     name: String,
     source_id: String,
 }
 
-#[derive(Deserialize, Debug, Serialize, PartialEq, Clone)]
-pub struct CredentialDefinition {
-    #[serde(rename = "ref")]
-    pub schema_seq_no: u32,
-    #[serde(rename = "origin")]
-    pub issuer_did: String,
-    pub signature_type: String,
-    pub data: CredentialDefinitionData,
-}
+impl CredentialDef {
 
-#[derive(Deserialize, Debug, Serialize, PartialEq, Clone)]
-pub struct CredentialDefinitionData {
-    #[serde(rename = "primary")]
-    pub public_key: Option<PublicKey>,
-    #[serde(rename = "revocation")]
-    pub public_key_revocation: Option<serde_json::Value>,
-}
-
-#[derive(Debug, Deserialize, PartialEq, Serialize, Eq, Clone)]
-pub struct PublicKey {
-    pub n: String,
-    pub s: String,
-    pub rms: String,
-    pub r: HashMap<String, String>,
-    pub rctxt: String,
-    pub z: String
-}
-
-pub trait CredentialDefCommon {
-
-    fn build_get_txn(&mut self,
-                     submitter_did: &str,
-                     schema_num:u32,
-                     sig_type: Option<SigTypes>,
-                     issuer_did: &str) -> Result<String, CredDefError> {
-        libindy_build_get_credential_def_txn(submitter_did,
-                                             schema_num as i32,
-                                             sig_type,
-                                             issuer_did).or(Err(CredDefError::BuildCredDefRequestError()))
-    }
-
-    fn send_request(&self, request: &str) ->  Result<String, CredDefError> {
-        if settings::test_indy_mode_enabled() { return Ok(STORE_CREDENTIAL_DEF_RESULT.to_string()); }
-        let pool_handle = pool::get_pool_handle().map_err(|x| CredDefError::CommonError(x))?;
-        libindy_submit_request(pool_handle, request).map_err(|x| CredDefError::CommonError(x))
-    }
-
-    fn extract_result(&self, msg: &str) -> Result<String, CredDefError> {
-        let credential_def: serde_json::Value = serde_json::from_str(msg)
-            .or(Err(CredDefError::CommonError(error::INVALID_JSON.code_num)))?;
-
-        serde_json::to_string(&credential_def["result"]).map_err(|err| {
-            error!("Error {}. Credential Definition result had invalid json.",  err);
-            CredDefError::RetrieveCredDefError()
-        })
-    }
-}
-
-impl CredentialDefCommon for RetrieveCredentialDef {}
-
-impl CredentialDefCommon for CreateCredentialDef {}
-
-impl RetrieveCredentialDef {
-    pub fn new() -> RetrieveCredentialDef {
-        RetrieveCredentialDef {
-            credential_def: None,
-        }
-    }
-
-    pub fn retrieve_credential_def(&mut self,
-                                   submitter_did: &str,
-                                   schema_num:u32,
-                                   sig_type: Option<SigTypes>,
-                                   issuer_did: &str) -> Result<String, CredDefError> {
-        let request = self.build_get_txn(submitter_did, schema_num, sig_type, issuer_did)?;
-        match self.send_request(&request) {
-            Ok(x) => {
-                debug!("Retrieved credential_def from the ledger with issuer_did: {}, schema_no: {}", issuer_did, schema_num);
-                self.extract_result(&x)
-            },
-            Err(y) => {
-                error!("Indy send request for credential_def failed with err: {}", y);
-                return Err(y)
-            },
-        }
-    }
-
-    pub fn retrieve_credential_def_with_schema_key(&mut self,
-                                                   did: &str,
-                                                   schema_key: &SchemaKey,
-                                                   sig_type: Option<SigTypes>) -> Result<String, CredDefError> {
-        if settings::test_indy_mode_enabled() { return Ok(LIBINDY_CRED_DEF.to_string()) }
-
-        let schema = LedgerSchema::new_from_ledger_with_schema_key(schema_key)
-            .or(Err(CredDefError::RetrieveCredDefError()))?;
-        self.retrieve_credential_def( did, schema.sequence_num as u32, sig_type, &schema_key.did)
-    }
-
-
-}
-impl CreateCredentialDef {
-    pub fn new() -> CreateCredentialDef {
-        CreateCredentialDef {
-            handle: 0,
-            credential_def: CredentialDefinition::new(),
-            name: String::new(),
-            source_id: String::new(),
-        }
-    }
-    pub fn from_str(input: &str) -> Result<CreateCredentialDef, CredDefError> {
+    pub fn from_str(input: &str) -> Result<CredentialDef, CredDefError> {
         serde_json::from_str(&input).or(Err(CredDefError::CreateCredDefError()))
-    }
-    pub fn sign_and_send_request(&self, request: &str) ->  Result<String, CredDefError> {
-        if settings::test_indy_mode_enabled() { return Ok("{}".to_string()); }
-        libindy_sign_and_submit_request(&self.credential_def.issuer_did,
-                                        request).map_err(|x| CredDefError::CommonError(x))
-    }
-
-    pub fn build_create_txn(&self, credential_def_json: &str) -> Result<String, CredDefError> {
-        libindy_build_create_credential_def_txn(&self.credential_def.issuer_did,
-                                           self.credential_def.schema_seq_no as i32,
-                                           Some(SigTypes::CL),
-                                           credential_def_json).map_err(|ec| CredDefError::CommonError(ec))
-    }
-
-    pub fn retrieve_credential_def(&mut self,
-                                   submitter_did: &str,
-                                   schema_num:u32,
-                                   sig_type: Option<SigTypes>,
-                                   issuer_did: &str) -> Result<String, CredDefError> {
-        let request = self.build_get_txn(submitter_did, schema_num, sig_type, issuer_did)?;
-        match self.send_request(&request) {
-            Ok(x) => {
-                debug!("Retrieved credential_def from the ledger with issuer_did: {}, schema_no: {}", issuer_did, schema_num);
-                self.extract_result(&x)
-            },
-            Err(y) => {
-                error!("Indy send request for credential_def failed with err: {}", y);
-                return Err(y)
-            },
-        }
     }
 
     pub fn get_source_id(&self) -> &String { &self.source_id }
 
     pub fn set_handle(&mut self, handle: u32) { self.handle = handle; }
-
-    pub fn set_credential_def(&mut self, credential_def: CredentialDefinition) { self.credential_def = credential_def.clone(); }
 
     pub fn set_name(&mut self, name: String) { self.name = name.clone(); }
 
@@ -194,88 +52,55 @@ impl CreateCredentialDef {
 
 }
 
-impl CredentialDefinitionData {
-    pub fn to_string(&self) -> Result<String, CredDefError> {
-        serde_json::to_string(&self).map_err(|err| {
-            error!("{}. CredentialDefinitionData failed on to_string().", err);
-            CredDefError::CommonError(error::INVALID_JSON.code_num)
-        })
-    }
-}
-
-impl CredentialDefinition {
-
-    pub fn new() -> CredentialDefinition {
-        CredentialDefinition {
-            schema_seq_no: 0,
-            issuer_did: String::new(),
-            signature_type: String::from("CL"),
-            data: CredentialDefinitionData {
-                public_key: None,
-                public_key_revocation: None,
-            },
-        }
-    }
-
-    pub fn from_str(credential_def: &str) -> Result<Self, CredDefError> {
-        serde_json::from_str(credential_def).map_err(|err| {
-            error!("{} with serde error: {}",error::INVALID_CREDENTIAL_DEF_JSON.message, err);
-            CredDefError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num)
-        })
-    }
-}
-
 pub fn create_new_credentialdef(source_id: String,
-                           credentialdef_name: String,
-                           schema_seq_no: u32,
-                           issuer_did: String,
-                           create_non_revoc: bool) -> Result<u32, CredDefError> {
-    let mut new_credentialdef = Box::new(CreateCredentialDef::new());
-    let schema_data = get_schema_data(schema_seq_no)?;
+                                name: String,
+                                issuer_did: String,
+                                schema_id: String,
+                                tag: String,
+                                config_json: String) -> Result<u32, CredDefError> {
+    let schema_json = LedgerSchema::new_from_ledger(&schema_id)
+        .map_err(|x| CredDefError::CommonError(x.to_error_code()))?.schema_json;
 
-    debug!("creating credentialdef with source_id: {}, name: {}, issuer_did: {}, sequence_no: {}", source_id, credentialdef_name, issuer_did, schema_seq_no);
-    let credential_def_json = create_and_store_credential_def(&schema_data,
-                                                    &issuer_did,
-                                                    Some(SigTypes::CL),
-                                                    create_non_revoc)?;
-    //Todo: move creating and sending txn to its own function
-    new_credentialdef.set_credential_def(CredentialDefinition::from_str(&credential_def_json)?);
-
-    let credential_def_txn = new_credentialdef.build_create_txn(&new_credentialdef
-        .credential_def
-        .data
-        .to_string()?
-    )?;
-
-    new_credentialdef.sign_and_send_request(&credential_def_txn)?;
-    debug!("created new credential def on ledger and stored in wallet");
+    debug!("creating credentialdef with source_id: {}, name: {}, issuer_did: {}, schema_id: {}", source_id, name, issuer_did, schema_id);
+    let id= _create_and_store_credential_def( &issuer_did,
+                                                   &schema_json,
+                                                   &tag,
+                                                   Some(SigTypes::CL),
+                                                   &config_json)?;
 
     let new_handle = rand::thread_rng().gen::<u32>();
-    new_credentialdef.set_name(credentialdef_name);
-    new_credentialdef.set_handle(new_handle);
-    new_credentialdef.set_source_id(source_id);
+    let mut new_cred_def = Box::new(CredentialDef {
+        handle: new_handle,
+        source_id,
+        name,
+        tag,
+        id,
+    });
     {
         let mut m = CREDENTIALDEF_MAP.lock().unwrap();
         debug!("inserting handle {} into credentialdef table", new_handle);
-        m.insert(new_handle, new_credentialdef);
+        m.insert(new_handle, new_cred_def);
     }
 
     Ok(new_handle)
 }
 
-fn create_and_store_credential_def(schema_json: &str,
-                              issuer_did: &str,
-                              sig_type: Option<SigTypes>,
-                              create_non_revoc: bool) -> Result<String, CredDefError> {
-    if settings::test_indy_mode_enabled() { return Ok(CREDENTIAL_DEF_JSON.to_string()); }
-    libindy_create_and_store_credential_def(get_wallet_handle(),
-                                       issuer_did,
-                                       schema_json,
-                                       sig_type,
-                                       create_non_revoc)
+//Todo: possibly move _create_and_store_credential_def and retrieve_cred_def to a common trait
+fn _create_and_store_credential_def(issuer_did: &str,
+                                   schema_json: &str,
+                                   tag: &str,
+                                   sig_type: Option<SigTypes>,
+                                   config_json: &str) -> Result<String, CredDefError> {
+    if settings::test_indy_mode_enabled() { return Ok(CRED_DEF_ID.to_string()); }
+
+    let (id, cred_def_json) = libindy_create_and_store_credential_def(issuer_did,
+                                                                      schema_json,
+                                                                      tag,
+                                                                      sig_type,
+                                                                      config_json)
         .map_err(|err| {
             match err {
-                //Todo: Find out how to match or Cred..Created.code_num
+                //Todo: Find out how to match on Cred...code_num
                 x if x == error::CREDENTIAL_DEF_ALREADY_CREATED.code_num => {
                     error!("cred_def for issuer_did {} already in wallet", issuer_did);
                     CredDefError::CredDefAlreadyCreatedError()
@@ -285,15 +110,30 @@ fn create_and_store_credential_def(schema_json: &str,
                     CredDefError::CreateCredDefError()
                 }
             }
-        })
+        })?;
+
+
+    let cred_def_req = libindy_build_create_credential_def_txn(issuer_did, &cred_def_json)
+        .or(Err(CredDefError::CreateCredDefError()))?;
+
+    libindy_sign_and_submit_request(issuer_did, &cred_def_req)
+        .map_err(|err| CredDefError::CommonError(err))?;
+
+    Ok(id)
 }
 
-pub fn get_schema_data(schema_seq_no: u32) -> Result<String, CredDefError> {
-    if settings::test_indy_mode_enabled() { return Ok(SCHEMAS_JSON.to_string()); }
-    let schema_obj = LedgerSchema::new_from_ledger_with_seq_no(schema_seq_no as i32)
-        .map_err(|x| CredDefError::CommonError(x.to_error_code()))?;
-    debug!("retrieved schema data from ledger");
-    Ok(schema_obj.to_string())
+pub fn retrieve_credential_def(submitter_did: &str,
+                               cred_def_id: &str) -> Result<(String, String), CredDefError> {
+    if settings::test_indy_mode_enabled() { return Ok((CRED_DEF_ID.to_string(), CRED_DEF_JSON.to_string())); }
+
+    let get_cred_def_req = libindy_build_get_credential_def_txn(submitter_did, cred_def_id)
+        .or(Err(CredDefError::BuildCredDefRequestError()))?;
+
+    let get_cred_def_response = libindy_submit_request(&get_cred_def_req)
+        .map_err(|err| CredDefError::CommonError(err))?;
+
+    libindy_parse_get_cred_def_response(&get_cred_def_response)
+        .or(Err(CredDefError::RetrieveCredDefError()))
 }
 
 pub fn is_valid_handle(handle: u32) -> bool {
@@ -311,7 +151,7 @@ pub fn to_string(handle: u32) -> Result<String, u32> {
 }
 
 pub fn from_string(credentialdef_data: &str) -> Result<u32, u32> {
-    let derived_credentialdef: CreateCredentialDef = serde_json::from_str(credentialdef_data)
+    let derived_credentialdef: CredentialDef = serde_json::from_str(credentialdef_data)
         .map_err(|err| {
             error!("{} with: {}", error::INVALID_CREDENTIAL_DEF_JSON.message, err);
             error::INVALID_CREDENTIAL_DEF_JSON.code_num
@@ -352,7 +192,7 @@ pub fn release_all() {
 pub mod tests {
     use utils::libindy::signus::SignusUtils;
     use utils::libindy::wallet::{ init_wallet, delete_wallet, get_wallet_handle };
-    use utils::constants::{ DEMO_AGENT_PW_SEED, DEMO_ISSUER_PW_SEED };
+    use utils::constants::{ DEMO_AGENT_PW_SEED, DEMO_ISSUER_PW_SEED, SCHEMA_ID};
     use utils::error::{NO_POOL_OPEN, INVALID_SCHEMA_SEQ_NO};
     use utils::types;
     use utils::constants;
@@ -362,158 +202,83 @@ pub mod tests {
     static CREDENTIAL_DEF_NAME: &str = "Test Credential Definition";
     static ISSUER_DID: &str = "4fUDR9R7fjwELRvH9JT6HH";
 
-    #[test]
-    fn test_get_cred_def_with_no_schema_no() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
-        let schema_key = types::SchemaKey{
-            name: "DEF".to_string(),
-            version: "1.0".to_string(),
-            did: ISSUER_DID.to_string(),
-        };
-        let sig_type = Some(SigTypes::CL);
-
-        let cred_def_string = RetrieveCredentialDef::new().retrieve_credential_def_with_schema_key(ISSUER_DID, &schema_key, sig_type).unwrap();
-        let cred_def: CredentialDefinition = serde_json::from_str(&cred_def_string).unwrap();
-        assert_eq!(cred_def_string, constants::LIBINDY_CRED_DEF);
-    }
-
     fn set_default_and_enable_test_mode(){
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
     }
 
     #[test]
-    fn test_get_credential_def_request() {
-        settings::set_defaults();
+    fn test_get_cred_def() {
+        set_default_and_enable_test_mode();
+        let sig_type = Some(SigTypes::CL);
 
-        let wallet_name = String::from("a_test_wallet");
-        assert!(init_wallet(&wallet_name).unwrap() > 0);
-        let wallet_handle = get_wallet_handle();
-        assert!(wallet_handle > 0);
-        let mut credential_def = RetrieveCredentialDef::new();
-        let credential_def_req = credential_def.build_get_txn("GGBDg1j8bsKmr4h5T9XqYf",
-                                                    22,
-                                                    Some(SigTypes::CL),
-                                                    "2hoqvcwupRTUNkXn6ArYzs").unwrap();
-        delete_wallet("a_test_wallet").unwrap();
-        assert!(credential_def_req.contains("\"identifier\":\"GGBDg1j8bsKmr4h5T9XqYf\",\"operation\":{\"type\":\"108\",\"ref\":22,\"signature_type\":\"CL\",\"origin\":\"2hoqvcwupRTUNkXn6ArYzs\"}"));
+        let (id, cred_def_json) = retrieve_credential_def(ISSUER_DID, CRED_DEF_ID).unwrap();
+        assert_eq!(&id, CRED_DEF_ID);
+        assert_eq!(&cred_def_json, CRED_DEF_JSON);
     }
 
-    #[test]
-    fn test_get_credential_def_by_extract_result() {
-        settings::set_defaults();
-        assert!(init_wallet("a_test_wallet").unwrap() > 0);
-        let wallet_handle = get_wallet_handle();
-        let credential_def = RetrieveCredentialDef::new();
-        let credential_def_response = credential_def.extract_result(CREDENTIAL_DEF_EX).unwrap();
-        let credential_def_obj: serde_json::Value = serde_json::from_str(&credential_def_response).unwrap();
-        assert_eq!(credential_def_obj["identifier"], json!("GGBDg1j8bsKmr4h5T9XqYf"));
-        let cred_def: CredentialDefinitionData = serde_json::from_value(credential_def_obj["data"].clone()).unwrap();
-        assert_eq!(cred_def.public_key_revocation, None);
-        delete_wallet("a_test_wallet").unwrap();
-    }
-
-    #[ignore] /* on some systems the pool may be open */
     #[test]
     fn test_get_credential_def_by_send_request_fails() {
         settings::set_defaults();
-        assert_eq!(RetrieveCredentialDef::new().send_request("{}"), Err(CredDefError::CommonError(error::NO_POOL_OPEN.code_num)));
-    }
-
-    #[test]
-    fn test_build_credential_def_req_fails() {
-        assert_eq!(RetrieveCredentialDef::new().build_get_txn("", 0, None, ""),
-                   Err(CredDefError::BuildCredDefRequestError()));
+        assert_eq!(retrieve_credential_def(ISSUER_DID, CRED_DEF_ID), Err(CredDefError::CommonError(error::NO_POOL_OPEN.code_num)));
     }
 
     #[ignore]
     #[test]
     fn test_get_credential_def() {
+        //Todo: Move to integration tests
         settings::set_defaults();
-        pool::open_sandbox_pool();
-        assert!(init_wallet("test_wallet").unwrap() > 0);
-        let wallet_handle = get_wallet_handle();
-        let mut retrieve_credential_def = RetrieveCredentialDef::new();
-        let credential_def = retrieve_credential_def.retrieve_credential_def("GGBDg1j8bsKmr4h5T9XqYf",
-                                                              1487,
-                                                  Some(SigTypes::CL),
-                                                  "2hoqvcwupRTUNkXn6ArYzs").unwrap();
-        delete_wallet("test_wallet").unwrap();
-        retrieve_credential_def.credential_def = Some(CredentialDefinition::from_str(&credential_def).unwrap());
-        let ref credential_def_obj = retrieve_credential_def.credential_def.as_ref().unwrap();
-        assert_ne!(credential_def_obj.data.public_key, None);
-        assert_eq!(credential_def_obj.schema_seq_no, 1487);
-        assert_eq!(credential_def_obj.data.public_key_revocation, None);
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
+        let wallet_name = "get_cred_def_test";
+        ::utils::devsetup::setup_dev_env(wallet_name);
+
+        let (id, cred_def_json) = retrieve_credential_def(ISSUER_DID, CRED_DEF_ID).unwrap();
+
+        ::utils::devsetup::cleanup_dev_env(wallet_name);
+        assert_eq!(&id, CRED_DEF_ID);
+        assert_eq!(&cred_def_json, CRED_DEF_JSON);
     }
 
     #[test]
     fn test_create_credential_def_and_store_in_wallet() {
-        settings::set_defaults();
+        set_default_and_enable_test_mode();
         assert!(init_wallet("test_credential_def").unwrap() > 0);
         let wallet_handle = get_wallet_handle();
-        let credential_def_json = create_and_store_credential_def(SCHEMAS_JSON, ISSUER_DID, Some(SigTypes::CL), false).unwrap();
+        let config = r#"{"support_revocation":false}"#;
+        let id = _create_and_store_credential_def(SCHEMAS_JSON, ISSUER_DID, "tag_1",Some(SigTypes::CL), config).unwrap();
         delete_wallet("test_credential_def").unwrap();
-        let credential_def_obj = CredentialDefinition::from_str(&credential_def_json).unwrap();
-        assert_eq!(credential_def_obj.schema_seq_no, 15);
-        assert_eq!(credential_def_obj.issuer_did, ISSUER_DID.to_string());
-        assert_ne!(credential_def_obj.data.public_key, None);
-        assert_eq!(credential_def_obj.data.public_key_revocation, None);
-    }
-
-    #[ignore]
-    #[test]
-    fn test_create_credential_def_txn_and_submit_req() {
-        settings::set_defaults();
-        pool::open_sandbox_pool();
-        init_wallet("a_test_wallet").unwrap();
-        let wallet_handle = get_wallet_handle();
-        let (my_did, _) = SignusUtils::create_and_store_my_did(wallet_handle, Some(DEMO_ISSUER_PW_SEED)).unwrap();
-        SignusUtils::create_and_store_my_did(wallet_handle, Some(DEMO_AGENT_PW_SEED)).unwrap();
-        let credential_def_json = create_and_store_credential_def(SCHEMAS_JSON, &my_did, Some(SigTypes::CL), false).unwrap();
-        println!("CredentialDefJson: {:?}", credential_def_json);
-        let credential_def_obj = CredentialDefinition::from_str(&credential_def_json).unwrap();
-        let credentialdef_data = serde_json::to_string(&credential_def_obj.data).unwrap();
-        println!("CredentialData: {:?}", credential_def_obj.data);
-        let mut create_credential_def = CreateCredentialDef::new();
-        create_credential_def.set_credential_def(credential_def_obj);
-        let credential_def_txn = create_credential_def.build_create_txn(&credentialdef_data).unwrap();
-        println!("CredentialDef TXN:  {:?}", credential_def_txn);
-        let credential_def_result = create_credential_def.sign_and_send_request(&credential_def_txn).unwrap();
-        println!("CredentialDef Result:  {:?}", credential_def_result);
-        delete_wallet("a_test_wallet").unwrap();
+        assert_eq!(id, CRED_DEF_ID);
     }
 
     #[ignore]
     #[test]
     fn test_create_credential_def_fails_with_already_created_credential_def() {
+        //Todo: Move to integration tests
         settings::set_defaults();
         let wallet_name = "a_test_wallet";
         ::utils::devsetup::setup_dev_env(wallet_name);
         let wallet_handle = get_wallet_handle();
 
         let my_did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
-        let rc = create_new_credentialdef("1".to_string(), "name".to_string(), 1487, my_did, false);
+        let rc = create_new_credentialdef("1".to_string(),
+                                          "name".to_string(),
+                                          my_did,
+                                          SCHEMA_ID.to_string(),
+                                          "tag_1".to_string(),
+                                          r#"{"support_revocation":false}"#.to_string());
         ::utils::devsetup::cleanup_dev_env(wallet_name);
         assert_eq!(rc.err(), Some(CredDefError::CredDefAlreadyCreatedError()));
-    }
-
-    #[ignore]
-    #[test]
-    fn test_get_schema_fails_with_invalid_seq_no() {
-        settings::set_defaults();
-        pool::open_sandbox_pool();
-        init_wallet("a_test_wallet").unwrap();
-        let wallet_handle = get_wallet_handle();
-        // Needs to be invalid schema_seq_no
-        assert_eq!(get_schema_data(1).err(), Some(CredDefError::CommonError(INVALID_SCHEMA_SEQ_NO.code_num)));
-        delete_wallet("a_test_wallet").unwrap();
     }
 
     #[test]
     fn test_create_credentialdef_success() {
         set_default_and_enable_test_mode();
-        let handle = create_new_credentialdef("SourceId".to_string(), CREDENTIAL_DEF_NAME.to_string(), 15, ISSUER_DID.to_string(), false).unwrap();
+        let handle = create_new_credentialdef("SourceId".to_string(),
+                                              CREDENTIAL_DEF_NAME.to_string(),
+                                            ISSUER_DID.to_string(),
+                                              SCHEMA_ID.to_string(),
+                                              "tag".to_string(),
+                                              "{}".to_string()).unwrap();
         assert!(handle > 0);
     }
 
@@ -521,11 +286,12 @@ pub mod tests {
     fn test_to_string_succeeds() {
         set_default_and_enable_test_mode();
 
-        let handle = create_new_credentialdef("SID".to_string(),
-                                        "NAME".to_string(),
-                                        15,
-                                        ISSUER_DID.to_string(),
-                                               false).unwrap();
+        let handle = create_new_credentialdef("SourceId".to_string(),
+                                              CREDENTIAL_DEF_NAME.to_string(),
+                                            ISSUER_DID.to_string(),
+                                              SCHEMA_ID.to_string(),
+                                              "tag".to_string(),
+                                              "{}".to_string()).unwrap();
         let credential_string = to_string(handle).unwrap();
         assert!(!credential_string.is_empty());
     }
@@ -533,35 +299,33 @@ pub mod tests {
     #[test]
     fn test_from_string_succeeds() {
         set_default_and_enable_test_mode();
-        let handle = create_new_credentialdef("SID".to_string(),
-                                               "NAME".to_string(),
-                                               15,
-                                               ISSUER_DID.to_string(),
-                                               false).unwrap();
+        let handle = create_new_credentialdef("SourceId".to_string(),
+                                              CREDENTIAL_DEF_NAME.to_string(),
+                                              ISSUER_DID.to_string(),
+                                              SCHEMA_ID.to_string(),
+                                              "tag".to_string(),
+                                              "{}".to_string()).unwrap();
         let credentialdef_data = to_string(handle).unwrap();
         assert!(!credentialdef_data.is_empty());
         release(handle);
         let new_handle = from_string(&credentialdef_data).unwrap();
         let new_credentialdef_data = to_string(new_handle).unwrap();
-        let mut credentialdef1: CreateCredentialDef = serde_json::from_str(&credentialdef_data).unwrap();
-        let credentialdef2: CreateCredentialDef = serde_json::from_str(&new_credentialdef_data).unwrap();
+        let mut credentialdef1: CredentialDef = serde_json::from_str(&credentialdef_data).unwrap();
+        let credentialdef2: CredentialDef = serde_json::from_str(&new_credentialdef_data).unwrap();
         credentialdef1.handle = credentialdef2.handle;
         assert_eq!(credentialdef1,credentialdef2);
-        println!("credentialdef_data: {}", credentialdef_data);
-        let cred_def_struct = CreateCredentialDef::from_str(&credentialdef_data).unwrap().credential_def;
-        assert_eq!(credentialdef1.credential_def, cred_def_struct);
-        assert_eq!(CreateCredentialDef::from_str("{}").err(), Some(CredDefError::CreateCredDefError()));
+        assert_eq!(CredentialDef::from_str("{}").err(), Some(CredDefError::CreateCredDefError()));
     }
 
     #[test]
     fn test_release_all() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
-        let h1 = create_new_credentialdef("SID".to_string(),"NAME".to_string(),15,ISSUER_DID.to_string(),false).unwrap();
-        let h2 = create_new_credentialdef("SID".to_string(),"NAME".to_string(),15,ISSUER_DID.to_string(),false).unwrap();
-        let h3 = create_new_credentialdef("SID".to_string(),"NAME".to_string(),15,ISSUER_DID.to_string(),false).unwrap();
-        let h4 = create_new_credentialdef("SID".to_string(),"NAME".to_string(),15,ISSUER_DID.to_string(),false).unwrap();
-        let h5 = create_new_credentialdef("SID".to_string(),"NAME".to_string(),15,ISSUER_DID.to_string(),false).unwrap();
+        let h1 = create_new_credentialdef("SourceId".to_string(), CREDENTIAL_DEF_NAME.to_string(), ISSUER_DID.to_string(), SCHEMA_ID.to_string(), "tag".to_string(), "{}".to_string()).unwrap();
+        let h2 = create_new_credentialdef("SourceId".to_string(), CREDENTIAL_DEF_NAME.to_string(), ISSUER_DID.to_string(), SCHEMA_ID.to_string(), "tag".to_string(), "{}".to_string()).unwrap();
+        let h3 = create_new_credentialdef("SourceId".to_string(), CREDENTIAL_DEF_NAME.to_string(), ISSUER_DID.to_string(), SCHEMA_ID.to_string(), "tag".to_string(), "{}".to_string()).unwrap();
+        let h4 = create_new_credentialdef("SourceId".to_string(), CREDENTIAL_DEF_NAME.to_string(), ISSUER_DID.to_string(), SCHEMA_ID.to_string(), "tag".to_string(), "{}".to_string()).unwrap();
+        let h5 = create_new_credentialdef("SourceId".to_string(), CREDENTIAL_DEF_NAME.to_string(), ISSUER_DID.to_string(), SCHEMA_ID.to_string(), "tag".to_string(), "{}".to_string()).unwrap();
         release_all();
         assert_eq!(release(h1),error::INVALID_CREDENTIAL_DEF_HANDLE.code_num);
         assert_eq!(release(h2),error::INVALID_CREDENTIAL_DEF_HANDLE.code_num);
@@ -569,13 +333,4 @@ pub mod tests {
         assert_eq!(release(h4),error::INVALID_CREDENTIAL_DEF_HANDLE.code_num);
         assert_eq!(release(h5),error::INVALID_CREDENTIAL_DEF_HANDLE.code_num);
     }
-
-    #[test]
-    fn test_errors(){
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
-        assert_eq!(CreateCredentialDef::new().sign_and_send_request("").err(),
-                   Some(CredDefError::CommonError(NO_POOL_OPEN.code_num)))
-    }
-
 }

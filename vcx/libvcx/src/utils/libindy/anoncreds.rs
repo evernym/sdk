@@ -8,6 +8,7 @@ use utils::libindy::{indy_function_eval, check_str, mock_libindy_rc};
 use utils::libindy::return_types::{ Return_I32_STR, Return_I32_BOOL, Return_I32_STR_STR, Return_I32 };
 use utils::libindy::SigTypes;
 use utils::libindy::error_codes::{map_indy_error_code, map_string_error};
+use utils::libindy::wallet::get_wallet_handle;
 use utils::timeout::TimeoutUtils;
 use utils::libindy::option_cstring_as_ptn;
 
@@ -19,7 +20,8 @@ extern {
                                                    tag: *const c_char,
                                                    type_: *const c_char,
                                                    config_json: *const c_char,
-                                                   cb: Option<extern fn(xcommand_handle: i32, err: i32,
+                                                   cb: Option<extern fn(xcommand_handle: i32,
+                                                                        err: i32,
                                                                         cred_def_id: *const c_char,
                                                                         cred_def_json: *const c_char)>) -> i32;
 //    fn indy_issuer_create_and_store_credential_def(command_handle: i32,
@@ -35,9 +37,9 @@ extern {
     fn indy_issuer_create_credential_offer(command_handle: i32,
                                            wallet_handle: i32,
                                            cred_def_id: *const c_char,
-                                           cb: Option<extern fn(xcommand_handle: i32, err: i32,
-                                                                cred_offer_json: *const c_char
-                                           )>) -> i32;
+                                           cb: Option<extern fn(xcommand_handle: i32,
+                                                                err: i32,
+                                                                cred_offer_json: *const c_char)>) -> i32;
 
 //    fn indy_issuer_create_credential_offer(command_handle: i32,
 //                                           wallet_handle: i32,
@@ -55,7 +57,8 @@ extern {
                                      cred_values_json: *const c_char,
                                      rev_reg_id: *const c_char,
                                      blob_storage_reader_handle: i32,
-                                     cb: Option<extern fn(xcommand_handle: i32, err: i32,
+                                     cb: Option<extern fn(xcommand_handle: i32,
+                                                          err: i32,
                                                           cred_json: *const c_char,
                                                           cred_revoc_id: *const c_char,
                                                           revoc_reg_delta_json: *const c_char)>) -> i32;
@@ -75,10 +78,10 @@ extern {
                                          cred_offer_json: *const c_char,
                                          cred_def_json: *const c_char,
                                          master_secret_id: *const c_char,
-                                         cb: Option<extern fn(xcommand_handle: i32, err: i32,
+                                         cb: Option<extern fn(xcommand_handle: i32,
+                                                              err: i32,
                                                               cred_req_json: *const c_char,
-                                                              cred_req_metadata_json: *const c_char
-                                         )>) -> i32;
+                                                              cred_req_metadata_json: *const c_char)>) -> i32;
 //    fn indy_prover_create_credential_req(command_handle: i32,
 //                                         wallet_handle: i32,
 //                                         prover_did: *const c_char,
@@ -98,7 +101,8 @@ extern {
                                     cred_json: *const c_char,
                                     cred_def_json: *const c_char,
                                     rev_reg_def_json: *const c_char,
-                                    cb: Option<extern fn(xcommand_handle: i32, err: i32,
+                                    cb: Option<extern fn(xcommand_handle: i32,
+                                                         err: i32,
                                                          out_cred_id: *const c_char)>) -> i32;
     //    fn indy_prover_store_credential(command_handle: i32,
     //                               wallet_handle: i32,
@@ -123,7 +127,8 @@ extern {
                                   credential_defs_json: *const c_char,
                                   rev_reg_defs_json: *const c_char,
                                   rev_regs_json: *const c_char,
-                                  cb: Option<extern fn(xcommand_handle: i32, err: i32,
+                                  cb: Option<extern fn(xcommand_handle: i32,
+                                                       err: i32,
                                                        valid: bool)>) -> i32;
 //    fn indy_verifier_verify_proof(command_handle: i32,
 //                                  proof_request_json: *const c_char,
@@ -143,7 +148,8 @@ extern {
                                 schemas_json: *const c_char,
                                 credential_defs_json: *const c_char,
                                 rev_states_json: *const c_char,
-                                cb: Option<extern fn(xcommand_handle: i32, err: i32,
+                                cb: Option<extern fn(xcommand_handle: i32,
+                                                     err: i32,
                                                      proof_json: *const c_char)>) -> i32;
 //    fn indy_prover_create_proof(command_handle: i32,
 //                                wallet_handle: i32,
@@ -163,9 +169,9 @@ extern {
     fn indy_prover_create_master_secret(command_handle: i32,
                                         wallet_handle: i32,
                                         master_secret_id: *const c_char,
-                                        cb: Option<extern fn(xcommand_handle: i32, err: i32,
-                                                             out_master_secret_id: *const c_char
-                                        )>) -> i32;
+                                        cb: Option<extern fn(xcommand_handle: i32,
+                                                             err: i32,
+                                                             out_master_secret_id: *const c_char)>) -> i32;
 //    fn indy_prover_create_master_secret(command_handle: i32,
 //                                        wallet_handle: i32,
 //                                        master_secret_name: *const c_char,
@@ -173,17 +179,6 @@ extern {
 //                                                             err: i32)>
 //    ) -> i32;
 
-/*
-    fn indy_prover_store_credential_offer(command_handle: i32,
-                                     wallet_handle: i32,
-                                     credential_offer_json: *const c_char,
-                                     cb: Option<extern fn(xcommand_handle: i32,
-                                                          err: i32)>
-    ) -> i32;
-*/
-
-
-    //Todo: Add to schema object
     fn indy_issuer_create_schema(command_handle: i32,
                                  issuer_did: *const c_char,
                                  name: *const c_char,
@@ -222,58 +217,57 @@ pub fn libindy_verifier_verify_proof(proof_req_json: &str,
     Err(0)
 }
 
-pub fn libindy_create_and_store_credential_def(wallet_handle: i32,
-                                               issuer_did: &str,
+pub fn libindy_create_and_store_credential_def(issuer_did: &str,
                                                schema_json: &str,
+                                               tag: &str,
                                                sig_type: Option<SigTypes>,
-                                               create_non_revoc: bool)  -> Result<String, u32>{
+                                               config_json: &str)  -> Result<(String, String), u32>{
 
-    let rtn_obj = Return_I32_STR::new()?;
-    let schema_json = CString::new(schema_json).map_err(map_string_error)?;
+    let wallet_handle = get_wallet_handle();
+    let rtn_obj = Return_I32_STR_STR::new()?;
     let i_did = CString::new(issuer_did).map_err(map_string_error)?;
+    let schema_json = CString::new(schema_json).map_err(map_string_error)?;
+    let tag = CString::new(tag).map_err(map_string_error)?;
     let s_type = CString::new(sig_type.unwrap_or(SigTypes::CL).to_string()).map_err(map_string_error)?;
-//    unsafe {
-//        indy_function_eval(
-//            indy_issuer_create_and_store_credential_def(rtn_obj.command_handle,
-//                                                   wallet_handle,
-//                                                   i_did.as_ptr(),
-//                                                   schema_json.as_ptr(),
-//                                                   s_type.as_ptr(),
-//                                                   create_non_revoc,
-//                                                   Some(rtn_obj.get_callback()))
-//        ).map_err(map_indy_error_code)?;
-//    }
+    let config_json = CString::new(config_json).map_err(map_string_error)?;
 
-    Err(0)
-//    rtn_obj.receive(TimeoutUtils::some_long()).and_then(check_str)
+    unsafe {
+        indy_function_eval(
+            indy_issuer_create_and_store_credential_def(rtn_obj.command_handle,
+                                                   wallet_handle,
+                                                   i_did.as_ptr(),
+                                                   schema_json.as_ptr(),
+                                                   tag.as_ptr(),
+                                                   s_type.as_ptr(),
+                                                   config_json.as_ptr(),
+                                                   Some(rtn_obj.get_callback()))
+        ).map_err(map_indy_error_code)?;
+    }
+
+    let (opt_str1, opt_str2) = rtn_obj.receive(TimeoutUtils::some_long())?;
+    let str1 = check_str(opt_str1)?;
+    let str2 = check_str(opt_str2)?;
+    Ok((str1, str2))
 }
 
-pub fn libindy_issuer_create_credential_offer(wallet_handle: i32,
-                                          schema_json: &str,
-                                          issuer_did: &str,
-                                          prover_did: &str) -> Result<String, u32> {
+pub fn libindy_issuer_create_credential_offer(cred_def_id: &str) -> Result<String, u32> {
     if settings::test_indy_mode_enabled() {
         let rc = mock_libindy_rc();
         if rc != 0 { return Err(rc) };
         return Ok(LIBINDY_CRED_OFFER.to_string());
     }
+    let wallet_handle = get_wallet_handle();
     let rtn_obj = Return_I32_STR::new()?;
-    let schema_json = CString::new(schema_json).map_err(map_string_error)?;
-    let i_did = CString::new(issuer_did).map_err(map_string_error)?;
-    let p_did = CString::new(prover_did).map_err(map_string_error)?;
-//    unsafe {
-//        indy_function_eval(
-//            indy_issuer_create_credential_offer(rtn_obj.command_handle,
-//                                               wallet_handle,
-//                                               schema_json.as_ptr(),
-//                                                   i_did.as_ptr(),
-//                                                   p_did.as_ptr(),
-//                                                   Some(rtn_obj.get_callback()))
-//        ).map_err(map_indy_error_code)?;
-//    }
-
-    Err(0)
-//    rtn_obj.receive(TimeoutUtils::some_long()).and_then(check_str)
+    let cred_def_id = CString::new(cred_def_id).map_err(map_string_error)?;
+    unsafe {
+        indy_function_eval(
+            indy_issuer_create_credential_offer(rtn_obj.command_handle,
+                                                wallet_handle,
+                                                cred_def_id.as_ptr(),
+                                                Some(rtn_obj.get_callback()))
+        ).map_err(map_indy_error_code)?;
+    }
+    rtn_obj.receive(TimeoutUtils::some_long()).and_then(check_str)
 }
 
 pub fn libindy_issuer_create_credential(wallet_handle: i32,
@@ -434,26 +428,25 @@ pub fn libindy_prover_store_credential_offer(wallet_handle: i32,
 }
 */
 
-pub fn libindy_prover_create_master_secret(wallet_handle: i32,
-                                           master_secret_name: &str) -> Result<(), u32>
+pub fn libindy_prover_create_master_secret(master_secret_id: &str) -> Result<String, u32>
 {
-    if settings::test_indy_mode_enabled() { return Ok(()); }
+    if settings::test_indy_mode_enabled() { return Ok(settings::DEFAULT_LINK_SECRET_ALIAS.to_string()); }
 
-    let rtn_obj = Return_I32::new()?;
+    let wallet_handle = get_wallet_handle();
+    let rtn_obj = Return_I32_STR::new()?;
 
-    let master_secret_name = CString::new(master_secret_name).map_err(map_string_error)?;
+    let master_secret_id = CString::new(master_secret_id).map_err(map_string_error)?;
 
-//    unsafe {
-//        indy_function_eval(
-//            indy_prover_create_master_secret(rtn_obj.command_handle,
-//                                             wallet_handle,
-//                                             master_secret_name.as_ptr(),
-//                                             Some(rtn_obj.get_callback()))
-//        ).map_err(map_indy_error_code)?;
-//    }
+    unsafe {
+        indy_function_eval(
+            indy_prover_create_master_secret(rtn_obj.command_handle,
+                                             wallet_handle,
+                                             master_secret_id.as_ptr(),
+                                             Some(rtn_obj.get_callback()))
+        ).map_err(map_indy_error_code)?;
+    }
 
-    Err(0)
-//    rtn_obj.receive(TimeoutUtils::some_medium())
+    rtn_obj.receive(TimeoutUtils::some_long()).and_then(check_str)
 }
 
 pub fn libindy_issuer_create_schema(issuer_did: &str,
@@ -493,36 +486,20 @@ mod tests {
                             INDY_CREDENTIAL_DEFS_JSON,
                             INDY_REVOC_REGS_JSON,
                             SCHEMAS_JSON,
+                            SCHEMA_JSON,
+                            CRED_DEF_ID,
     };
-
-    #[test]
-    fn simple_libindy_create_and_store_credential_def_test() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-        init_wallet("wallet_simple").unwrap();
-        let result = libindy_create_and_store_credential_def(get_wallet_handle(),
-                                                             "GGBDg1j8bsKmr4h5T9XqYf",
-                                                             SCHEMAS_JSON,
-                                                             None,
-                                                             false);
-        delete_wallet("wallet_simple").unwrap();
-        assert!(result.is_ok());
-        println!("{}", result.unwrap());
-    }
 
     #[test]
     fn simple_libindy_create_credential_offer_test() {
         ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         let wallet_name = "test_libindy_create_cred_offer";
         ::utils::devsetup::setup_wallet(wallet_name);
         init_wallet(wallet_name).unwrap();
-        let schema_no = 1487;
-        let schema_json = r#"{"dest":"2hoqvcwupRTUNkXn6ArYzs","seqNo":1487,"txnTime":1522769798,"type":"101","data":{"name":"Home Address","version":"1.4","attr_names":["address1","address2","city","zip","state"]}}"#;
-        let result = libindy_issuer_create_credential_offer(get_wallet_handle(),
-                                                            &schema_json,
-                                                            &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
-                                                           "DunkM3x1y7S4ECgSL4Wkru");
+
+        let result = libindy_issuer_create_credential_offer(CRED_DEF_ID);
         delete_wallet(wallet_name).unwrap();
         assert!(result.is_ok());
         println!("{}", result.unwrap());
@@ -536,32 +513,32 @@ mod tests {
         ::utils::devsetup::setup_wallet(wallet_name);
         init_wallet(wallet_name).unwrap();
 
-        let libindy_cred_def = ::utils::constants::LIBINDY_CRED_DEF;
-        let schema_json = r#"{"dest":"2hoqvcwupRTUNkXn6ArYzs","seqNo":1487,"txnTime":1522769798,"type":"101","data":{"name":"Home Address","version":"1.4","attr_names":["address1","address2","city","zip","state"]}}"#;
-        let encoded_cred_data = r#"{"address1":["101TelaLane","63690509275174663089934667471948380740244018358024875547775652380902762701972"],"address2":["101WilsonLane","68086943237164982734333428280784300550565381723532936263016368251445461241953"],"city":["SLC","101327353979588246869873249766058188995681113722618593621043638294296500696424"],"state":["UT","93856629670657830351991220989031130499313559332549427637940645777813964461231"],"zip":["87121","87121"]}"#;
-        let wallet_h = get_wallet_handle();
-        let schema_no = 1487;
-
-        let libindy_offer = libindy_issuer_create_credential_offer(get_wallet_handle(),
-                                                                   &schema_json,
-                                                                   &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
-                                                                   "DunkM3x1y7S4ECgSL4Wkru").unwrap();
-        println!("CredOffer: \n{:?}", libindy_offer);
-
-        libindy_prover_create_master_secret(wallet_h, settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
-        let libindy_cred_req = libindy_prover_create_credential_req(wallet_h,
-                                                                              "DunkM3x1y7S4ECgSL4Wkru",
-                                                                              &libindy_offer,
-                                                                              &libindy_cred_def).unwrap();
-        println!("CredReq: \n{:?}", libindy_cred_req);
-        let result = libindy_issuer_create_credential(wallet_h,
-                                                      &libindy_cred_req,
-                                                      encoded_cred_data,
-                                                      -1);
-        delete_wallet(wallet_name).unwrap();
-        assert!(result.is_ok());
-        let (str1, str2) = result.unwrap();
-        println!("{}\n{}", str1, str2);
+//        let libindy_cred_def = ::utils::constants::LIBINDY_CRED_DEF;
+//        let schema_json = r#"{"dest":"2hoqvcwupRTUNkXn6ArYzs","seqNo":1487,"txnTime":1522769798,"type":"101","data":{"name":"Home Address","version":"1.4","attr_names":["address1","address2","city","zip","state"]}}"#;
+//        let encoded_cred_data = r#"{"address1":["101TelaLane","63690509275174663089934667471948380740244018358024875547775652380902762701972"],"address2":["101WilsonLane","68086943237164982734333428280784300550565381723532936263016368251445461241953"],"city":["SLC","101327353979588246869873249766058188995681113722618593621043638294296500696424"],"state":["UT","93856629670657830351991220989031130499313559332549427637940645777813964461231"],"zip":["87121","87121"]}"#;
+//        let wallet_h = get_wallet_handle();
+//        let schema_no = 1487;
+//
+//        let libindy_offer = libindy_issuer_create_credential_offer(get_wallet_handle(),
+//                                                                   &schema_json,
+//                                                                   &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
+//                                                                   "DunkM3x1y7S4ECgSL4Wkru").unwrap();
+//        println!("CredOffer: \n{:?}", libindy_offer);
+//
+//        libindy_prover_create_master_secret(settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
+//        let libindy_cred_req = libindy_prover_create_credential_req(wallet_h,
+//                                                                              "DunkM3x1y7S4ECgSL4Wkru",
+//                                                                              &libindy_offer,
+//                                                                              &libindy_cred_def).unwrap();
+//        println!("CredReq: \n{:?}", libindy_cred_req);
+//        let result = libindy_issuer_create_credential(wallet_h,
+//                                                      &libindy_cred_req,
+//                                                      encoded_cred_data,
+//                                                      -1);
+//        delete_wallet(wallet_name).unwrap();
+//        assert!(result.is_ok());
+//        let (str1, str2) = result.unwrap();
+//        println!("{}\n{}", str1, str2);
     }
 
     #[test]
@@ -640,4 +617,39 @@ mod tests {
         println!("{}, {}", id, schema);
     }
 
+    #[test]
+    fn simple_libindy_create_cred_def() {
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
+        let wallet_name = "test_create_cred_def";
+        ::utils::devsetup::setup_wallet(wallet_name);
+        init_wallet(wallet_name).unwrap();
+
+        let result = libindy_create_and_store_credential_def(
+            &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
+            SCHEMA_JSON,
+           "tag_1",
+            Some(SigTypes::CL),
+            r#"{"support_revocation":false}"#
+        );
+        println!("result {:?}", result);
+        delete_wallet(wallet_name).unwrap();
+        assert!(result.is_ok());
+        let (id, cred) = result.unwrap();
+        println!("{}, {}", id, cred);
+    }
+
+    #[test]
+    fn simple_libindy_create_master_secret() {
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
+        let wallet_name = "test_create_cred_def";
+        ::utils::devsetup::setup_wallet(wallet_name);
+        init_wallet(wallet_name).unwrap();
+
+        let rc = libindy_prover_create_master_secret(settings::DEFAULT_LINK_SECRET_ALIAS);
+        delete_wallet(wallet_name).unwrap();
+        assert!(rc.is_ok());
+        println!("{}", rc.unwrap())
+    }
 }

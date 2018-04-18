@@ -17,7 +17,7 @@ use ::vcx::utils::logger::LoggerUtils;
 use ::vcx::utils::types::SchemaKey;
 use std::time::Duration;
 use std::ffi::CString;
-use vcx::credential_def::{ CredentialDefinition, CreateCredentialDef, RetrieveCredentialDef};
+use vcx::credential_def::{CredentialDefinition, CredentialDef, RetrieveCredentialDef};
 use vcx::api;
 use vcx::utils::timeout::TimeoutUtils;
 use std::sync::mpsc::channel;
@@ -473,9 +473,9 @@ fn test_get_cred_def_with_no_schema_no(){
 
     assert_eq!(credential_def.schema_seq_no as i32, schema_seq_no_as_i32);
     // lets get just a normal credential def, that we know all the parts to firsthand...
-    let mut cred_def_retrieved = CreateCredentialDef::new();
+    let mut cred_def_retrieved = CredentialDef::new();
     let schema_seq_no = schema_seq_no.to_string().parse::<u32>().unwrap();
-    let cred_def_using_seq_no: CredentialDefinition = serde_json::from_str(&CreateCredentialDef::new().retrieve_credential_def("GGBDg1j8bsKmr4h5T9XqYf", schema_seq_no, Some(sig_type), &did).unwrap()).unwrap();
+    let cred_def_using_seq_no: CredentialDefinition = serde_json::from_str(&CredentialDef::new().retrieve_credential_def("GGBDg1j8bsKmr4h5T9XqYf", schema_seq_no, Some(sig_type), &did).unwrap()).unwrap();
     let cred_def_using_schema_key: CredentialDefinition = serde_json::from_str(&RetrieveCredentialDef::new()
         .retrieve_credential_def_with_schema_key("GGBDg1j8bsKmr4h5T9XqYf",
                                                  &schema_key,

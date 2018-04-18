@@ -22,7 +22,7 @@ use utils::libindy::SigTypes;
 use utils::libindy::wallet;
 use utils::libindy::crypto;
 
-use credential_def::RetrieveCredentialDef;
+use credential_def::retrieve_credential_def;
 use connection;
 
 use settings;
@@ -80,11 +80,13 @@ pub struct Credential {
 impl Credential {
 
     fn _find_credential_def(&self, issuer_did: &str, schema_seq_num: u32) -> Result<String, CredentialError> {
-        RetrieveCredentialDef::new()
-            .retrieve_credential_def("GGBDg1j8bsKmr4h5T9XqYf",
-                                schema_seq_num,
-                                Some(SigTypes::CL),
-                                issuer_did).map_err(|e| CredentialError::CommonError(e.to_error_code()))
+        //Todo: need to use retrieve_cred_def with schema_id
+//        RetrieveCredentialDef::new()
+//            .retrieve_credential_def("GGBDg1j8bsKmr4h5T9XqYf",
+//                                schema_seq_num,
+//                                Some(SigTypes::CL),
+//                                issuer_did).map_err(|e| CredentialError::CommonError(e.to_error_code()))
+        Err(CredentialError::CommonError(0))
     }
 
     fn _build_request(&self, my_did: &str, their_did: &str) -> Result<CredentialRequest, CredentialError> {
