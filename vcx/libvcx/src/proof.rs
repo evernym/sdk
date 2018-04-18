@@ -438,7 +438,6 @@ pub fn from_string(proof_data: &str) -> Result<u32, ProofError> {
     {
         let mut m = PROOF_MAP.lock().unwrap();
         debug!("inserting handle {} with source_id {:?} into proof table", new_handle, source_id);
-        println!("INSERTED INTO MAP, new_handle: {}", new_handle);
         m.insert(new_handle, proof);
     }
     Ok(new_handle)
@@ -612,9 +611,9 @@ mod tests {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
 
         let connection_handle = build_connection("test_send_proof_request").unwrap();
-        connection::set_agent_verkey(connection_handle, VERKEY);
-        connection::set_agent_did(connection_handle, DID);
-        connection::set_their_pw_verkey(connection_handle, VERKEY);
+        connection::set_agent_verkey(connection_handle, VERKEY).unwrap();
+        connection::set_agent_did(connection_handle, DID).unwrap();
+        connection::set_their_pw_verkey(connection_handle, VERKEY).unwrap();
 
         let handle = create_proof("1".to_string(),
                                   REQUESTED_ATTRS.to_owned(),
@@ -635,7 +634,7 @@ mod tests {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
 
         let connection_handle = build_connection("test_send_proof_request").unwrap();
-        connection::set_pw_did(connection_handle, "");
+        connection::set_pw_did(connection_handle, "").unwrap();
 
         let handle = create_proof("1".to_string(),
                                   REQUESTED_ATTRS.to_owned(),
@@ -1002,9 +1001,9 @@ mod tests {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
 
         let connection_handle = build_connection("test_send_proof_request").unwrap();
-        connection::set_agent_verkey(connection_handle, VERKEY);
-        connection::set_agent_did(connection_handle, DID);
-        connection::set_their_pw_verkey(connection_handle, VERKEY);
+        connection::set_agent_verkey(connection_handle, VERKEY).unwrap();
+        connection::set_agent_did(connection_handle, DID).unwrap();
+        connection::set_their_pw_verkey(connection_handle, VERKEY).unwrap();
 
         let handle = create_proof("1".to_string(),
                                   REQUESTED_ATTRS.to_owned(),
