@@ -338,11 +338,48 @@ pub fn is_valid_handle(handle: u32) -> bool {
 }
 
 //TODO one function with credential
+pub fn get_proof_request(connection_handle: u32, msg_id: &str) -> Result<String, ProofError> {
+    let my_did = connection::get_pw_did(connection_handle).map_err(|e| ProofError::CommonError(e.to_error_code()))?;
+    let my_vk = connection::get_pw_verkey(connection_handle).map_err(|e| ProofError::CommonError(e.to_error_code()))?;
+    let agent_did = connection::get_agent_did(connection_handle).map_err(|e| ProofError::CommonError(e.to_error_code()))?;
+    let agent_vk = connection::get_agent_verkey(connection_handle).map_err(|e| ProofError::CommonError(e.to_error_code()))?;
+
+    if settings::test_agency_mode_enabled() { ::utils::httpclient::set_next_u8_response(::utils::constants::NEW_PROOF_REQUEST_RESPONSE.to_vec()); }
+
+    let message = messages::get_message::get_matching_message(msg_id,
+                                                              &my_did,
+                                                              &my_vk,
+                                                              &agent_did,
+                                                              &agent_vk).map_err(|ec| ProofError::CommonError(ec))?;
+
+    if message.msg_type.eq("proofReq") {
+        let msg_data = match message.payload {
+            Some(ref data) => {
+                let data = to_u8(data);
+                crypto::parse_msg(wallet::get_wallet_handle(), &my_vk, data.as_slice()).map_err(|ec| ProofError::CommonError(ec))?
+            },
+            None => return Err(ProofError::CommonError(error::INVALID_HTTP_RESPONSE.code_num))
+        };
+
+        let request = extract_json_payload(&msg_data).map_err(|ec| ProofError::CommonError(ec))?;
+        let mut request: ProofRequestMessage = serde_json::from_str(&request)
+           .or(Err(ProofError::CommonError(error::INVALID_HTTP_RESPONSE.code_num)))?;
+
+        request.msg_ref_id = Some(message.uid.to_owned());
+        Ok(serde_json::to_string_pretty(&request).unwrap())
+    } else {
+        Err(ProofError::CommonError(error::INVALID_MESSAGES.code_num))
+    }
+}
+
+//TODO one function with credential
 pub fn get_proof_request_messages(connection_handle: u32, match_name: Option<&str>) -> Result<String, ProofError> {
     let my_did = connection::get_pw_did(connection_handle).map_err(|e| ProofError::CommonError(e.to_error_code()))?;
     let my_vk = connection::get_pw_verkey(connection_handle).map_err(|e| ProofError::CommonError(e.to_error_code()))?;
     let agent_did = connection::get_agent_did(connection_handle).map_err(|e| ProofError::CommonError(e.to_error_code()))?;
     let agent_vk = connection::get_agent_verkey(connection_handle).map_err(|e| ProofError::CommonError(e.to_error_code()))?;
+
+    if settings::test_agency_mode_enabled() { ::utils::httpclient::set_next_u8_response(::utils::constants::NEW_PROOF_REQUEST_RESPONSE.to_vec()); }
 
     let payload = messages::get_message::get_all_message(&my_did,
                                                          &my_vk,
@@ -414,8 +451,6 @@ mod tests {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
 
         let connection_h = connection::build_connection("test_send_credential_offer").unwrap();
-
-        httpclient::set_next_u8_response(::utils::constants::NEW_PROOF_REQUEST_RESPONSE.to_vec());
 
         let requests = get_proof_request_messages(connection_h, None).unwrap();
         let requests:Value = serde_json::from_str(&requests).unwrap();
@@ -529,5 +564,17 @@ mod tests {
         assert!(requested_credential.len() > 0);
     println!("{}", requested_credential);
         assert!(requested_credential.contains(r#""state_2":["claim::230f2692-f8d2-48fa-8b65-2ef0177996f3",true]"#));
+    }
+
+    #[test]
+    fn test_get_proof_request() {
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
+        wallet::init_wallet("test_get_proof_request").unwrap();
+
+        let connection_h = connection::build_connection("test_get_proof_request").unwrap();
+
+        let request = get_proof_request(connection_h, "123").unwrap();
+        assert!(request.len() > 50);
     }
 }
