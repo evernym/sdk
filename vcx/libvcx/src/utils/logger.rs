@@ -1,4 +1,4 @@
-//extern crate env_logger;
+extern crate env_logger;
 extern crate log;
 extern crate log4rs;
 
@@ -42,6 +42,13 @@ impl LoggerUtils {
                     }
                 }
             }
+        });
+    }
+
+    pub fn init_test_logging() {
+        // logger for testing purposes, sends to stdout (set env RUST_LOG to configure log level
+        LOGGER_INIT.call_once(|| {
+            env_logger::init().unwrap();
         });
     }
 }
