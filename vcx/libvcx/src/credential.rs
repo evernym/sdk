@@ -54,6 +54,8 @@ impl Default for Credential {
             credential_offer: None,
             link_secret_alias: Some(String::from("main")), //TODO this should not be hardcoded
             msg_uid: None,
+            credential: None,
+            credential_id: Some(String::new()),
         }
     }
 }
@@ -75,10 +77,11 @@ pub struct Credential {
     my_vk: Option<String>,
     their_did: Option<String>,
     their_vk: Option<String>,
+    credential: Option<String>,
+    credential_id: Option<String>,
 }
 
 impl Credential {
-
     fn _find_credential_def(&self, issuer_did: &str, schema_seq_num: u32) -> Result<String, CredentialError> {
         RetrieveCredentialDef::new()
             .retrieve_credential_def("GGBDg1j8bsKmr4h5T9XqYf",
@@ -88,7 +91,6 @@ impl Credential {
     }
 
     fn _build_request(&self, my_did: &str, their_did: &str) -> Result<CredentialRequest, CredentialError> {
-
         if self.state != VcxStateType::VcxStateRequestReceived { return Err(CredentialError::NotReady())}
 
         let wallet_h = wallet::get_wallet_handle();
@@ -98,6 +100,7 @@ impl Credential {
 
         let schema_seq_no = credential_offer.schema_seq_no;
 
+        // this calls down to libindy
         let credential_def = self._find_credential_def(&credential_offer.libindy_offer.issuer_did,
                                              credential_offer.schema_seq_no)?;
 
@@ -153,7 +156,9 @@ impl Credential {
         let local_my_did = self.my_did.as_ref().ok_or(CredentialError::InvalidHandle())?;
         let local_my_vk = self.my_vk.as_ref().ok_or(CredentialError::InvalidHandle())?;
 
+        // if test mode, just get this.
         let req: CredentialRequest = self._build_request(local_my_did, local_their_did)?;
+
         let req = serde_json::to_string(&req).or(Err(CredentialError::InvalidCredentialJson()))?;
         let data: Vec<u8> = connection::generate_encrypted_payload(local_my_vk, local_their_vk, &req, "CLAIM_REQ").map_err(|e| CredentialError::CommonError(e.to_error_code()))?;
         let offer_msg_id = self.credential_offer.as_ref().unwrap().msg_ref_id.as_ref().ok_or(CredentialError::CommonError(error::CREATE_CREDENTIAL_REQUEST_ERROR.code_num))?;
@@ -202,12 +207,16 @@ impl Credential {
                         let data = crypto::parse_msg(wallet::get_wallet_handle(), &my_vk, data.as_slice())?;
 
                         let credential = extract_json_payload(&data)?;
+                        // add the credential to the struct
+                        self.credential = Some(credential.clone());
+                        // for now add the source_id as the credential_id
+                        self.credential_id = Some(self.source_id.clone());
+
                         let credential: Value = serde_json::from_str(&credential).or(Err(error::INVALID_CREDENTIAL_JSON.code_num)).unwrap();
-
                         let wallet_h = wallet::get_wallet_handle();
-
                         let credential = serde_json::to_string_pretty(&credential).unwrap();
                         debug!("storing credential: {}", credential);
+                        // TODO Get value from this call, store it in the Credential Object
                         libindy_prover_store_credential(wallet_h, &credential)?;
                         self.state = VcxStateType::VcxStateAccepted;
                     },
@@ -233,7 +242,25 @@ impl Credential {
         }
     }
 
-    fn get_state(&self) -> u32 { let state = self.state as u32; state }
+    fn get_state(&self) -> u32 {
+        let state = self.state as u32;
+        state
+    }
+    fn get_credential(&self) -> Result<String, CredentialError> {
+        match self.get_state() {
+            4 => match self.credential {
+                Some(ref c) => Ok(c.clone()),
+                None => Err(CredentialError::InvalidState()),
+            }
+            _ => Err(CredentialError::InvalidState()),
+        }
+    }
+
+    fn get_credential_id(&self) -> String { match self.credential_id.clone() {
+        Some(cid) => cid,
+        None => "".to_string(),
+    }}
+
 
     fn set_source_id(&mut self, id: &str) { self.source_id = id.to_string(); }
 
@@ -284,6 +311,18 @@ pub fn update_state(handle: u32) -> Result<u32, u32> {
         Ok(error::SUCCESS.code_num)
     })
 
+}
+
+pub fn get_credential(handle: u32) -> Result<String, CredentialError> {
+    HANDLE_MAP.get(handle, |obj| {
+        obj.get_credential().map_err(|e| e.to_error_code())
+    }).map_err(|ec| CredentialError::CommonError(ec))
+}
+
+fn get_credential_id(handle: u32) -> Result<String, CredentialError> {
+    HANDLE_MAP.get(handle, |obj| {
+        Ok(obj.get_credential_id())
+    }).map_err(|ec| CredentialError::CommonError(ec))
 }
 
 pub fn get_state(handle: u32) -> Result<u32, CredentialError> {
@@ -452,11 +491,11 @@ mod tests {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
         wallet::init_wallet("full_credential_test").unwrap();
+        use utils::constants::CREDENTIAL_STORED_IN_WALLET;
 
         let connection_h = connection::build_connection("test_send_credential_offer").unwrap();
 
         let offers = get_credential_offer_messages(connection_h, None).unwrap();
-        println!("{}", offers);
         let offers:Value = serde_json::from_str(&offers).unwrap();
         let offers = serde_json::to_string(&offers[0]).unwrap();
 
@@ -470,6 +509,9 @@ mod tests {
         httpclient::set_next_u8_response(::utils::constants::CREDENTIAL_RESPONSE.to_vec());
 
         update_state(c_h).unwrap();
+        assert_eq!(get_state(c_h).unwrap(), 4);
+        assert_eq!(get_credential_id(c_h).unwrap(), get_source_id(c_h).unwrap());
+        assert_eq!(get_credential(c_h).unwrap(),CREDENTIAL_STORED_IN_WALLET);
         assert_eq!(VcxStateType::VcxStateAccepted as u32, get_state(c_h).unwrap());
 
         wallet::delete_wallet("full_credential_test").unwrap();
@@ -486,4 +528,5 @@ mod tests {
         let offer = get_credential_offer(connection_h, "123").unwrap();
         assert!(offer.len() > 50);
     }
+
 }

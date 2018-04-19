@@ -8,7 +8,7 @@ use connection;
 use credential;
 use std::thread;
 use std::ptr;
-
+use error::credential::CredentialError;
 use error::ToErrorCode;
 
 /// Create a Credential object that requests and receives a credential for an institution
@@ -56,6 +56,35 @@ pub extern fn vcx_credential_create_with_offer(command_handle: u32,
         };
     });
 
+    error::SUCCESS.code_num
+}
+
+#[no_mangle]
+#[allow(unused_variables, unused_mut)]
+pub extern fn vcx_get_credential(command_handle: u32,
+                                 credential_handle: u32,
+                                 cb: Option<extern fn(xcommand_handle:u32, err: u32, credential: *const c_char)>) -> u32 {
+    check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
+    if !credential::is_valid_handle(credential_handle) {
+        return CredentialError::InvalidHandle().to_error_code();
+    }
+
+    thread::spawn(move|| {
+        match credential::get_credential(credential_handle) {
+            Ok(s) => {
+                info!("vcx_get_credential_cb(commmand_handle: {}, rc: {}, msg: {})",
+                      command_handle, error::SUCCESS.code_num, s);
+                let msg = CStringUtils::string_to_cstring(s);
+                cb(command_handle, error::SUCCESS.code_num, msg.as_ptr());
+            },
+            Err(e) => {
+                error!("vcx_get_credential_cb(commmand_handle: {}, rc: {}, msg: {})",
+                    command_handle, e.to_error_code(), "".to_string());
+                cb(command_handle, e.to_error_code(), ptr::null_mut());
+
+            },
+        };
+    });
     error::SUCCESS.code_num
 }
 
@@ -443,6 +472,18 @@ mod tests {
         println!("successfully called serialize_cb: {}", credential_string);
     }
 
+    extern "C" fn get_credential_cb(handle: u32, err: u32, credential_string: *const c_char) {
+        assert_eq!(err, 0);
+        if credential_string.is_null() {
+            panic!("credential_string is null");
+        }
+        check_useful_c_str!(credential_string, ());
+    }
+
+    extern "C" fn get_invalid_state_credential_cb(handle: u32, err: u32, credential_string: *const c_char) {
+        assert_eq!(err, CredentialError::InvalidState().to_error_code());
+    }
+
     #[test]
     fn test_vcx_credential_create_with_offer_success() {
         settings::set_defaults();
@@ -580,5 +621,22 @@ mod tests {
         thread::sleep(Duration::from_millis(300));
         assert_eq!(vcx_credential_send_request(0, handle, cxn,Some(send_offer_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
+
+    }
+
+    #[test]
+    fn test_get_credential(){
+        use utils::constants::SERIALIZED_CREDENTIAL;
+        settings::set_defaults();
+        let handle = credential::from_string(SERIALIZED_CREDENTIAL).unwrap();
+        let bad_handle = 1123;
+        let command_handle = 0;
+        assert_eq!(vcx_get_credential(command_handle, handle, Some(get_credential_cb)), error::SUCCESS.code_num);
+        thread::sleep(Duration::from_millis(400));
+        assert_eq!(vcx_get_credential(command_handle, bad_handle, Some(get_credential_cb)), CredentialError::InvalidHandle().to_error_code());
+
+        let handle = credential::from_string(DEFAULT_SERIALIZED_CREDENTIAL).unwrap();
+        assert_eq!(vcx_get_credential(command_handle, handle, Some(get_invalid_state_credential_cb)), error::SUCCESS.code_num);
+
     }
 }

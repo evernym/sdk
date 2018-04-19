@@ -113,6 +113,9 @@ impl RetrieveCredentialDef {
                                    schema_num:u32,
                                    sig_type: Option<SigTypes>,
                                    issuer_did: &str) -> Result<String, CredDefError> {
+        if settings::test_indy_mode_enabled() { return self.extract_result(STORE_CREDENTIAL_DEF_RESULT)};
+
+
         let request = self.build_get_txn(submitter_did, schema_num, sig_type, issuer_did)?;
         match self.send_request(&request) {
             Ok(x) => {
