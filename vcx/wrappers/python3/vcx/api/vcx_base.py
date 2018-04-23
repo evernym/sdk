@@ -54,6 +54,7 @@ class VcxBase:
 
     @classmethod
     async def _deserialize(cls, fn: str, data: str, *args):
+
         obj = cls(*args)
 
         if not hasattr(cls.deserialize, "cb"):
@@ -65,6 +66,7 @@ class VcxBase:
         obj.handle = await do_call(fn,
                                    c_data,
                                    cls.deserialize.cb)
+
 
         if obj.handle not in VcxBase.HANDLES:
             obj.logger.debug("deserialized {} object".format(cls))

@@ -48,7 +48,11 @@ async def test_deserialize():
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_deserialize_with_invalid_data():
     with pytest.raises(VcxError) as e:
-        data = {'invalid': -99}
+        data = {'invalid': -99,
+                'source_id': 'foobar',
+                'name': 'barfoo',
+                'credential_def':{'ref': 1234}
+                }
         await CredentialDef.deserialize(data)
     # assert ErrorCode.InvalidCredentialDef == e.value.error_code
     assert 'Credential Def not in valid json' == e.value.error_msg

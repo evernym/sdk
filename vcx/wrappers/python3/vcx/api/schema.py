@@ -49,7 +49,7 @@ class Schema(VcxBase):
 
     @staticmethod
     async def deserialize(data: dict):
-        # try:
+        try:
             # Todo: Find better way to access attr_names. Potential for issues.
             attrs = data['data']['data']
             schema = await Schema._deserialize("vcx_schema_deserialize",
@@ -58,8 +58,9 @@ class Schema(VcxBase):
                                                data['name'],
                                                attrs)
             return schema
-        # except KeyError:
-        #     raise VcxError(ErrorCode.InvalidSchema, error_message(ErrorCode.InvalidSchema))
+        except KeyError:
+            print('hit a key error')
+            raise VcxError(3000, lambda ec: ec)
 
     @staticmethod
     async def lookup(source_id: str, schema_no: int):

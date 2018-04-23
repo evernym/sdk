@@ -4,7 +4,7 @@ import asyncio
 import itertools
 import logging
 import os
-from .error import VcxError#, ErrorCode
+from .error import VcxError
 
 LIBRARY = "libvcx.so"
 _futures = {}
@@ -28,7 +28,7 @@ def do_call(name: str, *args):
 
     if err != 0:
         logger.warning("_do_call: Function %s returned error %i", name, err)
-        future.set_exception(VcxError(err, error_message(err)))
+        future.set_exception(VcxError(err, error_message))
 
     logger.debug("do_call: <<< %s", future)
     return future
@@ -43,8 +43,7 @@ def release(name, handle):
 
     if err != 0:
         logger.warning("release: Function %s returned error %i", name, err)
-        raise VcxError(err, error_message(err))
-
+        raise VcxError(err, error_message)
 
 
 def create_cb(cb_type: CFUNCTYPE, transform_fn=None):
@@ -72,7 +71,7 @@ def _cxs_loop_callback(command_handle: int, err, *args):
         print("_indy_loop_callback: Future was cancelled earlier")
     else:
         if err != 0: #ErrorCode.Success:
-            future.set_exception(VcxError(err, error_message(err)))
+            future.set_exception(VcxError(err, error_message))
         else:
             if len(args) == 0:
                 res = None

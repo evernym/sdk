@@ -1,7 +1,6 @@
 import pytest
-from vcx.error import VcxError
+from vcx.error import VcxError, ErrorCode
 from vcx.api.schema import Schema
-import json
 
 source_id = '123'
 name = 'schema name'
@@ -40,7 +39,6 @@ async def test_serialize_with_bad_handle():
         schema = Schema(source_id, name, attr_names)
         schema.handle = 0
         await schema.serialize()
-    # assert ErrorCode.InvalidSchemaHandle == e.value.error_code
 
 
 @pytest.mark.asyncio
@@ -58,7 +56,11 @@ async def test_deserialize_with_invalid_data():
     with pytest.raises(VcxError) as e:
         data = {'invalid': -99}
         await Schema.deserialize(data)
-    # assert ErrorCode.InvalidSchema == e.value.error_code
+    assert e.value.error_code == ErrorCode.InvalidJson
+
+    with pytest.raises(VcxError) as e:
+        data = {'invalid': -99, 'source_id': 'foobar', 'name': 'barfoo', 'credential_def':{'ref': 1234}}
+        await Schema.deserialize(data)
 
 
 @pytest.mark.asyncio
@@ -79,7 +81,6 @@ async def test_release():
         assert schema.handle > 0
         schema.release()
         await schema.serialize()
-    # assert ErrorCode.InvalidSchemaHandle == e.value.error_code
 
 
 @pytest.mark.asyncio
