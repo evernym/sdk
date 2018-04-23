@@ -1,5 +1,5 @@
 from ctypes import *
-from vcx.error import VcxError, ErrorCode
+from vcx.error import VcxError#, ErrorCode
 from vcx.api.vcx_base import VcxBase
 from vcx.common import error_message
 
@@ -60,8 +60,7 @@ class CredentialDef(VcxBase):
                                                               data['name'],
                                                               schema_no)
             return credential_def
-        except KeyError:
-            raise VcxError(ErrorCode.InvalidCredentialDef, error_message(ErrorCode.InvalidCredentialDef))
+        #     raise VcxError(ErrorCode.InvalidCredentialDef, error_message(ErrorCode.InvalidCredentialDef))
 
     async def serialize(self) -> dict:
         return await self._serialize(CredentialDef, 'vcx_credentialdef_serialize')

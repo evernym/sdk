@@ -4,7 +4,7 @@ import asyncio
 import itertools
 import logging
 import os
-from .error import VcxError, ErrorCode
+from .error import VcxError#, ErrorCode
 
 LIBRARY = "libvcx.so"
 _futures = {}
@@ -26,9 +26,9 @@ def do_call(name: str, *args):
 
     logger.debug("do_call: Function %s returned err: %i", name, err)
 
-    if err != ErrorCode.Success:
+    if err != 0:
         logger.warning("_do_call: Function %s returned error %i", name, err)
-        future.set_exception(VcxError(ErrorCode(err), error_message(err)))
+        future.set_exception(VcxError(err, error_message(err)))
 
     logger.debug("do_call: <<< %s", future)
     return future
@@ -41,22 +41,10 @@ def release(name, handle):
 
     logger.debug("release: Function %s returned err: %i", name, err)
 
-    if err != ErrorCode.Success:
+    if err != 0:
         logger.warning("release: Function %s returned error %i", name, err)
-        raise VcxError(ErrorCode(err))
+        raise VcxError(err, error_message(err))
 
-
-def error_message(error_code: int) -> str:
-    logger = logging.getLogger(__name__)
-
-    name = 'vcx_error_c_message'
-    c_error_code = c_uint32(error_code)
-    c_err_msg = getattr(_cdll(), name)(c_error_code)
-
-    err_msg = cast(c_err_msg , c_char_p).value.decode()
-    logger.debug("error_message: Function %s returned error_message: %s", name, err_msg)
-
-    return err_msg
 
 
 def create_cb(cb_type: CFUNCTYPE, transform_fn=None):
@@ -83,8 +71,8 @@ def _cxs_loop_callback(command_handle: int, err, *args):
     if future.cancelled():
         print("_indy_loop_callback: Future was cancelled earlier")
     else:
-        if err != ErrorCode.Success:
-            future.set_exception(VcxError(ErrorCode(err), error_message(err)))
+        if err != 0: #ErrorCode.Success:
+            future.set_exception(VcxError(err, error_message(err)))
         else:
             if len(args) == 0:
                 res = None
@@ -94,6 +82,19 @@ def _cxs_loop_callback(command_handle: int, err, *args):
                 res = args
 
             future.set_result(res)
+
+
+def error_message(error_code: int) -> str:
+    logger = logging.getLogger(__name__)
+
+    name = 'vcx_error_c_message'
+    c_error_code = c_uint32(error_code)
+    c_err_msg = getattr(_cdll(), name)(c_error_code)
+
+    err_msg = cast(c_err_msg , c_char_p).value.decode()
+    logger.debug("error_message: Function %s returned error_message: %s", name, err_msg)
+
+    return err_msg
 
 
 def _cdll() -> CDLL:

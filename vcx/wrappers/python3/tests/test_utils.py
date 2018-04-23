@@ -1,5 +1,5 @@
 import pytest
-from vcx.error import ErrorCode, VcxError
+from vcx.error import VcxError #, ErrorCode
 from vcx.common import error_message
 from vcx.api.utils import vcx_agent_provision, vcx_agent_update_info
 from ctypes import *
