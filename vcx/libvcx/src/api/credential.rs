@@ -59,6 +59,18 @@ pub extern fn vcx_credential_create_with_offer(command_handle: u32,
     error::SUCCESS.code_num
 }
 
+
+/// Retrieve information about a stored credential in user's wallet, including credential id and the credential itself.
+///
+/// #Params
+/// command_handle: command handle to map callback to user context.
+///
+/// credential_handle: credential handle that was provided during creation. Used to identify credential object
+///
+/// cb: Callback that provides error status of api call, or returns the credential in json format of "{uuid:credential}".
+///
+/// #Returns
+/// Error code as a u32
 #[no_mangle]
 #[allow(unused_variables, unused_mut)]
 pub extern fn vcx_get_credential(command_handle: u32,
@@ -95,7 +107,7 @@ pub extern fn vcx_get_credential(command_handle: u32,
 ///
 /// source_id: Institution's personal identification for the credential, should be unique.
 ///
-/// connection: connection to query for credential offer
+/// connection_handle: connection to query for credential offer
 ///
 /// msg_id: msg_id that contains the credential offer
 ///
@@ -473,10 +485,14 @@ mod tests {
     }
 
     extern "C" fn get_credential_cb(handle: u32, err: u32, credential_string: *const c_char) {
+        use utils::constants::{ CREDENTIAL_ID, CREDENTIAL_STORED_IN_WALLET };
         assert_eq!(err, 0);
         if credential_string.is_null() {
             panic!("credential_string is null");
         }
+        let cred = format!(r#"{{"{}":{}}}"#, CREDENTIAL_ID, CREDENTIAL_STORED_IN_WALLET);
+        println!("get_credential(): {}", CStringUtils::c_str_to_string(credential_string).unwrap().unwrap());
+        assert_eq!(CStringUtils::c_str_to_string(credential_string).unwrap().unwrap(), cred);
         check_useful_c_str!(credential_string, ());
     }
 

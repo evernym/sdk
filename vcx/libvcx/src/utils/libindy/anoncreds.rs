@@ -3,7 +3,7 @@ use self::libc::c_char;
 use settings;
 use std::ffi::CString;
 use std::ptr::null;
-use utils::constants::LIBINDY_CRED_OFFER;
+use utils::constants::{ LIBINDY_CRED_OFFER, CREDENTIAL_ID};
 use utils::libindy::{indy_function_eval, check_str, mock_libindy_rc};
 use utils::libindy::return_types::{ Return_I32_STR, Return_I32_BOOL, Return_I32_STR_STR, Return_I32 };
 use utils::libindy::SigTypes;
@@ -101,12 +101,14 @@ extern {
     ) -> i32;
 
     fn indy_prover_store_credential(command_handle: i32,
-                               wallet_handle: i32,
-                               credentials_json: *const c_char,
-                               rev_reg_json: *const c_char,
-                               cb: Option<extern fn(xcommand_handle: i32,
-                                                    err: i32)>
-    ) -> i32;
+                                    wallet_handle: i32,
+                                    cred_id: *const c_char,
+                                    cred_req_metadata_json: *const c_char,
+                                    cred_json: *const c_char,
+                                    cred_def_json: *const c_char,
+                                    rev_reg_def_json: *const c_char,
+                                    cb: Option<extern fn(xcommand_handle: i32, err: i32,
+                                    out_cred_id: *const c_char)>) -> i32;
 }
 
 pub fn libindy_verifier_verify_proof(proof_req_json: &str,
@@ -297,25 +299,36 @@ pub fn libindy_prover_create_credential_req(wallet_handle: i32,
 }
 
 pub fn libindy_prover_store_credential(wallet_handle: i32,
-                                       credential_json: &str) -> Result<(), u32>
+                                        cred_req_metadata_json: &str,
+                                        cred_json: &str,
+                                        cred_def_json: &str) -> Result<String, u32>
 {
-    if settings::test_indy_mode_enabled() { return Ok(()); }
+    if settings::test_indy_mode_enabled() { return Ok(CREDENTIAL_ID.to_string()); }
 
-    let rtn_obj = Return_I32::new()?;
+    let rtn_obj = Return_I32_STR::new()?;
 
-    let credential_json = CString::new(credential_json).map_err(map_string_error)?;
+    let cred_json = CString::new(cred_json).map_err(map_string_error)?;
+    let cred_req_metadata_json = CString::new(cred_req_metadata_json).map_err(map_string_error)?;
+    let cred_def_json = CString::new(cred_def_json).map_err(map_string_error)?;
 
     unsafe {
         indy_function_eval(
-            indy_prover_store_credential(rtn_obj.command_handle,
+            indy_prover_store_credential( rtn_obj.command_handle,
                                     wallet_handle,
-                                    credential_json.as_ptr(),
                                     null(),
-                                    Some(rtn_obj.get_callback()))
-        ).map_err(map_indy_error_code)?;
+                                    cred_req_metadata_json.as_ptr(),
+                                    cred_json.as_ptr(),
+                                    cred_def_json.as_ptr(),
+                                    null(),
+                                    Some(rtn_obj.get_callback()))).map_err(map_indy_error_code)?;
     }
-
-    rtn_obj.receive(TimeoutUtils::some_medium())
+    match rtn_obj.receive(TimeoutUtils::some_medium()) {
+        Ok(cred_id_opt) => match cred_id_opt {
+            Some(cred_id) => Ok(cred_id),
+            None => Err(1001),
+        },
+        Err(e) => Err(e),
+    }
 }
 
 /*

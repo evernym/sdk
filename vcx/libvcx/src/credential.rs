@@ -27,7 +27,7 @@ use connection;
 
 use settings;
 use utils::httpclient;
-use utils::constants::SEND_MESSAGE_RESPONSE;
+use utils::constants::{ SEND_MESSAGE_RESPONSE, CREDENTIAL_ID, CREDENTIAL_STORED_IN_WALLET };
 
 use serde_json::Value;
 use error::ToErrorCode;
@@ -158,7 +158,7 @@ impl Credential {
 
         // if test mode, just get this.
         let req: CredentialRequest = self._build_request(local_my_did, local_their_did)?;
-
+        self.credential_request = Some(req.clone());
         let req = serde_json::to_string(&req).or(Err(CredentialError::InvalidCredentialJson()))?;
         let data: Vec<u8> = connection::generate_encrypted_payload(local_my_vk, local_their_vk, &req, "CLAIM_REQ").map_err(|e| CredentialError::CommonError(e.to_error_code()))?;
         let offer_msg_id = self.credential_offer.as_ref().unwrap().msg_ref_id.as_ref().ok_or(CredentialError::CommonError(error::CREATE_CREDENTIAL_REQUEST_ERROR.code_num))?;
@@ -214,10 +214,33 @@ impl Credential {
 
                         let credential: Value = serde_json::from_str(&credential).or(Err(error::INVALID_CREDENTIAL_JSON.code_num)).unwrap();
                         let wallet_h = wallet::get_wallet_handle();
+
+
+                        // TODO Refactor this to its own function
+                        let credential_offer = self.credential_offer.as_ref()
+                            .ok_or(CredentialError::InvalidCredentialJson().to_error_code())?;
+                        let schema_seq_no = credential_offer.schema_seq_no;
+                        // this calls down to libindy
+                        let cred_def_json = self._find_credential_def(&credential_offer.libindy_offer.issuer_did,
+                                                                       credential_offer.schema_seq_no).map_err(|e| e.to_error_code())?;
+
                         let credential = serde_json::to_string_pretty(&credential).unwrap();
+                        let cred_req_metadata_json = match self.credential_request.clone() {
+                            Some(cred_req) => match serde_json::to_string(&cred_req) {
+                                Ok(s) => s,
+                                Err(e) => return Err(error::INVALID_CREDENTIAL_JSON.code_num),
+                            },
+
+                            None => return Err(error::INVALID_CREDENTIAL_JSON.code_num),
+                        };
                         debug!("storing credential: {}", credential);
                         // TODO Get value from this call, store it in the Credential Object
-                        libindy_prover_store_credential(wallet_h, &credential)?;
+                        self.credential_id = Some(libindy_prover_store_credential(wallet_h,
+                                                        &cred_req_metadata_json,
+                                                        &credential,
+                                                        &cred_def_json)?);
+
+
                         self.state = VcxStateType::VcxStateAccepted;
                     },
                     None => return Err(error::INVALID_HTTP_RESPONSE.code_num)
@@ -246,10 +269,16 @@ impl Credential {
         let state = self.state as u32;
         state
     }
+
+
+    // TODO have this be VCXState, not u32
     fn get_credential(&self) -> Result<String, CredentialError> {
-        match self.get_state() {
-            4 => match self.credential {
-                Some(ref c) => Ok(c.clone()),
+        match self.state {
+            VcxStateType::VcxStateAccepted => match self.credential.clone() {
+                Some(ref c) => match self.credential_id.clone() {
+                    Some(id) => Ok(format!(r#"{{"{}":{}}}"#, id, c)),
+                    None => Err(CredentialError::InvalidState()),
+                }
                 None => Err(CredentialError::InvalidState()),
             }
             _ => Err(CredentialError::InvalidState()),
@@ -482,6 +511,7 @@ mod tests {
         assert_eq!(release(handle).err(), Some(CredentialError::InvalidHandle()));
         let handle = from_string(&credential_string).unwrap();
         let cred1: Credential = serde_json::from_str(&credential_string).unwrap();
+        assert_eq!(cred1.get_state(), 4);
         let cred2: Credential = serde_json::from_str(&to_string(handle).unwrap()).unwrap();
         assert_eq!(cred1, cred2);
     }
@@ -491,10 +521,8 @@ mod tests {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
         wallet::init_wallet("full_credential_test").unwrap();
-        use utils::constants::CREDENTIAL_STORED_IN_WALLET;
 
         let connection_h = connection::build_connection("test_send_credential_offer").unwrap();
-
         let offers = get_credential_offer_messages(connection_h, None).unwrap();
         let offers:Value = serde_json::from_str(&offers).unwrap();
         let offers = serde_json::to_string(&offers[0]).unwrap();
@@ -503,17 +531,15 @@ mod tests {
         assert_eq!(VcxStateType::VcxStateRequestReceived as u32, get_state(c_h).unwrap());
 
         send_credential_request(c_h, connection_h).unwrap();
-
         assert_eq!(VcxStateType::VcxStateOfferSent as u32, get_state(c_h).unwrap());
 
+        assert_eq!(get_credential_id(c_h).unwrap(), "");
         httpclient::set_next_u8_response(::utils::constants::CREDENTIAL_RESPONSE.to_vec());
-
         update_state(c_h).unwrap();
-        assert_eq!(get_state(c_h).unwrap(), 4);
-        assert_eq!(get_credential_id(c_h).unwrap(), get_source_id(c_h).unwrap());
-        assert_eq!(get_credential(c_h).unwrap(),CREDENTIAL_STORED_IN_WALLET);
+        assert_eq!(get_state(c_h).unwrap(), VcxStateType::VcxStateAccepted as u32);
+        assert_eq!(get_credential_id(c_h).unwrap(), CREDENTIAL_ID);
+        assert_eq!(get_credential(c_h).unwrap(),format!(r#"{{"{}":{}}}"#, CREDENTIAL_ID, CREDENTIAL_STORED_IN_WALLET));
         assert_eq!(VcxStateType::VcxStateAccepted as u32, get_state(c_h).unwrap());
-
         wallet::delete_wallet("full_credential_test").unwrap();
     }
 
@@ -521,12 +547,12 @@ mod tests {
     fn test_get_credential_offer() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
-        wallet::init_wallet("test_get_credential_offer").unwrap();
-
+        let test_name = "test_get_credential_offer";
+        wallet::init_wallet(test_name).unwrap();
         let connection_h = connection::build_connection("test_get_credential_offer").unwrap();
-
-        let offer = get_credential_offer(connection_h, "123").unwrap();
+        let offer = get_credential_offer_messages(connection_h, None).unwrap();
         assert!(offer.len() > 50);
+        wallet::delete_wallet(test_name).unwrap();
     }
 
 }
