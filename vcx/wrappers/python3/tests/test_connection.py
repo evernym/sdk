@@ -88,13 +88,13 @@ async def test_deserialize():
     assert state == State.OfferSent
     connection3 = connection
 
+
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_deserialize_with_invalid_data():
     with pytest.raises(VcxError) as e:
         data = {'invalid': -99}
         await Connection.deserialize(data)
-    # assert ErrorCode.InvalidJson == e.value.error_code
 
 
 @pytest.mark.asyncio
@@ -116,7 +116,6 @@ async def test_connection_release():
         assert connection.handle > 0
         connection.release()
         await connection.serialize()
-    # assert ErrorCode.InvalidConnectionHandle == e.value.error_code
 
 
 @pytest.mark.asyncio
@@ -135,7 +134,6 @@ async def test_update_state_with_invalid_handle():
         connection = Connection(source_id)
         connection.handle = 0
         await connection.update_state()
-    # assert ErrorCode.InvalidConnectionHandle == e.value.error_code
 
 
 @pytest.mark.asyncio

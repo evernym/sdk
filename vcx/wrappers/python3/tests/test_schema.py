@@ -59,7 +59,7 @@ async def test_deserialize_with_invalid_data():
     assert e.value.error_code == ErrorCode.InvalidJson
 
     with pytest.raises(VcxError) as e:
-        data = {'invalid': -99, 'source_id': 'foobar', 'name': 'barfoo', 'credential_def':{'ref': 1234}}
+        data = {'invalid': -99, 'source_id': 'foobar', 'name': 'barfoo', 'credential_def': {'ref': 1234}}
         await Schema.deserialize(data)
 
 
