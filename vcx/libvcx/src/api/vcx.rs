@@ -8,6 +8,7 @@ use utils::error;
 use settings;
 use std::thread;
 use std::path::Path;
+use std::ffi::CString;
 
 
 /// Initializes VCX with config file
@@ -179,9 +180,13 @@ pub extern fn vcx_init (command_handle: u32,
     error::SUCCESS.code_num
 }
 
+lazy_static!{
+    pub static ref VERSION_STRING: CString = CString::new(format!("{}{}", version_constants::VERSION, version_constants::REVISION)).unwrap();
+}
+
 #[no_mangle]
 pub extern fn vcx_version() -> *const c_char {
-    version_constants::VERSION_STRING.as_ptr()
+    VERSION_STRING.as_ptr()
 }
 
 #[no_mangle]
@@ -225,7 +230,6 @@ mod tests {
     use std::ptr;
     use error::*;
     use error::proof::ProofError;
-    use std::ffi::CString;
 
     extern "C" fn init_cb(command_handle: u32, err: u32) {
         if err != 0 {panic!("create_cb failed: {}", err)}
