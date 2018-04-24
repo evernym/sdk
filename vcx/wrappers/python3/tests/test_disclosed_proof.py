@@ -1,5 +1,5 @@
 import pytest
-from vcx.error import ErrorCode, VcxError
+from vcx.error import VcxError
 from vcx.state import State
 from vcx.api.disclosed_proof import DisclosedProof
 from vcx.api.connection import Connection
@@ -83,6 +83,7 @@ proof_json = {
     "agent_vk": None
   }
 
+
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_create_disclosed_proof():
@@ -90,6 +91,7 @@ async def test_create_disclosed_proof():
     assert disclosed_proof.source_id == source_id
     assert disclosed_proof.handle > 0
     assert await disclosed_proof.get_state() == State.RequestReceived
+
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
@@ -101,6 +103,7 @@ async def test_create_disclosed_proof_with_msgid():
     assert disclosed_proof.source_id == source_id
     assert disclosed_proof.handle > 0
     assert await disclosed_proof.get_state() == State.RequestReceived
+
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
@@ -117,7 +120,6 @@ async def test_serialize_with_bad_handle():
         disclosed_proof = DisclosedProof(source_id)
         disclosed_proof.handle = 0
         await disclosed_proof.serialize()
-    assert ErrorCode.InvalidDisclosedProofHandle == e.value.error_code
 
 
 @pytest.mark.asyncio
@@ -137,7 +139,6 @@ async def test_deserialize_with_invalid_data():
     with pytest.raises(VcxError) as e:
         data = {'invalid': -99}
         await DisclosedProof.deserialize(data)
-    assert ErrorCode.InvalidJson == e.value.error_code
 
 
 @pytest.mark.asyncio
@@ -164,7 +165,6 @@ async def test_update_state_with_invalid_handle():
         disclosed_proof = DisclosedProof(source_id)
         disclosed_proof.handle = 0
         await disclosed_proof.update_state()
-    assert ErrorCode.InvalidDisclosedProofHandle == e.value.error_code
 
 
 @pytest.mark.asyncio
@@ -182,7 +182,6 @@ async def test_disclosed_proof_release():
         assert disclosed_proof.handle > 0
         disclosed_proof.release()
         await disclosed_proof.serialize()
-    assert ErrorCode.InvalidDisclosedProofHandle == e.value.error_code
 
 
 @pytest.mark.asyncio
@@ -202,7 +201,7 @@ async def test_send_proof_with_bad_connection():
         connection = Connection(source_id)
         disclosed_proof = await DisclosedProof.create(source_id, request)
         await disclosed_proof.send_proof(connection)
-    assert ErrorCode.InvalidConnectionHandle == e.value.error_code
+
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')

@@ -1,7 +1,5 @@
 from ctypes import *
-from vcx.error import VcxError, ErrorCode
 from vcx.api.vcx_base import VcxBase
-from vcx.common import error_message
 
 import json
 
@@ -52,16 +50,14 @@ class CredentialDef(VcxBase):
 
     @staticmethod
     async def deserialize(data: dict):
-        try:
-            schema_no = data['credential_def']['ref']
-            credential_def = await CredentialDef._deserialize("vcx_credentialdef_deserialize",
-                                                              json.dumps(data),
-                                                              data['source_id'],
-                                                              data['name'],
-                                                              schema_no)
-            return credential_def
-        except KeyError:
-            raise VcxError(ErrorCode.InvalidCredentialDef, error_message(ErrorCode.InvalidCredentialDef))
+        schema_no = data['credential_def']['ref']
+        credential_def = await CredentialDef._deserialize("vcx_credentialdef_deserialize",
+                                                      json.dumps(data),
+                                                      data['source_id'],
+                                                      data['name'],
+                                                      schema_no)
+        return credential_def
+
 
     async def serialize(self) -> dict:
         return await self._serialize(CredentialDef, 'vcx_credentialdef_serialize')

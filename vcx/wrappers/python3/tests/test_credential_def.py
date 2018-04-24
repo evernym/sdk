@@ -1,5 +1,5 @@
 import pytest
-from vcx.error import ErrorCode, VcxError
+from vcx.error import VcxError
 from vcx.api.credential_def import CredentialDef
 
 source_id = '123'
@@ -32,8 +32,8 @@ async def test_serialize_with_bad_handle():
         credential_def = await CredentialDef.create(source_id, name, schema_no, False)
         credential_def.handle = 0
         await credential_def.serialize()
-    assert ErrorCode.InvalidCredentialDefHandle == e.value.error_code
     assert 'Invalid Credential Definition handle' == e.value.error_msg
+
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
@@ -48,10 +48,14 @@ async def test_deserialize():
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_deserialize_with_invalid_data():
     with pytest.raises(VcxError) as e:
-        data = {'invalid': -99}
+        data = {'invalid': -99,
+                'source_id': 'foobar',
+                'name': 'barfoo',
+                'credential_def':{'ref': 1234}
+                }
         await CredentialDef.deserialize(data)
-    assert ErrorCode.InvalidCredentialDef == e.value.error_code
     assert 'Credential Def not in valid json' == e.value.error_msg
+
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
@@ -71,6 +75,5 @@ async def test_release():
         assert credential_def.handle > 0
         credential_def.release()
         await credential_def.serialize()
-    assert ErrorCode.InvalidCredentialDefHandle == e.value.error_code
     assert 'Invalid Credential Definition handle' == e.value.error_msg
 
