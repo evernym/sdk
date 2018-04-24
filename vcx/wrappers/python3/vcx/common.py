@@ -70,7 +70,7 @@ def _cxs_loop_callback(command_handle: int, err, *args):
     if future.cancelled():
         print("_indy_loop_callback: Future was cancelled earlier")
     else:
-        if err != 0: #ErrorCode.Success:
+        if err != 0:
             future.set_exception(VcxError(err, error_message))
         else:
             if len(args) == 0:
