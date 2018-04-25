@@ -3,7 +3,7 @@ use self::libc::c_char;
 use settings;
 use std::ffi::CString;
 use std::ptr::null;
-use utils::constants::LIBINDY_CRED_OFFER;
+use utils::constants::{ LIBINDY_CRED_OFFER, CREDENTIAL_ID};
 use utils::libindy::{indy_function_eval, check_str, mock_libindy_rc};
 use utils::libindy::return_types::{
     Return_I32_STR,
