@@ -660,14 +660,11 @@ mod tests {
             agent_vk: VERKEY.to_string(),
         });
 
-
         httpclient::set_next_u8_response(PROOF_RESPONSE.to_vec());
         httpclient::set_next_u8_response(UPDATE_PROOF_RESPONSE.to_vec());
 
         proof.update_state();
         assert_eq!(proof.get_state(), VcxStateType::VcxStateRequestReceived as u32);
-        //Remove when u8 is updated
-        assert_eq!(0, 1);
     }
 
     #[test]
@@ -709,11 +706,10 @@ mod tests {
         assert_eq!(proof.get_proof_state(), ProofStateType::ProofInvalid as u32);
         assert_eq!(proof.prover_did, "GxtnGN6ypZYgEqcftSQFnC");
         let proof_data = proof.get_proof().unwrap();
-        assert!(proof_data.contains(r#""issuer_did":"NcYxiDXkpYi6ov5FcYDi1e""#));
-        assert!(proof_data.contains(r#""schema_key":{"name":"gvt","version":"1.0","did":"NcYxiDXkpYi6ov5FcYDi1e"}"#));
+        println!("proof_data: {}", proof_data);
+        assert!(proof_data.contains(r#""cred_def_id":"NcYxiDXkpYi6ov5FcYDi1e:3:CL:NcYxiDXkpYi6ov5FcYDi1e:2:gvt:1.0""#));
+        assert!(proof_data.contains(r#""schema_id":"NcYxiDXkpYi6ov5FcYDi1e:2:gvt:1.0""#));
         /* converting proof to a string produces non-deterministic results */
-        //Remove when u8 is updated
-        assert_eq!(0, 1);
     }
 
     #[test]
