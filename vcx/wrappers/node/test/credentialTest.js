@@ -12,26 +12,8 @@ describe('A Credential', function () {
     version: '0.1',
     to_did: '8XFh8yBzrpJQmNyZzgoTqB',
     from_did: '8XFh8yBzrpJQmNyZzgoTqB',
-    libindy_offer: {
-      issuer_did: '2hoqvcwupRTUNkXn6ArYzs',
-      schema_key: {
-        name: 'Home Address',
-        version: '1.4',
-        did: '2hoqvcwupRTUNkXn6ArYzs'
-      },
-      key_correctness_proof: {
-        c: '2',
-        xz_cap: '2',
-        xr_cap: {
-          city: '2',
-          zip: '2',
-          state: '2',
-          address2: '2',
-          address1: '1'
-        }
-      },
-      nonce: '722911015074465265175302'
-    },
+    libindy_offer: '{}',
+    cred_def_id: 'id',
     credential_attrs: {
       address1: ['101 Tela Lane'],
       address2: ['101 Wilson Lane'],
@@ -55,26 +37,8 @@ describe('A Credential', function () {
       version: '0.1',
       to_did: '8XFh8yBzrpJQmNyZzgoTqB',
       from_did: '8XFh8yBzrpJQmNyZzgoTqB',
-      libindy_offer: {
-        issuer_did: '2hoqvcwupRTUNkXn6ArYzs',
-        schema_key: {
-          name: 'Home Address',
-          version: '1.4',
-          did: '2hoqvcwupRTUNkXn6ArYzs'
-        },
-        key_correctness_proof: {
-          c: '2',
-          xz_cap: '2',
-          xr_cap: {
-            city: '2',
-            zip: '2',
-            state: '2',
-            address2: '2',
-            address1: '1'
-          }
-        },
-        nonce: '722911015074465265175302'
-      },
+      libindy_offer: '{}',
+      cred_def_id: 'id',
       credential_attrs: {
         address1: ['101 Tela Lane'],
         address2: ['101 Wilson Lane'],

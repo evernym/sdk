@@ -174,7 +174,7 @@ pub extern fn vcx_schema_release(schema_handle: u32) -> u32 {
     }
 }
 
-/// Retrieves schema's sequence number
+/// Retrieves schema's id
 ///
 /// #Params
 /// schema_handle: Schema handle that was provided during creation. Used to access proof object
@@ -184,30 +184,30 @@ pub extern fn vcx_schema_release(schema_handle: u32) -> u32 {
 /// #Returns
 /// Error code as a u32
 #[no_mangle]
-pub extern fn vcx_schema_get_sequence_no(command_handle: u32,
-                                         schema_handle: u32,
-                                         cb: Option<extern fn(xcommand_handle: u32, err: u32, sequence_no: u32)>) -> u32 {
+pub extern fn vcx_schema_get_schema_id(command_handle: u32,
+                                       schema_handle: u32,
+                                       cb: Option<extern fn(xcommand_handle: u32, err: u32, schema_id: *const c_char)>) -> u32 {
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
-    info!("vcx_schema_get_sequence_no(command_handle: {}, schema_handle: {})", command_handle, schema_handle);
+    info!("vcx_schema_get_schema_id(command_handle: {}, schema_handle: {})", command_handle, schema_handle);
     if !schema::is_valid_handle(schema_handle) {
         return error::INVALID_SCHEMA_HANDLE.code_num;
     }
 
     thread::spawn(move|| {
-        let (schema_no, rc) = match schema::get_sequence_num(schema_handle) {
+        match schema::get_schema_id(schema_handle) {
             Ok(x) => {
-                info!("vcx_schema_get_sequence_no_cb(command_handle: {}, schema_handle: {}, rc: {}, schema_seq_no: {})",
+                info!("vcx_schema_get_schema_id(command_handle: {}, schema_handle: {}, rc: {}, schema_seq_no: {})",
                       command_handle, schema_handle, error_string(0), x);
-                (x, error::SUCCESS.code_num)
+                let msg = CStringUtils::string_to_cstring(x);
+                cb(command_handle, error::SUCCESS.code_num, msg.as_ptr());
             },
             Err(x) => {
-                warn!("vcx_schema_get_sequence_no_cb(command_handle: {}, schema_handle: {}, rc: {}, schema_seq_no: {})",
-                      command_handle, schema_handle, error_string(x.to_error_code()), 0);
-                (0, x.to_error_code())
+                warn!("vcx_schema_get_schema_id(command_handle: {}, schema_handle: {}, rc: {}, schema_seq_no: {})",
+                      command_handle, schema_handle, error_string(x), "");
+                cb(command_handle, x, ptr::null_mut());
             },
         };
-        cb(command_handle, rc, schema_no);
     });
 
     error::SUCCESS.code_num
@@ -306,11 +306,11 @@ mod tests {
     }
 
 
-    extern "C" fn create_cb_get_seq_no(command_handle: u32, err: u32, schema_handle: u32) {
+    extern "C" fn create_cb_get_id(command_handle: u32, err: u32, schema_handle: u32) {
         assert_eq!(err, 0);
         assert!(schema_handle > 0);
         println!("successfully called create_cb_get_seq_no");
-        assert_eq!(vcx_schema_get_sequence_no(0, schema_handle, Some(get_seq_no_cb)), error::SUCCESS.code_num);
+        assert_eq!(vcx_schema_get_schema_id(0, schema_handle, Some(get_id_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
 
@@ -340,10 +340,14 @@ mod tests {
         println!("successfully called serialize_cb: {}", schema_str);
     }
 
-    extern "C" fn get_seq_no_cb(handle: u32, err: u32, schema_no: u32) {
+    extern "C" fn get_id_cb(handle: u32, err: u32, schema_id: *const c_char) {
         assert_eq!(err, 0);
-        assert_eq!(schema_no, 299);
-        println!("successfully called get_seq_no_cb: {}", schema_no);
+        assert_eq!(err, 0);
+        if schema_id.is_null() {
+            panic!("id is null");
+        }
+        check_useful_c_str!(schema_id, ());
+        println!("successfully called get_id_cb: {}", schema_id);
     }
 
     extern "C" fn deserialize_cb(command_handle: u32, err: u32, schema_handle: u32) {
@@ -449,8 +453,8 @@ mod tests {
         thread::sleep(Duration::from_millis(200));
     }
 
-    //Todo: Change to get_schema_id
-    fn test_vcx_schema_get_schema_no_succeeds() {
+    #[test]
+    fn test_vcx_schema_get_schema_id_succeeds() {
         set_default_and_enable_test_mode();
         let data = r#"["name","male"]"#;
         assert_eq!(vcx_schema_create(0,
@@ -458,8 +462,7 @@ mod tests {
                                      CString::new("Test Schema").unwrap().into_raw(),
                                      CString::new("0.0.0").unwrap().into_raw(),
                                      CString::new(data).unwrap().into_raw(),
-                                     Some(create_cb_get_seq_no)), error::SUCCESS.code_num);
-        assert_eq!(0, 1);
+                                     Some(create_cb_get_id)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
 
     }

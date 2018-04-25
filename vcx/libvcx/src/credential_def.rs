@@ -52,6 +52,8 @@ impl CredentialDef {
 
 }
 
+//Todo: Add a get_cred_def_id call
+
 pub fn create_new_credentialdef(source_id: String,
                                 name: String,
                                 issuer_did: String,

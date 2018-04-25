@@ -18,22 +18,18 @@ describe('A disclosedProof', function () {
       "nonce":"838186471541979035208225",
       "name":"Account Certificate",
       "version":"0.1",
-      "requested_attrs":{
+      "requested_attributes":{
         "email_1":{
-          "name":"email",
-          "schema_seq_no":52
+          "name":"email"
         },
         "business_2":{
-          "name":"business",
-          "schema_seq_no":52
+          "name":"business"
         },
         "name_0":{
-          "name":"name",
-          "schema_seq_no":52
+          "name":"name"
         }
       },
       "requested_predicates":{
-  
       }
     },
     "msg_ref_id":"abcd"

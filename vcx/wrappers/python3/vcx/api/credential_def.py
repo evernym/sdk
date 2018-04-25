@@ -8,10 +8,10 @@ import json
 
 class CredentialDef(VcxBase):
 
-    def __init__(self, source_id: str, name: str, schema_no: int):
+    def __init__(self, source_id: str, name: str, schema_id: str):
         VcxBase.__init__(self, source_id)
         self._source_id = source_id
-        self._schema_no = schema_no
+        self._schema_id = schema_id
         self._name = name
 
     def __del__(self):
@@ -27,24 +27,26 @@ class CredentialDef(VcxBase):
         self._name = x
 
     @property
-    def schema_no(self):
-        return self._schema_no
+    def schema_id(self):
+        return self._schema_id
 
-    @schema_no.setter
-    def schema_no(self, x):
-        self._schema_no = x
+    @schema_id.setter
+    def schema_id(self, x):
+        self._schema_id = x
 
     @staticmethod
-    async def create(source_id: str, name: str, schema_no: int, revocation: bool):
-        constructor_params = (source_id, name, schema_no)
+    async def create(source_id: str, name: str, schema_id: str):
+        constructor_params = (source_id, name, schema_id)
 
         c_source_id = c_char_p(source_id.encode('utf-8'))
+        c_schema_id = c_char_p(schema_id.encode('utf-8'))
         c_name = c_char_p(name.encode('utf-8'))
-        c_schema_no = c_uint32(schema_no)
         # default institution_did in config is used as issuer_did
         c_issuer_did = None
-        c_revocation = c_bool(revocation)
-        c_params = (c_source_id, c_name, c_schema_no, c_issuer_did, c_revocation)
+        # Todo: add params for tag and config
+        c_tag = c_char_p('tag1'.encode('utf-8'))
+        c_config = c_char_p('{}'.encode('utf-8'))
+        c_params = (c_source_id, c_name, c_schema_id, c_issuer_did, c_tag, c_config)
 
         return await CredentialDef._create("vcx_credentialdef_create",
                                            constructor_params,
@@ -53,12 +55,11 @@ class CredentialDef(VcxBase):
     @staticmethod
     async def deserialize(data: dict):
         try:
-            schema_no = data['credential_def']['ref']
             credential_def = await CredentialDef._deserialize("vcx_credentialdef_deserialize",
                                                               json.dumps(data),
                                                               data['source_id'],
                                                               data['name'],
-                                                              schema_no)
+                                                              data['id'])
             return credential_def
         except KeyError:
             raise VcxError(ErrorCode.InvalidCredentialDef, error_message(ErrorCode.InvalidCredentialDef))

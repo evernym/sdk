@@ -22,16 +22,13 @@ request = {
         "nonce": "838186471541979035208225",
         "requested_attrs": {
             "business_2": {
-                "name": "business",
-                "schema_seq_no": 52
+                "name": "business"
             },
             "email_1": {
-                "name": "email",
-                "schema_seq_no": 52
+                "name": "email"
             },
             "name_0": {
-                "name": "name",
-                "schema_seq_no": 52
+                "name": "name"
             }
         },
         "requested_predicates": {},
@@ -57,18 +54,15 @@ proof_json = {
             "nonce": "838186471541979035208225",
             "name": "Account Certificate",
             "version": "0.1",
-            "requested_attrs": {
+            "requested_attributes": {
                 "business_2": {
-                    "name": "business",
-                    "schema_seq_no": 52
+                    "name": "business"
                 },
                 "email_1": {
-                    "name": "email",
-                    "schema_seq_no": 52
+                    "name": "email"
                 },
                 "name_0": {
-                    "name": "name",
-                    "schema_seq_no": 52
+                    "name": "name"
                 }
             },
             "requested_predicates": {}

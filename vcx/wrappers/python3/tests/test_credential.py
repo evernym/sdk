@@ -12,26 +12,7 @@ offer = {
    "version": "0.1",
    "to_did": "8XFh8yBzrpJQmNyZzgoTqB",
    "from_did": "8XFh8yBzrpJQmNyZzgoTqB",
-   "libindy_offer": {
-      "issuer_did": "2hoqvcwupRTUNkXn6ArYzs",
-      "schema_key": {
-         "name": "Home Address",
-         "version": "1.4",
-         "did": "2hoqvcwupRTUNkXn6ArYzs"
-      },
-      "key_correctness_proof": {
-         "c": "2",
-         "xz_cap": "2",
-         "xr_cap": {
-            "city": "2",
-            "zip": "2",
-            "state": "2",
-            "address2": "2",
-            "address1": "1"
-         }
-      },
-      "nonce": "722911015074465265175302"
-   },
+   "libindy_offer": '{}',
    "credential_attrs": {
       "address1": [
          "101 Tela Lane"
@@ -50,6 +31,7 @@ offer = {
       ]
    },
    "schema_seq_no": 1487,
+   "cred_def_id": "id1",
    "claim_name": "Credential",
    "claim_id": "defaultCredentialId",
    "msg_ref_id": None
@@ -60,7 +42,7 @@ credential_json = {
     'state': 3,
     'credential_name': None,
     'credential_request': None,
-    'credential_offer': { "msg_type": "CLAIM_OFFER", "version": "0.1", "to_did": "8XFh8yBzrpJQmNyZzgoTqB", "from_did": "8XFh8yBzrpJQmNyZzgoTqB", "libindy_offer": { "issuer_did": "2hoqvcwupRTUNkXn6ArYzs", "schema_key": { "name": "Home Address", "version": "1.4", "did": "2hoqvcwupRTUNkXn6ArYzs" }, "key_correctness_proof": { "c": "2", "xz_cap": "2", "xr_cap": { "city": "2", "zip": "2", "state": "2", "address2": "2", "address1": "1" } }, "nonce": "722911015074465265175302" }, "credential_attrs": { "address1": [ "101 Tela Lane" ], "address2": [ "101 Wilson Lane" ], "city": [ "SLC" ], "state": [ "UT" ], "zip": [ "87121" ] }, "schema_seq_no": 1487, "claim_name": "Credential", "claim_id": "defaultCredentialId", "msg_ref_id": '123' },
+    'credential_offer': '{}',
     'link_secret_alias': 'main',
     'msg_uid': None,
     'agent_did': None,
@@ -68,6 +50,7 @@ credential_json = {
     'my_did': None,
     'my_vk': None,
     'their_did': None,
+    "cred_def_id": "id1",
     'their_vk': None
   }
 

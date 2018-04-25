@@ -13,7 +13,7 @@ import { VCXBase } from './VCXBase'
 export interface ICredentialDefinition {
   sourceId: string,
   name: string,
-  schemaNo: number,
+  schemaId: string,
   revocation: boolean
 }
 
@@ -32,7 +32,7 @@ export interface ICredentialDefData {
 }
 
 export interface ICredentialDefParams {
-  schemaNo: number,
+  schemaId: string,
   name: string,
 }
 
@@ -44,12 +44,12 @@ export class CredentialDef extends VCXBase {
   protected _serializeFn = rustAPI().vcx_credentialdef_serialize
   protected _deserializeFn = rustAPI().vcx_credentialdef_deserialize
   private _name: string
-  private _schemaNo: number
+  private _schemaId: string
 
-  constructor (sourceId, { name, schemaNo }: ICredentialDefParams) {
+  constructor (sourceId, { name, schemaId }: ICredentialDefParams) {
     super(sourceId)
     this._name = name
-    this._schemaNo = schemaNo
+    this._schemaId = schemaId
   }
 
   /**
@@ -64,17 +64,19 @@ export class CredentialDef extends VCXBase {
    * @returns {Promise<credentialDef>} A credentialDef Object
    */
   static async create (data: ICredentialDefinition): Promise<CredentialDef> {
-    const credentialDef = new CredentialDef(data.sourceId, { name: data.name, schemaNo: data.schemaNo })
+    // Todo: need to add params for tag and config
+    const credentialDef = new CredentialDef(data.sourceId, { name: data.name, schemaId: data.schemaId })
     const commandHandle = 0
     const issuerDid = null
     try {
       await credentialDef._create((cb) => rustAPI().vcx_credentialdef_create(
       commandHandle,
-      credentialDef.sourceId,
-      credentialDef._name,
-      data.schemaNo,
+      data.sourceId,
+      data.name,
+      data.schemaId,
       issuerDid,
-      data.revocation,
+      'tag1',
+      '{}',
       cb
       ))
       return credentialDef
@@ -97,10 +99,11 @@ export class CredentialDef extends VCXBase {
    * @returns {Promise<credentialDef>} A credentialDef Obj
    */
   static async deserialize (data: ICredentialDefObj) {
+    // Todo: update the ICredentialDefObj
     try {
       const credentialDefParams = {
         name: data.name,
-        schemaNo: data.credential_def.ref
+        schemaId: null
       }
       return await super._deserialize(CredentialDef, data, credentialDefParams)
     } catch (err) {

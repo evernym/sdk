@@ -473,7 +473,7 @@ mod tests {
         assert_eq!(release(handle).err(), Some(CredentialError::InvalidHandle()));
         let handle = from_string(&credential_string).unwrap();
         let cred1: Credential = serde_json::from_str(&credential_string).unwrap();
-        assert_eq!(cred1.get_state(), 4);
+        assert_eq!(cred1.get_state(), 3);
         let cred2: Credential = serde_json::from_str(&to_string(handle).unwrap()).unwrap();
         assert_eq!(cred1, cred2);
     }

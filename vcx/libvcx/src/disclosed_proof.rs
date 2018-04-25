@@ -202,14 +202,10 @@ impl DisclosedProof {
         let credentials = anoncreds::libindy_prover_get_credentials_for_proof_req(&proof_req_data_json)
             .map_err(|ec| ProofError::CommonError(ec))?;
 
-        debug!("credentials: {}", credentials);
         let credentials_identifiers = credential_def_identifiers(&credentials)?;
         let requested_credentials = self._build_requested_credentials(&credentials_identifiers)?;
-
         let schemas = self._find_schemas(&credentials_identifiers)?;
-        debug!("schemas: {}", schemas);
         let credential_defs_json = self._find_credential_def(&credentials_identifiers)?;
-        debug!("credential_defs: {}", credential_defs_json);
         let revoc_regs_json = Some("{}");
 
         let proof = anoncreds::libindy_prover_create_proof(&proof_req_data_json,

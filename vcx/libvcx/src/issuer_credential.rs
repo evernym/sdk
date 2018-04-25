@@ -963,7 +963,5 @@ pub mod tests {
                                                                      r#"{"name":["frank"],"gpa":["4.0"]}"#.to_string()).unwrap();
 
         let encoded_attributes = self::get_encoded_attributes(issuer_credential_handle).unwrap();
-        println!("Encoded attributes: \n{}", encoded_attributes);
-
     }
 }

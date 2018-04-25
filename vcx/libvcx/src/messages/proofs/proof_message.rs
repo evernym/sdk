@@ -92,7 +92,7 @@ pub mod tests {
     fn test_proof_struct(){
         ::settings::set_defaults();
         let offer = create_default_proof();
-        assert_eq!(offer.from_did, Some("2hoqvcwupRTUNkXn6ArYzs".to_string()));
+        assert_eq!(offer.from_did, Some(::settings::get_config_value(::settings::CONFIG_INSTITUTION_DID).unwrap()));
     }
 
     #[test]
