@@ -827,7 +827,6 @@ pub mod tests {
         println!("{}", &credential.credential_attributes);
 //        println!("{:?}", &credential.generate_credential_offer(&credential_request.libindy_cred_req.issuer_did.unwrap()).unwrap());
         println!("{:?}", serde_json::to_string(&credential.generate_credential_offer("QTrbV4raAcND4DWWzBmdsh").unwrap()).unwrap());
-        assert_eq!(0, 1);
     }
 
     #[test]
