@@ -7,9 +7,9 @@ extern crate rmp_serde;
 use object_cache::ObjectCache;
 use api::VcxStateType;
 use utils::error;
-use issuer_credential::CredentialOffer;
+use issuer_credential::{ CredentialOffer, CredentialMessage };
 
-use credential_request::{ CredentialRequest, IndyCredReq };
+use credential_request::{ CredentialRequest };
 
 use messages;
 use messages::to_u8;
@@ -54,6 +54,7 @@ impl Default for Credential {
             credential_offer: None,
             link_secret_alias: Some(String::from("main")), //TODO this should not be hardcoded
             msg_uid: None,
+            cred_id: None,
         }
     }
 }
@@ -75,55 +76,36 @@ pub struct Credential {
     my_vk: Option<String>,
     their_did: Option<String>,
     their_vk: Option<String>,
+    cred_id: Option<String>,
 }
 
 impl Credential {
-
-    fn _find_credential_def(&self, issuer_did: &str, schema_seq_num: u32) -> Result<String, CredentialError> {
-        //Todo: need to use retrieve_cred_def with schema_id
-//        RetrieveCredentialDef::new()
-//            .retrieve_credential_def("GGBDg1j8bsKmr4h5T9XqYf",
-//                                schema_seq_num,
-//                                Some(SigTypes::CL),
-//                                issuer_did).map_err(|e| CredentialError::CommonError(e.to_error_code()))
-        Err(CredentialError::CommonError(0))
-    }
 
     fn _build_request(&self, my_did: &str, their_did: &str) -> Result<CredentialRequest, CredentialError> {
 
         if self.state != VcxStateType::VcxStateRequestReceived { return Err(CredentialError::NotReady())}
 
-        let wallet_h = wallet::get_wallet_handle();
-
         let prover_did = self.my_did.as_ref().ok_or(CredentialError::CommonError(error::INVALID_DID.code_num))?;
         let credential_offer = self.credential_offer.as_ref().ok_or(CredentialError::InvalidCredentialJson())?;
 
-        let schema_seq_no = credential_offer.schema_seq_no;
-
-        let credential_def = self._find_credential_def(&credential_offer.libindy_offer.issuer_did,
-                                             credential_offer.schema_seq_no)?;
-
-        let credential_offer = serde_json::to_string(&credential_offer.libindy_offer).or(Err(CredentialError::CommonError(error::INVALID_CREDENTIAL_JSON.code_num)))?;
+        let (cred_def_id, cred_def_json) = retrieve_credential_def(&credential_offer.cred_def_id)
+            .map_err(|err| CredentialError::CommonError(err.to_error_code()))?;
 
 /*
         debug!("storing credential offer: {}", credential_offer);
         libindy_prover_store_credential_offer(wallet_h, &credential_offer).map_err(|ec| CredentialError::CommonError(ec))?;
 */
 
-        let req = libindy_prover_create_credential_req(wallet_h,
-                                                            &prover_did,
-                                                            &credential_offer,
-                                                            &credential_def).map_err(|ec| CredentialError::CommonError(ec))?;
-
-        let req: IndyCredReq = serde_json::from_str(&req)
-            .or_else(|e|{
-                error!("Unable to create credential request - libindy error: {}", e);
-                Err(CredentialError::CommonError(error::UNKNOWN_LIBINDY_ERROR.code_num))
-            })?;
+        let (req, req_meta) = libindy_prover_create_credential_req(&prover_did,
+                                                                   &credential_offer.libindy_offer,
+                                                                   &cred_def_json,
+                                                                   self.link_secret_alias.clone())
+            .map_err(|ec| CredentialError::CommonError(ec))?;
 
         Ok(CredentialRequest {
             libindy_cred_req: req,
-            schema_seq_no: Some(schema_seq_no as i32),
+            libindy_cred_req_meta: req_meta,
+            cred_def_id,
             tid: String::new(),
             to_did: String::from(their_did),
             from_did: String::from(my_did),
@@ -204,13 +186,18 @@ impl Credential {
                         let data = crypto::parse_msg(wallet::get_wallet_handle(), &my_vk, data.as_slice())?;
 
                         let credential = extract_json_payload(&data)?;
-                        let credential: Value = serde_json::from_str(&credential).or(Err(error::INVALID_CREDENTIAL_JSON.code_num)).unwrap();
+                        let credential: CredentialMessage = serde_json::from_str(&credential)
+                            .or(Err(error::INVALID_CREDENTIAL_JSON.code_num)).unwrap();
 
-                        let wallet_h = wallet::get_wallet_handle();
+                        let cred_req: &CredentialRequest = self.credential_request.as_ref()
+                            .ok_or(CredentialError::InvalidCredentialJson().to_error_code())?;
 
-                        let credential = serde_json::to_string_pretty(&credential).unwrap();
-                        debug!("storing credential: {}", credential);
-                        libindy_prover_store_credential(wallet_h, &credential)?;
+                        self.cred_id = Some(libindy_prover_store_credential(None,
+                                                                      &cred_req.libindy_cred_req,
+                                                                      &cred_req.libindy_cred_req_meta,
+                                                                      &credential.libindy_cred,
+                                                                      &cred_req.cred_def_id,
+                                                                      None)?);
                         self.state = VcxStateType::VcxStateAccepted;
                     },
                     None => return Err(error::INVALID_HTTP_RESPONSE.code_num)
@@ -477,8 +464,6 @@ mod tests {
         wallet::delete_wallet("full_credential_test").unwrap();
     }
 
-<<<<<<< HEAD
-=======
     #[test]
     fn test_get_credential_offer() {
         settings::set_defaults();
@@ -490,5 +475,4 @@ mod tests {
         let offer = get_credential_offer(connection_h, "123").unwrap();
         assert!(offer.len() > 50);
     }
->>>>>>> upstream/master
 }

@@ -1,4 +1,5 @@
 extern crate vcx;
+/*
 extern crate libc;
 #[macro_use]
 extern crate serde_json;
@@ -531,3 +532,4 @@ fn create_schema_on_ledger(did: &str, schema_data: &str, pool_handle: i32, walle
     let schema_request = ::vcx::utils::libindy::ledger::libindy_build_schema_request(did, schema_data)?;
     ::vcx::utils::libindy::ledger::libindy_sign_and_submit_request(pool_handle, wallet_handle, did, &schema_request)
 }
+*/

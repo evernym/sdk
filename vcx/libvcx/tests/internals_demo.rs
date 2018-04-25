@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate serde_json;
+/*
 
 #[cfg(test)]
 mod tests {
@@ -119,3 +120,4 @@ mod tests {
         self::vcx::utils::devsetup::cleanup_dev_env("test_real_proof");
     }
 }
+*/

@@ -1,4 +1,5 @@
 extern crate vcx;
+/*
 extern crate tempfile;
 extern crate libc;
 extern crate serde_json;
@@ -440,3 +441,4 @@ pub fn create_schema(source_id: &str, schema_name: &str, schema_data: &str) -> (
     let schema_no = ::vcx::schema::get_sequence_num(handle).unwrap();
     (rc, handle, schema_no)
 }
+*/

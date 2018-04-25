@@ -1,6 +1,7 @@
 extern crate libc;
 use self::libc::c_char;
 use std::ffi::CString;
+use settings;
 use utils::libindy::{
     indy_function_eval,
     SigTypes,
@@ -234,11 +235,11 @@ pub fn libindy_parse_get_cred_def_response(get_cred_def_response: &str) -> Resul
     let str2 = check_str(opt_str2)?;
     Ok((str1, str2))
 }
-pub fn libindy_build_get_credential_def_txn(submitter_did: &str,
-                                            cred_def_id: &str)  -> Result<String, u32>{
+pub fn libindy_build_get_credential_def_txn(cred_def_id: &str)  -> Result<String, u32>{
 
     let rtn_obj = Return_I32_STR::new()?;
-    let sub_did = CString::new(submitter_did).map_err(map_string_error)?;
+    let institution_did  = settings::get_config_value(settings::CONFIG_INSTITUTION_DID)?;
+    let sub_did = CString::new(institution_did).map_err(map_string_error)?;
     let cred_def_id = CString::new(cred_def_id).map_err(map_string_error)?;
     unsafe {
         indy_function_eval(
@@ -275,7 +276,6 @@ pub fn libindy_build_create_credential_def_txn(submitter_did: &str,
 mod tests {
     use super::*;
     use utils::constants::{CREDENTIAL_DEF_DATA, SCHEMA_CREATE_JSON, SCHEMA_ID, CRED_DEF_ID, CREDENTIAL_DEF_JSON, SCHEMA_JSON, CRED_DEF_REQ};
-    use settings;
     use utils::devsetup::setup_wallet;
     use utils::libindy::{
         wallet::{delete_wallet, init_wallet},
@@ -293,17 +293,7 @@ mod tests {
     #[test]
     fn simple_libindy_build_get_credential_def_txn_test() {
         settings::set_defaults();
-        let result = libindy_build_get_credential_def_txn(
-                                                          &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
-                                                          CRED_DEF_ID);
-        assert!(result.is_ok());
-        println!("{}", result.unwrap());
-    }
-
-    #[test]
-    fn simple_libindy_build_schema_request_test() {
-        let request = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#;
-        let result = libindy_build_schema_request("GGBDg1j8bsKmr4h5T9XqYf", request);
+        let result = libindy_build_get_credential_def_txn(CRED_DEF_ID);
         assert!(result.is_ok());
         println!("{}", result.unwrap());
     }
@@ -311,7 +301,7 @@ mod tests {
     #[test]
     fn test_libindy_build_get_schema_request() {
         let did = "GGBDg1j8bsKmr4h5T9XqYf";
-        assert!(libindy_build_get_schema_request(did, did).is_ok())
+        assert!(libindy_build_get_schema_request(did, SCHEMA_ID).is_ok())
     }
 
     #[test]
@@ -375,7 +365,7 @@ mod tests {
         ::utils::devsetup::cleanup_dev_env(wallet_name);
     }
 
-    #[ignore]
+//    #[ignore]
     #[test]
     fn test_build_get_schema_and_parse_response() {
         //Todo: Move to integration tests
@@ -508,9 +498,7 @@ mod tests {
         let wallet_name = "test_create_schema_req";
         ::utils::devsetup::setup_dev_env(wallet_name);
 
-        let get_cred_def_req = libindy_build_get_credential_def_txn(
-            &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
-            CRED_DEF_ID).unwrap();
+        let get_cred_def_req = libindy_build_get_credential_def_txn(CRED_DEF_ID).unwrap();
         println!("get_cred_def_req: {}", get_cred_def_req);
 
         let get_cred_def_response = libindy_submit_request(&get_cred_def_req ).unwrap();

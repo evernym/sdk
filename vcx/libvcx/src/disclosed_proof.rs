@@ -25,6 +25,8 @@ use settings;
 use utils::httpclient;
 use utils::constants::SEND_MESSAGE_RESPONSE;
 
+use serde_json::{Map, Value};
+
 use error::ToErrorCode;
 use error::proof::ProofError;
 
@@ -51,7 +53,7 @@ impl Default for DisclosedProof {
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
-struct DisclosedProof {
+pub struct DisclosedProof {
     source_id: String,
     my_did: Option<String>,
     my_vk: Option<String>,
@@ -71,29 +73,50 @@ pub struct RequestedCreds {
     pub requested_predicates: HashMap<String, String>
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-pub struct CredsForProofRequest {
-    pub attrs: HashMap<String, Vec<CredInfo>>,
-    pub predicates: HashMap<String, Vec<CredInfo>>
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub struct CredInfo {
     pub referent: String,
-    pub attrs: HashMap<String, String>,
-    pub schema_key: SchemaKey,
-    pub issuer_did: String,
-    pub revoc_reg_seq_no: Option<i32>
+    pub schema_id: String,
+    pub cred_def_id: String,
 }
 
-fn credential_def_identifiers(credentials: &CredsForProofRequest) -> Result<Vec<(String, String, String, SchemaKey)>, ProofError> {
-    credentials.attrs.iter().map(|(key, creds)| {
-        //Todo: retrieve all claims for a specific attribute instead of just picking the first one
-        //Todo: create a type instead of using a tuple
-        let cred: &CredInfo = &creds[0];
-        Ok((key.to_owned(), cred.referent.to_owned(), cred.issuer_did.to_owned(),
-            cred.schema_key.to_owned()))
-    }).collect::<Result<Vec<(String, String, String, SchemaKey)>, ProofError>>()
+fn credential_def_identifiers(credentials: &str) -> Result<Vec<(String, String, String, String)>, ProofError> {
+    let mut rtn = Vec::new();
+
+    let credentials: Value = serde_json::from_str(credentials)
+        .or(Err(ProofError::CommonError(error::INVALID_JSON.code_num)))?;
+
+    if let Value::Object(ref map) = credentials["attrs"] {
+        for (key, value) in map {
+            //Todo: retrieve all claims for a specific attribute instead of just picking the first one
+            if let Value::Object(ref attr_obj) = value[0]["cred_info"] {
+
+                let cred_uuid = match attr_obj.get("referent") {
+                    Some(i) => if i.is_string() { i.as_str().unwrap() } else { return Err(ProofError::CommonError(error::INVALID_JSON.code_num))},
+                    None => return Err(ProofError::CommonError(error::INVALID_JSON.code_num)),
+                };
+
+                let schema_id = match attr_obj.get("schema_id") {
+                    Some(i) => if i.is_string() { i.as_str().unwrap() } else { return Err(ProofError::CommonError(error::INVALID_JSON.code_num))},
+                    None => return Err(ProofError::CommonError(error::INVALID_JSON.code_num)),
+                };
+
+                let cred_def_id = match attr_obj.get("cred_def_id") {
+                    Some(i) => if i.is_string() { i.as_str().unwrap() } else { return Err(ProofError::CommonError(error::INVALID_JSON.code_num))},
+                    None => return Err(ProofError::CommonError(error::INVALID_JSON.code_num)),
+                };
+
+                rtn.push((key.to_string(),
+                          cred_uuid.to_string(),
+                          schema_id.to_string(),
+                          cred_def_id.to_string()))
+            }
+        }
+    } else {
+        return Err(ProofError::CommonError(error::INVALID_JSON.code_num))
+    }
+
+    Ok(rtn)
 }
 
 
@@ -104,39 +127,17 @@ impl DisclosedProof {
     fn get_state(&self) -> u32 {self.state as u32}
     fn set_state(&mut self, state: VcxStateType) {self.state = state}
 
-    fn _find_schemas(&self, credentials_identifers: &Vec<(String, String, String, SchemaKey)>) -> Result<String, ProofError> {
-//        let mut rtn: HashMap<String, SchemaTransaction> = HashMap::new();
+    fn _find_schemas(&self, credentials_identifiers: &Vec<(String, String, String, String)>) -> Result<String, ProofError> {
+        let mut rtn: HashMap<String, Value> = HashMap::new();
 
-//        for &(ref attr_id, ref claim_uuid, ref issuer_did, ref schema_key) in credentials_identifers {
-//            let schema = LedgerSchema::new_from_ledger_with_schema_key(schema_key )
-//                .map_err(|_| ProofError::InvalidSchema())?;
-//            let schema = schema.data.ok_or(ProofError::CommonError(error::INVALID_SCHEMA.code_num))?;
-//
-//            rtn.insert(claim_uuid.to_owned(), schema);
-//        }
+        for &(ref attr_id, ref cred_uuid, ref schema_id, ref cred_def_id) in credentials_identifiers {
+            let schema = LedgerSchema::new_from_ledger(schema_id)
+                .or( Err(ProofError::InvalidSchema()))?;
 
-//        match rtn.is_empty() {
-//            false => Ok(serde_json::to_string(&rtn)
-//                .or(Err(ProofError::CommonError(error::INVALID_JSON.code_num)))?),
-//            true => Err(ProofError::CommonError(error::INVALID_JSON.code_num))
-//        }
-        Err(ProofError::CommonError(0))
-    }
+            let schema_json = serde_json::from_str(&schema.schema_json)
+                .or(Err(ProofError::InvalidSchema()))?;
 
-    fn _find_credential_def(&self, credentials_identifers: &Vec<(String, String, String, SchemaKey)>) -> Result<String, ProofError> {
-
-        let mut rtn: HashMap<String, String> = HashMap::new();
-
-        for &(ref attr_id, ref claim_uuid, ref issuer_did, ref schema_key) in credentials_identifers {
-
-            //Todo: need to use retrieve_cred_def with schema_id
-//            let credential_def = RetrieveCredentialDef::new().retrieve_credential_def_with_schema_key(
-//                issuer_did,
-//                schema_key,
-//                Some(SigTypes::CL)).map_err(|_| ProofError::InvalidCredData())?;
-
-            let credential_def = "".to_string();
-            rtn.insert(claim_uuid.to_owned(), credential_def);
+            rtn.insert(schema_id.to_owned(), schema_json);
         }
 
         match rtn.is_empty() {
@@ -145,37 +146,63 @@ impl DisclosedProof {
             true => Err(ProofError::CommonError(error::INVALID_JSON.code_num))
         }
     }
-    fn _build_requested_credentials(&self, credentials_identifiers: &Vec<(String, String, String, SchemaKey)>) -> Result<String, ProofError> {
-        let mut requested_creds = RequestedCreds {
-            self_attested_attributes: HashMap::new(),
-            requested_attrs: HashMap::new(),
-            requested_predicates: HashMap::new(),
-        };
-        for &(ref attr_id, ref claim_uuid, ref issuer_did,
-            // TODO Handle self attested and predicate
-            ref schema_key) in credentials_identifiers {
-            requested_creds.requested_attrs.insert(attr_id.to_owned(), (claim_uuid.to_owned(), true));
+
+    fn _find_credential_def(&self, credentials_identifiers: &Vec<(String, String, String, String)>) -> Result<String, ProofError> {
+
+        let mut rtn: HashMap<String, Value> = HashMap::new();
+
+        for &(ref attr_id, ref cred_uuid, ref schema_id, ref cred_def_id) in credentials_identifiers {
+
+            let (_, credential_def) = retrieve_credential_def(cred_def_id)
+                .or(Err(ProofError::InvalidCredData()))?;
+
+            let credential_def = serde_json::from_str(&credential_def)
+                .or(Err(ProofError::InvalidCredData()))?;
+
+            rtn.insert(cred_def_id.to_owned(), credential_def);
         }
-        Ok(serde_json::to_string(&requested_creds)
-            .or(Err(ProofError::CommonError(error::INVALID_JSON.code_num)))?)
+
+        match rtn.is_empty() {
+            false => Ok(serde_json::to_string(&rtn)
+                .or(Err(ProofError::CommonError(error::INVALID_JSON.code_num)))?),
+            true => Err(ProofError::CommonError(error::INVALID_JSON.code_num))
+        }
+
+    }
+
+    fn _build_requested_credentials(&self, credentials_identifiers: &Vec<(String, String, String, String)>) -> Result<String, ProofError> {
+        let mut rtn: Value = json!({
+              "self_attested_attributes":{},
+              "requested_attributes":{},
+              "requested_predicates":{}
+        });
+        //Todo: need to do same for predicates and self_attested
+        //Todo: need to handle if the attribute is not revealed
+        if let Value::Object(ref mut map) = rtn["requested_attributes"] {
+            for &(ref attr_id, ref cred_uuid, ref schema_id, ref cred_def_id) in credentials_identifiers {
+
+                let insert_val = json!({"cred_id": cred_uuid, "revealed": true});
+                map.insert(attr_id.to_owned(), insert_val);
+            }
+        }
+
+        let rtn = serde_json::to_string(&rtn)
+            .or(Err(ProofError::CommonError(error::INVALID_JSON.code_num)))?;
+
+        Ok(rtn)
     }
 
     fn _build_proof(&self) -> Result<ProofMessage, ProofError> {
-
-        let wallet_h = wallet::get_wallet_handle();
 
         let proof_req = self.proof_request.as_ref()
             .ok_or(ProofError::CreateProofError())?;
         let proof_req_data_json = serde_json::to_string(&proof_req.proof_request_data)
             .or(Err(ProofError::CommonError(error::INVALID_JSON.code_num)))?;
 
-        let credentials = anoncreds::libindy_prover_get_credentials(wallet_h,
-                                                          &proof_req_data_json)
+        let credentials = anoncreds::libindy_prover_get_credentials_for_proof_req(&proof_req_data_json)
             .map_err(|ec| ProofError::CommonError(ec))?;
 
         debug!("credentials: {}", credentials);
-        let credentials: CredsForProofRequest = serde_json::from_str(&credentials)
-            .or(Err(ProofError::CreateProofError()))?;
         let credentials_identifiers = credential_def_identifiers(&credentials)?;
         let requested_credentials = self._build_requested_credentials(&credentials_identifiers)?;
 
@@ -185,11 +212,10 @@ impl DisclosedProof {
         debug!("credential_defs: {}", credential_defs_json);
         let revoc_regs_json = Some("{}");
 
-        let proof = anoncreds::libindy_prover_create_proof(wallet_h,
-                                                          &proof_req_data_json,
+        let proof = anoncreds::libindy_prover_create_proof(&proof_req_data_json,
                                                            &requested_credentials,
-                                                          &schemas,
                                                           &self.link_secret_alias,
+                                                           &schemas,
                                                           &credential_defs_json,
                                                           revoc_regs_json).map_err(|ec| ProofError::CommonError(ec))?;
 
@@ -428,6 +454,8 @@ mod tests {
     extern crate serde_json;
 
     use super::*;
+    use utils::constants::CREDS_FROM_PROOF_REQ;
+    use serde_json::Value;
 
     const CREDENTIALS: &str = r#"{"attrs":{"address1_0":[{"claim_uuid":"claim::b3817a07-afe2-42cc-9341-771d58ab3a8a","attrs":{"state":"UT","zip":"84000","city":"Draper","address2":"Suite 3","address1":"123 Main St"},"schema_seq_no":22,"issuer_did":"2hoqvcwupRTUNkXn6ArYzs"}],"zip_4":[{"claim_uuid":"claim::b3817a07-afe2-42cc-9341-771d58ab3a8a","attrs":{"state":"UT","zip":"84000","city":"Draper","address2":"Suite 3","address1":"123 Main St"},"schema_seq_no":22,"issuer_did":"2hoqvcwupRTUNkXn6ArYzs"}],"address2_1":[{"claim_uuid":"claim::b3817a07-afe2-42cc-9341-771d58ab3a8a","attrs":{"state":"UT","zip":"84000","city":"Draper","address2":"Suite 3","address1":"123 Main St"},"schema_seq_no":22,"issuer_did":"2hoqvcwupRTUNkXn6ArYzs"}],"city_2":[{"claim_uuid":"claim::b3817a07-afe2-42cc-9341-771d58ab3a8a","attrs":{"state":"UT","zip":"84000","city":"Draper","address2":"Suite 3","address1":"123 Main St"},"schema_seq_no":22,"issuer_did":"2hoqvcwupRTUNkXn6ArYzs"}],"state_3":[{"claim_uuid":"claim::b3817a07-afe2-42cc-9341-771d58ab3a8a","attrs":{"state":"UT","zip":"84000","city":"Draper","address2":"Suite 3","address1":"123 Main St"},"schema_seq_no":22,"issuer_did":"2hoqvcwupRTUNkXn6ArYzs"}]},"predicates":{}}"#;
     const PROOF_OBJECT_JSON: &str = r#"{"source_id":"","my_did":null,"my_vk":null,"state":3,"proof_request":{"@type":{"name":"PROOF_REQUEST","version":"1.0"},"@topic":{"mid":9,"tid":1},"proof_request_data":{"nonce":"838186471541979035208225","name":"Account Certificate","version":"0.1","requested_attrs":{"name_0":{"name":"name","schema_seq_no":52},"business_2":{"name":"business","schema_seq_no":52},"email_1":{"name":"email","schema_seq_no":52}},"requested_predicates":{}},"msg_ref_id":"ymy5nth"},"link_secret_alias":"main","their_did":null,"their_vk":null,"agent_did":null,"agent_vk":null}"#;
@@ -489,34 +517,25 @@ mod tests {
 
     #[test]
     fn test_credential_def_identifiers() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
-        let creds_for_request: CredsForProofRequest = serde_json::from_str(::utils::constants::INDY_PROVER_CRED).unwrap();
-        let credentials_identifiers = credential_def_identifiers(&creds_for_request).unwrap();
-
-        assert_eq!(credentials_identifiers.len(), 2);
-        let schema_key = SchemaKey {
-            name:"Home Address".to_string(),
-            version:"1.4".to_string(),
-            did:"2hoqvcwupRTUNkXn6ArYzs".to_string()
-        };
-        let cred_id_str = serde_json::to_string(&credentials_identifiers).unwrap();
-        let state = r#"["state_2","claim::230f2692-f8d2-48fa-8b65-2ef0177996f3","2hoqvcwupRTUNkXn6ArYzs",{"name":"Home Address","version":"1.4","did":"2hoqvcwupRTUNkXn6ArYzs"}]"#;
-        let address = r#"["address1_1","claim::230f2692-f8d2-48fa-8b65-2ef0177996f3","2hoqvcwupRTUNkXn6ArYzs",{"name":"Home Address","version":"1.4","did":"2hoqvcwupRTUNkXn6ArYzs"}]"#;
-        assert!(cred_id_str .contains(state));
-        assert!(cred_id_str .contains(address));
+        let creds = credential_def_identifiers(CREDS_FROM_PROOF_REQ).unwrap();
+        let cred1 = ("height_1".to_string(), "0809d6ec-a3fc-483d-90af-7fbbffb9d1e8".to_string(), "2hoqvcwupRTUNkXn6ArYzs:2:schema_name:0.0.11".to_string(), "2hoqvcwupRTUNkXn6ArYzs:3:CL:1766".to_string() );
+        let cred2 = ("zip_2".to_string(), "1fb2b448-db40-47c6-8594-20ff5bbd9d37".to_string(), "2hoqvcwupRTUNkXn6ArYzs:2:Home Address - Test:0.0.1".to_string(), "2hoqvcwupRTUNkXn6ArYzs:3:CL:2200".to_string() );
+        assert_eq!(creds, vec![cred1, cred2]);
     }
 
     #[test]
     fn test_find_schemas() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
+        let cred1 = ("height_1".to_string(), "0809d6ec-a3fc-483d-90af-7fbbffb9d1e8".to_string(), "2hoqvcwupRTUNkXn6ArYzs:2:schema_name:0.0.11".to_string(), "2hoqvcwupRTUNkXn6ArYzs:3:CL:1766".to_string() );
+        let cred2 = ("zip_2".to_string(), "1fb2b448-db40-47c6-8594-20ff5bbd9d37".to_string(), "2hoqvcwupRTUNkXn6ArYzs:2:Home Address - Test:0.0.1".to_string(), "2hoqvcwupRTUNkXn6ArYzs:3:CL:2200".to_string() );
+        let creds = vec![cred1, cred2];
 
-        let creds_for_request: CredsForProofRequest = serde_json::from_str(::utils::constants::INDY_PROVER_CRED).unwrap();
-        let credential_ids = credential_def_identifiers(&creds_for_request).unwrap();
         let proof: DisclosedProof = Default::default();
-        let schemas = proof._find_schemas(&credential_ids).unwrap();
+        let schemas = proof._find_schemas(&creds).unwrap();
         assert!(schemas.len() > 0);
+        println!("{}", schemas);
+        assert!(schemas.contains(r#""id":"2hoqvcwupRTUNkXn6ArYzs:2:schema_name:0.0.11","name":"schema_name""#));
     }
 
     #[test]
@@ -534,12 +553,14 @@ mod tests {
     fn test_find_credential_def() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
+        let cred1 = ("height_1".to_string(), "0809d6ec-a3fc-483d-90af-7fbbffb9d1e8".to_string(), "2hoqvcwupRTUNkXn6ArYzs:2:schema_name:0.0.11".to_string(), "2hoqvcwupRTUNkXn6ArYzs:3:CL:1766".to_string() );
+        let cred2 = ("zip_2".to_string(), "1fb2b448-db40-47c6-8594-20ff5bbd9d37".to_string(), "2hoqvcwupRTUNkXn6ArYzs:2:Home Address - Test:0.0.1".to_string(), "2hoqvcwupRTUNkXn6ArYzs:3:CL:2200".to_string() );
+        let creds = vec![cred1, cred2];
 
-        let creds_for_request: CredsForProofRequest = serde_json::from_str(::utils::constants::INDY_PROVER_CRED).unwrap();
-        let credentials_identifiers = credential_def_identifiers(&creds_for_request).unwrap();
         let proof: DisclosedProof = Default::default();
-        let credential_def = proof._find_credential_def(&credentials_identifiers ).unwrap();
+        let credential_def = proof._find_credential_def(&creds).unwrap();
         assert!(credential_def.len() > 0);
+        assert!(credential_def.contains(r#""id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:1766","schemaId":"1766""#));
     }
 
     #[test]
@@ -556,15 +577,22 @@ mod tests {
     #[test]
     fn test_build_requested_credentials() {
         settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
+        let cred1 = ("height_1".to_string(), "0809d6ec-a3fc-483d-90af-7fbbffb9d1e8".to_string(), "2hoqvcwupRTUNkXn6ArYzs:2:schema_name:0.0.11".to_string(), "2hoqvcwupRTUNkXn6ArYzs:3:CL:1766".to_string() );
+        let cred2 = ("zip_2".to_string(), "1fb2b448-db40-47c6-8594-20ff5bbd9d37".to_string(), "2hoqvcwupRTUNkXn6ArYzs:2:Home Address - Test:0.0.1".to_string(), "2hoqvcwupRTUNkXn6ArYzs:3:CL:2200".to_string() );
+        let creds = vec![cred1, cred2];
 
-        let creds_for_request: CredsForProofRequest = serde_json::from_str(::utils::constants::INDY_PROVER_CRED).unwrap();
-        let credentials_identifiers = credential_def_identifiers(&creds_for_request).unwrap();
+        let mut test: Value = json!({
+              "self_attested_attributes":{},
+              "requested_attributes":{
+                  "height_1": {"cred_id": "0809d6ec-a3fc-483d-90af-7fbbffb9d1e8", "revealed": true },
+                  "zip_2": {"cred_id": "1fb2b448-db40-47c6-8594-20ff5bbd9d37", "revealed": true },
+              },
+              "requested_predicates":{}
+        });
+
         let proof: DisclosedProof = Default::default();
-        let requested_credential = proof._build_requested_credentials(&credentials_identifiers).unwrap();
-        assert!(requested_credential.len() > 0);
-    println!("{}", requested_credential);
-        assert!(requested_credential.contains(r#""state_2":["claim::230f2692-f8d2-48fa-8b65-2ef0177996f3",true]"#));
+        let requested_credential = proof._build_requested_credentials(&creds).unwrap();
+        assert_eq!(test.to_string(), requested_credential);
     }
 
     #[test]

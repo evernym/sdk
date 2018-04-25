@@ -122,11 +122,10 @@ fn _create_and_store_credential_def(issuer_did: &str,
     Ok(id)
 }
 
-pub fn retrieve_credential_def(submitter_did: &str,
-                               cred_def_id: &str) -> Result<(String, String), CredDefError> {
+pub fn retrieve_credential_def(cred_def_id: &str) -> Result<(String, String), CredDefError> {
     if settings::test_indy_mode_enabled() { return Ok((CRED_DEF_ID.to_string(), CRED_DEF_JSON.to_string())); }
 
-    let get_cred_def_req = libindy_build_get_credential_def_txn(submitter_did, cred_def_id)
+    let get_cred_def_req = libindy_build_get_credential_def_txn(cred_def_id)
         .or(Err(CredDefError::BuildCredDefRequestError()))?;
 
     let get_cred_def_response = libindy_submit_request(&get_cred_def_req)
@@ -212,7 +211,7 @@ pub mod tests {
         set_default_and_enable_test_mode();
         let sig_type = Some(SigTypes::CL);
 
-        let (id, cred_def_json) = retrieve_credential_def(ISSUER_DID, CRED_DEF_ID).unwrap();
+        let (id, cred_def_json) = retrieve_credential_def(CRED_DEF_ID).unwrap();
         assert_eq!(&id, CRED_DEF_ID);
         assert_eq!(&cred_def_json, CRED_DEF_JSON);
     }
@@ -220,7 +219,8 @@ pub mod tests {
     #[test]
     fn test_get_credential_def_by_send_request_fails() {
         settings::set_defaults();
-        assert_eq!(retrieve_credential_def(ISSUER_DID, CRED_DEF_ID), Err(CredDefError::CommonError(error::NO_POOL_OPEN.code_num)));
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
+        assert_eq!(retrieve_credential_def(CRED_DEF_ID), Err(CredDefError::CommonError(error::NO_POOL_OPEN.code_num)));
     }
 
     #[ignore]
@@ -232,7 +232,7 @@ pub mod tests {
         let wallet_name = "get_cred_def_test";
         ::utils::devsetup::setup_dev_env(wallet_name);
 
-        let (id, cred_def_json) = retrieve_credential_def(ISSUER_DID, CRED_DEF_ID).unwrap();
+        let (id, cred_def_json) = retrieve_credential_def(CRED_DEF_ID).unwrap();
 
         ::utils::devsetup::cleanup_dev_env(wallet_name);
         assert_eq!(&id, CRED_DEF_ID);

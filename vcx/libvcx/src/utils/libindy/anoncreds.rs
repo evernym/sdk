@@ -5,7 +5,13 @@ use std::ffi::CString;
 use std::ptr::null;
 use utils::constants::LIBINDY_CRED_OFFER;
 use utils::libindy::{indy_function_eval, check_str, mock_libindy_rc};
-use utils::libindy::return_types::{ Return_I32_STR, Return_I32_BOOL, Return_I32_STR_STR, Return_I32 };
+use utils::libindy::return_types::{
+    Return_I32_STR,
+    Return_I32_BOOL,
+    Return_I32_STR_STR,
+    Return_I32_STR_STR_STR,
+    Return_I32
+};
 use utils::libindy::SigTypes;
 use utils::libindy::error_codes::{map_indy_error_code, map_string_error};
 use utils::libindy::wallet::get_wallet_handle;
@@ -193,28 +199,31 @@ pub fn libindy_verifier_verify_proof(proof_req_json: &str,
                                      proof_json: &str,
                                      schemas_json: &str,
                                      credential_defs_json: &str,
-                                     revoc_regs_json: &str)  -> Result<bool, u32>{
+                                     rev_reg_defs_json: &str,
+                                     rev_regs_json: &str)  -> Result<bool, u32>{
 
     let rtn_obj = Return_I32_BOOL::new()?;
-    let proof_req_json = CString::new(proof_req_json.to_string()).map_err(map_string_error)?;
-    let proof_json = CString::new(proof_json.to_string()).map_err(map_string_error)?;
-    let schemas_json = CString::new(schemas_json.to_string()).map_err(map_string_error)?;
-    let credential_defs_json = CString::new(credential_defs_json.to_string()).map_err(map_string_error)?;
-    let revoc_regs_json = CString::new(revoc_regs_json.to_string()).map_err(map_string_error)?;
-//    unsafe {
-//        indy_function_eval(
-//            indy_verifier_verify_proof(rtn_obj.command_handle,
-//                                       proof_req_json.as_ptr(),
-//                                       proof_json.as_ptr(),
-//                                       schemas_json.as_ptr(),
-//                                       credential_defs_json.as_ptr(),
-//                                       revoc_regs_json.as_ptr(),
-//                                       Some(rtn_obj.get_callback()))
-//        ).map_err(map_indy_error_code)?;
-//    }
+    let proof_req_json = CString::new(proof_req_json).map_err(map_string_error)?;
+    let proof_json = CString::new(proof_json).map_err(map_string_error)?;
+    let schemas_json = CString::new(schemas_json).map_err(map_string_error)?;
+    let credential_defs_json = CString::new(credential_defs_json).map_err(map_string_error)?;
+    let rev_reg_defs_json = CString::new(rev_reg_defs_json).map_err(map_string_error)?;
+    let rev_regs_json = CString::new(rev_regs_json).map_err(map_string_error)?;
 
-//    rtn_obj.receive(TimeoutUtils::some_long())
-    Err(0)
+    unsafe {
+        indy_function_eval(
+            indy_verifier_verify_proof(rtn_obj.command_handle,
+                                       proof_req_json.as_ptr(),
+                                       proof_json.as_ptr(),
+                                       schemas_json.as_ptr(),
+                                       credential_defs_json.as_ptr(),
+                                       rev_reg_defs_json.as_ptr(),
+                                       rev_regs_json.as_ptr(),
+                                       Some(rtn_obj.get_callback()))
+        ).map_err(map_indy_error_code)?;
+    }
+
+    rtn_obj.receive(TimeoutUtils::some_long())
 }
 
 pub fn libindy_create_and_store_credential_def(issuer_did: &str,
@@ -270,139 +279,164 @@ pub fn libindy_issuer_create_credential_offer(cred_def_id: &str) -> Result<Strin
     rtn_obj.receive(TimeoutUtils::some_long()).and_then(check_str)
 }
 
-pub fn libindy_issuer_create_credential(wallet_handle: i32,
-                                        credential_req_json: &str,
-                                        credential_json: &str,
-                                        user_revoc_index: i32)  -> Result<(String, String), u32>{
-    let rtn_obj = Return_I32_STR_STR::new()?;
-    let credential_req_json = CString::new(credential_req_json).map_err(map_string_error)?;
-    let credential_json = CString::new(credential_json).map_err(map_string_error)?;
-//    unsafe {
-//        indy_function_eval(
-//            indy_issuer_create_credential(rtn_obj.command_handle,
-//                                     wallet_handle,
-//                                     credential_req_json.as_ptr(),
-//                                     credential_json.as_ptr(),
-//                                     user_revoc_index,
-//                                     Some(rtn_obj.get_callback()))
-//        ).map_err(map_indy_error_code)?;
-//    }
+pub fn libindy_issuer_create_credential(cred_offer_json: &str,
+                                        cred_req_json: &str,
+                                        cred_values_json: &str,
+                                        rev_reg_id: Option<&str>,
+                                        blob_storage_reader_handle: Option<i32>)
+    -> Result<(String, String, String), u32>{
+    let rtn_obj = Return_I32_STR_STR_STR::new()?;
+    let wallet_handle = get_wallet_handle();
+    let cred_offer_json = CString::new(cred_offer_json ).map_err(map_string_error)?;
+    let cred_req_json = CString::new(cred_req_json ).map_err(map_string_error)?;
+    let cred_values_json = CString::new(cred_values_json ).map_err(map_string_error)?;
+    let rev_reg_id_str = CString::new(rev_reg_id.unwrap_or_default() ).map_err(map_string_error)?;
+    let blob_storage_reader_handle = blob_storage_reader_handle.unwrap_or(-1);
 
-//    let (opt_str1, opt_str2) = rtn_obj.receive(TimeoutUtils::some_long())?;
-//    let str1 = check_str(opt_str1)?;
-//    let str2 = check_str(opt_str2)?;
-//    Ok((str1, str2))
-    Err(0)
+    unsafe {
+        indy_function_eval(
+            indy_issuer_create_credential(rtn_obj.command_handle,
+                                          wallet_handle,
+                                          cred_offer_json.as_ptr(),
+                                          cred_req_json.as_ptr(),
+                                          cred_values_json.as_ptr(),
+                                          if rev_reg_id.is_some() { rev_reg_id_str.as_ptr() } else { null() },
+                                          blob_storage_reader_handle,
+                                          Some(rtn_obj.get_callback()))
+        ).map_err(map_indy_error_code)?;
+    }
+
+    let (opt_str1, opt_str2, opt_str3) = rtn_obj.receive(TimeoutUtils::some_long())?;
+    let str1 = check_str(opt_str1)?;
+    //Todo: when we do revocation, we will need to check the two last strings. Currently, None is returned if no revocation info was provided
+    //Not sure if this is sufficient
+    let str2 = if rev_reg_id.is_some() { check_str(opt_str2)?} else {String::new()};
+    let str3 = if rev_reg_id.is_some() { check_str(opt_str3)?} else {String::new()};
+    Ok((str1, str2, str3))
 }
 
-pub fn libindy_prover_create_proof(wallet_handle: i32,
-                                   proof_req_json: &str,
+pub fn libindy_prover_create_proof(proof_req_json: &str,
                                    requested_credentials_json: &str,
+                                   master_secret_id: &str,
                                    schemas_json: &str,
-                                   master_secret_name: &str,
                                    credential_defs_json: &str,
-                                   revoc_regs_json: Option<&str>) -> Result<String, u32> {
+                                   revoc_states_json: Option<&str>) -> Result<String, u32> {
     let rtn_obj = Return_I32_STR::new()?;
 
+    let wallet_handle = get_wallet_handle();
     let proof_req_json = CString::new(proof_req_json).map_err(map_string_error)?;
     let requested_credentials_json = CString::new(requested_credentials_json).map_err(map_string_error)?;
     let schemas_json = CString::new(schemas_json).map_err(map_string_error)?;
-    let master_secret_name = CString::new(master_secret_name).map_err(map_string_error)?;
+    let master_secret_name = CString::new(master_secret_id).map_err(map_string_error)?;
     let credential_defs_json = CString::new(credential_defs_json).map_err(map_string_error)?;
-    let revoc_regs_json = match revoc_regs_json {
-        Some(s) => Some(CString::new(s).map_err(map_string_error)?),
-        None => None
+    let revoc_states_json = match revoc_states_json {
+        Some(s) => CString::new(s).map_err(map_string_error)?,
+        None => CString::new("{}").map_err(map_string_error)?,
     };
 
-//    unsafe {
-//        indy_function_eval(
-//            indy_prover_create_proof(rtn_obj.command_handle,
-//                                     wallet_handle,
-//                                     proof_req_json.as_ptr(),
-//                                     requested_credentials_json.as_ptr(),
-//                                     schemas_json.as_ptr(),
-//                                     master_secret_name.as_ptr(),
-//                                     credential_defs_json.as_ptr(),
-//                                     option_cstring_as_ptn(&revoc_regs_json),
-//                                     Some(rtn_obj.get_callback()))
-//        ).map_err(map_indy_error_code)?;
-//    }
-
-    Err(0)
-//    rtn_obj.receive(TimeoutUtils::some_long()).and_then(check_str)
+    unsafe {
+        indy_function_eval(
+            indy_prover_create_proof(rtn_obj.command_handle,
+                                     wallet_handle,
+                                     proof_req_json.as_ptr(),
+                                     requested_credentials_json.as_ptr(),
+                                     master_secret_name.as_ptr(),
+                                     schemas_json.as_ptr(),
+                                     credential_defs_json.as_ptr(),
+                                     revoc_states_json.as_ptr(),
+                                     Some(rtn_obj.get_callback()))
+        ).map_err(map_indy_error_code)?;
+    }
+    rtn_obj.receive(TimeoutUtils::some_long()).and_then(check_str)
 }
 
-pub fn libindy_prover_get_credentials(wallet_handle: i32,
-                                      proof_req: &str) -> Result<String, u32> {
+pub fn libindy_prover_get_credentials_for_proof_req(proof_req: &str) -> Result<String, u32> {
 
     let rtn_obj = Return_I32_STR::new()?;
 
+    let wallet_handle = get_wallet_handle();
     let proof_req = CString::new(proof_req).map_err(map_string_error)?;
 
-//    unsafe {
-//        indy_function_eval(
-//            indy_prover_get_credentials_for_proof_req(rtn_obj.command_handle,
-//                                                 wallet_handle,
-//                                                 proof_req.as_ptr(),
-//                                                 Some(rtn_obj.get_callback()))
-//        ).map_err(map_indy_error_code)?;
-//    }
+    unsafe {
+        indy_function_eval(
+            indy_prover_get_credentials_for_proof_req(rtn_obj.command_handle,
+                                                      wallet_handle,
+                                                      proof_req.as_ptr(),
+                                                      Some(rtn_obj.get_callback()))
+        ).map_err(map_indy_error_code)?;
+    }
 
-    Err(0)
-//    rtn_obj.receive(TimeoutUtils::some_medium()).and_then(check_str)
+    rtn_obj.receive(TimeoutUtils::some_medium()).and_then(check_str)
 }
 
-pub fn libindy_prover_create_credential_req(wallet_handle: i32,
-                                                      prover_did: &str,
-                                                      credential_offer_json: &str,
-                                                      credential_def_json: &str) -> Result<String, u32>
+pub fn libindy_prover_create_credential_req(prover_did: &str,
+                                            credential_offer_json: &str,
+                                            credential_def_json: &str,
+                                            master_secret_id: Option<String>) -> Result<(String, String), u32>
 {
-    if settings::test_indy_mode_enabled() { return Ok(::utils::constants::CREDENTIAL_REQ_STRING.to_owned()); }
+    if settings::test_indy_mode_enabled() { return Ok((::utils::constants::CREDENTIAL_REQ_STRING.to_owned(), String::new())); }
 
-    let rtn_obj = Return_I32_STR::new()?;
+    let rtn_obj = Return_I32_STR_STR::new()?;
 
+    let wallet_handle = get_wallet_handle();
     let prover_did = CString::new(prover_did).map_err(map_string_error)?;
     let credential_offer_json = CString::new(credential_offer_json).map_err(map_string_error)?;
     let credential_def_json = CString::new(credential_def_json).map_err(map_string_error)?;
-    let master_secret_name = CString::new(settings::get_config_value(settings::CONFIG_LINK_SECRET_ALIAS).unwrap()).map_err(map_string_error)?;
+    let master_secret_name = CString::new(master_secret_id.unwrap_or(settings::get_config_value(settings::CONFIG_LINK_SECRET_ALIAS).unwrap())).map_err(map_string_error)?;
 
-//    unsafe {
-//        indy_function_eval(
-//            indy_prover_create_credential_req(rtn_obj.command_handle,
-//                                                   wallet_handle,
-//                                                   prover_did.as_ptr(),
-//                                                   credential_offer_json.as_ptr(),
-//                                                   credential_def_json.as_ptr(),
-//                                                   master_secret_name.as_ptr(),
-//                                                   Some(rtn_obj.get_callback()))
-//        ).map_err(map_indy_error_code)?;
-//    }
+    unsafe {
+        indy_function_eval(
+            indy_prover_create_credential_req(rtn_obj.command_handle,
+                                                   wallet_handle,
+                                                   prover_did.as_ptr(),
+                                                   credential_offer_json.as_ptr(),
+                                                   credential_def_json.as_ptr(),
+                                                   master_secret_name.as_ptr(),
+                                                   Some(rtn_obj.get_callback()))
+        ).map_err(map_indy_error_code)?;
+    }
 
-    Err(0)
-//    rtn_obj.receive(TimeoutUtils::some_medium()).and_then(check_str)
+    let (opt_str1, opt_str2) = rtn_obj.receive(TimeoutUtils::some_long())?;
+    let str1 = check_str(opt_str1)?;
+    let str2 = check_str(opt_str2)?;
+    Ok((str1, str2))
 }
 
-pub fn libindy_prover_store_credential(wallet_handle: i32,
-                                       credential_json: &str) -> Result<(), u32>
+pub fn libindy_prover_store_credential(cred_id: Option<&str>,
+                                       cred_req_json: &str,
+                                       cred_req_meta: &str,
+                                       cred_json: &str,
+                                       cred_def_json: &str,
+                                       rev_reg_def_json: Option<&str>) -> Result<String, u32>
 {
-    if settings::test_indy_mode_enabled() { return Ok(()); }
+    if settings::test_indy_mode_enabled() { return Ok("cred_id".to_string()); }
 
-    let rtn_obj = Return_I32::new()?;
+    let rtn_obj = Return_I32_STR::new()?;
 
-    let credential_json = CString::new(credential_json).map_err(map_string_error)?;
+    let wallet_handle = get_wallet_handle();
+    let cred_id_str = CString::new(cred_id.unwrap_or_default() ).map_err(map_string_error)?;
+    let cred_req_json = CString::new(cred_req_json).map_err(map_string_error)?;
+    let cred_req_meta = CString::new(cred_req_meta).map_err(map_string_error)?;
+    let cred_json = CString::new(cred_json).map_err(map_string_error)?;
+    let cred_def_json = CString::new(cred_def_json).map_err(map_string_error)?;
+    let rev_reg_def_str = CString::new(rev_reg_def_json.unwrap_or_default() ).map_err(map_string_error)?;
 
-//    unsafe {
-//        indy_function_eval(
-//            indy_prover_store_credential(rtn_obj.command_handle,
-//                                    wallet_handle,
-//                                    credential_json.as_ptr(),
-//                                    null(),
-//                                    Some(rtn_obj.get_callback()))
-//        ).map_err(map_indy_error_code)?;
-//    }
+    unsafe {
+        indy_function_eval(
+            indy_prover_store_credential(
+                rtn_obj.command_handle,
+                wallet_handle,
+                if cred_id.is_some() { cred_id_str.as_ptr() } else { null() },
+                cred_req_json.as_ptr(),
+                cred_req_meta.as_ptr(),
+                cred_json.as_ptr(),
+                cred_def_json.as_ptr(),
+                if rev_reg_def_json.is_some() { rev_reg_def_str.as_ptr() } else { null() },
+                Some(rtn_obj.get_callback()))
+        ).map_err(map_indy_error_code)?;
+    }
 
-    Err(0)
-//    rtn_obj.receive(TimeoutUtils::some_medium())
+    rtn_obj.receive(TimeoutUtils::some_long()).and_then(check_str)
 }
 
 /*
@@ -478,17 +512,10 @@ pub fn libindy_issuer_create_schema(issuer_did: &str,
 #[cfg(test)]
 mod tests {
     use super::*;
+    extern crate serde_json;
     use settings;
-    use utils::libindy::wallet::{ init_wallet, get_wallet_handle, delete_wallet};
-    use utils::constants::{ INDY_PROOF_REQ_JSON,
-                            INDY_PROOF_JSON,
-                            INDY_SCHEMAS_JSON,
-                            INDY_CREDENTIAL_DEFS_JSON,
-                            INDY_REVOC_REGS_JSON,
-                            SCHEMAS_JSON,
-                            SCHEMA_JSON,
-                            CRED_DEF_ID,
-    };
+    use utils::libindy::wallet::{ init_wallet, get_wallet_handle, delete_wallet, open_wallet};
+    use utils::constants::*;
 
     #[test]
     fn simple_libindy_create_credential_offer_test() {
@@ -497,7 +524,7 @@ mod tests {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         let wallet_name = "test_libindy_create_cred_offer";
         ::utils::devsetup::setup_wallet(wallet_name);
-        init_wallet(wallet_name).unwrap();
+        open_wallet(wallet_name, None).unwrap();
 
         let result = libindy_issuer_create_credential_offer(CRED_DEF_ID);
         delete_wallet(wallet_name).unwrap();
@@ -506,96 +533,38 @@ mod tests {
     }
 
     #[test]
-    fn simple_libindy_issuer_create_credential_test() {
+    fn simple_libindy_issuer_create_credential_offer_req_and_cred() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         let wallet_name = "test_libindy_create_credential";
         ::utils::devsetup::setup_wallet(wallet_name);
-        init_wallet(wallet_name).unwrap();
+        open_wallet(wallet_name, None).unwrap();
 
-//        let libindy_cred_def = ::utils::constants::LIBINDY_CRED_DEF;
-//        let schema_json = r#"{"dest":"2hoqvcwupRTUNkXn6ArYzs","seqNo":1487,"txnTime":1522769798,"type":"101","data":{"name":"Home Address","version":"1.4","attr_names":["address1","address2","city","zip","state"]}}"#;
-//        let encoded_cred_data = r#"{"address1":["101TelaLane","63690509275174663089934667471948380740244018358024875547775652380902762701972"],"address2":["101WilsonLane","68086943237164982734333428280784300550565381723532936263016368251445461241953"],"city":["SLC","101327353979588246869873249766058188995681113722618593621043638294296500696424"],"state":["UT","93856629670657830351991220989031130499313559332549427637940645777813964461231"],"zip":["87121","87121"]}"#;
-//        let wallet_h = get_wallet_handle();
-//        let schema_no = 1487;
-//
-//        let libindy_offer = libindy_issuer_create_credential_offer(get_wallet_handle(),
-//                                                                   &schema_json,
-//                                                                   &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
-//                                                                   "DunkM3x1y7S4ECgSL4Wkru").unwrap();
-//        println!("CredOffer: \n{:?}", libindy_offer);
-//
-//        libindy_prover_create_master_secret(settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
-//        let libindy_cred_req = libindy_prover_create_credential_req(wallet_h,
-//                                                                              "DunkM3x1y7S4ECgSL4Wkru",
-//                                                                              &libindy_offer,
-//                                                                              &libindy_cred_def).unwrap();
-//        println!("CredReq: \n{:?}", libindy_cred_req);
-//        let result = libindy_issuer_create_credential(wallet_h,
-//                                                      &libindy_cred_req,
-//                                                      encoded_cred_data,
-//                                                      -1);
-//        delete_wallet(wallet_name).unwrap();
-//        assert!(result.is_ok());
-//        let (str1, str2) = result.unwrap();
-//        println!("{}\n{}", str1, str2);
-    }
+        let libindy_offer = libindy_issuer_create_credential_offer(CRED_DEF_ID).unwrap();
+        println!("CredOffer: \n{:?}", libindy_offer);
 
-    #[test]
-    fn simple_libindy_verifier_verify_proof() {
-        settings::set_defaults();
-        init_wallet("wallet_simple").unwrap();
-        let result = libindy_verifier_verify_proof(INDY_PROOF_REQ_JSON,
-                                                   INDY_PROOF_JSON,
-                                                   INDY_SCHEMAS_JSON,
-                                                   INDY_CREDENTIAL_DEFS_JSON,
-                                                   INDY_REVOC_REGS_JSON);
-        delete_wallet("wallet_simple").unwrap();
+        libindy_prover_create_master_secret(settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
+        let (libindy_cred_req, cred_req_meta) = libindy_prover_create_credential_req(
+            &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
+            &libindy_offer,
+            CRED_DEF_JSON,
+            None).unwrap();
+        println!("CredReq: \n{:?}", libindy_cred_req);
+
+        let encoded_cred_data = r#"{"age":["111","111"],"height":["4'11","25730877424947290072821310314181366395232879096832067784637233452620527354832"],"name":["Bob","93006290325627508022776103386395994712401809437930957652111221015872244345185"],"sex":["male","5944657099558967239210949258394887428692050081607692519917050011144233115103"]}"#;
+
+        let result = libindy_issuer_create_credential(
+            &libindy_offer,
+            &libindy_cred_req,
+            encoded_cred_data,
+            None,
+            None);
+        delete_wallet(wallet_name).unwrap();
+        println!("result: {:?}", result);
         assert!(result.is_ok());
-        println!("{}", result.unwrap());
+        let (str1, str2, str3) = result.unwrap();
+        println!("{}\n{}\n{}", str1, str2, str3);
     }
-
-    //Todo: Fix test. Works when run independently but errors out when run with other tests
-//    #[test]
-//    fn simple_libindy_prover_get_credentials() {
-//        settings::set_defaults();
-//        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-//        let wallet_name = "test_libindy_create_credential";
-//        ::utils::devsetup::setup_wallet(wallet_name);
-//        let wallet_h = init_wallet(wallet_name).unwrap();
-//
-//        let libindy_cred_def = ::utils::constants::LIBINDY_CRED_DEF;
-//        let schema_json = r#"{"dest":"2hoqvcwupRTUNkXn6ArYzs","seqNo":1487,"txnTime":1522769798,"type":"101","data":{"name":"Home Address","version":"1.4","attr_names":["address1","address2","city","zip","state"]}}"#;
-//        let encoded_cred_data = r#"{"address1":["101TelaLane","63690509275174663089934667471948380740244018358024875547775652380902762701972"],"address2":["101WilsonLane","68086943237164982734333428280784300550565381723532936263016368251445461241953"],"city":["SLC","101327353979588246869873249766058188995681113722618593621043638294296500696424"],"state":["UT","93856629670657830351991220989031130499313559332549427637940645777813964461231"],"zip":["87121","87121"]}"#;
-//        let proof_req = r#"{  "nonce":"123432421212", "name":"proof_req_1", "version":"0.1", "requested_attrs":{  "address1_1":{  "name":"address1", "restrictions":[  {  "issuer_did":"2hoqvcwupRTUNkXn6ArYzs", "schema_key":{  "name":"Home Address", "version":"1.4", "did":"2hoqvcwupRTUNkXn6ArYzs" } } ] }, "state_2":{  "name":"state", "restrictions":[  {  "issuer_did":"2hoqvcwupRTUNkXn6ArYzs", "schema_key":{  "name":"Home Address", "version":"1.4", "did":"2hoqvcwupRTUNkXn6ArYzs" } } ] } }, "requested_predicates":{  } }"#;
-//        let schema_no = 1487;
-//
-//        Store Cred In wallet
-//        let libindy_offer = libindy_issuer_create_credential_offer(wallet_h,
-//                                                                   &schema_json,
-//                                                                   &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
-//                                                                   "DunkM3x1y7S4ECgSL4Wkru").unwrap();
-//        println!("CredOffer: \n{:?}", libindy_offer);
-//
-//        libindy_prover_create_master_secret(wallet_h, settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
-//        let libindy_cred_req = libindy_prover_create_credential_req(wallet_h,
-//                                                                              "DunkM3x1y7S4ECgSL4Wkru",
-//                                                                              &libindy_offer,
-//                                                                              &libindy_cred_def).unwrap();
-//        println!("CredReq: \n{:?}", libindy_cred_req);
-//        let (str1, cred) = libindy_issuer_create_credential(wallet_h,
-//                                                      &libindy_cred_req,
-//                                                      encoded_cred_data,
-//                                                      -1).unwrap();
-//        println!("Cred: \n{}", cred);
-//
-//        libindy_prover_store_credential(wallet_h, &cred).unwrap();
-//
-//        Get Credentials
-//        let credentials = libindy_prover_get_credentials(wallet_h, proof_req).unwrap();
-//        println!("Prover Credentials: \n{}", credentials);
-//        delete_wallet(wallet_name).unwrap();
-//    }
 
     #[test]
     fn simple_libindy_create_schema() {
@@ -623,10 +592,10 @@ mod tests {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         let wallet_name = "test_create_cred_def";
         ::utils::devsetup::setup_wallet(wallet_name);
-        init_wallet(wallet_name).unwrap();
+        open_wallet(wallet_name, None).unwrap();
 
         let result = libindy_create_and_store_credential_def(
-            &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
+            "AQ2EZRY9JQ4ssjmZPL5MiU",
             SCHEMA_JSON,
            "tag_1",
             Some(SigTypes::CL),
@@ -639,17 +608,249 @@ mod tests {
         println!("{}, {}", id, cred);
     }
 
+//    #[test]
+    //Todo: Get working. Works individually but fails during cargo test
+//    fn simple_libindy_create_master_secret() {
+//        settings::set_defaults();
+//        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
+//        let wallet_name = "test_create_cred_def";
+//        ::utils::devsetup::setup_wallet(wallet_name);
+//        open_wallet(wallet_name, None).unwrap();
+//
+//        let rc = libindy_prover_create_master_secret("random_ms");
+//        delete_wallet(wallet_name).unwrap();
+//        assert!(rc.is_ok());
+//        println!("{}", rc.unwrap())
+//    }
+
     #[test]
-    fn simple_libindy_create_master_secret() {
+    fn simple_libindy_create_cred_req() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-        let wallet_name = "test_create_cred_def";
+        let wallet_name = "test_create_cred_req";
         ::utils::devsetup::setup_wallet(wallet_name);
-        init_wallet(wallet_name).unwrap();
+        open_wallet(wallet_name, None).unwrap();
 
-        let rc = libindy_prover_create_master_secret(settings::DEFAULT_LINK_SECRET_ALIAS);
+        libindy_prover_create_master_secret(settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
+        let result = libindy_prover_create_credential_req(
+            &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
+            CRED_OFFER,
+            CRED_DEF_JSON,
+            None,
+        );
         delete_wallet(wallet_name).unwrap();
-        assert!(rc.is_ok());
-        println!("{}", rc.unwrap())
+        assert!(result.is_ok());
+        let (cred_req, cred_req_meta) = result.unwrap();
+        println!("{}\n{}", cred_req, cred_req_meta);
+    }
+
+//    #[test]
+    //Todo: Get working. Works individually but fails during cargo test
+//    fn simple_libindy_create_cred() {
+//        settings::set_defaults();
+//        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
+//        let wallet_name = "test_create_cred";
+//        ::utils::devsetup::setup_wallet(wallet_name);
+//        open_wallet(wallet_name, None).unwrap();
+//        let encoded_cred_data = r#"{"age":["111","111"],"height":["4'11","25730877424947290072821310314181366395232879096832067784637233452620527354832"],"name":["Bob","93006290325627508022776103386395994712401809437930957652111221015872244345185"],"sex":["male","5944657099558967239210949258394887428692050081607692519917050011144233115103"]}"#;
+//
+//        let result = libindy_issuer_create_credential(
+//            CRED_OFFER,
+//            CRED_REQ,
+//            encoded_cred_data,
+//            None,
+//            None);
+//        delete_wallet(wallet_name).unwrap();
+//        assert!(result.is_ok());
+//        let (cred, cred_revoc_id, revoc_reg_delta_json) = result.unwrap();
+//        println!("{}\n{}\n{}", cred, cred_revoc_id, revoc_reg_delta_json);
+//    }
+
+    #[test]
+    fn simple_libindy_prover_store_cred() {
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
+        let wallet_name = "test_store_cred";
+        ::utils::devsetup::setup_wallet(wallet_name);
+        open_wallet(wallet_name, None).unwrap();
+
+        let libindy_offer = libindy_issuer_create_credential_offer(CRED_DEF_ID).unwrap();
+        println!("CredOffer: \n{:?}", libindy_offer);
+
+        libindy_prover_create_master_secret(settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
+        let (libindy_cred_req, cred_req_meta) = libindy_prover_create_credential_req(
+            &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
+            &libindy_offer,
+            CRED_DEF_JSON,
+            None,
+            ).unwrap();
+        println!("CredReq: \n{:?}", libindy_cred_req);
+
+        let encoded_cred_data = r#"{"age":["111","111"],"height":["4'11","25730877424947290072821310314181366395232879096832067784637233452620527354832"],"name":["Bob","93006290325627508022776103386395994712401809437930957652111221015872244345185"],"sex":["male","5944657099558967239210949258394887428692050081607692519917050011144233115103"]}"#;
+
+        let (cred, _, _) = libindy_issuer_create_credential(
+            &libindy_offer,
+            &libindy_cred_req,
+            encoded_cred_data,
+            None,
+            None).unwrap();
+
+        let result = libindy_prover_store_credential(
+            None,
+            &libindy_cred_req,
+            &cred_req_meta,
+            &cred,
+            CRED_DEF_JSON,
+            None);
+
+        delete_wallet(wallet_name).unwrap();
+        assert!(result.is_ok());
+        let cred_id = result.unwrap();
+        println!("{}", cred_id);
+    }
+
+    #[test]
+    fn simple_libindy_prover_get_creds_from_req() {
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
+        let wallet_name = "test_get_creds_from_req";
+        ::utils::devsetup::setup_wallet(wallet_name);
+        open_wallet(wallet_name, None).unwrap();
+
+        let proof_req = json!({
+           "nonce":"123432421212",
+           "name":"proof_req_1",
+           "version":"0.1",
+           "requested_attributes": json!({
+               "height_1": json!({
+                   "name":"height",
+                   "restrictions": [json!({ "issuer_did": "2hoqvcwupRTUNkXn6ArYzs" })]
+               }),
+               "zip_2": json!({
+                   "name":"zip",
+                   "restrictions": [json!({ "issuer_did": "2hoqvcwupRTUNkXn6ArYzs" })]
+               }),
+           }),
+           "requested_predicates": json!({}),
+        }).to_string();
+        let result = libindy_prover_get_credentials_for_proof_req(&proof_req);
+
+        delete_wallet(wallet_name).unwrap();
+        assert!(result.is_ok());
+        let creds = result.unwrap();
+        println!("{}", creds);
+    }
+
+    #[test]
+    fn test_prover_create_proof() {
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
+        let wallet_name = "test_prover_create_proof";
+        ::utils::devsetup::setup_wallet(wallet_name);
+        open_wallet(wallet_name, None).unwrap();
+
+        let proof_req = json!({
+           "nonce":"123432421212",
+           "name":"proof_req_1",
+           "version":"0.1",
+           "requested_attributes": json!({
+               "height_1": json!({
+                   "name":"height",
+                   "restrictions": [json!({ "issuer_did": "2hoqvcwupRTUNkXn6ArYzs" })]
+               }),
+               "zip_2": json!({
+                   "name":"zip",
+                   "restrictions": [json!({ "issuer_did": "2hoqvcwupRTUNkXn6ArYzs" })]
+               }),
+           }),
+           "requested_predicates": json!({}),
+        }).to_string();
+
+        let requested_credentials_json = json!({
+              "self_attested_attributes":{},
+              "requested_attributes":{
+                 "height_1": {"cred_id": "52b1f5e1-89eb-44fe-a846-b4131c0feadc", "revealed": true},
+                 "zip_2": {"cred_id": "9a440066-986c-42f8-8117-92178a0ee8a1", "revealed": true}
+                },
+              "requested_predicates":{}
+        }).to_string();
+
+        let schema_json: serde_json::Value = serde_json::from_str(SCHEMA_JSON).unwrap();
+        let address_schema_json: serde_json::Value = serde_json::from_str(ADDRESS_SCHEMA_JSON).unwrap();
+        let schemas = json!({
+            SCHEMA_ID: schema_json,
+            ADDRESS_SCHEMA_ID: address_schema_json,
+        }).to_string();
+
+        let cred_def_json: serde_json::Value = serde_json::from_str(CRED_DEF_JSON).unwrap();
+        let address_cred_def_json: serde_json::Value = serde_json::from_str(ADDRESS_CRED_DEF_JSON).unwrap();
+        let cred_defs = json!({
+            ADDRESS_CRED_DEF_ID: address_cred_def_json,
+            CRED_DEF_ID: cred_def_json,
+        }).to_string();
+
+        let result = libindy_prover_create_proof(
+            &proof_req,
+            &requested_credentials_json,
+            "default_creds_in_wallet",
+            &schemas,
+            &cred_defs,
+            None);
+        delete_wallet(wallet_name).unwrap();
+        assert!(result.is_ok());
+        let proof = result.unwrap();
+        println!("{}", proof);
+    }
+
+    #[test]
+    fn test_prover_verify_proof() {
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
+        let wallet_name = "test_verify_proof";
+        ::utils::devsetup::setup_wallet(wallet_name);
+        open_wallet(wallet_name, None).unwrap();
+
+        let proof_req = json!({
+           "nonce":"123432421212",
+           "name":"proof_req_1",
+           "version":"0.1",
+           "requested_attributes": json!({
+               "height_1": json!({
+                   "name":"height",
+                   "restrictions": [json!({ "issuer_did": "2hoqvcwupRTUNkXn6ArYzs" })]
+               }),
+               "zip_2": json!({
+                   "name":"zip",
+                   "restrictions": [json!({ "issuer_did": "2hoqvcwupRTUNkXn6ArYzs" })]
+               })
+           }),
+           "requested_predicates": json!({}),
+        }).to_string();
+
+        let schemas = json!({
+            SCHEMA_ID: serde_json::from_str::<serde_json::Value>(SCHEMA_JSON).unwrap(),
+            ADDRESS_SCHEMA_ID: serde_json::from_str::<serde_json::Value>(ADDRESS_SCHEMA_JSON).unwrap(),
+        }).to_string();
+
+        let cred_defs = json!({
+            CRED_DEF_ID: serde_json::from_str::<serde_json::Value>(CRED_DEF_JSON).unwrap(),
+            ADDRESS_CRED_DEF_ID: serde_json::from_str::<serde_json::Value>(ADDRESS_CRED_DEF_JSON).unwrap(),
+        }).to_string();
+
+
+        let result = libindy_verifier_verify_proof(
+            &proof_req,
+            PROOF_JSON,
+            &schemas,
+            &cred_defs,
+            "{}",
+            "{}",
+        );
+
+        delete_wallet(wallet_name).unwrap();
+        assert!(result.is_ok());
+        let proof_validation = result.unwrap();
+        assert!(proof_validation, true);
+        println!("{}", proof_validation);
     }
 }

@@ -299,7 +299,7 @@ mod tests {
 
         wallet::init_wallet("wallet1").unwrap();
         let connection = ::connection::build_connection("h1").unwrap();
-        let credential = ::issuer_credential::issuer_credential_create(0,"1".to_string(),"8XFh8yBzrpJQmNyZzgoTqB".to_owned(),"credential_name".to_string(),"{\"attr\":\"value\"}".to_owned()).unwrap();
+        let credential = ::issuer_credential::issuer_credential_create("cred_id".to_string(),"1".to_string(),"8XFh8yBzrpJQmNyZzgoTqB".to_owned(),"credential_name".to_string(),"{\"attr\":\"value\"}".to_owned()).unwrap();
         let proof = ::proof::create_proof("1".to_string(),req_attr.to_owned(),req_predicates.to_owned(),"Optional".to_owned()).unwrap();
         let credentialdef = ::credential_def::create_new_credentialdef("SID".to_string(),"NAME".to_string(),"4fUDR9R7fjwELRvH9JT6HH".to_string(), "id".to_string(), "tag".to_string(),"{}".to_string() ).unwrap();
         let schema = ::schema::create_new_schema("5",  "VsKV7grR1BUE29mG2Fm2kX".to_string(),"name".to_string(), "0.1".to_string(), data.to_string()).unwrap();

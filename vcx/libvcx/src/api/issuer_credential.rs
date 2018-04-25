@@ -40,7 +40,7 @@ use error::ToErrorCode;
 #[allow(unused_variables, unused_mut)]
 pub extern fn vcx_issuer_create_credential(command_handle: u32,
                                       source_id: *const c_char,
-                                      schema_seq_no: u32,
+                                      cred_id: *const c_char,
                                       issuer_did: *const c_char,
                                       credential_data: *const c_char,
                                       credential_name: *const c_char,
@@ -50,6 +50,7 @@ pub extern fn vcx_issuer_create_credential(command_handle: u32,
     check_useful_c_str!(credential_data, error::INVALID_OPTION.code_num);
     check_useful_c_str!(credential_name, error::INVALID_OPTION.code_num);
     check_useful_c_str!(source_id, error::INVALID_OPTION.code_num);
+    check_useful_c_str!(cred_id, error::INVALID_OPTION.code_num);
 
     let issuer_did: String = if !issuer_did.is_null() {
         check_useful_c_str!(issuer_did, error::INVALID_OPTION.code_num);
@@ -61,16 +62,16 @@ pub extern fn vcx_issuer_create_credential(command_handle: u32,
         }
     };
 
-    info!("vcx_issuer_create_credential(command_handle: {}, source_id: {}, schema_seq_no: {}, issuer_did: {}, credential_data: {}, credential_name: {})",
+    info!("vcx_issuer_create_credential(command_handle: {}, source_id: {}, cred_id: {}, issuer_did: {}, credential_data: {}, credential_name: {})",
           command_handle,
           source_id,
-          schema_seq_no,
+          cred_id,
           issuer_did,
           credential_data,
           credential_name);
 
     thread::spawn(move|| {
-        let (rc, handle) = match issuer_credential::issuer_credential_create(schema_seq_no, source_id, issuer_did, credential_name, credential_data) {
+        let (rc, handle) = match issuer_credential::issuer_credential_create(cred_id, source_id, issuer_did, credential_name, credential_data) {
             Ok(x) => {
                 info!("vcx_issuer_create_credential_cb(command_handle: {}, rc: {}, handle: {}), source_id: {:?}",
                       command_handle, error_string(0), x, issuer_credential::get_source_id(x).unwrap_or_default());
@@ -377,7 +378,7 @@ mod tests {
     use settings;
     use connection;
     use api::VcxStateType;
-    use utils::constants::{DEFAULT_SERIALIZED_ISSUER_CREDENTIAL, CREDENTIAL_REQ_STRING};
+    use utils::constants::{CRED_DEF_ID, DEFAULT_SERIALIZED_ISSUER_CREDENTIAL, CREDENTIAL_REQ_STRING};
     use credential_request::CredentialRequest;
     use error::issuer_cred::IssuerCredError;
 
@@ -385,7 +386,7 @@ mod tests {
     static DEFAULT_DID: &str = "8XFh8yBzrpJQmNyZzgoTqB";
     static DEFAULT_ATTR: &str = "{\"attr\":\"value\"}";
     static DEFAULT_SCHEMA_SEQ_NO: u32 = 32;
-    static ISSUER_CREDENTIAL_STATE_ACCEPTED: &str = r#"{"credential_id":"a credential id","credential_name":"credential name","source_id":"test_vcx_issuer_send_credential","handle":123,"credential_attributes":"{\"state\":[\"UT\"],\"zip\":[\"84000\"],\"city\":[\"Draper\"],\"address2\":[\"Suite 3\"],\"address1\":[\"123 Main St\"]}","msg_uid":"","schema_seq_no":32,"issuer_did":"8XFh8yBzrpJQmNyZzgoTqB","issued_did":"VsKV7grR1BUE29mG2Fm2kX","issued_vk":"CnEDk9HrMnmiHXEV1WFgbVCRteYnPqsJwrTdcZaNhFVW","remote_did":"VsKV7grR1BUE29mG2Fm2kX","remote_vk":"CnEDk9HrMnmiHXEV1WFgbVCRteYnPqsJwrTdcZaNhFVW","agent_did":"VsKV7grR1BUE29mG2Fm2kX","agent_vk":"CnEDk9HrMnmiHXEV1WFgbVCRteYnPqsJwrTdcZaNhFVW","state":3,"ref_msg_id":"abc123"}"#;
+    static ISSUER_CREDENTIAL_STATE_ACCEPTED: &str = r#"{"source_id":"1","credential_attributes":"{\"attr\":\"value\"}","msg_uid":"","schema_seq_no":0,"issuer_did":"8XFh8yBzrpJQmNyZzgoTqB","state":3,"credential_request":null,"credential_offer":null,"credential_name":"credential_name","credential_id":"2936720225","cred_def_id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:1766","ref_msg_id":null,"agent_did":"","agent_vk":"","issued_did":"","issued_vk":"","remote_did":"","remote_vk":""}"#;
     extern "C" fn create_cb(command_handle: u32, err: u32, credential_handle: u32) {
         assert_eq!(err, 0);
         assert!(credential_handle > 0);
@@ -407,7 +408,7 @@ mod tests {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
         assert_eq!(vcx_issuer_create_credential(0,
                                            CString::new(DEFAULT_CREDENTIAL_NAME).unwrap().into_raw(),
-                                           32,
+                                           CString::new(CRED_DEF_ID).unwrap().into_raw(),
                                            ptr::null(),
                                            CString::new(DEFAULT_ATTR).unwrap().into_raw(),
                                            CString::new(DEFAULT_CREDENTIAL_NAME).unwrap().into_raw(),
@@ -422,7 +423,7 @@ mod tests {
         assert_eq!(vcx_issuer_create_credential(
             0,
             CString::new(DEFAULT_CREDENTIAL_NAME).unwrap().into_raw(),
-            32,
+            CString::new(CRED_DEF_ID).unwrap().into_raw(),
             ptr::null(),
             ptr::null(),
             CString::new(DEFAULT_CREDENTIAL_NAME).unwrap().into_raw(),
@@ -444,7 +445,7 @@ mod tests {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
         assert_eq!(vcx_issuer_create_credential(0,
                                            CString::new(DEFAULT_CREDENTIAL_NAME).unwrap().into_raw(),
-                                           DEFAULT_SCHEMA_SEQ_NO,
+                                                CString::new(CRED_DEF_ID).unwrap().into_raw(),
                                            CString::new(DEFAULT_DID).unwrap().into_raw(),
                                            CString::new(DEFAULT_ATTR).unwrap().into_raw(),
                                            CString::new(DEFAULT_CREDENTIAL_NAME).unwrap().into_raw(),
@@ -485,9 +486,6 @@ mod tests {
             Ok(x) => x,
             Err(_) => panic!("error with credential request"),
         };
-        // set credential request to have the same did as enterprise did (and sam as credential def)
-        credential_request.libindy_cred_req.issuer_did = Some(settings::get_config_value(settings::CONFIG_INSTITUTION_DID).clone().unwrap());
-        credential_request.schema_seq_no = Some(15);
         issuer_credential::set_credential_request(handle, credential_request).unwrap();
         assert_eq!(issuer_credential::get_state(handle),VcxStateType::VcxStateRequestReceived as u32);
         /**********************************************************************/
@@ -507,7 +505,7 @@ mod tests {
         assert_eq!(err, 0);
         assert!(credential_handle > 0);
         println!("successfully called deserialize_cb");
-        let serialized_issuer_credential = r#"{"source_id":"test_credential_serialize","credential_attributes":"{\"attr\":\"value\"}","msg_uid":"","schema_seq_no":32,"issuer_did":"8XFh8yBzrpJQmNyZzgoTqB","state":1,"credential_request":null,"credential_name":"credential name","credential_id":"1737199584","ref_msg_id":"abc123","agent_did":"","agent_vk":"","issued_did":"","issued_vk":"","remote_did":"","remote_vk":""}"#;
+        let serialized_issuer_credential = r#"{"source_id":"1","credential_attributes":"{\"attr\":\"value\"}","msg_uid":"","schema_seq_no":0,"issuer_did":"8XFh8yBzrpJQmNyZzgoTqB","state":1,"credential_request":null,"credential_offer":null,"credential_name":"credential_name","credential_id":"2936720225","cred_def_id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:1766","ref_msg_id":null,"agent_did":"","agent_vk":"","issued_did":"","issued_vk":"","remote_did":"","remote_vk":""}"#;
         let original = formatter(&serialized_issuer_credential);
         let new = formatter(&issuer_credential::to_string(credential_handle).unwrap());
         assert_eq!(original, new);
@@ -529,7 +527,7 @@ mod tests {
         settings::set_config_value(settings::CONFIG_INSTITUTION_DID, DEFAULT_DID);
         assert_eq!(vcx_issuer_create_credential(0,
                                            CString::new(DEFAULT_CREDENTIAL_NAME).unwrap().into_raw(),
-                                           DEFAULT_SCHEMA_SEQ_NO,
+                                                CString::new(CRED_DEF_ID).unwrap().into_raw(),
                                            CString::new(DEFAULT_DID).unwrap().into_raw(),
                                            CString::new(DEFAULT_ATTR).unwrap().into_raw(),
                                            CString::new(DEFAULT_CREDENTIAL_NAME).unwrap().into_raw(),

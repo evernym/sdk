@@ -1,5 +1,5 @@
-use messages::proofs::proof_message::{ ProofMessage, Attr, Identifier };
-use messages::proofs::proof_request::{ Filter, ProofRequestData, SchemaKeyFilter };
+/*use messages::proofs::proof_message::{ ProofMessage, Attr, Identifier };
+use messages::proofs::proof_request::{ Filter, ProofRequestData };
 use std::collections::HashMap;
 use error::proof::ProofError;
 
@@ -438,4 +438,4 @@ fn test_check_value(){
         proof.requested_proof.self_attested_attrs.insert("self_attested_name".to_string(), "value".to_string());
         assert_eq!(proof_compliance(&proof_req, &proof), Err(ProofError::FailedProofCompliance()));
     }
-}
+}*/
