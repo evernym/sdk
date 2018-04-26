@@ -19,6 +19,8 @@ use error::ToErrorCode;
 ///
 /// schema_name: Name of schema
 ///
+/// version: version of schema
+///
 /// schema_data: list of attributes that will make up the schema
 ///
 /// # Example schema_data -> "["attr1", "attr2", "attr3"]"
@@ -179,7 +181,7 @@ pub extern fn vcx_schema_release(schema_handle: u32) -> u32 {
 /// #Params
 /// schema_handle: Schema handle that was provided during creation. Used to access proof object
 ///
-/// cb: Callback that provides schema number and provides error status
+/// cb: Callback that provides schema id and provides error status
 ///
 /// #Returns
 /// Error code as a u32
@@ -219,6 +221,8 @@ pub extern fn vcx_schema_get_schema_id(command_handle: u32,
 /// sequence_no: The schema sequence number for wanted schema
 ///
 /// source_id: Enterprise's personal identification for the user.
+///
+/// schema_id: id of schema given during the creation of the schema
 ///
 /// cb: Callback that provides schema number and provides error status
 ///

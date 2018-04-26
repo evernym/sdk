@@ -19,11 +19,14 @@ use error::ToErrorCode;
 ///
 /// credentialdef_name: Name of credential definitions
 ///
-/// schema_seq_no: The schema sequence number to create credentialdef against
+/// schema_id: The schema id given during the creation of the cred_def
 ///
 /// issuer_did: did corresponding to entity issuing a credential. Needs to have Trust Anchor permissions on ledger
 ///
-/// create_non_revoc: Todo: need to add what this done. Right now, provide false
+/// tag: way to create a unique credential def with the same schema and issuer did.
+///
+//Todo: Provide more info about the config
+/// config: revocation info
 ///
 /// cb: Callback that provides CredentialDef handle and error status of request.
 ///

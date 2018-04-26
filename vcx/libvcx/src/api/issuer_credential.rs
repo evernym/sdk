@@ -22,7 +22,7 @@ use error::ToErrorCode;
 ///
 /// source_id: Enterprise's personal identification for the user.
 ///
-/// schema_seq_no: integer number corresponding to credential's schema number on the ledger
+/// cred_def_id: id of credential definition given during creation of the credential definition
 ///
 /// issuer_did: did corresponding to entity issuing a credential. Needs to have Trust Anchor permissions on ledger
 ///

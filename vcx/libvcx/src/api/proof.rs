@@ -19,12 +19,12 @@ use error::ToErrorCode;
 ///
 /// requested_attrs: attributes in json format prover is expected to include in proof.
 ///
-/// # Example requested_attrs -> "[{"name":"attrName","issuer_did":"did","schema_seq_no":1}]"
+/// # Example requested_attrs -> "[{"name":"attrName","issuer_did":"did","schema_id":"id","schema_issuer_did":"did","schema_name":"name","schema_version":"1.1.1","cred_def_id":"id"}]"
 ///
 /// requested_predicates: specific requirements regarding the prover's attributes.
 ///
-/// # Example requested_predicates -> "[{"attr_name":"age","p_type":"GE","value":18,"schema_seq_no":1,"issuer_did":"DID"}]"
-/// /// name: Name of the proof request - ex. Drivers Licence.
+/// # Example requested_predicates -> "[{"name":"attrName","p_type":"GE","p_value":9,"issuer_did":"did","schema_id":"id","schema_issuer_did":"did","schema_name":"name","schema_version":"1.1.1","cred_def_id":"id"}]"
+///
 ///
 /// cb: Callback that provides proof handle and error status of request.
 ///
