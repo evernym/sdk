@@ -27,6 +27,8 @@ use error::ToErrorCode;
 ///
 /// cb: Callback that provides CredentialDef handle and error status of request.
 ///
+/// payment_handle: future use (currently uses any address in wallet)
+///
 /// #Returns
 /// Error code as a u32
 #[no_mangle]
@@ -36,6 +38,7 @@ pub extern fn vcx_credentialdef_create(command_handle: u32,
                                   schema_seq_no: u32,
                                   issuer_did: *const c_char,
                                   create_non_revoc: bool,
+                                  payment_handle: u32,
                                   cb: Option<extern fn(xcommand_handle: u32, err: u32, credentialdef_handle: u32)>) -> u32 {
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
     check_useful_c_str!(credentialdef_name, error::INVALID_OPTION.code_num);
@@ -174,13 +177,6 @@ pub extern fn vcx_credentialdef_release(credentialdef_handle: u32) -> u32 {
     credential_def::release(credentialdef_handle)
 }
 
-#[allow(unused_variables, unused_mut)]
-pub extern fn vcx_credentialdef_commit(credentialdef_handle: u32) -> u32 { error::SUCCESS.code_num }
-#[allow(unused_variables, unused_mut)]
-pub extern fn vcx_credentialdef_get_sequence_no(credentialdef_handle: u32, sequence_no: *mut u32) -> u32 { error::SUCCESS.code_num }
-#[allow(unused_variables, unused_mut)]
-pub extern fn vcx_credentialdef_get(credentialdef_handle: u32, data: *mut c_char) -> u32 { error::SUCCESS.code_num }
-
 #[cfg(test)]
 mod tests {
     extern crate serde_json;
@@ -254,6 +250,7 @@ mod tests {
                                        15,
                                        CString::new("6vkhW3L28AophhA68SSzRS").unwrap().into_raw(),
                                        false,
+                                       0,
                                        Some(create_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
@@ -274,6 +271,7 @@ mod tests {
                                        22,
                                        ptr::null(),
                                        false,
+                                       0,
                                        Some(credential_def_on_ledger_err_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_secs(1));
         delete_wallet("test_vcx_create_credentialdef_with_pool").unwrap();
@@ -289,6 +287,7 @@ mod tests {
                                        0,
                                        ptr::null(),
                                        false,
+                                       0,
                                        Some(create_cb_err)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
@@ -302,6 +301,7 @@ mod tests {
                                        15,
                                        ptr::null(),
                                        false,
+                                       0,
                                        Some(create_and_serialize_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }

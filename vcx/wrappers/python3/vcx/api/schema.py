@@ -35,13 +35,14 @@ class Schema(VcxBase):
         self._attrs = x
 
     @staticmethod
-    async def create(source_id: str, name: str, attr_names: dict):
+    async def create(source_id: str, name: str, attr_names: dict, payment_handle: int):
         constructor_params = (source_id, name, attr_names)
 
         c_source_id = c_char_p(source_id.encode('utf-8'))
         c_name = c_char_p(name.encode('utf-8'))
         c_schema_data = c_char_p(json.dumps(attr_names).encode('utf-8'))
-        c_params = (c_source_id, c_name, c_schema_data)
+        c_payment = c_uint32(payment_handle)
+        c_params = (c_source_id, c_name, c_schema_data, c_payment, )
 
         return await Schema._create("vcx_schema_create",
                                     constructor_params,

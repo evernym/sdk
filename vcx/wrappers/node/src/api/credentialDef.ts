@@ -63,7 +63,7 @@ export class CredentialDef extends VCXBase {
    * { sourceId: "12", schemaNum: 1, name: "name of credential", revocation: false}
    * @returns {Promise<credentialDef>} A credentialDef Object
    */
-  static async create (data: ICredentialDefinition): Promise<CredentialDef> {
+  static async create (data: ICredentialDefinition, paymentHandle: number): Promise<CredentialDef> {
     const credentialDef = new CredentialDef(data.sourceId, { name: data.name, schemaNo: data.schemaNo })
     const commandHandle = 0
     const issuerDid = null
@@ -75,6 +75,7 @@ export class CredentialDef extends VCXBase {
       data.schemaNo,
       issuerDid,
       data.revocation,
+      paymentHandle,
       cb
       ))
       return credentialDef

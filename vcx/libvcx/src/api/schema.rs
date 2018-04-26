@@ -23,6 +23,8 @@ use error::ToErrorCode;
 ///
 /// # Example schema_data -> "["attr1", "attr2", "attr3"]"
 ///
+/// payment_handle: future use (currently uses any address in the wallet)
+///
 /// cb: Callback that provides Schema handle and error status of request.
 ///
 /// #Returns
@@ -32,6 +34,7 @@ pub extern fn vcx_schema_create(command_handle: u32,
                                 source_id: *const c_char,
                                 schema_name: *const c_char,
                                 schema_data: *const c_char,
+                                payment_handle: u32,
                                 cb: Option<extern fn(xcommand_handle: u32, err: u32, credentialdef_handle: u32)>) -> u32 {
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
     check_useful_c_str!(schema_name, error::INVALID_OPTION.code_num);
@@ -321,6 +324,7 @@ mod tests {
                                        schema_seq_no,
                                        ptr::null(),
                                        false,
+                                       0,
                                        Some(create_cb)),
                    error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(800));
@@ -362,6 +366,7 @@ mod tests {
                                        CString::new("Test Source ID").unwrap().into_raw(),
                                        CString::new("Test Schema").unwrap().into_raw(),
                                        CString::new("{}").unwrap().into_raw(),
+                                       0,
                                        Some(create_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
@@ -381,6 +386,7 @@ mod tests {
                                      CString::new("Test Source ID").unwrap().into_raw(),
                                      CString::new("Test Schema").unwrap().into_raw(),
                                      CString::new(data).unwrap().into_raw(),
+                                     0,
                                      Some(create_schema_and_credentialdef_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_secs(1));
         delete_wallet("a_test_wallet").unwrap();
@@ -401,6 +407,7 @@ mod tests {
                                      CString::new("Test Source ID").unwrap().into_raw(),
                                      CString::new("Test Schema").unwrap().into_raw(),
                                      CString::new(data).unwrap().into_raw(),
+                                     0,
                                      Some(create_schema_and_credentialdef_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_secs(60));
         delete_wallet("a_test_wallet").unwrap();
@@ -429,6 +436,7 @@ mod tests {
                                      CString::new("Test Source ID").unwrap().into_raw(),
                                      CString::new("Test Schema").unwrap().into_raw(),
                                      CString::new(data).unwrap().into_raw(),
+                                     0,
                                      Some(create_and_serialize_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
@@ -448,6 +456,7 @@ mod tests {
                                      CString::new("Test Source ID").unwrap().into_raw(),
                                      CString::new("Test Schema").unwrap().into_raw(),
                                      CString::new("{}").unwrap().into_raw(),
+                                     0,
                                      Some(create_cb_get_seq_no)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
 

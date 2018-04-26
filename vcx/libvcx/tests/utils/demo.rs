@@ -59,6 +59,7 @@ pub fn create_credential_offer(credential_name: &str, source_id: &str, credentia
                                                         ptr::null(),
                                                         credential_data_cstring.as_ptr(),
                                                         credential_name_cstring.as_ptr(),
+                                                        0.0,
                                                         cb);
     assert_eq!(rc, 0);
     receiver.recv_timeout(TimeoutUtils::long_timeout()).unwrap()
@@ -417,6 +418,7 @@ pub fn create_credentialdef(source_id: &str, credentialdef_name: &str, schema_se
                                                         schema_seq_no,
                                                         ptr::null(),
                                                  false,
+                                                     0,
                                                      cb);
     assert_eq!(rc, 0);
     receiver.recv_timeout(TimeoutUtils::long_timeout()).unwrap()
@@ -434,6 +436,7 @@ pub fn create_schema(source_id: &str, schema_name: &str, schema_data: &str) -> (
                                                      source_id_cstring.as_ptr(),
                                                      schema_name_cstring.as_ptr(),
                                                      schema_data_cstring.as_ptr(),
+                                                     0,
                                                      cb);
     assert_eq!(rc, 0);
     let (rc, handle) = receiver.recv_timeout(TimeoutUtils::long_timeout()).unwrap();

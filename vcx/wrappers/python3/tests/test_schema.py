@@ -11,7 +11,7 @@ attr_names = ['attr1', 'attr2', 'height', 'weight']
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_create_schema():
-    schema = await Schema.create(source_id, name, attr_names)
+    schema = await Schema.create(source_id, name, attr_names, 0)
     assert schema.source_id == source_id
     assert schema.handle > 0
 
@@ -19,14 +19,14 @@ async def test_create_schema():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_create_sets_schema_attrs():
-    schema = await Schema.create(source_id, name, attr_names)
+    schema = await Schema.create(source_id, name, attr_names, 0)
     assert schema.attrs == attr_names
 
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_serialize():
-    schema = await Schema.create(source_id, name, attr_names)
+    schema = await Schema.create(source_id, name, attr_names, 0)
     data = await schema.serialize()
     assert data.get('source_id') == source_id
     assert data.get('name') == name
@@ -46,7 +46,7 @@ async def test_serialize_with_bad_handle():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_deserialize():
-    schema = await Schema.create(source_id, name, attr_names)
+    schema = await Schema.create(source_id, name, attr_names, 0)
     data = await schema.serialize()
     schema2 = await Schema.deserialize(data)
     assert schema2.source_id == data.get('source_id')
@@ -64,7 +64,7 @@ async def test_deserialize_with_invalid_data():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_serialize_deserialize_and_then_serialize():
-    schema = await Schema.create(source_id, name, attr_names)
+    schema = await Schema.create(source_id, name, attr_names, 0)
     data1 = await schema.serialize()
     schema2 = await Schema.deserialize(data1)
     data2 = await schema2.serialize()
@@ -75,7 +75,7 @@ async def test_serialize_deserialize_and_then_serialize():
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_release():
     with pytest.raises(VcxError) as e:
-        schema = await Schema.create(source_id, name, attr_names)
+        schema = await Schema.create(source_id, name, attr_names, 0)
         assert schema.handle > 0
         schema.release()
         await schema.serialize()
