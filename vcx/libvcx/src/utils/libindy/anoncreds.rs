@@ -100,7 +100,6 @@ extern {
     fn indy_prover_store_credential(command_handle: i32,
                                     wallet_handle: i32,
                                     cred_id: *const c_char,
-                                    cred_req_json: *const c_char,
                                     cred_req_metadata_json: *const c_char,
                                     cred_json: *const c_char,
                                     cred_def_json: *const c_char,
@@ -401,7 +400,6 @@ pub fn libindy_prover_create_credential_req(prover_did: &str,
 }
 
 pub fn libindy_prover_store_credential(cred_id: Option<&str>,
-                                       cred_req_json: &str,
                                        cred_req_meta: &str,
                                        cred_json: &str,
                                        cred_def_json: &str,
@@ -413,7 +411,6 @@ pub fn libindy_prover_store_credential(cred_id: Option<&str>,
 
     let wallet_handle = get_wallet_handle();
     let cred_id_str = CString::new(cred_id.unwrap_or_default() ).map_err(map_string_error)?;
-    let cred_req_json = CString::new(cred_req_json).map_err(map_string_error)?;
     let cred_req_meta = CString::new(cred_req_meta).map_err(map_string_error)?;
     let cred_json = CString::new(cred_json).map_err(map_string_error)?;
     let cred_def_json = CString::new(cred_def_json).map_err(map_string_error)?;
@@ -425,7 +422,6 @@ pub fn libindy_prover_store_credential(cred_id: Option<&str>,
                 rtn_obj.command_handle,
                 wallet_handle,
                 if cred_id.is_some() { cred_id_str.as_ptr() } else { null() },
-                cred_req_json.as_ptr(),
                 cred_req_meta.as_ptr(),
                 cred_json.as_ptr(),
                 cred_def_json.as_ptr(),
@@ -695,7 +691,6 @@ mod tests {
 
         let result = libindy_prover_store_credential(
             None,
-            &libindy_cred_req,
             &cred_req_meta,
             &cred,
             CRED_DEF_JSON,

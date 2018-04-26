@@ -196,7 +196,6 @@ impl Credential {
 
                         self.credential = Some(credential);
                         self.cred_id = Some(libindy_prover_store_credential(None,
-                                                                      &cred_req.libindy_cred_req,
                                                                       &cred_req.libindy_cred_req_meta,
                                                                       &credential_msg.libindy_cred,
                                                                       &cred_req.cred_def_id,
