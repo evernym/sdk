@@ -112,11 +112,11 @@ export class Credential extends VCXBaseWithState {
     }
   }
 
-  async sendRequest (connection: Connection): Promise<void> {
+  async sendRequest (connection: Connection, payment: number): Promise<void> {
     try {
       await createFFICallbackPromise<void>(
           (resolve, reject, cb) => {
-            const rc = rustAPI().vcx_credential_send_request(0, this.handle, connection.handle, cb)
+            const rc = rustAPI().vcx_credential_send_request(0, this.handle, connection.handle, payment, cb)
             if (rc) {
               reject(rc)
             }

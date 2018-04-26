@@ -35,16 +35,17 @@ class CredentialDef(VcxBase):
         self._schema_no = x
 
     @staticmethod
-    async def create(source_id: str, name: str, schema_no: int, revocation: bool):
+    async def create(source_id: str, name: str, schema_no: int, revocation: bool, payment_handle: int):
         constructor_params = (source_id, name, schema_no)
 
         c_source_id = c_char_p(source_id.encode('utf-8'))
         c_name = c_char_p(name.encode('utf-8'))
         c_schema_no = c_uint32(schema_no)
+        c_payment = c_uint32(payment_handle)
         # default institution_did in config is used as issuer_did
         c_issuer_did = None
         c_revocation = c_bool(revocation)
-        c_params = (c_source_id, c_name, c_schema_no, c_issuer_did, c_revocation)
+        c_params = (c_source_id, c_name, c_schema_no, c_issuer_did, c_revocation, c_payment)
 
         return await CredentialDef._create("vcx_credentialdef_create",
                                            constructor_params,

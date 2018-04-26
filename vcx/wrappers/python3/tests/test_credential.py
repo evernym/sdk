@@ -163,7 +163,7 @@ async def test_send_request():
     connection = await Connection.create(source_id)
     await connection.connect(phone_number)
     credential = await Credential.deserialize(credential_json)
-    await credential.send_request(connection)
+    await credential.send_request(connection, 0)
     assert await credential.update_state() == State.OfferSent
 
 
@@ -174,7 +174,7 @@ async def test_send_request_with_invalid_state():
         connection = await Connection.create(source_id)
         await connection.connect(phone_number)
         credential = await Credential.create(source_id, offer)
-        await credential.send_request(connection)
+        await credential.send_request(connection, 0)
     assert ErrorCode.CreateCredentialFailed == e.value.error_code
 
 @pytest.mark.asyncio
@@ -183,7 +183,7 @@ async def test_send_request_with_bad_connection():
     with pytest.raises(VcxError) as e:
         connection = Connection(source_id)
         credential = await Credential.create(source_id, offer)
-        await credential.send_request(connection)
+        await credential.send_request(connection, 0)
     assert ErrorCode.InvalidConnectionHandle == e.value.error_code
 
 @pytest.mark.asyncio
