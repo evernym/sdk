@@ -485,12 +485,12 @@ mod tests {
     }
 
     extern "C" fn get_credential_cb(handle: u32, err: u32, credential_string: *const c_char) {
-        use utils::constants::{ CREDENTIAL_ID, CREDENTIAL_STORED_IN_WALLET };
+        use utils::constants::CRED;
         assert_eq!(err, 0);
         if credential_string.is_null() {
             panic!("credential_string is null");
         }
-        let cred = format!(r#"{{"{}":{}}}"#, CREDENTIAL_ID, CREDENTIAL_STORED_IN_WALLET);
+        let cred = format!(r#"{{"{}":{}}}"#, "cred_id", CRED);
         println!("get_credential(): {}", CStringUtils::c_str_to_string(credential_string).unwrap().unwrap());
         assert_eq!(CStringUtils::c_str_to_string(credential_string).unwrap().unwrap(), cred);
         check_useful_c_str!(credential_string, ());

@@ -32,7 +32,7 @@ export interface IProofData {
 }
 
 export interface IProofResponses {
-  proofAttrs: IProofResponseAttr[],
+  proofAttrs?: IProofResponseAttr[],
   proofState: ProofState,
 }
 

@@ -17,7 +17,7 @@ import { VCXBaseWithState } from './VCXBaseWithState'
  */
 export interface ICredentialConfig {
   sourceId: string,
-  schemaNum: number,
+  credDefId: string,
   attr: {
     [ index: string ]: string
   },
@@ -29,7 +29,7 @@ export interface ICredentialVCXAttributes {
 }
 
 export interface IcredentialParams {
-  schemaNum: number,
+  credDefId: string,
   credentialName: string,
   attr: ICredentialVCXAttributes
 }
@@ -48,6 +48,7 @@ export interface ICredentialData {
   issuer_did: string
   state: StateType
   msg_uid: string
+  cred_def_id: string
 }
 
 /**
@@ -59,14 +60,14 @@ export class IssuerCredential extends VCXBaseWithState {
   protected _getStFn = rustAPI().vcx_issuer_credential_get_state
   protected _serializeFn = rustAPI().vcx_issuer_credential_serialize
   protected _deserializeFn = rustAPI().vcx_issuer_credential_deserialize
-  private _schemaNum: number
+  private _credDefId: string
   private _issuerDID: string
   private _credentialName: string
   private _attr: ICredentialVCXAttributes
 
-  constructor (sourceId, { schemaNum, credentialName, attr }: IcredentialParams) {
+  constructor (sourceId, { credDefId, credentialName, attr }: IcredentialParams) {
     super(sourceId)
-    this._schemaNum = schemaNum
+    this._credDefId = credDefId
     this._credentialName = credentialName
     this._attr = attr
   }
@@ -82,10 +83,10 @@ export class IssuerCredential extends VCXBaseWithState {
    * { sourceId: "12", schemaNum: 1, issuerDid: "did", attr: {key: "value"}, credentialName: "name of credential"}
    * @returns {Promise<IssuerCredential>} An Issuer credential Object
    */
-  static async create ({ attr, sourceId, schemaNum, credentialName }: ICredentialConfig): Promise<IssuerCredential> {
+  static async create ({ attr, sourceId, credDefId, credentialName }: ICredentialConfig): Promise<IssuerCredential> {
     const attrsVCX: ICredentialVCXAttributes = Object.keys(attr)
       .reduce((accum, attrKey) => ({ ...accum, [attrKey]: [attr[attrKey]] }), {})
-    const credential = new IssuerCredential(sourceId, { schemaNum, credentialName, attr: attrsVCX })
+    const credential = new IssuerCredential(sourceId, { credDefId, credentialName, attr: attrsVCX })
     const attrsStringified = JSON.stringify(attrsVCX)
     const commandHandle = 0
     const issuerDid = null
@@ -93,7 +94,7 @@ export class IssuerCredential extends VCXBaseWithState {
       await credential._create((cb) => rustAPI().vcx_issuer_create_credential(
         commandHandle,
         sourceId,
-        schemaNum,
+        credDefId,
         issuerDid,
         attrsStringified,
         credentialName,
@@ -125,8 +126,8 @@ export class IssuerCredential extends VCXBaseWithState {
       const attr = JSON.parse(credentialData.credential_attributes)
       const params: IcredentialParams = {
         attr,
-        credentialName: credentialData.credential_name,
-        schemaNum: credentialData.schema_seq_no
+        credDefId: credentialData.cred_def_id,
+        credentialName: credentialData.credential_name
       }
       const credential = await super._deserialize<IssuerCredential, IcredentialParams>(IssuerCredential,
          credentialData,
@@ -253,8 +254,8 @@ export class IssuerCredential extends VCXBaseWithState {
     return this._issuerDID
   }
 
-  get schemaNum () {
-    return this._schemaNum
+  get credDefId () {
+    return this._credDefId
   }
 
   get attr () {

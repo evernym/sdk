@@ -35,8 +35,8 @@ describe('A CredentialDef', function () {
     const jsonDef = await credentialDef.serialize()
     assert.equal(jsonDef.source_id, 'sourceId')
     const credentialDef2 = await CredentialDef.deserialize(jsonDef)
-    // assert.equal(credentialDef.name, credentialDef2.name)
-    // assert.equal(credentialDef.source_id, credentialDef2.source_id)
+    assert.equal(credentialDef.name, credentialDef2.name)
+    assert.equal(credentialDef.source_id, credentialDef2.source_id)
   })
 
   it('will throw error on serialize when credentialDef has been released', async () => {
