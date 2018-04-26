@@ -218,3 +218,4 @@ describe('A Proof', function () {
     return isComplete
   })
 })
+c_source_id = c_char_p(source_id.encode('utf-8'))

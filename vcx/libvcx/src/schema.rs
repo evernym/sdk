@@ -212,7 +212,6 @@ pub fn create_new_schema(source_id: &str,
 
 
 pub fn get_schema_attrs(source_id: String, schema_id: String) -> Result<(u32, String), SchemaError> {
-    //Todo: which did should I use for submitter did
     let submitter_did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
     let new_handle = rand::thread_rng().gen::<u32>();
 

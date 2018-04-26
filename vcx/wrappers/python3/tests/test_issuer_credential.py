@@ -6,6 +6,7 @@ from vcx.api.connection import Connection
 
 source_id = '1'
 schema_no = 1234
+cred_def_id = 'cred_def_id1'
 attrs = {'key': 'value', 'key2': 'value2', 'key3': 'value3'}
 name = 'Credential Name'
 issuer_did = '8XFh8yBzrpJQmNyZzgoTqB'
@@ -15,7 +16,7 @@ phone_number = '8019119191'
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_create_issuer_credential():
-    issuer_credential = await IssuerCredential.create(source_id, attrs, schema_no, name)
+    issuer_credential = await IssuerCredential.create(source_id, attrs, cred_def_id, name)
     assert issuer_credential.source_id == source_id
     assert issuer_credential.handle > 0
     assert await issuer_credential.get_state() == State.Initialized
@@ -24,7 +25,7 @@ async def test_create_issuer_credential():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_serialize():
-    issuer_credential = await IssuerCredential.create(source_id, attrs, schema_no, name)
+    issuer_credential = await IssuerCredential.create(source_id, attrs, cred_def_id, name)
     data = await issuer_credential.serialize()
     assert data.get('source_id') == source_id
     assert data.get('credential_name') == name
@@ -34,7 +35,7 @@ async def test_serialize():
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_serialize_with_bad_handle():
     with pytest.raises(VcxError) as e:
-        issuer_credential = IssuerCredential(source_id, attrs, schema_no, name)
+        issuer_credential = IssuerCredential(source_id, attrs, cred_def_id, name)
         issuer_credential.handle = 0
         await issuer_credential.serialize()
     assert ErrorCode.InvalidIssuerCredentialHandle == e.value.error_code
@@ -44,7 +45,7 @@ async def test_serialize_with_bad_handle():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_deserialize():
-    issuer_credential = await IssuerCredential.create(source_id, attrs, schema_no, name)
+    issuer_credential = await IssuerCredential.create(source_id, attrs, cred_def_id, name)
     data = await issuer_credential.serialize()
     data['handle'] = 99999
     data['state'] = State.Expired
@@ -66,7 +67,7 @@ async def test_deserialize_with_invalid_data():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_serialize_deserialize_and_then_serialize():
-    issuer_credential = await IssuerCredential.create(source_id, attrs, schema_no, name)
+    issuer_credential = await IssuerCredential.create(source_id, attrs, cred_def_id, name)
     data1 = await issuer_credential.serialize()
     issuer_credential2 = await IssuerCredential.deserialize(data1)
     data2 = await issuer_credential2.serialize()
@@ -76,7 +77,7 @@ async def test_serialize_deserialize_and_then_serialize():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_update_state():
-    issuer_credential = await IssuerCredential.create(source_id, attrs, schema_no, name)
+    issuer_credential = await IssuerCredential.create(source_id, attrs, cred_def_id, name)
     assert await issuer_credential.update_state() == State.Initialized
 
 
@@ -84,7 +85,7 @@ async def test_update_state():
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_update_state_with_invalid_handle():
     with pytest.raises(VcxError) as e:
-        issuer_credential = IssuerCredential(source_id, attrs, schema_no, name)
+        issuer_credential = IssuerCredential(source_id, attrs, cred_def_id, name)
         issuer_credential.handle = 0
         await issuer_credential.update_state()
     assert ErrorCode.InvalidIssuerCredentialHandle == e.value.error_code
@@ -94,7 +95,7 @@ async def test_update_state_with_invalid_handle():
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_get_state():
-    issuer_credential = await IssuerCredential.create(source_id, attrs, schema_no, name)
+    issuer_credential = await IssuerCredential.create(source_id, attrs, cred_def_id, name)
     assert await issuer_credential.get_state() == State.Initialized
 
 
@@ -102,7 +103,7 @@ async def test_get_state():
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_issuer_credential_release():
     with pytest.raises(VcxError) as e:
-        issuer_credential = await IssuerCredential.create(source_id, attrs, schema_no, name)
+        issuer_credential = await IssuerCredential.create(source_id, attrs, cred_def_id, name)
         assert issuer_credential.handle > 0
         issuer_credential.release()
         await issuer_credential.serialize()
@@ -115,7 +116,7 @@ async def test_issuer_credential_release():
 async def test_send_offer():
     connection = await Connection.create(source_id)
     await connection.connect(phone_number)
-    issuer_credential = await IssuerCredential.create(source_id, attrs, schema_no, name)
+    issuer_credential = await IssuerCredential.create(source_id, attrs, cred_def_id, name)
     await issuer_credential.send_offer(connection)
     assert await issuer_credential.update_state() == State.OfferSent
 
@@ -126,7 +127,7 @@ async def test_send_offer_with_invalid_state():
     with pytest.raises(VcxError) as e:
         connection = await Connection.create(source_id)
         await connection.connect(phone_number)
-        issuer_credential = await IssuerCredential.create(source_id, attrs, schema_no, name)
+        issuer_credential = await IssuerCredential.create(source_id, attrs, cred_def_id, name)
         data = await issuer_credential.serialize()
         data['state'] = State.Expired
         issuer_credential2 = await IssuerCredential.deserialize(data)
@@ -139,7 +140,7 @@ async def test_send_offer_with_invalid_state():
 async def test_send_offer_with_bad_connection():
     with pytest.raises(VcxError) as e:
         connection = Connection(source_id)
-        issuer_credential = await IssuerCredential.create(source_id, attrs, schema_no, name)
+        issuer_credential = await IssuerCredential.create(source_id, attrs, cred_def_id, name)
         await issuer_credential.send_offer(connection)
     assert ErrorCode.InvalidConnectionHandle == e.value.error_code
     assert 'Invalid Connection Handle' == e.value.error_msg
@@ -150,7 +151,7 @@ async def test_send_offer_with_bad_connection():
 async def test_send_credential():
     connection = await Connection.create(source_id)
     await connection.connect(phone_number)
-    issuer_credential = await IssuerCredential.create(source_id, attrs, schema_no, name)
+    issuer_credential = await IssuerCredential.create(source_id, attrs, cred_def_id, name)
     await issuer_credential.send_offer(connection)
     assert await issuer_credential.update_state() == State.OfferSent
     # simulate consumer sending credential_req
@@ -165,7 +166,7 @@ async def test_send_credential():
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_send_credential_with_invalid_issuer_credential():
     with pytest.raises(VcxError) as e:
-        issuer_credential = IssuerCredential(source_id, attrs, schema_no, name)
+        issuer_credential = IssuerCredential(source_id, attrs, cred_def_id, name)
         await issuer_credential.send_credential(Connection(source_id))
     assert ErrorCode.InvalidIssuerCredentialHandle == e.value.error_code
 
@@ -174,7 +175,7 @@ async def test_send_credential_with_invalid_issuer_credential():
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_send_credential_with_invalid_connection():
     with pytest.raises(VcxError) as e:
-        issuer_credential = await IssuerCredential.create(source_id, attrs, schema_no, name)
+        issuer_credential = await IssuerCredential.create(source_id, attrs, cred_def_id, name)
         await issuer_credential.send_credential(Connection(source_id))
     assert ErrorCode.InvalidConnectionHandle == e.value.error_code
 
@@ -185,7 +186,7 @@ async def test_send_credential_with_no_prior_offer():
     with pytest.raises(VcxError) as e:
         connection = await Connection.create(source_id)
         await connection.connect(phone_number)
-        issuer_credential = await IssuerCredential.create(source_id, attrs, schema_no, name)
+        issuer_credential = await IssuerCredential.create(source_id, attrs, cred_def_id, name)
         await issuer_credential.send_credential(connection)
     assert ErrorCode.NotReady == e.value.error_code
 

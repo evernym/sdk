@@ -40,7 +40,7 @@ use error::ToErrorCode;
 #[allow(unused_variables, unused_mut)]
 pub extern fn vcx_issuer_create_credential(command_handle: u32,
                                       source_id: *const c_char,
-                                      cred_id: *const c_char,
+                                      cred_def_id: *const c_char,
                                       issuer_did: *const c_char,
                                       credential_data: *const c_char,
                                       credential_name: *const c_char,
@@ -50,7 +50,7 @@ pub extern fn vcx_issuer_create_credential(command_handle: u32,
     check_useful_c_str!(credential_data, error::INVALID_OPTION.code_num);
     check_useful_c_str!(credential_name, error::INVALID_OPTION.code_num);
     check_useful_c_str!(source_id, error::INVALID_OPTION.code_num);
-    check_useful_c_str!(cred_id, error::INVALID_OPTION.code_num);
+    check_useful_c_str!(cred_def_id, error::INVALID_OPTION.code_num);
 
     let issuer_did: String = if !issuer_did.is_null() {
         check_useful_c_str!(issuer_did, error::INVALID_OPTION.code_num);
@@ -62,16 +62,16 @@ pub extern fn vcx_issuer_create_credential(command_handle: u32,
         }
     };
 
-    info!("vcx_issuer_create_credential(command_handle: {}, source_id: {}, cred_id: {}, issuer_did: {}, credential_data: {}, credential_name: {})",
+    info!("vcx_issuer_create_credential(command_handle: {}, source_id: {}, cred_def_id: {}, issuer_did: {}, credential_data: {}, credential_name: {})",
           command_handle,
           source_id,
-          cred_id,
+          cred_def_id,
           issuer_did,
           credential_data,
           credential_name);
 
     thread::spawn(move|| {
-        let (rc, handle) = match issuer_credential::issuer_credential_create(cred_id, source_id, issuer_did, credential_name, credential_data) {
+        let (rc, handle) = match issuer_credential::issuer_credential_create(cred_def_id, source_id, issuer_did, credential_name, credential_data) {
             Ok(x) => {
                 info!("vcx_issuer_create_credential_cb(command_handle: {}, rc: {}, handle: {}), source_id: {:?}",
                       command_handle, error_string(0), x, issuer_credential::get_source_id(x).unwrap_or_default());

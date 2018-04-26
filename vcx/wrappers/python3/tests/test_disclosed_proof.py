@@ -3,6 +3,7 @@ from vcx.error import ErrorCode, VcxError
 from vcx.state import State
 from vcx.api.disclosed_proof import DisclosedProof
 from vcx.api.connection import Connection
+import json
 
 phone_number = '8019119191'
 source_id = '1'
@@ -20,7 +21,7 @@ request = {
     "proof_request_data": {
         "name": "Account Certificate",
         "nonce": "838186471541979035208225",
-        "requested_attrs": {
+        "requested_attributes": {
             "business_2": {
                 "name": "business"
             },

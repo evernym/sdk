@@ -9,10 +9,7 @@ from vcx.api.connection import Connection
 source_id = '123'
 name = 'proof name'
 phone_number = '8019119191'
-requested_attrs = [{'name': 'a', 'issuer_did': '8XFh8yBzrpJQmNyZzgoTqB', 'schema_seq_no': 1},
-                   {'name': 'b'},
-                   {'name': 'c', 'issuer_did': '77Fh8yBzrpJQmNyZzgoTqB'}]
-proof_msg = '{"version":"0.1","to_did":"BnRXf8yDMUwGyZVDkSENeq","from_did":"GxtnGN6ypZYgEqcftSQFnC","proof_request_id":"cCanHnpFAD","proof":{ "proofs":{ "claim::bb929325-e8e6-4637-ba26-b19807b1f618":{ "primary_proof":{ "eq_proof":{ "revealed_attrs":{ "name":"1139481716457488690172217916278103335" }, "a_prime":"123", "e":"456", "v":"5", "m":{ "age":"456", "height":"4532", "sex":"444" }, "m1":"5432", "m2":"211" }, "ge_proofs":[ { "u":{ "2":"6", "1":"5", "0":"7", "3":"8" }, "r":{ "1":"9", "3":"0", "DELTA":"8", "2":"6", "0":"9" }, "mj":"2", "alpha":"3", "t":{ "DELTA":"4", "1":"5", "0":"6", "2":"7", "3":"8" }, "predicate":{ "attr_name":"age", "p_type":"GE", "value":18 } } ] }, "non_revoc_proof":null } }, "aggregated_proof":{ "c_hash":"31470331269146455873134287006934967606471534525199171477580349873046877989406", "c_list":[ [ 182 ], [ 96, 49 ], [ 1 ] ] } }, "requested_proof":{ "revealed_attrs":{ "attr1_referent":[ "claim::bb929325-e8e6-4637-ba26-b19807b1f618", "Alex", "1139481716457488690172217916278103335" ] }, "unrevealed_attrs":{ }, "self_attested_attrs":{ }, "predicates":{ "predicate1_referent":"claim::bb929325-e8e6-4637-ba26-b19807b1f618" } }, "identifiers":{ "claim::bb929325-e8e6-4637-ba26-b19807b1f618":{ "issuer_did":"NcYxiDXkpYi6ov5FcYDi1e", "schema_key":{ "name":"gvt", "version":"1.0", "did":"NcYxiDXkpYi6ov5FcYDi1e" }, "rev_reg_seq_no":null } }}'
+requested_attrs = [{"name": "age", "restrictions": [{"schema_id": "6XFh8yBzrpJQmNyZzgoTqB:2:schema_name:0.0.11", "schema_name":"Faber Student Info", "schema_version":"1.0", "schema_issuer_did":"6XFh8yBzrpJQmNyZzgoTqB", "issuer_did":"8XFh8yBzrpJQmNyZzgoTqB", "cred_def_id": "8XFh8yBzrpJQmNyZzgoTqB:3:CL:1766" }, { "schema_id": "5XFh8yBzrpJQmNyZzgoTqB:2:schema_name:0.0.11", "schema_name":"BYU Student Info", "schema_version":"1.0", "schema_issuer_did":"5XFh8yBzrpJQmNyZzgoTqB", "issuer_did":"66Fh8yBzrpJQmNyZzgoTqB", "cred_def_id": "66Fh8yBzrpJQmNyZzgoTqB:3:CL:1766" } ] }, { "name":"name", "restrictions": [ { "schema_id": "6XFh8yBzrpJQmNyZzgoTqB:2:schema_name:0.0.11", "schema_name":"Faber Student Info", "schema_version":"1.0", "schema_issuer_did":"6XFh8yBzrpJQmNyZzgoTqB", "issuer_did":"8XFh8yBzrpJQmNyZzgoTqB", "cred_def_id": "8XFh8yBzrpJQmNyZzgoTqB:3:CL:1766" }, { "schema_id": "5XFh8yBzrpJQmNyZzgoTqB:2:schema_name:0.0.11", "schema_name":"BYU Student Info", "schema_version":"1.0", "schema_issuer_did":"5XFh8yBzrpJQmNyZzgoTqB", "issuer_did":"66Fh8yBzrpJQmNyZzgoTqB", "cred_def_id": "66Fh8yBzrpJQmNyZzgoTqB:3:CL:1766"}]}]
 
 @pytest.mark.asyncio
 async def test_create_proof_has_libindy_error_with_no_init():
@@ -155,15 +152,12 @@ async def test_get_proof_with_invalid_proof():
     await connection.connect(phone_number)
     proof = await Proof.create(source_id, name, requested_attrs)
     data = await proof.serialize()
-    data['proof'] = json.loads(proof_msg)
+    data['proof'] = {'version': '1.0', 'to_did': None, 'from_did': None, 'proof_request_id': None, "libindy_proof": "{\"proof_data\":123}"}
     data['state'] = State.Accepted
     data['proof_state'] = ProofState.Invalid
     proof2 = await Proof.deserialize(data)
     await proof2.update_state()
     proof_data = await proof2.get_proof(connection)
+    print(proof_data)
     assert proof2.proof_state == ProofState.Invalid
-    attrs = [{"issuer_did": "NcYxiDXkpYi6ov5FcYDi1e",
-              "credential_uuid": "claim::bb929325-e8e6-4637-ba26-b19807b1f618",
-              "attr_info": {"name": "name", "value": "Alex", "type": "revealed"},
-              "schema_key": {"name": "gvt", "version": "1.0", "did": "NcYxiDXkpYi6ov5FcYDi1e"}}]
-    assert proof_data[0] == attrs[0]
+    assert proof_data == {"proof_data": 123}
