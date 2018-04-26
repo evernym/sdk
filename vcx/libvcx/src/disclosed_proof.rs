@@ -17,15 +17,13 @@ use schema::{ LedgerSchema };
 
 use utils::libindy::anoncreds;
 use utils::libindy::wallet;
-use utils::libindy::SigTypes;
 use utils::libindy::crypto;
-use utils::types::SchemaKey;
 
 use settings;
 use utils::httpclient;
 use utils::constants::SEND_MESSAGE_RESPONSE;
 
-use serde_json::{Map, Value};
+use serde_json::{Value};
 
 use error::ToErrorCode;
 use error::proof::ProofError;
@@ -577,7 +575,7 @@ mod tests {
         let cred2 = ("zip_2".to_string(), "1fb2b448-db40-47c6-8594-20ff5bbd9d37".to_string(), "2hoqvcwupRTUNkXn6ArYzs:2:Home Address - Test:0.0.1".to_string(), "2hoqvcwupRTUNkXn6ArYzs:3:CL:2200".to_string() );
         let creds = vec![cred1, cred2];
 
-        let mut test: Value = json!({
+        let test: Value = json!({
               "self_attested_attributes":{},
               "requested_attributes":{
                   "height_1": {"cred_id": "0809d6ec-a3fc-483d-90af-7fbbffb9d1e8", "revealed": true },

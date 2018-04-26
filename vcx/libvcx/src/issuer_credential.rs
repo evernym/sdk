@@ -10,11 +10,9 @@ use settings;
 use messages::{ GeneralMessage, MessageResponseCode::MessageAccepted, send_message::parse_msg_uid };
 use connection;
 use credential_request::{ CredentialRequest };
-use schema::LedgerSchema;
 use utils::{ error,
-             types::SchemaKey,
              error::INVALID_JSON,
-             libindy::{ anoncreds::{ libindy_issuer_create_credential, libindy_issuer_create_credential_offer }, wallet},
+             libindy::{ anoncreds::{ libindy_issuer_create_credential, libindy_issuer_create_credential_offer }},
              httpclient,
              constants::{ SEND_MESSAGE_RESPONSE, CRED },
              openssl::encode
@@ -152,7 +150,7 @@ impl IssuerCredential {
 
         let to = connection::get_pw_did(connection_handle).map_err(|e| IssuerCredError::CommonError(e.to_error_code()))?;
         let attrs_with_encodings = self.create_attributes_encodings()?;
-        let mut data = if settings::test_indy_mode_enabled() {CRED.to_string()} else {
+        let data = if settings::test_indy_mode_enabled() {CRED.to_string()} else {
             let cred = self.generate_credential(&attrs_with_encodings, &to)?;
             serde_json::to_string(&cred).or(Err(IssuerCredError::InvalidCred()))?
         };
@@ -536,7 +534,7 @@ pub mod tests {
                           anoncreds::{ libindy_create_and_store_credential_def,
                                        libindy_issuer_create_credential_offer,
                                        libindy_prover_create_credential_req },
-                          wallet::get_wallet_handle },
+                          wallet::get_wallet_handle, wallet},
     };
     use error::{ issuer_cred::IssuerCredError };
 
@@ -675,7 +673,7 @@ pub mod tests {
 
         let issuer_did = &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
         let to_did = "8XFh8yBzrpJQmNyZzgoTqB";
-        let mut issuer_cred = IssuerCredential {
+        let issuer_cred = IssuerCredential {
             handle: 123,
             source_id: "standard_credential".to_owned(),
             schema_seq_no: 1487,

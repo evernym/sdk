@@ -1,7 +1,6 @@
 extern crate serde_json;
 
 use error::issuer_cred::IssuerCredError;
-use utils::types::SchemaKey;
 
 static ISSUER_DID: &'static str = "issuer_did";
 static SEQUENCE_NUMBER: &'static str = "schema_seq_no";
@@ -50,8 +49,6 @@ impl CredentialRequest {
 mod tests {
     use super::*;
     use utils::constants::{ CREDENTIAL_REQ_STRING, CRED_REQ, CRED_REQ_META };
-    use utils::libindy::{ wallet, anoncreds::{ libindy_prover_create_master_secret, 
-                                               libindy_prover_create_credential_req } };
 
     static TEMP_ISSUER_DID: &'static str = "4reqXeZVm7JZAffAoaNLsb";
 

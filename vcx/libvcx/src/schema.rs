@@ -9,19 +9,15 @@ use std::sync::Mutex;
 use std::string::ToString;
 use std::collections::HashMap;
 use utils::error;
-use utils::types::SchemaKey;
-use utils::constants::{ SCHEMA_REQ, CREATE_SCHEMA_RESULT, SCHEMA_TXN, SCHEMA_TYPE, SCHEMA_ID, SCHEMA_JSON };
+use utils::constants::{ SCHEMA_ID, SCHEMA_JSON };
 use utils::libindy::{
     ledger::{
-        libindy_build_get_txn_request,
         libindy_build_get_schema_request,
         libindy_submit_request,
         libindy_build_schema_request,
         libindy_parse_get_schema_response,
         libindy_sign_and_submit_request
     },
-    pool::{ get_pool_handle },
-    wallet::{ get_wallet_handle },
     anoncreds::libindy_issuer_create_schema
 };
 use error::schema::SchemaError;
@@ -194,7 +190,7 @@ pub fn create_new_schema(source_id: &str,
     debug!("created schema on ledger with id: {}", schema_id);
 
     let new_handle = rand::thread_rng().gen::<u32>();
-    let mut new_schema = Box::new(CreateSchema {
+    let new_schema = Box::new(CreateSchema {
         source_id: source_id.to_string(),
         handle: new_handle,
         name: schema_name,
@@ -314,9 +310,8 @@ mod tests {
     use super::*;
     use settings;
     use utils::libindy::pool;
-    use utils::libindy::wallet::{ delete_wallet, init_wallet };
+    use utils::libindy::wallet::{ delete_wallet, init_wallet, get_wallet_handle };
     use utils::error::INVALID_JSON;
-    use error::ToErrorCode;
 
     static  EXAMPLE: &str = r#"{
     "seqNo": 15,

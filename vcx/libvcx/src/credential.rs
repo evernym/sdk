@@ -18,7 +18,6 @@ use messages::send_message::parse_msg_uid;
 use messages::extract_json_payload;
 
 use utils::libindy::anoncreds::{libindy_prover_create_credential_req, libindy_prover_store_credential};
-use utils::libindy::SigTypes;
 use utils::libindy::wallet;
 use utils::libindy::crypto;
 
@@ -27,9 +26,8 @@ use connection;
 
 use settings;
 use utils::httpclient;
-use utils::constants::{ SEND_MESSAGE_RESPONSE, CREDENTIAL_ID, CREDENTIAL_STORED_IN_WALLET };
+use utils::constants::{ SEND_MESSAGE_RESPONSE };
 
-use serde_json::Value;
 use error::ToErrorCode;
 use error::credential::CredentialError;
 
@@ -442,6 +440,7 @@ mod tests {
     use super::*;
     use utils::httpclient;
     use api::VcxStateType;
+    use serde_json::Value;
 
     pub const BAD_CREDENTIAL_OFFER: &str = r#"{"version": "0.1","to_did": "LtMgSjtFcyPwenK9SHCyb8","from_did": "LtMgSjtFcyPwenK9SHCyb8","claim": {"account_num": ["8BEaoLf8TBmK4BUyX8WWnA"],"name_on_account": ["Alice"]},"schema_seq_no": 48,"issuer_did": "Pd4fnFtRBcMKRVC2go5w3j","claim_name": "Account Certificate","claim_id": "3675417066","msg_ref_id": "ymy5nth"}"#;
 

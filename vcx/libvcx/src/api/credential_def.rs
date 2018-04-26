@@ -197,10 +197,7 @@ mod tests {
     use std::thread;
     use std::time::Duration;
     use settings;
-    use utils::libindy::pool;
-    use utils::libindy::wallet::{ init_wallet, get_wallet_handle, delete_wallet };
-    use utils::libindy::signus::SignusUtils;
-    use utils::constants::{ DEMO_AGENT_PW_SEED, DEMO_ISSUER_PW_SEED, SCHEMA_ID};
+    use utils::constants::{SCHEMA_ID};
 
     extern "C" fn create_cb(command_handle: u32, err: u32, credentialdef_handle: u32) {
         assert_eq!(err, 0);

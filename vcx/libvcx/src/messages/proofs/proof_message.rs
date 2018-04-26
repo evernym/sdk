@@ -1,8 +1,7 @@
 extern crate serde_json;
 
-use utils::{ types::SchemaKey, error };
+use utils::{ error };
 use serde_json::Value;
-use std::collections::{ HashMap, HashSet };
 use error::proof::ProofError;
 
 static ISSUER_DID: &'static str = "issuer_did";

@@ -4,7 +4,6 @@ extern crate rand;
 use utils::constants;
 use utils::libindy::signus::SignusUtils;
 use schema::{create_new_schema, get_sequence_num};
-use credential_def::create_new_credentialdef;
 use utils::libindy::wallet;
 use utils::libindy::pool;
 use settings;

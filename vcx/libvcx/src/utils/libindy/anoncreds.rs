@@ -3,20 +3,18 @@ use self::libc::c_char;
 use settings;
 use std::ffi::CString;
 use std::ptr::null;
-use utils::constants::{ LIBINDY_CRED_OFFER, CREDENTIAL_ID};
+use utils::constants::{ LIBINDY_CRED_OFFER };
 use utils::libindy::{indy_function_eval, check_str, mock_libindy_rc};
 use utils::libindy::return_types::{
     Return_I32_STR,
     Return_I32_BOOL,
     Return_I32_STR_STR,
     Return_I32_STR_STR_STR,
-    Return_I32
 };
 use utils::libindy::SigTypes;
 use utils::libindy::error_codes::{map_indy_error_code, map_string_error};
 use utils::libindy::wallet::get_wallet_handle;
 use utils::timeout::TimeoutUtils;
-use utils::libindy::option_cstring_as_ptn;
 
 extern {
     fn indy_issuer_create_and_store_credential_def(command_handle: i32,
@@ -514,7 +512,7 @@ mod tests {
     use super::*;
     extern crate serde_json;
     use settings;
-    use utils::libindy::wallet::{ init_wallet, get_wallet_handle, delete_wallet, open_wallet};
+    use utils::libindy::wallet::{ init_wallet, delete_wallet, open_wallet};
     use utils::constants::*;
 
     #[test]

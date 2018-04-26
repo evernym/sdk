@@ -4,7 +4,6 @@ use std::ffi::CString;
 use settings;
 use utils::libindy::{
     indy_function_eval,
-    SigTypes,
     return_types::{ Return_I32_STR_STR, Return_I32_STR },
     pool::get_pool_handle,
     wallet::get_wallet_handle,
@@ -275,9 +274,9 @@ pub fn libindy_build_create_credential_def_txn(submitter_did: &str,
 #[cfg(test)]
 mod tests {
     use super::*;
-    use utils::constants::{CREDENTIAL_DEF_DATA, SCHEMA_CREATE_JSON, SCHEMA_ID, CRED_DEF_ID, CREDENTIAL_DEF_JSON, SCHEMA_JSON, CRED_DEF_REQ};
-    use utils::devsetup::setup_wallet;
+    use utils::constants::{SCHEMA_ID, CRED_DEF_ID};
     use utils::libindy::{
+        SigTypes,
         wallet::{delete_wallet, init_wallet},
         anoncreds::{ libindy_issuer_create_schema, libindy_create_and_store_credential_def },
 
