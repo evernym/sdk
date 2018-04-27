@@ -172,6 +172,16 @@ pub extern fn vcx_agent_update_info(command_handle: u32,
 }
 
 #[no_mangle]
+pub extern fn vcx_ledger_get_fees(command_handle: u32,
+                                  cb: Option<extern fn(xcommand_handle: u32, err: u32, fees: *const c_char)>) -> u32 {
+
+    check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
+    info!("vcx_ledger_get_fees(command_handle: {})",
+          command_handle);
+    error::INVALID_OPTION.code_num
+}
+
+#[no_mangle]
 pub extern fn vcx_set_next_agency_response(message_index: u32) {
     let message = match message_index {
         1 => CREATE_KEYS_RESPONSE.to_vec(),

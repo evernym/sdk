@@ -22,12 +22,12 @@ describe('A Schema', function () {
   })
 
   it('can be created.', async () => {
-    const schema = await Schema.create(SCHEMA)
+    const schema = await Schema.create(SCHEMA, 0)
     assert(schema)
   })
 
   it('can retrieve schema attrs', async () => {
-    const schema = await Schema.create(SCHEMA)
+    const schema = await Schema.create(SCHEMA, 0)
     assert(schema)
     assert.equal(schema.getSchemaAttrs(), SCHEMA.data)
   })

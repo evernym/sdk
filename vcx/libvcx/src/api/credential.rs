@@ -172,6 +172,7 @@ pub extern fn vcx_credential_create_with_msgid(command_handle: u32,
 pub extern fn vcx_credential_send_request(command_handle: u32,
                                           credential_handle: u32,
                                           connection_handle: u32,
+                                          payment_handle: u32,
                                           cb: Option<extern fn(xcommand_handle: u32, err: u32)>) -> u32 {
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
@@ -549,7 +550,7 @@ mod tests {
 
         let connection_handle = connection::build_connection("test_send_credential_offer").unwrap();
 
-        assert_eq!(vcx_credential_send_request(0,handle,connection_handle,Some(send_offer_cb)), error::SUCCESS.code_num);
+        assert_eq!(vcx_credential_send_request(0,handle,connection_handle,0, Some(send_offer_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(1000));
     }
 
@@ -635,7 +636,7 @@ mod tests {
         ::utils::httpclient::set_next_u8_response(::utils::constants::NEW_CREDENTIAL_OFFER_RESPONSE.to_vec());
         assert_eq!(vcx_credential_update_state(0, handle, Some(get_state_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(300));
-        assert_eq!(vcx_credential_send_request(0, handle, cxn,Some(send_offer_cb)), error::SUCCESS.code_num);
+        assert_eq!(vcx_credential_send_request(0, handle, cxn,0, Some(send_offer_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
 
     }
