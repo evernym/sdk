@@ -530,13 +530,12 @@ mod tests {
         println!("{}, {}", id, cred);
     }
 
-    /*
     #[test]
     //Todo: Get working. Works individually but fails during cargo test
     fn simple_libindy_create_master_secret() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-        let wallet_name = "test_create_cred_def";
+        let wallet_name = "test_create_ms";
         ::utils::devsetup::setup_wallet(wallet_name);
         open_wallet(wallet_name, None).unwrap();
 
@@ -545,7 +544,6 @@ mod tests {
         assert!(rc.is_ok());
         println!("{}", rc.unwrap())
     }
-    */
 
     #[test]
     fn simple_libindy_create_cred_req() {

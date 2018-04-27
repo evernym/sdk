@@ -19,11 +19,11 @@ use error::ToErrorCode;
 ///
 /// requested_attrs: attributes/claims prover must provide in proof
 ///
-/// # Example requested_attrs -> "[{"name":"attrName","issuer_did":"did","schema_id":"id","schema_issuer_did":"did","schema_name":"name","schema_version":"1.1.1","cred_def_id":"id"}]"
+/// # Example requested_attrs -> "[{"name":"attrName","restrictions":["issuer_did":"did","schema_id":"id","schema_issuer_did":"did","schema_name":"name","schema_version":"1.1.1","cred_def_id":"id"}]]"
 ///
 /// requested_predicates: predicate specifications prover must provide claim for
 ///
-/// # Example requested_predicates -> "[{"name":"attrName","p_type":"GE","p_value":9,"issuer_did":"did","schema_id":"id","schema_issuer_did":"did","schema_name":"name","schema_version":"1.1.1","cred_def_id":"id"}]"
+/// # Example requested_predicates -> "[{"name":"attrName","p_type":"GE","p_value":9,"restrictions":["issuer_did":"did","schema_id":"id","schema_issuer_did":"did","schema_name":"name","schema_version":"1.1.1","cred_def_id":"id"}]]"
 ///
 ///
 /// cb: Callback that provides proof handle and error status of request.
