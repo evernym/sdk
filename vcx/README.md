@@ -40,7 +40,7 @@ export PYTHONPATH=/Users/[your_username]/[path_to_sdk]/vcx/libvcx/vcx-indy-sdk/w
 #it is important that the $HOME/.cargo/bin comes first in the PATH
 export PATH="$HOME/.cargo/bin:$PATH"
 2) git clone this repository
-3) cd sdk/vcx/libvcx
+3) cd sdk/vcx/libvcx/build/macos
 4) ./mac.01.libindy.setup.sh
 5) source ./mac.02.libindy.env.sh
 6) ./mac.03.libindy.build.sh
