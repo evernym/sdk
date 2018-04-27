@@ -30,23 +30,34 @@
 ## OSX
 
 To build libvcx using scripts do the following steps --
-1) git clone this repository
-2) cd sdk/vcx/libvcx
-3) ./mac.01.libindy.setup.sh
-4) source ./mac.02.libindy.env.sh
-5) ./mac.03.libindy.build.sh
-6) ./mac.04.libvcx.setup.sh
-7) source ./mac.05.libvcx.env.sh
-8) ./mac.06.libvcx.build.sh
-9) If the script ./mac.06.libvcx.build.sh terminates with the message
+1) Add the following environment variables to your .bash_profile
+export PKG_CONFIG_ALLOW_CROSS=1
+export CARGO_INCREMENTAL=1
+export RUST_LOG=indy=trace
+export RUST_TEST_THREADS=1
+for i in `ls -t /usr/local/Cellar/openssl/`; do export OPENSSL_DIR=/usr/local/Cellar/openssl/$i; break; done
+export PYTHONPATH=/Users/[your_username]/[path_to_sdk]/vcx/libvcx/vcx-indy-sdk/wrappers/python:/Users/[your_username]/[path_to_sdk]/vcx/wrappers/python3:${PYTHONPATH}
+#it is important that the $HOME/.cargo/bin comes first in the PATH
+export PATH="$HOME/.cargo/bin:$PATH"
+2) git clone this repository
+3) cd sdk/vcx/libvcx/build/macos
+4) ./mac.01.libindy.setup.sh
+5) source ./mac.02.libindy.env.sh
+6) ./mac.03.libindy.build.sh
+7) ./mac.04.libvcx.setup.sh
+8) source ./mac.05.libvcx.env.sh
+9) ./mac.06.libvcx.build.sh
+10) If the script ./mac.06.libvcx.build.sh terminates with the message
 "signal: 11, SIGSEGV: invalid memory reference" OR "signal: 4, SIGILL: illegal instruction"
-then that means the
-'cargo test' command was unsuccessful OR if you have intermittent
+then that means the 'cargo test' command was unsuccessful OR if you have intermittent
 behavior (some tests pass on one try then fail on the next) with the
 'cargo test' command then execute the script ./mac.build.and.install.rust.tools.sh
 After the mac.build.and.install.rust.tools.sh finishes (it will take a long long time)
 then restart your terminal and then re-run all of the scripts starting at step 1)
-above and they should all be successful.
+above and they should all be successful. If they are not successful then run the
+./mac.build.and.install.rust.tools.sh script one more time (it will be fast this time)
+and DO NOT restart your terminal but run the ./mac.06.libvcx.build.sh script and
+it should finish successfully.
 
 To build libvcx on your own you can follow these steps --
 1) Install rust and rustup (https://www.rust-lang.org/install.html).
