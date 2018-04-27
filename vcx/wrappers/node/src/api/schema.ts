@@ -79,7 +79,7 @@ export class Schema extends VCXBase {
    * {sourceId: '123', data: {name: 'name', version: '1.0', attrNames:['name', 'address', 'city']}}
    * @returns {Promise<Schema>} A Schema Object
    */
-  static async create (data: ISchema): Promise<Schema> {
+  static async create (data: ISchema, paymentHandle: number): Promise<Schema> {
     const schema = new Schema(data.sourceId, { name: data.data.name, schemaId: '', schemaAttrs: data.data })
     const commandHandle = 0
     try {
@@ -89,6 +89,7 @@ export class Schema extends VCXBase {
       schema._name,
       data.data.version,
       JSON.stringify(data.data.attrNames),
+      paymentHandle,
       cb
       ))
       await schema.getSchemaId()
