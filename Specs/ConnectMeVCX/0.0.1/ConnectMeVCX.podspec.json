@@ -4,7 +4,7 @@
       "ios": "10.0"
     },
     "summary": "High-level wrapper function for vcx framework.",
-    "requires_arc": true,
+    "requires_arc": false,
     "version": "0.0.1",
     "license": {
       "type": "Commercial",
@@ -22,6 +22,5 @@
     "dependencies": {
     },
     "source_files": "vcx/wrappers/ios/src/**/*.{h,m}",
-    "resources":
-      "vcx/wrappers/ios/**/*.{png,jpeg,jpg,storyboard,xib}"
+    "resources": "vcx/wrappers/ios/**/*.{png,jpeg,jpg,storyboard,xib}"
   }
