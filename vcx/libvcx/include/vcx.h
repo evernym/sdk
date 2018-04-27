@@ -31,7 +31,9 @@ typedef unsigned int vcx_connection_handle_t;
 typedef unsigned int vcx_credential_handle_t;
 typedef unsigned int vcx_proof_handle_t;
 typedef unsigned int vcx_command_handle_t;
+typedef unsigned int vcx_payment_handle_t;
 typedef unsigned int vcx_bool_t;
+typedef float vcx_float_t;
 
 typedef struct {
 
@@ -56,8 +58,12 @@ typedef struct {
 vcx_error_t vcx_init(vcx_command_handle_t handle, const char *config_path,void (*cb)(vcx_command_handle_t command_handle, vcx_error_t err));
 vcx_error_t vcx_create_agent(vcx_command_handle_t handle, const char *config, void (*cb)(vcx_command_handle_t xhandle, vcx_error_t err, const char *xconfig));
 vcx_error_t vcx_update_agent_info(vcx_command_handle_t handle, const char *info, void (*cb)(vcx_command_handle_t xhandle, vcx_error_t err));
+vcx_error_t vcx_ledger_get_fees(vcx_command_handle_t chandle, void (*cb)(vcx_command_handle_t xhandle, vcx_error_t err, const char *fees));
+vcx_error_t vcx_wallet_get_balance(vcx_command_handle_t chandle, vcx_payment_handle_t phandle, void (*cb)(vcx_command_handle_t xhandle, vcx_error_t err, vcx_float_t balance));
+vcx_error_t vcx_wallet_send_tokens(vcx_command_handle_t chandle, vcx_payment_handle_t phandle, vcx_float_t tokens, const char *recipient, void (*cb)(vcx_command_handle_t xhandle, vcx_error_t err, const char *receipt));
 
 const char *vcx_error_c_message(int);
+const char *vcx_version();
 
 
 /**
@@ -67,7 +73,7 @@ const char *vcx_error_c_message(int);
  */
 
 /** Creates a schema from a json string. Populates a handle to the new schema. */
-vcx_error_t vcx_schema_create(vcx_command_handle_t command_handle, const char *source_id, const char *schema_name, const char *version, const char *schema_data, void (*cb)(vcx_command_handle_t command_handle, vcx_error_t err, vcx_schema_handle_t schema_handle));
+vcx_error_t vcx_schema_create(vcx_command_handle_t command_handle, const char *source_id, const char *schema_name, const char *version, const char *schema_data, vcx_payment_handle_t payment_handle, void (*cb)(vcx_command_handle_t command_handle, vcx_error_t err, vcx_schema_handle_t schema_handle));
 
 /** Populates status with the current state of this credential. */
 vcx_error_t vcx_schema_serialize(vcx_command_handle_t command_handle, vcx_schema_handle_t schema_handle, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, const char *state));
@@ -92,7 +98,7 @@ vcx_error_t vcx_schema_release(vcx_schema_handle_t handle);
  */
 
 /** Creates a credential definition from the given schema.  Populates a handle to the new credentialdef. */
-vcx_error_t vcx_credentialdef_create(vcx_command_handle_t command_handle, const char *source_id, const char *credentialdef_name, const char *schema_id, const char *issuer_did, const char *tag,  const char *config, void (*cb)(vcx_command_handle_t command_handle, vcx_error_t err, vcx_credentialdef_handle_t credentialdef_handle));
+vcx_error_t vcx_credentialdef_create(vcx_command_handle_t command_handle, const char *source_id, const char *credentialdef_name, const char *schema_id, const char *issuer_did, const char *tag,  const char *config, vcx_payment_handle_t payment_handle, void (*cb)(vcx_command_handle_t command_handle, vcx_error_t err, vcx_credentialdef_handle_t credentialdef_handle));
 
 /** Populates status with the current state of this credential. */
 vcx_error_t vcx_credentialdef_serialize(vcx_command_handle_t command_handle, vcx_credentialdef_handle_t credentialdef_handle, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, const char *state));
@@ -100,15 +106,8 @@ vcx_error_t vcx_credentialdef_serialize(vcx_command_handle_t command_handle, vcx
 /** Re-creates a credential object from the specified serialization. */
 vcx_error_t vcx_credentialdef_deserialize(vcx_command_handle_t command_handle, const char *serialized_credentialdef, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, vcx_credentialdef_handle_t credentialdef_handle));
 
-/** Asynchronously commits the credentialdef to the ledger.  */
-vcx_error_t vcx_credentialdef_commit(vcx_credentialdef_handle_t credentialdef_handle);
-
-/** Populates sequence_no with the actual sequence number of the credentialdef on the sovrin ledger. */
-vcx_error_t vcx_credentialdef_get_sequence_no(vcx_credentialdef_handle_t credentialdef_handle, int *sequence_no);
-
-/** Populates data with the contents of the credentialdef handle. */
-vcx_error_t vcx_credentialdef_get(vcx_credentialdef_handle_t credentialdef_handle, char *data);
-
+/** Release memory associated with credentialdef object. */
+vcx_error_t vcx_credentialdef_release(vcx_schema_handle_t handle);
 
 /**
  * connection object
@@ -121,7 +120,7 @@ vcx_error_t vcx_credentialdef_get(vcx_credentialdef_handle_t credentialdef_handl
 vcx_error_t vcx_connection_create(vcx_command_handle_t command_handle, const char *source_id, void (*cb)(vcx_command_handle_t command_handle, vcx_error_t err, vcx_connection_handle_t connection_handle));
 
 /** Asynchronously request a connection be made. */
-vcx_error_t vcx_connection_connect(vcx_command_handle_t command_handle, vcx_connection_handle_t connection_handle, const char *connection_type, void (*cb)(vcx_command_handle_t, vcx_error_t err));
+vcx_error_t vcx_connection_connect(vcx_command_handle_t command_handle, vcx_connection_handle_t connection_handle, const char *connection_type, void (*cb)(vcx_command_handle_t, vcx_error_t err, const char *details));
 
 /** Returns the contents of the connection handle or null if the connection does not exist. */
 vcx_error_t vcx_connection_serialize(vcx_command_handle_t command_handle, vcx_connection_handle_t connection_handle, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, const char *state));
@@ -152,7 +151,7 @@ vcx_error_t vcx_connection_create_with_invite(vcx_command_handle_t command_handl
  */
 
 /** Creates a credential object from the specified credentialdef handle. Populates a handle the new credential. */
-vcx_error_t vcx_issuer_create_credential(vcx_command_handle_t command_handle, const char *source_id, const char *cred_def_id, const char *issuer_did, const char * credential_data, const char * credential_name, void (*cb)(vcx_command_handle_t command_handle, vcx_error_t err, vcx_credential_handle_t credential_handle));
+vcx_error_t vcx_issuer_create_credential(vcx_command_handle_t command_handle, const char *source_id, const char *cred_def_id, const char *issuer_did, const char * credential_data, const char * credential_name, vcx_float_t price, void (*cb)(vcx_command_handle_t command_handle, vcx_error_t err, vcx_credential_handle_t credential_handle));
 
 /** Asynchronously sends the credential offer to the connection. */
 vcx_error_t vcx_issuer_send_credential_offer(vcx_command_handle_t command_handle, vcx_credential_handle_t credential_handle, vcx_connection_handle_t connection_handle, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err));
@@ -263,7 +262,7 @@ vcx_error_t vcx_credential_create_with_offer(vcx_command_handle_t command_handle
 vcx_error_t vcx_credential_create_with_msgid(vcx_command_handle_t command_handle, const char *source_id, vcx_connection_handle_t connection, const char *msg_id,void (*cb)(vcx_command_handle_t command_handle, vcx_error_t err, vcx_credential_handle_t credential_handle));
 
 /** Asynchronously sends the credential request to the connection. */
-vcx_error_t vcx_credential_send_request(vcx_command_handle_t command_handle, vcx_credential_handle_t credential_handle, vcx_connection_handle_t connection_handle, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err));
+vcx_error_t vcx_credential_send_request(vcx_command_handle_t command_handle, vcx_credential_handle_t credential_handle, vcx_connection_handle_t connection_handle, vcx_payment_handle_t payment_handle, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err));
 
 /** Check for any credential offers from the connection. */
 vcx_error_t vcx_credential_get_offers(vcx_command_handle_t command_handle, vcx_connection_handle_t connection_handle, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, const char *offers));
