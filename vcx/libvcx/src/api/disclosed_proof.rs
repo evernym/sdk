@@ -19,8 +19,6 @@ use error::ToErrorCode;
 ///
 /// req: proof request received via "vcx_get_proof_requests"
 ///
-/// # Example proof_request {"@topic":{"mid":9,"tid":1},"@type":{"name":"PROOF_REQUEST","version":"1.0"},"msg_ref_id":"ymy5nth","proof_request_data":{"name":"Account Certificate","nonce":"838186471541979035208225","requested_attrs":{"business_2":{"name":"business","schema_seq_no":52},"email_1":{"name":"email","schema_seq_no":52},"name_0":{"name":"name","schema_seq_no":52}},"requested_predicates":{},"version":"0.1"}}
-///
 /// cb: Callback that provides proof handle or error status
 ///
 /// #Returns

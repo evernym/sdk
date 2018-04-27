@@ -30,9 +30,9 @@ use error::ToErrorCode;
 #[no_mangle]
 #[allow(unused_variables, unused_mut)]
 pub extern fn vcx_credential_create_with_offer(command_handle: u32,
-                                          source_id: *const c_char,
-                                          offer: *const c_char,
-                                          cb: Option<extern fn(xcommand_handle: u32, err: u32, credential_handle: u32)>) -> u32 {
+                                               source_id: *const c_char,
+                                               offer: *const c_char,
+                                               cb: Option<extern fn(xcommand_handle: u32, err: u32, credential_handle: u32)>) -> u32 {
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
     check_useful_c_str!(source_id, error::INVALID_OPTION.code_num);
@@ -119,10 +119,10 @@ pub extern fn vcx_get_credential(command_handle: u32,
 #[no_mangle]
 #[allow(unused_variables, unused_mut)]
 pub extern fn vcx_credential_create_with_msgid(command_handle: u32,
-                                    source_id: *const c_char,
-                                    connection_handle: u32,
-                                    msg_id: *const c_char,
-                                    cb: Option<extern fn(xcommand_handle: u32, err: u32, credential_handle: u32)>) -> u32 {
+                                               source_id: *const c_char,
+                                               connection_handle: u32,
+                                               msg_id: *const c_char,
+                                               cb: Option<extern fn(xcommand_handle: u32, err: u32, credential_handle: u32)>) -> u32 {
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
     check_useful_c_str!(source_id, error::INVALID_OPTION.code_num);
@@ -266,8 +266,8 @@ pub extern fn vcx_credential_get_offers(command_handle: u32,
 
 #[no_mangle]
 pub extern fn vcx_credential_update_state(command_handle: u32,
-                                            credential_handle: u32,
-                                            cb: Option<extern fn(xcommand_handle: u32, err: u32, state: u32)>) -> u32 {
+                                          credential_handle: u32,
+                                          cb: Option<extern fn(xcommand_handle: u32, err: u32, state: u32)>) -> u32 {
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
@@ -308,8 +308,8 @@ pub extern fn vcx_credential_update_state(command_handle: u32,
 
 #[no_mangle]
 pub extern fn vcx_credential_get_state(command_handle: u32,
-                                  handle: u32,
-                                  cb: Option<extern fn(xcommand_handle: u32, err: u32, state: u32)>) -> u32 {
+                                       handle: u32,
+                                       cb: Option<extern fn(xcommand_handle: u32, err: u32, state: u32)>) -> u32 {
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
     if !credential::is_valid_handle(handle) {
@@ -352,8 +352,8 @@ pub extern fn vcx_credential_get_state(command_handle: u32,
 /// Error code as a u32
 #[no_mangle]
 pub extern fn vcx_credential_serialize(command_handle: u32,
-                                         handle: u32,
-                                         cb: Option<extern fn(xcommand_handle: u32, err: u32, data: *const c_char)>) -> u32 {
+                                       handle: u32,
+                                       cb: Option<extern fn(xcommand_handle: u32, err: u32, data: *const c_char)>) -> u32 {
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
@@ -398,8 +398,8 @@ pub extern fn vcx_credential_serialize(command_handle: u32,
 /// Error code as a u32
 #[no_mangle]
 pub extern fn vcx_credential_deserialize(command_handle: u32,
-                                           credential_data: *const c_char,
-                                           cb: Option<extern fn(xcommand_handle: u32, err: u32, handle: u32)>) -> u32 {
+                                         credential_data: *const c_char,
+                                         cb: Option<extern fn(xcommand_handle: u32, err: u32, handle: u32)>) -> u32 {
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
     check_useful_c_str!(credential_data, error::INVALID_OPTION.code_num);

@@ -315,8 +315,6 @@ pub extern fn vcx_issuer_credential_serialize(command_handle: u32,
 ///
 /// credential_data: json string representing a credential object
 ///
-/// # Examples credential_data -> {"source_id":"1","handle":2,"credential_attributes":"{\"state\":[\"UT\"]}","msg_uid":"","schema_seq_no":1234,"issuer_did":"DID","issued_did":"","state":1,"credential_request":"","credential_name":"Credential","credential_id":"123","ref_msg_id":""}
-///
 /// cb: Callback that provides credential handle and provides error status
 ///
 /// #Returns

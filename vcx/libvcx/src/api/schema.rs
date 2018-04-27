@@ -123,9 +123,7 @@ pub extern fn vcx_schema_serialize(command_handle: u32,
 /// #Params
 /// command_handle: command handle to map callback to user context.
 ///
-/// schema: json string representing a schema object
-///
-/// # Examples schema -> {"data":{"seqNo":15,"identifier":"4fUDR9R7fjwELRvH9JT6HH","txnTime":1510246647,"type":"101","data":{"name":"Home Address","version":"0.1","attr_names":["address1","address2","city","state","zip"]}},"handle":1,"name":"schema_name","source_id":"testId","sequence_num":306}
+/// schema_data: json string representing a schema object
 ///
 /// cb: Callback that provides schema handle and provides error status
 ///
@@ -218,8 +216,6 @@ pub extern fn vcx_schema_get_schema_id(command_handle: u32,
 /// Retrieves schema's attributes
 ///
 /// #Params
-/// sequence_no: The schema sequence number for wanted schema
-///
 /// source_id: Enterprise's personal identification for the user.
 ///
 /// schema_id: id of schema given during the creation of the schema
