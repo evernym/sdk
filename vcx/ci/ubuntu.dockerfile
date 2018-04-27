@@ -27,7 +27,8 @@ RUN apt-get update -y && apt-get install -y \
     ruby \
     ruby-dev \ 
 	sudo \
-    rubygems 
+    rubygems \
+    libzmq5
 
 # Install Nodejs 
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - \
