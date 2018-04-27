@@ -28,6 +28,27 @@
 - simple archive of libvcx.so and provision python script.
 
 ## OSX
+
+To build libvcx using scripts do the following steps --
+1) git clone this repository
+2) cd sdk/vcx/libvcx
+3) ./mac.01.libindy.setup.sh
+4) source ./mac.02.libindy.env.sh
+5) ./mac.03.libindy.build.sh
+6) ./mac.04.libvcx.setup.sh
+7) source ./mac.05.libvcx.env.sh
+8) ./mac.06.libvcx.build.sh
+9) If the script ./mac.06.libvcx.build.sh terminates with the message
+"signal: 11, SIGSEGV: invalid memory reference" OR "signal: 4, SIGILL: illegal instruction"
+then that means the
+'cargo test' command was unsuccessful OR if you have intermittent
+behavior (some tests pass on one try then fail on the next) with the
+'cargo test' command then execute the script ./mac.build.and.install.rust.tools.sh
+After the mac.build.and.install.rust.tools.sh finishes (it will take a long long time)
+then restart your terminal and then re-run all of the scripts starting at step 1)
+above and they should all be successful.
+
+To build libvcx on your own you can follow these steps --
 1) Install rust and rustup (https://www.rust-lang.org/install.html).
 2) Install libindy (https://repo.evernym.com/libindy/).
     - As of now there is no distribution channel for OSX for LibIndy. [You have to build it manually.](https://github.com/hyperledger/indy-sdk/blob/master/doc/mac-build.md) 
@@ -50,7 +71,7 @@
        ```
        git clone git@github.com:rust-lang/rust.git -b stable
        cd rust
-       ./x.py build && sudo ./x.py install
+       ./x.py build && ./x.py install
        ```
    
       This will install rustc, rust-gdb, rust-lldb, and rustdoc executables in /usr/local/lib
