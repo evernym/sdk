@@ -18,6 +18,7 @@
       "git": "git@github.com:evernym/sdk.git",
       "branch": "ios-wrapper"
     },
+    "frameworks": "Foundation",
     "dependencies": {
     },
     "source_files": "vcx/wrappers/ios/src/**/*.{h,m}",
