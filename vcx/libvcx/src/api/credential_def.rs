@@ -30,6 +30,8 @@ use error::ToErrorCode;
 ///
 /// cb: Callback that provides CredentialDef handle and error status of request.
 ///
+/// payment_handle: future use (currently uses any address in wallet)
+///
 /// #Returns
 /// Error code as a u32
 #[no_mangle]
@@ -40,6 +42,7 @@ pub extern fn vcx_credentialdef_create(command_handle: u32,
                                        issuer_did: *const c_char,
                                        tag: *const c_char,
                                        config: *const c_char,
+                                       payment_handle: u32,
                                        cb: Option<extern fn(xcommand_handle: u32, err: u32, credentialdef_handle: u32)>) -> u32 {
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
     check_useful_c_str!(credentialdef_name, error::INVALID_OPTION.code_num);
@@ -182,13 +185,6 @@ pub extern fn vcx_credentialdef_release(credentialdef_handle: u32) -> u32 {
     credential_def::release(credentialdef_handle)
 }
 
-#[allow(unused_variables, unused_mut)]
-pub extern fn vcx_credentialdef_commit(credentialdef_handle: u32) -> u32 { error::SUCCESS.code_num }
-#[allow(unused_variables, unused_mut)]
-pub extern fn vcx_credentialdef_get_sequence_no(credentialdef_handle: u32, sequence_no: *mut u32) -> u32 { error::SUCCESS.code_num }
-#[allow(unused_variables, unused_mut)]
-pub extern fn vcx_credentialdef_get(credentialdef_handle: u32, data: *mut c_char) -> u32 { error::SUCCESS.code_num }
-
 #[cfg(test)]
 mod tests {
     extern crate serde_json;
@@ -254,13 +250,14 @@ mod tests {
     fn test_vcx_create_credentialdef_success() {
         set_default_and_enable_test_mode();
         assert_eq!(vcx_credentialdef_create(0,
-                                       CString::new("Test Source ID").unwrap().into_raw(),
-                                       CString::new("Test Credential Def").unwrap().into_raw(),
+                                            CString::new("Test Source ID").unwrap().into_raw(),
+                                            CString::new("Test Credential Def").unwrap().into_raw(),
                                             CString::new(SCHEMA_ID).unwrap().into_raw(),
-                                       CString::new("6vkhW3L28AophhA68SSzRS").unwrap().into_raw(),
+                                            CString::new("6vkhW3L28AophhA68SSzRS").unwrap().into_raw(),
                                             CString::new("tag").unwrap().into_raw(),
                                             CString::new("{}").unwrap().into_raw(),
-                                       Some(create_cb)), error::SUCCESS.code_num);
+                                            0,
+                                            Some(create_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
 
@@ -275,6 +272,7 @@ mod tests {
                                             ptr::null(),
                                             CString::new("tag").unwrap().into_raw(),
                                             CString::new("{}").unwrap().into_raw(),
+                                            0,
                                             Some(create_cb_err)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
@@ -289,6 +287,7 @@ mod tests {
                                             ptr::null(),
                                             CString::new("tag").unwrap().into_raw(),
                                             CString::new("{}").unwrap().into_raw(),
+                                            0,
                                             Some(create_and_serialize_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }

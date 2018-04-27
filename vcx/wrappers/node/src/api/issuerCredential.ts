@@ -22,6 +22,7 @@ export interface ICredentialConfig {
     [ index: string ]: string
   },
   credentialName: string,
+  price: number,
 }
 
 export interface ICredentialVCXAttributes {
@@ -31,7 +32,8 @@ export interface ICredentialVCXAttributes {
 export interface IcredentialParams {
   credDefId: string,
   credentialName: string,
-  attr: ICredentialVCXAttributes
+  attr: ICredentialVCXAttributes,
+  price: number
 }
 
 /**
@@ -49,6 +51,7 @@ export interface ICredentialData {
   state: StateType
   msg_uid: string
   cred_def_id: string
+  price: number
 }
 
 /**
@@ -64,12 +67,14 @@ export class IssuerCredential extends VCXBaseWithState {
   private _issuerDID: string
   private _credentialName: string
   private _attr: ICredentialVCXAttributes
+  private _price: number
 
-  constructor (sourceId, { credDefId, credentialName, attr }: IcredentialParams) {
+  constructor (sourceId, { credDefId, credentialName, attr, price }: IcredentialParams) {
     super(sourceId)
     this._credDefId = credDefId
     this._credentialName = credentialName
     this._attr = attr
+    this._price = price
   }
 
   /**
@@ -83,10 +88,11 @@ export class IssuerCredential extends VCXBaseWithState {
    * { sourceId: "12", schemaNum: 1, issuerDid: "did", attr: {key: "value"}, credentialName: "name of credential"}
    * @returns {Promise<IssuerCredential>} An Issuer credential Object
    */
-  static async create ({ attr, sourceId, credDefId, credentialName }: ICredentialConfig): Promise<IssuerCredential> {
+  static async create ({ attr, sourceId, credDefId,
+                         credentialName, price }: ICredentialConfig): Promise<IssuerCredential> {
     const attrsVCX: ICredentialVCXAttributes = Object.keys(attr)
       .reduce((accum, attrKey) => ({ ...accum, [attrKey]: [attr[attrKey]] }), {})
-    const credential = new IssuerCredential(sourceId, { credDefId, credentialName, attr: attrsVCX })
+    const credential = new IssuerCredential(sourceId, { credDefId, credentialName, attr: attrsVCX, price })
     const attrsStringified = JSON.stringify(attrsVCX)
     const commandHandle = 0
     const issuerDid = null
@@ -98,6 +104,7 @@ export class IssuerCredential extends VCXBaseWithState {
         issuerDid,
         attrsStringified,
         credentialName,
+        price,
         cb
         )
       )
@@ -127,7 +134,8 @@ export class IssuerCredential extends VCXBaseWithState {
       const params: IcredentialParams = {
         attr,
         credDefId: credentialData.cred_def_id,
-        credentialName: credentialData.credential_name
+        credentialName: credentialData.credential_name,
+        price: credentialData.price
       }
       const credential = await super._deserialize<IssuerCredential, IcredentialParams>(IssuerCredential,
          credentialData,

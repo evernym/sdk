@@ -32,6 +32,8 @@ use error::ToErrorCode;
 ///
 /// credential_name: Name of the credential - ex. Drivers Licence
 ///
+/// price: price of credential
+///
 /// cb: Callback that provides credential handle and error status of request
 ///
 /// #Returns
@@ -44,6 +46,7 @@ pub extern fn vcx_issuer_create_credential(command_handle: u32,
                                       issuer_did: *const c_char,
                                       credential_data: *const c_char,
                                       credential_name: *const c_char,
+                                      price: f64,
                                       cb: Option<extern fn(xcommand_handle: u32, err: u32, credential_handle: u32)>) -> u32 {
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
@@ -410,6 +413,7 @@ mod tests {
                                            ptr::null(),
                                            CString::new(DEFAULT_ATTR).unwrap().into_raw(),
                                            CString::new(DEFAULT_CREDENTIAL_NAME).unwrap().into_raw(),
+                                           0.0,
                                            Some(create_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
@@ -425,6 +429,7 @@ mod tests {
             ptr::null(),
             ptr::null(),
             CString::new(DEFAULT_CREDENTIAL_NAME).unwrap().into_raw(),
+            0.0,
             Some(create_cb)),error::INVALID_OPTION.code_num);
         thread::sleep(Duration::from_millis(200));
     }
@@ -447,6 +452,7 @@ mod tests {
                                            CString::new(DEFAULT_DID).unwrap().into_raw(),
                                            CString::new(DEFAULT_ATTR).unwrap().into_raw(),
                                            CString::new(DEFAULT_CREDENTIAL_NAME).unwrap().into_raw(),
+                                           0.0,
                                            Some(create_and_serialize_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
@@ -520,6 +526,7 @@ mod tests {
                                            CString::new(DEFAULT_DID).unwrap().into_raw(),
                                            CString::new(DEFAULT_ATTR).unwrap().into_raw(),
                                            CString::new(DEFAULT_CREDENTIAL_NAME).unwrap().into_raw(),
+                                           0.0,
                                            Some(create_and_serialize_cb)), error::SUCCESS.code_num);
     }
 

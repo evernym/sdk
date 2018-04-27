@@ -59,6 +59,18 @@ def error_message(error_code: int) -> str:
     return err_msg
 
 
+def get_version() -> str:
+    logger = logging.getLogger(__name__)
+
+    name = 'vcx_version'
+    c_version = getattr(_cdll(), name)()
+
+    version = cast(c_version , c_char_p).value.decode()
+    logger.debug("error_message: Function %s returned version: %s", name, version)
+
+    return version
+
+
 def create_cb(cb_type: CFUNCTYPE, transform_fn=None):
 
     def _cb(command_handle: int, err: int, *args):
@@ -80,6 +92,8 @@ def _cxs_loop_callback(command_handle: int, err, *args):
 
     (event_loop, future) = _futures.pop(command_handle)
 
+    print(args)
+    print(err)
     if future.cancelled():
         print("_indy_loop_callback: Future was cancelled earlier")
     else:
