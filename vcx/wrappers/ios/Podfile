@@ -3,22 +3,22 @@ source 'https://github.com/CocoaPods/Specs.git'
 
 platform :ios, '10.0'
 
-workspace 'ConnectMeVCX.xcworkspace'
+# workspace 'ConnectMeVCX.xcworkspace'
 
-def appPods
-     use_frameworks!
-end
+# def appPods
+#      use_frameworks!
+# end
 
-target 'ConnectMeVCX' do
-  project 'ConnectMeVCX/ConnectMeVCX.xcodeproj'
-  appPods
-end
+# target 'ConnectMeVCX' do
+#   project 'ConnectMeVCX/ConnectMeVCX.xcodeproj'
+#   appPods
+# end
 
-target 'ConnectMe-demo' do
-   project 'ConnectMe-demo/ConnectMe-demo.xcodeproj'
-   appPods
+# target 'ConnectMe-demo' do
+#    project 'ConnectMe-demo/ConnectMe-demo.xcodeproj'
+#    appPods
 
- target 'ConnectMe-demoTests' do
-	inherit! :search_paths
-    end
-end
+#  target 'ConnectMe-demoTests' do
+# 	inherit! :search_paths
+#     end
+# end
