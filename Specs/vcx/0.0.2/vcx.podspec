@@ -35,7 +35,7 @@ through to the libvcx shared library.
   s.source_files = '**/vcx/Classes/**/*'
   
   # s.resource_bundles = {
-  #   'vcx' => ['vcx/wrappers/ios/vcx/Assets/*.png']
+  #   'vcx' => ['**/vcx/Assets/*.png']
   # }
 
   # s.public_header_files = 'Pod/Classes/**/*.h'
