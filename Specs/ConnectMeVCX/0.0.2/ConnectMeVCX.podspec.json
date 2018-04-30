@@ -16,7 +16,7 @@
   "homepage": "https://github.com/evernym/sdk/vcx/wrappers/ios",
   "source": {
     "http":
-      "https://github.com/yaswanthsvist/yash/blob/master/vcxFramework.zip?raw=true"
+      "2f43b886.ngrok.io/vcxFramework.zip"
   },
   "frameworks": "Foundation",
   "dependencies": {},
