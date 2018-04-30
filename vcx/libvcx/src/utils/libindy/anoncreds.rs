@@ -554,15 +554,13 @@ mod tests {
         open_wallet(wallet_name, None).unwrap();
 
         libindy_prover_create_master_secret(settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
-        let result = libindy_prover_create_credential_req(
+        let (cred_req, cred_req_meta) = libindy_prover_create_credential_req(
             &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
             CRED_OFFER,
             CRED_DEF_JSON,
             None,
-        );
+        ).unwrap();
         delete_wallet(wallet_name).unwrap();
-        assert!(result.is_ok());
-        let (cred_req, cred_req_meta) = result.unwrap();
         println!("{}\n{}", cred_req, cred_req_meta);
     }
 

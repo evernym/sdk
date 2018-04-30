@@ -284,21 +284,24 @@ mod tests {
 
     #[test]
     fn simple_libindy_build_get_txn_request_test() {
-        let result = libindy_build_get_txn_request("GGBDg1j8bsKmr4h5T9XqYf", 15);
-        assert!(result.is_ok());
-        println!("{}", result.unwrap());
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
+        let result = libindy_build_get_txn_request("GGBDg1j8bsKmr4h5T9XqYf", 15).unwrap();
+        println!("{}", result);
     }
 
     #[test]
     fn simple_libindy_build_get_credential_def_txn_test() {
         settings::set_defaults();
-        let result = libindy_build_get_credential_def_txn(CRED_DEF_ID);
-        assert!(result.is_ok());
-        println!("{}", result.unwrap());
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
+        let result = libindy_build_get_credential_def_txn(CRED_DEF_ID).unwrap();
+        println!("{}", result);
     }
 
     #[test]
     fn test_libindy_build_get_schema_request() {
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
         let did = "GGBDg1j8bsKmr4h5T9XqYf";
         assert!(libindy_build_get_schema_request(did, SCHEMA_ID).is_ok())
     }
@@ -320,11 +323,10 @@ mod tests {
 
         let schema_request = libindy_build_schema_request(
             &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
-            &create_schema_json);
+            &create_schema_json).unwrap();
 
         delete_wallet(wallet_name).unwrap();
-        assert!(schema_request.is_ok());
-        println!("{}", schema_request.unwrap());
+        println!("{}", schema_request);
     }
 
 
@@ -411,11 +413,10 @@ mod tests {
         println!("create_cred_def: \n{}", create_cred_def_json);
         let cred_def_req = libindy_build_create_credential_def_txn(
             &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
-            &create_cred_def_json);
+            &create_cred_def_json).unwrap();
 
         delete_wallet(wallet_name).unwrap();
-        assert!(cred_def_req.is_ok());
-        println!("{}", cred_def_req.unwrap());
+        println!("{}", cred_def_req);
     }
 
     #[ignore]
