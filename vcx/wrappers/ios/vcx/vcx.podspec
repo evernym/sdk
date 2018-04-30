@@ -32,7 +32,7 @@ through to the libvcx shared library.
 
   s.ios.deployment_target = '8.0'
 
-  s.source_files = 'vcx/wrappers/ios/vcx/Classes/**/*'
+  s.source_files = 'vcx/wrappers/ios/vcx/Classes/*.m'
   
   # s.resource_bundles = {
   #   'vcx' => ['vcx/wrappers/ios/vcx/Assets/*.png']
