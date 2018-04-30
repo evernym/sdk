@@ -21,7 +21,7 @@
   "frameworks": "Foundation",
   "dependencies": {},
   "ios": {
-    "vendored_frameworks": "libvcx-objc/vcx.framework"
+    "vendored_frameworks": "ConnectMeVCX/vcx.framework"
   },
   "module_name": "vcx"
 }
