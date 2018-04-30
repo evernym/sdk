@@ -21,7 +21,7 @@
   "frameworks": "Foundation",
   "dependencies": {},
   "ios": {
-    "vendored_frameworks": "ConnectMeVCX/vcx.framework"
+    "vendored_frameworks": "vcxFramework/vcx.framework"
   },
   "module_name": "vcx"
 }
