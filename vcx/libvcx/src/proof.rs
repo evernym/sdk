@@ -756,7 +756,7 @@ mod tests {
         proof.proof = Some(proof_msg_obj);
 
         let proof_str = proof.get_proof().unwrap();
-        assert!(proof_str.contains(r#"[{"schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:schema_name:0.0.11","cred_def_id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:1766","rev_reg_id":null,"timestamp":null},{"schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:Home Address - Test:0.0.1","cred_def_id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:2200","rev_reg_id":null,"timestamp":null}]"#));
+        assert_eq!(&proof_str, PROOF_JSON);
     }
 
     #[test]
@@ -913,7 +913,7 @@ mod tests {
         wallet::delete_wallet("proof_errors").unwrap();
     }
 
-//    #[ignore]
+    #[ignore]
     #[test]
     fn test_proof_verification() {
         //Todo: Move to integration tests
@@ -933,7 +933,10 @@ mod tests {
                    "zip_2": json!({
                        "name":"zip",
                        "restrictions": [json!({ "issuer_did": "2hoqvcwupRTUNkXn6ArYzs" })]
-                   })
+                   }),
+                   "self_attest_3": json!({
+                       "name":"self_attest",
+                   }),
                }),
                "requested_predicates": json!({}),
             }).to_string();

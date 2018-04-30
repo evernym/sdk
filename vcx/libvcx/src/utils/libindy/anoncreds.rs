@@ -684,12 +684,17 @@ mod tests {
                    "name":"zip",
                    "restrictions": [json!({ "issuer_did": "2hoqvcwupRTUNkXn6ArYzs" })]
                }),
+               "self_attest_3": json!({
+                   "name":"self_attest",
+               }),
            }),
            "requested_predicates": json!({}),
         }).to_string();
 
         let requested_credentials_json = json!({
-              "self_attested_attributes":{},
+              "self_attested_attributes":{
+                 "self_attest_3": "my_self_attested_val"
+              },
               "requested_attributes":{
                  "height_1": {"cred_id": "52b1f5e1-89eb-44fe-a846-b4131c0feadc", "revealed": true},
                  "zip_2": {"cred_id": "9a440066-986c-42f8-8117-92178a0ee8a1", "revealed": true}
@@ -744,7 +749,10 @@ mod tests {
                "zip_2": json!({
                    "name":"zip",
                    "restrictions": [json!({ "issuer_did": "2hoqvcwupRTUNkXn6ArYzs" })]
-               })
+               }),
+               "self_attest_3": json!({
+                   "name":"self_attest",
+               }),
            }),
            "requested_predicates": json!({}),
         }).to_string();
