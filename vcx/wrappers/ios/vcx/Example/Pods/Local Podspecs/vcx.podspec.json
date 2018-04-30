@@ -1,9 +1,9 @@
 {
   "name": "vcx",
-  "version": "0.1.0",
-  "summary": "A short description of vcx.",
-  "description": "TODO: Add long description of the pod here.",
-  "homepage": "https://github.com/yaswanthsvist/vcx",
+  "version": "0.0.2",
+  "summary": "The Objective-C wrapper around the libvcx shared library.",
+  "description": "The ConnectMe mobile app on the iOS platform will call into the libvcx shared library\nfrom Objective-C. This pod is a very thin Objective-C wrapper that allows react native to call\nthrough to the libvcx shared library.",
+  "homepage": "https://www.evernym.com/",
   "license": {
     "type": "MIT",
     "file": "LICENSE"
@@ -12,8 +12,8 @@
     "yaswanthsvist": "iosdev@evernym.com"
   },
   "source": {
-    "git": "https://github.com/yaswanthsvist/vcx.git",
-    "tag": "0.1.0"
+    "git": "git@github.com:evernym/sdk.git",
+    "tag": "0.0.2"
   },
   "platforms": {
     "ios": "8.0"
