@@ -364,7 +364,7 @@ mod tests {
         ::utils::devsetup::cleanup_dev_env(wallet_name);
     }
 
-//    #[ignore]
+    #[ignore]
     #[test]
     fn test_build_get_schema_and_parse_response() {
         //Todo: Move to integration tests

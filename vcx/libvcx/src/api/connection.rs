@@ -211,7 +211,6 @@ pub extern fn vcx_connection_serialize(command_handle: u32,
 /// command_handle: command handle to map callback to user context.
 ///
 /// connection_data: json string representing a connection object
-/// # Examples connection_data -> {"source_id":"1","handle":2,"pw_did":"did","pw_verkey":"verkey","did_endpoint":"","state":2,"uuid":"","endpoint":"","invite_detail":{"e":"","rid":"","sakdp":"","sn":"","sD":"","lu":"","sVk":"","tn":""}}
 ///
 /// cb: Callback that provides credential handle and provides error status
 ///

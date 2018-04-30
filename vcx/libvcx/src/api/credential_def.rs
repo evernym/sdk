@@ -17,13 +17,16 @@ use error::ToErrorCode;
 ///
 /// source_id: Enterprise's personal identification for the user.
 ///
-/// credentialdef_name: Name of credential definitions
+/// credentialdef_name: Name of credential definition
 ///
-/// schema_seq_no: The schema sequence number to create credentialdef against
+/// schema_id: The schema id given during the creation of the schema
 ///
 /// issuer_did: did corresponding to entity issuing a credential. Needs to have Trust Anchor permissions on ledger
 ///
-/// create_non_revoc: Todo: need to add what this done. Right now, provide false
+/// tag: way to create a unique credential def with the same schema and issuer did.
+///
+//Todo: Provide more info about the config
+/// config: revocation info
 ///
 /// cb: Callback that provides CredentialDef handle and error status of request.
 ///
@@ -141,8 +144,6 @@ pub extern fn vcx_credentialdef_serialize(command_handle: u32,
 /// command_handle: command handle to map callback to user context.
 ///
 /// credentialdef_data: json string representing a credentialdef object
-///
-/// # Examples credentialdef -> {"source_id":"test id","credential_def":{"ref":15,"origin":"4fUDR9R7fjwELRvH9JT6HH","signature_type":"CL","data":{"primary":{"n":"9","s":"5","rms":"4","r":{"city":"6","address2":"8","address1":"7","state":"6","zip":"1"},"rctxt":"7","z":"7"},"revocation":null}},"handle":1378455216,"name":"NAME"}
 ///
 /// cb: Callback that provides credentialdef handle and provides error status
 ///

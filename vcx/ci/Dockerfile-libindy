@@ -6,22 +6,38 @@ ARG uid=1000
 
 # Update environment
 # JRE installation and gcc
+# Update environment
+# JRE installation and gcc
 RUN apt-get update -y && apt-get install -y \
+    gcc \
+    pkg-config \
     build-essential \
     libsodium-dev \
     libssl-dev \
     libgmp3-dev \
+    build-essential \
+    libsqlite3-dev \
+    libsqlite0 \
+    cmake \
+    apt-transport-https \
+    ca-certificates \
+    debhelper \
+    wget \
+    git \
     curl \
-    libsqlite0
-    
-
+	libffi-dev \
+    ruby \
+    ruby-dev \ 
+	sudo \
+    rubygems \
+    libzmq5
 
 # Install libindy
 RUN mkdir -p /libindy
 WORKDIR /libindy
 
-ENV LIBINDY_DEB=libindy_1.3.0_amd64.deb
-ENV LIBINDY_DOWNLOAD_URL=https://repo.sovrin.org/sdk/lib/apt/xenial/stable/$LIBINDY_DEB
+ENV LIBINDY_DEB=libindy_1.3.1~495_amd64.deb
+ENV LIBINDY_DOWNLOAD_URL=https://repo.sovrin.org/sdk/lib/apt/xenial/master/$LIBINDY_DEB
 
 RUN curl -fsOSL $LIBINDY_DOWNLOAD_URL \
     && dpkg -i $LIBINDY_DEB \

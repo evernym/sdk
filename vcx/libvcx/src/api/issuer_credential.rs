@@ -22,7 +22,7 @@ use error::ToErrorCode;
 ///
 /// source_id: Enterprise's personal identification for the user.
 ///
-/// schema_seq_no: integer number corresponding to credential's schema number on the ledger
+/// cred_def_id: id of credential definition given during creation of the credential definition
 ///
 /// issuer_did: did corresponding to entity issuing a credential. Needs to have Trust Anchor permissions on ledger
 ///
@@ -317,8 +317,6 @@ pub extern fn vcx_issuer_credential_serialize(command_handle: u32,
 /// command_handle: command handle to map callback to user context.
 ///
 /// credential_data: json string representing a credential object
-///
-/// # Examples credential_data -> {"source_id":"1","handle":2,"credential_attributes":"{\"state\":[\"UT\"]}","msg_uid":"","schema_seq_no":1234,"issuer_did":"DID","issued_did":"","state":1,"credential_request":"","credential_name":"Credential","credential_id":"123","ref_msg_id":""}
 ///
 /// cb: Callback that provides credential handle and provides error status
 ///

@@ -28,16 +28,6 @@ extern {
                                                                         err: i32,
                                                                         cred_def_id: *const c_char,
                                                                         cred_def_json: *const c_char)>) -> i32;
-//    fn indy_issuer_create_and_store_credential_def(command_handle: i32,
-//                                              wallet_handle: i32,
-//                                              issuer_did: *const c_char,
-//                                              schema_json: *const c_char,
-//                                              signature_type: *const c_char,
-//                                              create_non_revoc: bool,
-//                                              cb: Option<extern fn(xcommand_handle: i32,
-//                                                                   err: i32,
-//                                                                   credential_def_json: *const c_char)>) -> i32;
-
     fn indy_issuer_create_credential_offer(command_handle: i32,
                                            wallet_handle: i32,
                                            cred_def_id: *const c_char,
@@ -45,14 +35,6 @@ extern {
                                                                 err: i32,
                                                                 cred_offer_json: *const c_char)>) -> i32;
 
-//    fn indy_issuer_create_credential_offer(command_handle: i32,
-//                                           wallet_handle: i32,
-//                                           schema_json: *const c_char,
-//                                           issuer_did: *const c_char,
-//                                           prover_did: *const c_char,
-//                                           cb: Option<extern fn(xcommand_handle: i32,
-//                                                                err: i32,
-//                                                                credential_offer_json: *const c_char)>) -> i32;
 
     fn indy_issuer_create_credential(command_handle: i32,
                                      wallet_handle: i32,
@@ -66,16 +48,7 @@ extern {
                                                           cred_json: *const c_char,
                                                           cred_revoc_id: *const c_char,
                                                           revoc_reg_delta_json: *const c_char)>) -> i32;
-//    fn indy_issuer_create_credential(command_handle: i32,
-//                                wallet_handle: i32,
-//                                credential_req_json: *const c_char,
-//                                credential_json: *const c_char,
-//                                user_revoc_index: i32,
-//                                cb: Option<extern fn(xcommand_handle: i32,
-//                                                     err: i32,
-//                                                     revoc_reg_update_json: *const c_char, //TODO must be OPTIONAL
-//                                                     xcredential_json: *const c_char)>
-//    )-> i32;
+
     fn indy_prover_create_credential_req(command_handle: i32,
                                          wallet_handle: i32,
                                          prover_did: *const c_char,
@@ -86,16 +59,6 @@ extern {
                                                               err: i32,
                                                               cred_req_json: *const c_char,
                                                               cred_req_metadata_json: *const c_char)>) -> i32;
-//    fn indy_prover_create_credential_req(command_handle: i32,
-//                                         wallet_handle: i32,
-//                                         prover_did: *const c_char,
-//                                         credential_offer_json: *const c_char,
-//                                         credential_def_json: *const c_char,
-//                                         master_secret_name: *const c_char,
-//                                         cb: Option<extern fn(xcommand_handle: i32,
-//                                                              err: i32,
-//                                                              credential_req_json: *const c_char)>
-//    ) -> i32;
 
     fn indy_prover_store_credential(command_handle: i32,
                                     wallet_handle: i32,
@@ -107,13 +70,6 @@ extern {
                                     cb: Option<extern fn(xcommand_handle: i32,
                                                          err: i32,
                                                          out_cred_id: *const c_char)>) -> i32;
-    //    fn indy_prover_store_credential(command_handle: i32,
-    //                               wallet_handle: i32,
-    //                               credentials_json: *const c_char,
-    //                               rev_reg_json: *const c_char,
-    //                               cb: Option<extern fn(xcommand_handle: i32,
-    //                                                    err: i32)>
-    //    ) -> i32;
 
     fn indy_prover_get_credentials_for_proof_req(command_handle: i32,
                                                  wallet_handle: i32,
@@ -133,15 +89,6 @@ extern {
                                   cb: Option<extern fn(xcommand_handle: i32,
                                                        err: i32,
                                                        valid: bool)>) -> i32;
-//    fn indy_verifier_verify_proof(command_handle: i32,
-//                                  proof_request_json: *const c_char,
-//                                  proof_json: *const c_char,
-//                                  schemas_json: *const c_char,
-//                                  credential_defs_jsons: *const c_char,
-//                                  revoc_regs_json: *const c_char,
-//                                  cb: Option<extern fn(xcommand_handle: i32,
-//                                                       err: i32,
-//                                                       valid: bool)>) -> i32;
 
     fn indy_prover_create_proof(command_handle: i32,
                                 wallet_handle: i32,
@@ -154,19 +101,6 @@ extern {
                                 cb: Option<extern fn(xcommand_handle: i32,
                                                      err: i32,
                                                      proof_json: *const c_char)>) -> i32;
-//    fn indy_prover_create_proof(command_handle: i32,
-//                                wallet_handle: i32,
-//                                proof_req_json: *const c_char,
-//                                requested_credentials_json: *const c_char,
-//                                schemas_json: *const c_char,
-//                                master_secret_name: *const c_char,
-//                                credential_defs_json: *const c_char,
-//                                revoc_regs_json: *const c_char,
-//                                cb: Option<extern fn(xcommand_handle: i32,
-//                                                     err: i32,
-//                                                     proof_json: *const c_char)>
-//    ) -> i32;
-
 
 
     fn indy_prover_create_master_secret(command_handle: i32,
@@ -175,12 +109,6 @@ extern {
                                         cb: Option<extern fn(xcommand_handle: i32,
                                                              err: i32,
                                                              out_master_secret_id: *const c_char)>) -> i32;
-//    fn indy_prover_create_master_secret(command_handle: i32,
-//                                        wallet_handle: i32,
-//                                        master_secret_name: *const c_char,
-//                                        cb: Option<extern fn(xcommand_handle: i32,
-//                                                             err: i32)>
-//    ) -> i32;
 
     fn indy_issuer_create_schema(command_handle: i32,
                                  issuer_did: *const c_char,
@@ -602,20 +530,20 @@ mod tests {
         println!("{}, {}", id, cred);
     }
 
-//    #[test]
+    #[test]
     //Todo: Get working. Works individually but fails during cargo test
-//    fn simple_libindy_create_master_secret() {
-//        settings::set_defaults();
-//        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-//        let wallet_name = "test_create_cred_def";
-//        ::utils::devsetup::setup_wallet(wallet_name);
-//        open_wallet(wallet_name, None).unwrap();
-//
-//        let rc = libindy_prover_create_master_secret("random_ms");
-//        delete_wallet(wallet_name).unwrap();
-//        assert!(rc.is_ok());
-//        println!("{}", rc.unwrap())
-//    }
+    fn simple_libindy_create_master_secret() {
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
+        let wallet_name = "test_create_ms";
+        ::utils::devsetup::setup_wallet(wallet_name);
+        open_wallet(wallet_name, None).unwrap();
+
+        let rc = libindy_prover_create_master_secret("random_ms");
+        delete_wallet(wallet_name).unwrap();
+        assert!(rc.is_ok());
+        println!("{}", rc.unwrap())
+    }
 
     #[test]
     fn simple_libindy_create_cred_req() {
@@ -638,28 +566,29 @@ mod tests {
         println!("{}\n{}", cred_req, cred_req_meta);
     }
 
-//    #[test]
+    /*
+    #[test]
     //Todo: Get working. Works individually but fails during cargo test
-//    fn simple_libindy_create_cred() {
-//        settings::set_defaults();
-//        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-//        let wallet_name = "test_create_cred";
-//        ::utils::devsetup::setup_wallet(wallet_name);
-//        open_wallet(wallet_name, None).unwrap();
-//        let encoded_cred_data = r#"{"age":["111","111"],"height":["4'11","25730877424947290072821310314181366395232879096832067784637233452620527354832"],"name":["Bob","93006290325627508022776103386395994712401809437930957652111221015872244345185"],"sex":["male","5944657099558967239210949258394887428692050081607692519917050011144233115103"]}"#;
-//
-//        let result = libindy_issuer_create_credential(
-//            CRED_OFFER,
-//            CRED_REQ,
-//            encoded_cred_data,
-//            None,
-//            None);
-//        delete_wallet(wallet_name).unwrap();
-//        assert!(result.is_ok());
-//        let (cred, cred_revoc_id, revoc_reg_delta_json) = result.unwrap();
-//        println!("{}\n{}\n{}", cred, cred_revoc_id, revoc_reg_delta_json);
-//    }
+    fn simple_libindy_create_cred() {
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
+        let wallet_name = "test_create_cred";
+        ::utils::devsetup::setup_wallet(wallet_name);
+        open_wallet(wallet_name, None).unwrap();
+        let encoded_cred_data = r#"{"age":["111","111"],"height":["4'11","25730877424947290072821310314181366395232879096832067784637233452620527354832"],"name":["Bob","93006290325627508022776103386395994712401809437930957652111221015872244345185"],"sex":["male","5944657099558967239210949258394887428692050081607692519917050011144233115103"]}"#;
 
+        let result = libindy_issuer_create_credential(
+            CRED_OFFER,
+            CRED_REQ,
+            encoded_cred_data,
+            None,
+            None);
+        delete_wallet(wallet_name).unwrap();
+        assert!(result.is_ok());
+        let (cred, cred_revoc_id, revoc_reg_delta_json) = result.unwrap();
+        println!("{}\n{}\n{}", cred, cred_revoc_id, revoc_reg_delta_json);
+    }
+*/
     #[test]
     fn simple_libindy_prover_store_cred() {
         settings::set_defaults();
@@ -755,12 +684,17 @@ mod tests {
                    "name":"zip",
                    "restrictions": [json!({ "issuer_did": "2hoqvcwupRTUNkXn6ArYzs" })]
                }),
+               "self_attest_3": json!({
+                   "name":"self_attest",
+               }),
            }),
            "requested_predicates": json!({}),
         }).to_string();
 
         let requested_credentials_json = json!({
-              "self_attested_attributes":{},
+              "self_attested_attributes":{
+                 "self_attest_3": "my_self_attested_val"
+              },
               "requested_attributes":{
                  "height_1": {"cred_id": "52b1f5e1-89eb-44fe-a846-b4131c0feadc", "revealed": true},
                  "zip_2": {"cred_id": "9a440066-986c-42f8-8117-92178a0ee8a1", "revealed": true}
@@ -815,7 +749,10 @@ mod tests {
                "zip_2": json!({
                    "name":"zip",
                    "restrictions": [json!({ "issuer_did": "2hoqvcwupRTUNkXn6ArYzs" })]
-               })
+               }),
+               "self_attest_3": json!({
+                   "name":"self_attest",
+               }),
            }),
            "requested_predicates": json!({}),
         }).to_string();

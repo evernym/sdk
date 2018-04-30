@@ -92,8 +92,6 @@ def _cxs_loop_callback(command_handle: int, err, *args):
 
     (event_loop, future) = _futures.pop(command_handle)
 
-    print(args)
-    print(err)
     if future.cancelled():
         print("_indy_loop_callback: Future was cancelled earlier")
     else:
