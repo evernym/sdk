@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'vcx'
-  s.version          = '0.0.5'
+  s.version          = '0.0.6'
   s.summary          = 'The Objective-C wrapper around the libvcx shared library.'
 
 # This description is used to generate tags and improve search results.
@@ -27,8 +27,7 @@ through to the libvcx shared library.
   # s.screenshots     = 'www.example.com/screenshots_1', 'www.example.com/screenshots_2'
   s.license          = { :type => 'MIT', :file => 'vcx/wrappers/ios/vcx/LICENSE' }
   s.author           = { 'yaswanthsvist' => 'iosdev@evernym.com' }
-  #s.source           = { :git => 'git@github.com:evernym/sdk.git', :tag => s.version.to_s }
-  s.source           = { :http => 'https://github.com/evernym/sdk/archive/0.0.5.zip' }
+  s.source           = { :git => 'git@github.com:evernym/sdk.git', :tag => s.version.to_s }
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
   s.ios.deployment_target = '8.0'
