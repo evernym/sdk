@@ -6,7 +6,11 @@ ARG uid=1000
 
 # Update environment
 # JRE installation and gcc
+# Update environment
+# JRE installation and gcc
 RUN apt-get update -y && apt-get install -y \
+    gcc \
+    pkg-config \
     build-essential \
     libsodium-dev \
     libssl-dev \
