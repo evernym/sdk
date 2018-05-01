@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'vcx'
-  s.version          = '0.0.2'
+  s.version          = '0.0.4'
   s.summary          = 'The Objective-C wrapper around the libvcx shared library.'
 
 # This description is used to generate tags and improve search results.
@@ -32,10 +32,11 @@ through to the libvcx shared library.
 
   s.ios.deployment_target = '8.0'
 
-  s.source_files = '**/vcx/Classes/**/*'
-  
+  s.source_files = 'vcx/wrappers/ios/vcx/vcx/Classes/**/*'
+  s.vendored_libraries = 'vcx/wrappers/ios/vcx/vcx/lib/libvcx.a'
+
   # s.resource_bundles = {
-  #   'vcx' => ['**/vcx/Assets/*.png']
+  #   'vcx' => ['vcx/wrappers/ios/vcx/vcx/Assets/*.png']
   # }
 
   # s.public_header_files = 'Pod/Classes/**/*.h'
