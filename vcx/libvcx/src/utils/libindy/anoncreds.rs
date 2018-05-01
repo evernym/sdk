@@ -465,7 +465,6 @@ mod tests {
         let libindy_offer = libindy_issuer_create_credential_offer(CRED_DEF_ID).unwrap();
         println!("CredOffer: \n{:?}", libindy_offer);
 
-        libindy_prover_create_master_secret(settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
         let (libindy_cred_req, cred_req_meta) = libindy_prover_create_credential_req(
             &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
             &libindy_offer,
@@ -553,7 +552,6 @@ mod tests {
         ::utils::devsetup::setup_wallet(wallet_name);
         open_wallet(wallet_name, None).unwrap();
 
-        libindy_prover_create_master_secret(settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
         let result = libindy_prover_create_credential_req(
             &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
             CRED_OFFER,
@@ -600,7 +598,6 @@ mod tests {
         let libindy_offer = libindy_issuer_create_credential_offer(CRED_DEF_ID).unwrap();
         println!("CredOffer: \n{:?}", libindy_offer);
 
-        libindy_prover_create_master_secret(settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
         let (libindy_cred_req, cred_req_meta) = libindy_prover_create_credential_req(
             &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
             &libindy_offer,
@@ -696,8 +693,8 @@ mod tests {
                  "self_attest_3": "my_self_attested_val"
               },
               "requested_attributes":{
-                 "height_1": {"cred_id": "52b1f5e1-89eb-44fe-a846-b4131c0feadc", "revealed": true},
-                 "zip_2": {"cred_id": "9a440066-986c-42f8-8117-92178a0ee8a1", "revealed": true}
+                 "height_1": {"cred_id": LICENCE_CRED_ID, "revealed": true},
+                 "zip_2": {"cred_id": ADDRESS_CRED_ID, "revealed": true}
                 },
               "requested_predicates":{}
         }).to_string();
@@ -719,7 +716,7 @@ mod tests {
         let result = libindy_prover_create_proof(
             &proof_req,
             &requested_credentials_json,
-            "default_creds_in_wallet",
+            "main",
             &schemas,
             &cred_defs,
             None);

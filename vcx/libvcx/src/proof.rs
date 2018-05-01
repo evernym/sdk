@@ -749,7 +749,7 @@ mod tests {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
 
-        let mut proof_msg_obj = ProofMessage::new("2hoqvcwupRTUNkXn6ArYzs");
+        let mut proof_msg_obj = ProofMessage::new();
         proof_msg_obj.libindy_proof = PROOF_JSON.to_string();
 
         let mut proof = create_boxed_proof();
@@ -944,7 +944,7 @@ mod tests {
         let mut proof_req_obj = ProofRequestMessage::create();
         proof_req_obj.proof_request_data = serde_json::from_str(&proof_req).unwrap();
 
-        let mut proof_msg = ProofMessage::new("2hoqvcwupRTUNkXn6ArYzs");
+        let mut proof_msg = ProofMessage::new();
         proof_msg.libindy_proof = PROOF_JSON.to_string();
 
         let mut proof = create_boxed_proof();
