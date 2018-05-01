@@ -10,7 +10,7 @@
 @implementation Console
 
 + (void)log:(NSString *)message {
-    NSLog(@"###########%@",message);
+    NSLog(@"message:%@",message);
 }
 
 @end
