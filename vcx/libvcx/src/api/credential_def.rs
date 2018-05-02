@@ -17,15 +17,20 @@ use error::ToErrorCode;
 ///
 /// source_id: Enterprise's personal identification for the user.
 ///
-/// credentialdef_name: Name of credential definitions
+/// credentialdef_name: Name of credential definition
 ///
-/// schema_seq_no: The schema sequence number to create credentialdef against
+/// schema_id: The schema id given during the creation of the schema
 ///
 /// issuer_did: did corresponding to entity issuing a credential. Needs to have Trust Anchor permissions on ledger
 ///
-/// create_non_revoc: Todo: need to add what this done. Right now, provide false
+/// tag: way to create a unique credential def with the same schema and issuer did.
+///
+//Todo: Provide more info about the config
+/// config: revocation info
 ///
 /// cb: Callback that provides CredentialDef handle and error status of request.
+///
+/// payment_handle: future use (currently uses any address in wallet)
 ///
 /// #Returns
 /// Error code as a u32
@@ -37,6 +42,7 @@ pub extern fn vcx_credentialdef_create(command_handle: u32,
                                        issuer_did: *const c_char,
                                        tag: *const c_char,
                                        config: *const c_char,
+                                       payment_handle: u32,
                                        cb: Option<extern fn(xcommand_handle: u32, err: u32, credentialdef_handle: u32)>) -> u32 {
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
     check_useful_c_str!(credentialdef_name, error::INVALID_OPTION.code_num);
@@ -139,8 +145,6 @@ pub extern fn vcx_credentialdef_serialize(command_handle: u32,
 ///
 /// credentialdef_data: json string representing a credentialdef object
 ///
-/// # Examples credentialdef -> {"source_id":"test id","credential_def":{"ref":15,"origin":"4fUDR9R7fjwELRvH9JT6HH","signature_type":"CL","data":{"primary":{"n":"9","s":"5","rms":"4","r":{"city":"6","address2":"8","address1":"7","state":"6","zip":"1"},"rctxt":"7","z":"7"},"revocation":null}},"handle":1378455216,"name":"NAME"}
-///
 /// cb: Callback that provides credentialdef handle and provides error status
 ///
 /// #Returns
@@ -180,13 +184,6 @@ pub extern fn vcx_credentialdef_release(credentialdef_handle: u32) -> u32 {
           credentialdef_handle, credential_def::get_source_id(credentialdef_handle).unwrap_or_default());
     credential_def::release(credentialdef_handle)
 }
-
-#[allow(unused_variables, unused_mut)]
-pub extern fn vcx_credentialdef_commit(credentialdef_handle: u32) -> u32 { error::SUCCESS.code_num }
-#[allow(unused_variables, unused_mut)]
-pub extern fn vcx_credentialdef_get_sequence_no(credentialdef_handle: u32, sequence_no: *mut u32) -> u32 { error::SUCCESS.code_num }
-#[allow(unused_variables, unused_mut)]
-pub extern fn vcx_credentialdef_get(credentialdef_handle: u32, data: *mut c_char) -> u32 { error::SUCCESS.code_num }
 
 #[cfg(test)]
 mod tests {
@@ -253,13 +250,14 @@ mod tests {
     fn test_vcx_create_credentialdef_success() {
         set_default_and_enable_test_mode();
         assert_eq!(vcx_credentialdef_create(0,
-                                       CString::new("Test Source ID").unwrap().into_raw(),
-                                       CString::new("Test Credential Def").unwrap().into_raw(),
+                                            CString::new("Test Source ID").unwrap().into_raw(),
+                                            CString::new("Test Credential Def").unwrap().into_raw(),
                                             CString::new(SCHEMA_ID).unwrap().into_raw(),
-                                       CString::new("6vkhW3L28AophhA68SSzRS").unwrap().into_raw(),
+                                            CString::new("6vkhW3L28AophhA68SSzRS").unwrap().into_raw(),
                                             CString::new("tag").unwrap().into_raw(),
                                             CString::new("{}").unwrap().into_raw(),
-                                       Some(create_cb)), error::SUCCESS.code_num);
+                                            0,
+                                            Some(create_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
 
@@ -274,6 +272,7 @@ mod tests {
                                             ptr::null(),
                                             CString::new("tag").unwrap().into_raw(),
                                             CString::new("{}").unwrap().into_raw(),
+                                            0,
                                             Some(create_cb_err)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
@@ -288,6 +287,7 @@ mod tests {
                                             ptr::null(),
                                             CString::new("tag").unwrap().into_raw(),
                                             CString::new("{}").unwrap().into_raw(),
+                                            0,
                                             Some(create_and_serialize_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }

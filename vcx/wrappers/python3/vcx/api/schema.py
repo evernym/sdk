@@ -53,14 +53,15 @@ class Schema(VcxBase):
         self._version = x
 
     @staticmethod
-    async def create(source_id: str, name: str, version: str, attrs: list):
+    async def create(source_id: str, name: str, version: str, attrs: list, payment_handle: int):
         constructor_params = (source_id, name, version, attrs)
 
         c_source_id = c_char_p(source_id.encode('utf-8'))
         c_name = c_char_p(name.encode('utf-8'))
         c_version = c_char_p(version.encode('utf-8'))
         c_schema_data = c_char_p(json.dumps(attrs).encode('utf-8'))
-        c_params = (c_source_id, c_name, c_version, c_schema_data)
+        c_payment = c_uint32(payment_handle)
+        c_params = (c_source_id, c_name, c_version, c_schema_data, c_payment)
 
         schema = await Schema._create("vcx_schema_create", constructor_params, c_params)
         schema.schema_id = await schema.get_schema_id()

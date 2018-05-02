@@ -29,6 +29,8 @@ export const FFI_PROOF_HANDLE = 'uint32'
 export const FFI_CREDENTIALDEF_HANDLE = 'uint32'
 export const FFI_SCHEMA_HANDLE = 'uint32'
 export const FFI_SCHEMA_NUMBER = 'uint32'
+export const FFI_PAYMENT_HANDLE = 'uint32'
+export const FFI_PRICE = 'float'
 
 // Rust Lib Native Types
 export type rust_did = string
@@ -42,8 +44,13 @@ export type rust_connection_handle = rust_object_handle
 
 export interface IFFIEntryPoint {
   vcx_init: (commandId: number, configPath: string, cb: any) => number,
+  vcx_init_with_config: (commandId: number, config: string, cb: any) => number,
+  vcx_shutdown: (deleteIndyInfo: boolean) => number,
   vcx_error_c_message: (errorCode: number) => string,
   vcx_version: () => string,
+  vcx_wallet_get_token_info: (commandId: number, payment: number, cb: any) => number,
+  vcx_wallet_send_tokens: (commandId: number, payment: number, tokens: number, recipient: string, cb: any) => number,
+  vcx_ledger_get_fees: (commandId: number, cb: any) => number,
   vcx_agent_provision_async: (commandId: number, config: string, cb: any) => number,
   vcx_agent_update_info: (commandId: number, config: string, cb: any) => number,
   // connection
@@ -97,7 +104,8 @@ export interface IFFIEntryPoint {
   vcx_credential_create_with_msgid: (commandId: number, sourceId: string, connectionHandle: string,
                                      msgId: string, cb: any) => number,
   vcx_credential_release: (handle: string) => number,
-  vcx_credential_send_request: (commandId: number, handle: string, connectionHandle: string, cb: any) => number,
+  vcx_credential_send_request: (commandId: number, handle: string, connectionHandle: string,
+                                payment: number, cb: any) => number,
   vcx_credential_serialize: (commandId: number, handle: string, cb: any) => number,
   vcx_credential_deserialize: (commandId: number, data: string, cb: any) => number,
   vcx_credential_update_state: (commandId: number, handle: string, cb: any) => number,
@@ -109,7 +117,7 @@ export interface IFFIEntryPoint {
 
   // credentialdef
   vcx_credentialdef_create: (commandId: number, sourceId: string, credentialDefName: string, schemaId: string,
-                             issuerDid: string, tag: string, config: string, cb: any) => number
+                             issuerDid: string, tag: string, config: string, payment: number, cb: any) => number
   vcx_credentialdef_deserialize: (commandId: number, data: string, cb: any) => number,
   vcx_credentialdef_serialize: (commandId: number, handle: string, cb: any) => number,
   vcx_credentialdef_release: (handle: string) => number,
@@ -117,7 +125,7 @@ export interface IFFIEntryPoint {
   // schema
   vcx_schema_get_attributes: (commandId: number, sourceId: string, schemaId: string, cb: any) => number,
   vcx_schema_create: (commandId: number, sourceId: string, schemaName: string, version: string, schemaData: string,
-                      cb: any) => number,
+                      paymentHandle: number, cb: any) => number,
   vcx_schema_get_schema_id: (commandId: number, handle: string, cb: any) => number,
   vcx_schema_deserialize: (commandId: number, data: string, cb: any) => number,
   vcx_schema_serialize: (commandId: number, handle: string, cb: any) => number,
@@ -128,10 +136,17 @@ export interface IFFIEntryPoint {
 export const FFIConfiguration: { [ Key in keyof IFFIEntryPoint ]: any } = {
 
   vcx_init: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CONFIG_PATH, FFI_CALLBACK_PTR]],
+  vcx_init_with_config: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CONFIG_PATH, FFI_CALLBACK_PTR]],
+  vcx_shutdown: [FFI_ERROR_CODE, [FFI_BOOL]],
   vcx_error_c_message: [FFI_STRING, [FFI_ERROR_CODE]],
   vcx_version: [FFI_STRING, []],
   vcx_agent_provision_async: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_STRING_DATA, FFI_CALLBACK_PTR]],
   vcx_agent_update_info: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_STRING_DATA, FFI_CALLBACK_PTR]],
+
+  vcx_wallet_get_token_info: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_PAYMENT_HANDLE, FFI_CALLBACK_PTR]],
+  vcx_wallet_send_tokens: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_PAYMENT_HANDLE, FFI_PRICE, FFI_STRING_DATA,
+    FFI_CALLBACK_PTR]],
+  vcx_ledger_get_fees: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CALLBACK_PTR]],
 
   // connection
   vcx_connection_connect: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CONNECTION_HANDLE, FFI_CONNECTION_DATA,
@@ -153,7 +168,7 @@ export const FFIConfiguration: { [ Key in keyof IFFIEntryPoint ]: any } = {
   vcx_issuer_credential_update_state: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CREDENTIAL_HANDLE, FFI_CALLBACK_PTR]],
   vcx_issuer_credential_get_state: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CREDENTIAL_HANDLE, FFI_CALLBACK_PTR]],
   vcx_issuer_create_credential: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_SOURCE_ID,
-    FFI_STRING_DATA, FFI_STRING_DATA, FFI_STRING_DATA, FFI_STRING_DATA, FFI_CALLBACK_PTR]],
+    FFI_STRING_DATA, FFI_STRING_DATA, FFI_STRING_DATA, FFI_STRING_DATA, FFI_PRICE, FFI_CALLBACK_PTR]],
   vcx_issuer_send_credential: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CREDENTIAL_HANDLE, FFI_CONNECTION_HANDLE,
     FFI_CALLBACK_PTR]],
   vcx_issuer_send_credential_offer: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CREDENTIAL_HANDLE, FFI_CONNECTION_HANDLE,
@@ -194,7 +209,7 @@ export const FFIConfiguration: { [ Key in keyof IFFIEntryPoint ]: any } = {
     FFI_STRING_DATA, FFI_CALLBACK_PTR]],
   vcx_credential_release: [FFI_ERROR_CODE, [FFI_CREDENTIAL_HANDLE]],
   vcx_credential_send_request: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CREDENTIAL_HANDLE, FFI_CONNECTION_HANDLE,
-    FFI_CALLBACK_PTR]],
+    FFI_PAYMENT_HANDLE, FFI_CALLBACK_PTR]],
   vcx_credential_serialize: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CREDENTIAL_HANDLE, FFI_CALLBACK_PTR]],
   vcx_credential_deserialize: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_STRING_DATA, FFI_CALLBACK_PTR]],
   vcx_credential_update_state: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CREDENTIAL_HANDLE, FFI_CALLBACK_PTR]],
@@ -203,7 +218,7 @@ export const FFIConfiguration: { [ Key in keyof IFFIEntryPoint ]: any } = {
 
   // credentialDef
   vcx_credentialdef_create: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_SOURCE_ID, FFI_STRING_DATA, FFI_STRING_DATA,
-    FFI_STRING_DATA, FFI_STRING_DATA, FFI_STRING_DATA, FFI_CALLBACK_PTR]],
+    FFI_STRING_DATA, FFI_STRING_DATA, FFI_STRING_DATA, FFI_PAYMENT_HANDLE, FFI_CALLBACK_PTR]],
   vcx_credentialdef_deserialize: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_STRING_DATA, FFI_CALLBACK_PTR]],
   vcx_credentialdef_release: [FFI_ERROR_CODE, [FFI_CREDENTIALDEF_HANDLE]],
   vcx_credentialdef_serialize: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CREDENTIALDEF_HANDLE, FFI_CALLBACK_PTR]],
@@ -214,7 +229,7 @@ export const FFIConfiguration: { [ Key in keyof IFFIEntryPoint ]: any } = {
   // schema
   vcx_schema_get_attributes: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_SOURCE_ID, FFI_STRING_DATA, FFI_CALLBACK_PTR]],
   vcx_schema_create: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_SOURCE_ID, FFI_STRING_DATA, FFI_STRING_DATA,
-    FFI_STRING_DATA, FFI_CALLBACK_PTR]],
+    FFI_STRING_DATA, FFI_PAYMENT_HANDLE, FFI_CALLBACK_PTR]],
   vcx_schema_get_schema_id: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_SCHEMA_HANDLE, FFI_CALLBACK_PTR]],
   vcx_schema_deserialize: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_STRING_DATA, FFI_CALLBACK_PTR]],
   vcx_schema_release: [FFI_ERROR_CODE, [FFI_SCHEMA_HANDLE]],

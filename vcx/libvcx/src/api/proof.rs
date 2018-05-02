@@ -17,14 +17,14 @@ use error::ToErrorCode;
 ///
 /// source_id: Enterprise's personal identification for the user.
 ///
-/// requested_attrs: attributes in json format prover is expected to include in proof.
+/// requested_attrs: attributes/claims prover must provide in proof
 ///
-/// # Example requested_attrs -> "[{"name":"attrName","issuer_did":"did","schema_seq_no":1}]"
+/// # Example requested_attrs -> "[{"name":"attrName","restrictions":["issuer_did":"did","schema_id":"id","schema_issuer_did":"did","schema_name":"name","schema_version":"1.1.1","cred_def_id":"id"}]]"
 ///
-/// requested_predicates: specific requirements regarding the prover's attributes.
+/// requested_predicates: predicate specifications prover must provide claim for
 ///
-/// # Example requested_predicates -> "[{"attr_name":"age","p_type":"GE","value":18,"schema_seq_no":1,"issuer_did":"DID"}]"
-/// /// name: Name of the proof request - ex. Drivers Licence.
+/// # Example requested_predicates -> "[{"name":"attrName","p_type":"GE","p_value":9,"restrictions":["issuer_did":"did","schema_id":"id","schema_issuer_did":"did","schema_name":"name","schema_version":"1.1.1","cred_def_id":"id"}]]"
+///
 ///
 /// cb: Callback that provides proof handle and error status of request.
 ///
@@ -104,8 +104,8 @@ pub extern fn vcx_proof_update_state(command_handle: u32,
 
 #[no_mangle]
 pub extern fn vcx_proof_get_state(command_handle: u32,
-                                     proof_handle: u32,
-                                     cb: Option<extern fn(xcommand_handle: u32, err: u32, state: u32)>) -> u32 {
+                                  proof_handle: u32,
+                                  cb: Option<extern fn(xcommand_handle: u32, err: u32, state: u32)>) -> u32 {
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
     let source_id = proof::get_source_id(proof_handle).unwrap_or_default();
@@ -176,8 +176,6 @@ pub extern fn vcx_proof_serialize(command_handle: u32,
 /// command_handle: command handle to map callback to user context.
 ///
 /// proof_data: json string representing a proof object
-///
-/// # Examples proof_data -> {"source_id":"id","handle":1,"requested_attrs":"[{\"issuerDid\":\"did\",\"schemaSeqNo\":1,\"name\":\"\"}]","requested_predicates":"[]","msg_uid":"","prover_did":"","state":1,"name":"Proof Name"}
 ///
 /// cb: Callback that provides proof handle and provides error status
 ///

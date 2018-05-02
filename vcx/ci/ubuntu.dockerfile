@@ -27,7 +27,8 @@ RUN apt-get update -y && apt-get install -y \
     ruby \
     ruby-dev \ 
 	sudo \
-    rubygems 
+    rubygems \
+    libzmq5
 
 # Install Nodejs 
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - \
@@ -39,15 +40,15 @@ RUN npm install typescript-compiler
 RUN mkdir -p /libindy
 WORKDIR /libindy
 
-ENV LIBINDY_DEB=libindy_1.3.0_amd64.deb
-ENV LIBINDY_DOWNLOAD_URL=https://repo.sovrin.org/sdk/lib/apt/xenial/stable/$LIBINDY_DEB
+ENV LIBINDY_DEB=libindy_1.3.1~495_amd64.deb
+ENV LIBINDY_DOWNLOAD_URL=https://repo.sovrin.org/sdk/lib/apt/xenial/master/$LIBINDY_DEB
 
 RUN curl -fsOSL $LIBINDY_DOWNLOAD_URL \
     && dpkg -i $LIBINDY_DEB \
     && apt-get -f install
 
 # Install Rust
-ENV RUST_ARCHIVE=rust-1.24.0-x86_64-unknown-linux-gnu.tar.gz
+ENV RUST_ARCHIVE=rust-1.25.0-x86_64-unknown-linux-gnu.tar.gz
 ENV RUST_DOWNLOAD_URL=https://static.rust-lang.org/dist/$RUST_ARCHIVE
 
 RUN mkdir -p /rust

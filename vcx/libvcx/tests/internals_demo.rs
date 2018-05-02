@@ -1,6 +1,5 @@
 #[macro_use]
 extern crate serde_json;
-/*
 
 #[cfg(test)]
 mod tests {
@@ -13,20 +12,21 @@ mod tests {
     use self::vcx::issuer_credential;
     use self::vcx::disclosed_proof;
     use self::vcx::proof;
-    use self::vcx::utils::libindy::wallet;
     use self::vcx::api::VcxStateType;
     use self::vcx::api::ProofStateType;
     use serde_json::Value;
     use std::thread;
     use std::time::Duration;
 
+    #[ignore]
     #[test]
     fn test_real_proof() {
         self::vcx::utils::logger::LoggerUtils::init();
         settings::set_to_defaults();
+        let cred_def_id = vcx::utils::constants::CRED_DEF_ID.to_string();
         //BE INSTITUTION AND GENERATE INVITE FOR CONSUMER
         self::vcx::utils::devsetup::setup_dev_env("test_real_proof");
-        self::vcx::utils::libindy::anoncreds::libindy_prover_create_master_secret(wallet::get_wallet_handle(), settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
+        self::vcx::utils::libindy::anoncreds::libindy_prover_create_master_secret(settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
         let alice = connection::build_connection("alice").unwrap();
         connection::connect(alice, Some("{}".to_string())).unwrap();
         let details = connection::get_invite_details(alice, true).unwrap();
@@ -44,7 +44,7 @@ mod tests {
         // AS INSTITUTION SEND CREDENTIAL OFFER
         let credential_data = r#"{"address1": ["123 Main St"], "address2": ["Suite 3"], "city": ["Draper"], "state": ["UT"], "zip": ["84000"]}"#;
         let schema_seq_no = 22;
-        let credential_offer = issuer_credential::issuer_credential_create(schema_seq_no,
+        let credential_offer = issuer_credential::issuer_credential_create(cred_def_id.clone(),
                                                             "1".to_string(),
                                                             settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
                                                             "credential_name".to_string(),
@@ -120,4 +120,3 @@ mod tests {
         self::vcx::utils::devsetup::cleanup_dev_env("test_real_proof");
     }
 }
-*/

@@ -19,9 +19,13 @@ use error::ToErrorCode;
 ///
 /// schema_name: Name of schema
 ///
+/// version: version of schema
+///
 /// schema_data: list of attributes that will make up the schema
 ///
 /// # Example schema_data -> "["attr1", "attr2", "attr3"]"
+///
+/// payment_handle: future use (currently uses any address in the wallet)
 ///
 /// cb: Callback that provides Schema handle and error status of request.
 ///
@@ -33,6 +37,7 @@ pub extern fn vcx_schema_create(command_handle: u32,
                                 schema_name: *const c_char,
                                 version: *const c_char,
                                 schema_data: *const c_char,
+                                payment_handle: u32,
                                 cb: Option<extern fn(xcommand_handle: u32, err: u32, credentialdef_handle: u32)>) -> u32 {
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
     check_useful_c_str!(schema_name, error::INVALID_OPTION.code_num);
@@ -121,9 +126,7 @@ pub extern fn vcx_schema_serialize(command_handle: u32,
 /// #Params
 /// command_handle: command handle to map callback to user context.
 ///
-/// schema: json string representing a schema object
-///
-/// # Examples schema -> {"data":{"seqNo":15,"identifier":"4fUDR9R7fjwELRvH9JT6HH","txnTime":1510246647,"type":"101","data":{"name":"Home Address","version":"0.1","attr_names":["address1","address2","city","state","zip"]}},"handle":1,"name":"schema_name","source_id":"testId","sequence_num":306}
+/// schema_data: json string representing a schema object
 ///
 /// cb: Callback that provides schema handle and provides error status
 ///
@@ -179,7 +182,7 @@ pub extern fn vcx_schema_release(schema_handle: u32) -> u32 {
 /// #Params
 /// schema_handle: Schema handle that was provided during creation. Used to access proof object
 ///
-/// cb: Callback that provides schema number and provides error status
+/// cb: Callback that provides schema id and provides error status
 ///
 /// #Returns
 /// Error code as a u32
@@ -216,9 +219,9 @@ pub extern fn vcx_schema_get_schema_id(command_handle: u32,
 /// Retrieves schema's attributes
 ///
 /// #Params
-/// sequence_no: The schema sequence number for wanted schema
-///
 /// source_id: Enterprise's personal identification for the user.
+///
+/// schema_id: id of schema given during the creation of the schema
 ///
 /// cb: Callback that provides schema number and provides error status
 ///
@@ -327,6 +330,7 @@ mod tests {
                                             ptr::null(),
                                             CString::new("tag").unwrap().into_raw(),
                                             CString::new("{}").unwrap().into_raw(),
+                                            0,
                                             Some(create_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(800));
     }
@@ -370,8 +374,9 @@ mod tests {
         assert_eq!(vcx_schema_create(0,
                                        CString::new("Test Source ID").unwrap().into_raw(),
                                        CString::new("Test Schema").unwrap().into_raw(),
-                                     CString::new("0.0").unwrap().into_raw(),
+                                       CString::new("0.0").unwrap().into_raw(),
                                        CString::new("[att1, att2]").unwrap().into_raw(),
+                                       0,
                                        Some(create_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
@@ -392,6 +397,7 @@ mod tests {
                                      CString::new("Test Schema").unwrap().into_raw(),
                                      CString::new("0.0.0").unwrap().into_raw(),
                                      CString::new(data).unwrap().into_raw(),
+                                     0,
                                      Some(create_schema_and_credentialdef_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_secs(1));
         delete_wallet("a_test_wallet").unwrap();
@@ -413,6 +419,7 @@ mod tests {
                                      CString::new("Test Schema").unwrap().into_raw(),
                                      CString::new("0.0.0").unwrap().into_raw(),
                                      CString::new(data).unwrap().into_raw(),
+                                     0,
                                      Some(create_schema_and_credentialdef_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_secs(60));
         delete_wallet("marks_test_wallet").unwrap();
@@ -441,6 +448,7 @@ mod tests {
                                      CString::new("Test Schema").unwrap().into_raw(),
                                      CString::new("0.0.0").unwrap().into_raw(),
                                      CString::new(data).unwrap().into_raw(),
+                                     0,
                                      Some(create_and_serialize_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
@@ -462,6 +470,7 @@ mod tests {
                                      CString::new("Test Schema").unwrap().into_raw(),
                                      CString::new("0.0.0").unwrap().into_raw(),
                                      CString::new(data).unwrap().into_raw(),
+                                     0,
                                      Some(create_cb_get_id)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
 
