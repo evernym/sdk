@@ -124,6 +124,7 @@ export interface IFFIEntryPoint {
   vcx_credentialdef_deserialize: (commandId: number, data: string, cb: any) => number,
   vcx_credentialdef_serialize: (commandId: number, handle: string, cb: any) => number,
   vcx_credentialdef_release: (handle: string) => number,
+  vcx_credentialdef_get_cred_def_id: (commandId: number, handle: string, cb: any) => string,
 
   // schema
   vcx_schema_get_attributes: (commandId: number, sourceId: string, schemaId: string, cb: any) => number,
@@ -228,6 +229,7 @@ export const FFIConfiguration: { [ Key in keyof IFFIEntryPoint ]: any } = {
   vcx_credentialdef_deserialize: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_STRING_DATA, FFI_CALLBACK_PTR]],
   vcx_credentialdef_release: [FFI_ERROR_CODE, [FFI_CREDENTIALDEF_HANDLE]],
   vcx_credentialdef_serialize: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CREDENTIALDEF_HANDLE, FFI_CALLBACK_PTR]],
+  vcx_credentialdef_get_cred_def_id: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CREDENTIALDEF_HANDLE, FFI_CALLBACK_PTR]],
 
   // mock
   vcx_set_next_agency_response: [FFI_VOID, [FFI_UNSIGNED_INT]],

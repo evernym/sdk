@@ -1,5 +1,7 @@
+import * as ffi from 'ffi'
 import { VCXInternalError } from '../errors'
 import { rustAPI } from '../rustlib'
+import { createFFICallbackPromise } from '../utils/ffi-helpers'
 import { VCXBase } from './VCXBase'
 
 /**
@@ -45,11 +47,13 @@ export class CredentialDef extends VCXBase {
   protected _deserializeFn = rustAPI().vcx_credentialdef_deserialize
   private _name: string
   private _schemaId: string
+  private _credDefId: string
 
   constructor (sourceId, { name, schemaId }: ICredentialDefParams) {
     super(sourceId)
     this._name = name
     this._schemaId = schemaId
+    this._credDefId = null
   }
 
   /**
@@ -128,5 +132,34 @@ export class CredentialDef extends VCXBase {
     } catch (err) {
       throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_credentialdef_serialize')
     }
+  }
+
+  async getCredDefId (): Promise<string> {
+    try {
+      const credDefId = await createFFICallbackPromise<string>(
+          (resolve, reject, cb) => {
+            const rc = rustAPI().vcx_credentialdef_get_cred_def_id(0, this.handle, cb)
+            if (rc) {
+              reject(rc)
+            }
+          },
+          (resolve, reject) => ffi.Callback('void', ['uint32', 'uint32', 'string'],
+          (xcommandHandle, err, _credDefId) => {
+            if (err) {
+              reject(err)
+              return
+            }
+            this._setCredDefId(_credDefId)
+            resolve(_credDefId)
+          })
+        )
+      return credDefId
+    } catch (err) {
+      throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_credentialdef_get_cred_def_id')
+    }
+  }
+
+  _setCredDefId (credDefId: string) {
+    this._credDefId = credDefId
   }
 }

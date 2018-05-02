@@ -74,3 +74,9 @@ async def test_release():
     assert ErrorCode.InvalidCredentialDefHandle == e.value.error_code
     assert 'Invalid Credential Definition handle' == e.value.error_msg
 
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('vcx_init_test_mode')
+async def test_get_cred_def_id():
+    credential_def = await CredentialDef.create(source_id, name, schema_id, 0)
+    assert await credential_def.get_cred_def_id() == '2hoqvcwupRTUNkXn6ArYzs:3:CL:1766'

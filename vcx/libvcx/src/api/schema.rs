@@ -346,7 +346,6 @@ mod tests {
 
     extern "C" fn get_id_cb(handle: u32, err: u32, schema_id: *const c_char) {
         assert_eq!(err, 0);
-        assert_eq!(err, 0);
         if schema_id.is_null() {
             panic!("id is null");
         }

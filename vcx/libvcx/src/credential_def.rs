@@ -41,6 +41,8 @@ impl CredentialDef {
 
     pub fn get_source_id(&self) -> &String { &self.source_id }
 
+    pub fn get_cred_def_id(&self) -> &String { &self.id }
+
     pub fn set_handle(&mut self, handle: u32) { self.handle = handle; }
 
     pub fn set_name(&mut self, name: String) { self.name = name.clone(); }
@@ -169,6 +171,13 @@ pub fn from_string(credentialdef_data: &str) -> Result<u32, u32> {
 pub fn get_source_id(handle: u32) -> Result<String, u32> {
     match CREDENTIALDEF_MAP.lock().unwrap().get(&handle) {
         Some(c) => Ok(c.get_source_id().clone()),
+        None => Err(error::INVALID_CREDENTIAL_DEF_HANDLE.code_num),
+    }
+}
+
+pub fn get_cred_def_id(handle: u32) -> Result<String, u32> {
+    match CREDENTIALDEF_MAP.lock().unwrap().get(&handle) {
+        Some(c) => Ok(c.get_cred_def_id().clone()),
         None => Err(error::INVALID_CREDENTIAL_DEF_HANDLE.code_num),
     }
 }

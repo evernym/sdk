@@ -178,6 +178,43 @@ pub extern fn vcx_credentialdef_deserialize(command_handle: u32,
     error::SUCCESS.code_num
 }
 
+/// Retrieves credential definition's id
+///
+/// #Params
+/// cred_def_handle: CredDef handle that was provided during creation. Used to access proof object
+///
+/// cb: Callback that provides credential definition id and provides error status
+///
+/// #Returns
+/// Error code as a u32
+#[no_mangle]
+pub extern fn vcx_credentialdef_get_cred_def_id(command_handle: u32, cred_def_handle: u32, cb: Option<extern fn(xcommand_handle: u32, err: u32, cred_def_id: *const c_char)>) -> u32 {
+    check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
+
+    info!("vcx_schema_get_schema_id(command_handle: {}, cred_def_handle: {})", command_handle, cred_def_handle);
+    if !credential_def::is_valid_handle(cred_def_handle) {
+        return error::INVALID_CREDENTIAL_DEF_HANDLE.code_num;
+    }
+
+    thread::spawn(move|| {
+        match credential_def::get_cred_def_id(cred_def_handle) {
+            Ok(x) => {
+                info!("vcx_credentialdef_get_cred_def_id(command_handle: {}, cred_def_handle: {}, rc: {}, cred_def_id: {})",
+                      command_handle, cred_def_handle, error_string(0), x);
+                let msg = CStringUtils::string_to_cstring(x);
+                cb(command_handle, error::SUCCESS.code_num, msg.as_ptr());
+            },
+            Err(x) => {
+                warn!("vcx_credentialdef_get_cred_def_id(command_handle: {}, cred_def_handle: {}, rc: {}, cred_def_id: {})",
+                      command_handle, cred_def_handle, error_string(x), "");
+                cb(command_handle, x, ptr::null_mut());
+            },
+        };
+    });
+
+    error::SUCCESS.code_num
+}
+
 #[no_mangle]
 pub extern fn vcx_credentialdef_release(credentialdef_handle: u32) -> u32 {
     info!("vcx_credentialdef_release(credentialdef_handle: {}), source_id: {:?}",
@@ -205,6 +242,23 @@ mod tests {
     extern "C" fn create_cb_err(command_handle: u32, err: u32, credentialdef_handle: u32) {
         assert_ne!(err, 0);
         println!("successfully called create_cb_err")
+    }
+
+    extern "C" fn create_cb_get_id(command_handle: u32, err: u32, cred_def_handle: u32) {
+        assert_eq!(err, 0);
+        assert!(cred_def_handle > 0);
+        println!("successfully called create_cb_get_id");
+        assert_eq!(vcx_credentialdef_get_cred_def_id(0, cred_def_handle, Some(get_id_cb)), error::SUCCESS.code_num);
+        thread::sleep(Duration::from_millis(200));
+    }
+
+    extern "C" fn get_id_cb(handle: u32, err: u32, id: *const c_char) {
+        assert_eq!(err, 0);
+        if id.is_null() {
+            panic!("id is null");
+        }
+        check_useful_c_str!(id, ());
+        println!("successfully called get_id_cb: {}", id);
     }
 
     extern "C" fn credential_def_on_ledger_err_cb(command_handle: u32, err: u32, credentialdef_handle: u32) {
@@ -297,6 +351,21 @@ mod tests {
         set_default_and_enable_test_mode();
         let original = r#"{"id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:1697","tag":"tag","name":"Test Credential Definition","source_id":"SourceId"}"#;
         vcx_credentialdef_deserialize(0,CString::new(original).unwrap().into_raw(), Some(deserialize_cb));
+        thread::sleep(Duration::from_millis(200));
+    }
+
+    #[test]
+    fn test_vcx_creddef_get_id(){
+        set_default_and_enable_test_mode();
+        assert_eq!(vcx_credentialdef_create(0,
+                                            CString::new("Test Source ID").unwrap().into_raw(),
+                                            CString::new("Test Credential Def").unwrap().into_raw(),
+                                            CString::new(SCHEMA_ID).unwrap().into_raw(),
+                                            CString::new("6vkhW3L28AophhA68SSzRS").unwrap().into_raw(),
+                                            CString::new("tag").unwrap().into_raw(),
+                                            CString::new("{}").unwrap().into_raw(),
+                                            0,
+                                            Some(create_cb_get_id)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
 }

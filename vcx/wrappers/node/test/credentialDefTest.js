@@ -55,6 +55,11 @@ describe('A CredentialDef', function () {
     }
   })
 
+  it('will return cred_def_id', async () => {
+    const credentialDef = await CredentialDef.create(CREDENTIAL_DEF)
+    assert(await credentialDef.getCredDefId(), '2hoqvcwupRTUNkXn6ArYzs:3:CL:1766')
+  })
+
   const credentialDefCreateCheckAndDelete = async () => {
     let credentialDef = await CredentialDef.create(CREDENTIAL_DEF)
     let data = await credentialDef.serialize()
