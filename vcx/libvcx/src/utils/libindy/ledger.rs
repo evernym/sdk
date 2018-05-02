@@ -284,6 +284,8 @@ mod tests {
 
     #[test]
     fn simple_libindy_build_get_txn_request_test() {
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
         let result = libindy_build_get_txn_request("GGBDg1j8bsKmr4h5T9XqYf", 15);
         assert!(result.is_ok());
         println!("{}", result.unwrap());
