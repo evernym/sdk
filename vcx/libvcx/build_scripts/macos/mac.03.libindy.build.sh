@@ -1,8 +1,11 @@
 #!/bin/sh
 
+source ./shared.functions.sh
+
 START_DIR=$PWD
 WORK_DIR=$START_DIR/../../../../.macosbuild
 mkdir -p $WORK_DIR
+WORK_DIR=$(abspath "$WORK_DIR")
 
 source ./mac.02.libindy.env.sh
 if [ -d $WORK_DIR/vcx-indy-sdk ]; then
