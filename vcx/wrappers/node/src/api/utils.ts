@@ -77,3 +77,7 @@ export async function getLedgerFees (): Promise<string> {
     throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_ledger_get_fees')
   }
 }
+
+export function shutdownVcx (deleteWallet: boolean): number {
+  return rustAPI().vcx_shutdown(deleteWallet)
+}
