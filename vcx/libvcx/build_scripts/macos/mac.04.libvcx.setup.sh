@@ -15,9 +15,8 @@ VCXHEADER_PATH=$(abspath "$START_DIR/../../include")/vcx.h
 ls -al $LIBINDY_PATH
 #ln -sf $LIBINDY_PATH /usr/local/lib/libindy.dylib
 ln -sf $LIBINDY_PATH /usr/local/lib/libindy.a
-#otool -L /usr/local/lib/libindy.a
+otool -L /usr/local/lib/libindy.a
 
-echo "vcxheader $VCXHEADER_PATH"
 ln -sf $VCXHEADER_PATH /usr/local/include/vcx.h
 
 for h in `ls $LIBINDY_HEADER_PATH`
