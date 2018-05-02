@@ -1,8 +1,13 @@
 #!/bin/sh
-if [ ! -d ./rust-src ]; then
-    git clone git@github.com:rust-lang/rust.git -b stable rust-src
+
+START_DIR=$PWD
+WORK_DIR=$START_DIR/../../../../.macosbuild
+mkdir -p $WORK_DIR
+
+if [ ! -d $WORK_DIR/rust-src ]; then
+    git clone git@github.com:rust-lang/rust.git -b stable $WORK_DIR/rust-src
 fi
-cd rust-src
+cd $WORK_DIR/rust-src
 #./x.py clean && ./x.py build && ./x.py install
 ./x.py build && ./x.py install
 #./x.py build && sudo ./x.py install
