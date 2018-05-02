@@ -1,12 +1,14 @@
 #!/bin/sh
 
-LIBINDY_PATH=$PWD/vcx-indy-sdk/libindy/target/debug/libindy.dylib
+#LIBINDY_PATH=$PWD/vcx-indy-sdk/libindy/target/debug/libindy.dylib
+LIBINDY_PATH=$PWD/vcx-indy-sdk/libindy/target/universal/debug/libindy.a
 LIBINDY_HEADER_PATH=$PWD/vcx-indy-sdk/libindy/include
 VCXHEADER_PATH=$PWD/include/vcx.h
 
 ls -al $LIBINDY_PATH
-ln -sf $LIBINDY_PATH /usr/local/lib/libindy.dylib
-otool -L /usr/local/lib/libindy.dylib
+#ln -sf $LIBINDY_PATH /usr/local/lib/libindy.dylib
+ln -sf $LIBINDY_PATH /usr/local/lib/libindy.a
+otool -L /usr/local/lib/libindy.a
 
 ln -sf $VCXHEADER_PATH /usr/local/include/vcx.h
 
