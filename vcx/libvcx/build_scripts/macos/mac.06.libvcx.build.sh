@@ -5,8 +5,11 @@ cd ../..
 cargo clean
 # To build for macos
 #cargo build
+#export LIBINDY_DIR=/usr/local/lib
+#export RUST_BACKTRACE=1
 # To build for iOS
-#cargo lipo --release
-export RUST_BACKTRACE=1
-RUST_BACKTRACE=1 cargo lipo
+#LIBINDY_DIR=/usr/local/lib RUST_BACKTRACE=1 cargo lipo --release
+cargo lipo --release
+#LIBINDY_DIR=/usr/local/lib RUST_BACKTRACE=1 cargo lipo
+#LIBINDY_DIR=/usr/local/lib cargo test
 cargo test

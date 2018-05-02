@@ -57,7 +57,7 @@ fn main() {
     let target = env::var("TARGET").unwrap();
     println!("target={}", target);
 
-    if target.contains("aarch64"){
+    if target.contains("aarch64-linux-android"){
 
         let libindy_lib_path = env::var("LIBINDY_DIR").unwrap();
         println!("cargo:rustc-link-search=native={}",libindy_lib_path);
