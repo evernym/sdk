@@ -207,7 +207,7 @@ export class Schema extends VCXBase {
         )
       return schemaId
     } catch (err) {
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_proof_create')
+      throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_schema_get_schema_id')
     }
   }
 

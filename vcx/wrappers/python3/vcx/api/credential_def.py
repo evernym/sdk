@@ -1,7 +1,7 @@
 from ctypes import *
 from vcx.error import VcxError, ErrorCode
 from vcx.api.vcx_base import VcxBase
-from vcx.common import error_message
+from vcx.common import do_call, create_cb, error_message
 
 import json
 
@@ -68,6 +68,11 @@ class CredentialDef(VcxBase):
     async def serialize(self) -> dict:
         return await self._serialize(CredentialDef, 'vcx_credentialdef_serialize')
 
-    def release(self) -> None:
+    async def get_cred_def_id(self):
+        cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_char_p))
+        c_handle = c_uint32(self.handle)
+        cred_def_id = await do_call('vcx_credentialdef_get_cred_def_id', c_handle, cb)
+        return cred_def_id .decode()
 
+    def release(self) -> None:
         self._release(CredentialDef, 'vcx_credentialdef_release')
