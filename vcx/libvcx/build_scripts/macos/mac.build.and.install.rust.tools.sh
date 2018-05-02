@@ -1,8 +1,11 @@
 #!/bin/sh
 
+source ./shared.functions.sh
+
 START_DIR=$PWD
 WORK_DIR=$START_DIR/../../../../.macosbuild
 mkdir -p $WORK_DIR
+WORK_DIR=$(abspath "$WORK_DIR")
 
 if [ ! -d $WORK_DIR/rust-src ]; then
     git clone git@github.com:rust-lang/rust.git -b stable $WORK_DIR/rust-src
