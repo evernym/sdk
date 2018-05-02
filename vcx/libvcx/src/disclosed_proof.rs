@@ -12,7 +12,6 @@ use messages::proofs::proof_request::{ ProofRequestMessage };
 use messages::extract_json_payload;
 use messages::to_u8;
 
-use issuer_credential::{ CredentialMessage };
 use credential_def::{ retrieve_credential_def };
 use schema::{ LedgerSchema };
 
@@ -22,7 +21,7 @@ use utils::libindy::crypto;
 
 use settings;
 use utils::httpclient;
-use utils::constants::SEND_MESSAGE_RESPONSE;
+use utils::constants::{ SEND_MESSAGE_RESPONSE, CREDS_FROM_PROOF_REQ };
 
 use serde_json::{Value};
 
@@ -87,43 +86,34 @@ fn credential_def_identifiers(credentials: &str) -> Result<Vec<(String, String, 
     let credentials: Value = serde_json::from_str(credentials)
         .or(Err(ProofError::CommonError(error::INVALID_JSON.code_num)))?;
 
-    if let Value::Object(ref map) = credentials {
-        for (req_attr_key, value) in map {
-            if let &Value::Object(ref credentials) = value {
+    if let Value::Object(ref map) = credentials["attrs"] {
+        for (requested_attr, value) in map {
+            if let Value::Object(ref attr_obj) = value["cred_info"] {
 
-                for (cred_id, credential) in credentials {
-                    let cred_msg_str: String = serde_json::from_value(credential.clone())
-                        .or(Err(ProofError::CreateProofError()))?;
-                    let cred_msg: CredentialMessage = serde_json::from_str(&cred_msg_str)
-                        .or(Err(ProofError::CreateProofError()))?;
+                let cred_uuid = match attr_obj.get("referent") {
+                    Some(i) => if i.is_string() { i.as_str().unwrap() } else { return Err(ProofError::CommonError(error::INVALID_JSON.code_num))},
+                    None => return Err(ProofError::CommonError(error::INVALID_JSON.code_num)),
+                };
 
-                    let libindy_cred: Value = serde_json::from_str(&cred_msg.libindy_cred)
-                        .or(Err(ProofError::CreateProofError()))?;
+                let schema_id = match attr_obj.get("schema_id") {
+                    Some(i) => if i.is_string() { i.as_str().unwrap() } else { return Err(ProofError::CommonError(error::INVALID_JSON.code_num))},
+                    None => return Err(ProofError::CommonError(error::INVALID_JSON.code_num)),
+                };
 
-                    let schema_id = match libindy_cred.get("schema_id") {
-                        Some(i) => if i.is_string() { i.as_str().unwrap() } else { return Err(ProofError::CommonError(error::INVALID_JSON.code_num))},
-                        None => return Err(ProofError::CommonError(error::INVALID_JSON.code_num)),
-                    };
+                let cred_def_id = match attr_obj.get("cred_def_id") {
+                    Some(i) => if i.is_string() { i.as_str().unwrap() } else { return Err(ProofError::CommonError(error::INVALID_JSON.code_num))},
+                    None => return Err(ProofError::CommonError(error::INVALID_JSON.code_num)),
+                };
 
-                    let cred_def_id = match libindy_cred.get("cred_def_id") {
-                        Some(i) => if i.is_string() { i.as_str().unwrap() } else { return Err(ProofError::CommonError(error::INVALID_JSON.code_num))},
-                        None => return Err(ProofError::CommonError(error::INVALID_JSON.code_num)),
-                    };
-
-                    rtn.push((req_attr_key.to_string(),
-                              cred_id.to_string(),
-                              schema_id.to_string(),
-                              cred_def_id.to_string()))
-                }
+                rtn.push((requested_attr.to_string(),
+                          cred_uuid.to_string(),
+                          schema_id.to_string(),
+                          cred_def_id.to_string()))
             }
         }
-    } else {
-        return Err(ProofError::CommonError(error::INVALID_JSON.code_num))
     }
-
     Ok(rtn)
 }
-
 
 impl DisclosedProof {
 
@@ -131,6 +121,17 @@ impl DisclosedProof {
 
     fn get_state(&self) -> u32 {self.state as u32}
     fn set_state(&mut self, state: VcxStateType) {self.state = state}
+
+    fn retrieve_credentials(&self) -> Result<String, ProofError> {
+        if settings::test_indy_mode_enabled() {return Ok(CREDS_FROM_PROOF_REQ.to_string())}
+
+        let proof_req = self.proof_request.as_ref().ok_or(ProofError::ProofNotReadyError())?;
+        let indy_proof_req = serde_json::to_string(&proof_req.proof_request_data)
+            .or(Err(ProofError::CommonError(error::INVALID_JSON.code_num)))?;
+
+        anoncreds::libindy_prover_get_credentials_for_proof_req(&indy_proof_req)
+            .map_err(|err| ProofError::CommonError(err))
+    }
 
     fn _find_schemas(&self, credentials_identifiers: &Vec<(String, String, String, String)>) -> Result<String, ProofError> {
         let mut rtn: HashMap<String, Value> = HashMap::new();
@@ -204,6 +205,7 @@ impl DisclosedProof {
     }
 
     fn generate_proof(&mut self, credentials: &str, self_attested_attrs: &str) -> Result<u32, ProofError> {
+        if settings::test_indy_mode_enabled() {return Ok(error::SUCCESS.code_num)}
 
         let proof_req = self.proof_request.as_ref()
             .ok_or(ProofError::CreateProofError())?;
@@ -374,6 +376,12 @@ pub fn generate_proof(handle: u32, credentials: String, self_attested_attrs: Str
     }).map_err(|ec| ProofError::CommonError(ec))
 }
 
+pub fn retrieve_credentials(handle: u32) -> Result<String, ProofError> {
+    HANDLE_MAP.get_mut(handle, |obj|{
+        obj.retrieve_credentials().map_err(|e| e.to_error_code())
+    }).map_err(|ec| ProofError::CommonError(ec))
+}
+
 pub fn is_valid_handle(handle: u32) -> bool {
     HANDLE_MAP.has_handle(handle)
 }
@@ -466,13 +474,8 @@ mod tests {
     extern crate serde_json;
 
     use super::*;
-    use utils::constants::{ CRED_MSG, ADDRESS_CRED_ID, LICENCE_CRED_ID, ADDRESS_SCHEMA_ID, ADDRESS_CRED_DEF_ID, CRED_DEF_ID, SCHEMA_ID };
+    use utils::constants::{ ADDRESS_CRED_ID, LICENCE_CRED_ID, ADDRESS_SCHEMA_ID, ADDRESS_CRED_DEF_ID, CRED_DEF_ID, SCHEMA_ID };
     use serde_json::Value;
-
-    const CREDENTIALS: &str = r#"{"attrs":{"address1_0":[{"claim_uuid":"claim::b3817a07-afe2-42cc-9341-771d58ab3a8a","attrs":{"state":"UT","zip":"84000","city":"Draper","address2":"Suite 3","address1":"123 Main St"},"schema_seq_no":22,"issuer_did":"2hoqvcwupRTUNkXn6ArYzs"}],"zip_4":[{"claim_uuid":"claim::b3817a07-afe2-42cc-9341-771d58ab3a8a","attrs":{"state":"UT","zip":"84000","city":"Draper","address2":"Suite 3","address1":"123 Main St"},"schema_seq_no":22,"issuer_did":"2hoqvcwupRTUNkXn6ArYzs"}],"address2_1":[{"claim_uuid":"claim::b3817a07-afe2-42cc-9341-771d58ab3a8a","attrs":{"state":"UT","zip":"84000","city":"Draper","address2":"Suite 3","address1":"123 Main St"},"schema_seq_no":22,"issuer_did":"2hoqvcwupRTUNkXn6ArYzs"}],"city_2":[{"claim_uuid":"claim::b3817a07-afe2-42cc-9341-771d58ab3a8a","attrs":{"state":"UT","zip":"84000","city":"Draper","address2":"Suite 3","address1":"123 Main St"},"schema_seq_no":22,"issuer_did":"2hoqvcwupRTUNkXn6ArYzs"}],"state_3":[{"claim_uuid":"claim::b3817a07-afe2-42cc-9341-771d58ab3a8a","attrs":{"state":"UT","zip":"84000","city":"Draper","address2":"Suite 3","address1":"123 Main St"},"schema_seq_no":22,"issuer_did":"2hoqvcwupRTUNkXn6ArYzs"}]},"predicates":{}}"#;
-    const PROOF_OBJECT_JSON: &str = r#"{"source_id":"","my_did":null,"my_vk":null,"state":3,"proof_request":{"@type":{"name":"PROOF_REQUEST","version":"1.0"},"@topic":{"mid":9,"tid":1},"proof_request_data":{"nonce":"838186471541979035208225","name":"Account Certificate","version":"0.1","requested_attrs":{"name_0":{"name":"name","schema_seq_no":52},"business_2":{"name":"business","schema_seq_no":52},"email_1":{"name":"email","schema_seq_no":52}},"requested_predicates":{}},"msg_ref_id":"ymy5nth"},"link_secret_alias":"main","their_did":null,"their_vk":null,"agent_did":null,"agent_vk":null}"#;
-    const DEFAULT_PROOF_NAME: &'static str = "PROOF_NAME";
-    const ADDRESS_CRED_MSG: &str = r#"{"libindy_cred":"{\"schema_id\":\"2hoqvcwupRTUNkXn6ArYzs:2:Home Address - Test:0.0.1\",\"cred_def_id\":\"2hoqvcwupRTUNkXn6ArYzs:3:CL:2200\",\"rev_reg_id\":null,\"values\":{\"address2\":{\"raw\":\"101 Wilson Lane\",\"encoded\":\"68086943237164982734333428280784300550565381723532936263016368251445461241953\"},\"zip\":{\"raw\":\"87121\",\"encoded\":\"87121\"},\"state\":{\"raw\":\"UT\",\"encoded\":\"93856629670657830351991220989031130499313559332549427637940645777813964461231\"},\"city\":{\"raw\":\"SLC\",\"encoded\":\"101327353979588246869873249766058188995681113722618593621043638294296500696424\"},\"address1\":{\"raw\":\"101 Tela Lane\",\"encoded\":\"63690509275174663089934667471948380740244018358024875547775652380902762701972\"}},\"signature\":{\"p_credential\":{\"m_2\":\"31700338570294708736115754102769589522052428093121126330650183539696104868123\",\"a\":\"4636119591016812829290185041314064883675977941392954691835215572067999994098323998287355564063288642448057198914007955141049641553998558342655341817968147923681804839333199224553010720316518489774808129770384979728163770781989361982362867405864793191346212322668423871529915985531698939342464472895631546091648999074714329706048885943777714077961459226335884116117378159655001226651964283566072892631751640720591491247756738698407744555551753963108283649698879786534551101148976909194325048048013605796054155971253949496310160721914633273138580991140248773945729425382987577485365556610172767253647545223951021726217\",\"e\":\"259344723055062059907025491480697571938277889515152306249728583105665800713306759149981690559193987143012367913206299323899696942213235956742930255069409344197327246347865825149369\",\"v\":\"5442392197275490888678809487702542129411897330335165518349275082394063964444764459344976892451887855371603165577568090327919173883059714296862721727215358869616013170379140986326303293564317963193155875114392812218277209407301424853735470891253146266115220918971185172915597652817147699337266471939333863190850407141319440480206198727571771575096356918545327625642715038205943409218674445922703749043356568580220877437155433918126574892935240102991561269648783872491907898462124176860659130579749282890223194188886254686328193788510579077319607954076688757747388284117610626744695237160950509347241199159392817197212143556383920998964158042067834305029632704153673110173377096213149084715712292184081094942159527450689357050524405595136635859200065054329700221161376446458745677994071419731935585227500023261202489309988\"},\"r_credential\":null},\"signature_correctness_proof\":{\"se\":\"8016730965404851883671241244847742779897307518356938915461303310917958391781042203321949584884293411578195441346244310457503548981917702566207857006166532786621695731732572457973866565424003312839043290389096991017444920115829021559534784061534056328585032371907532245699825735789291770981445297764543024517565822205895405808716728744858736584662975614326288901012532704599773904731383285993134427754432909321314476624239694781522251998092762597857704178774180446097807521183698610764223586215851551541519785420920809108710540394126512090304315606118633258027865078525787805526912281981545608511002815713525388149891\",\"c\":\"47570451960219896208978703924196482810577196570400972965454633153633944823783\"},\"rev_reg\":null,\"witness\":null}","rev_reg_def_json":"","cred_def_id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:1766","msg_type":"CLAIM","claim_offer_id":"1234","version":"0.1","from_did":"44oqvcwupRTUNkXn6ArYzs"}"#;
 
     #[test]
     fn test_create_proof() {
@@ -620,16 +623,96 @@ mod tests {
     }
 
     #[test]
+    fn test_retrieve_credentials() {
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
+        let wallet_name = "test_retrieve_creds_disclosed_proof";
+        ::utils::devsetup::setup_dev_env(wallet_name);
+
+        let mut proof_req = ProofRequestMessage::create();
+        let mut proof: DisclosedProof = Default::default();
+        let indy_proof_req = json!({
+           "nonce":"123432421212",
+           "name":"proof_req_1",
+           "version":"0.1",
+           "requested_attributes": json!({
+               "height_1": json!({
+                   "name":"height",
+                   "restrictions": [json!({ "issuer_did": "2hoqvcwupRTUNkXn6ArYzs" })]
+               }),
+               "zip_2": json!({
+                   "name":"zip",
+                   "restrictions": [json!({ "issuer_did": "2hoqvcwupRTUNkXn6ArYzs" })]
+               }),
+           }),
+           "requested_predicates": json!({}),
+        }).to_string();
+        proof_req.proof_request_data = serde_json::from_str(&indy_proof_req).unwrap();
+        proof.proof_request = Some(proof_req);
+
+        let retrieved_creds: Value = serde_json::from_str(&proof.retrieve_credentials().unwrap()).unwrap();
+        let expected_creds: Value = serde_json::from_str(CREDS_FROM_PROOF_REQ).unwrap();
+        assert_eq!(retrieved_creds, expected_creds);
+
+        ::utils::devsetup::cleanup_dev_env(wallet_name);
+    }
+
+    #[test]
+    fn test_retrieve_credentials_fails_with_no_proof_req() {
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
+        let wallet_name = "test_retrieve_creds_disclosed_proof";
+        ::utils::devsetup::setup_dev_env(wallet_name);
+
+        let proof: DisclosedProof = Default::default();
+        assert_eq!(proof.retrieve_credentials(), Err(ProofError::ProofNotReadyError()));
+
+        ::utils::devsetup::cleanup_dev_env(wallet_name);
+    }
+
+    #[test]
     fn test_credential_def_identifiers() {
         let cred1 = ("height_1".to_string(), LICENCE_CRED_ID.to_string(), SCHEMA_ID.to_string(), CRED_DEF_ID.to_string() );
         let cred2 = ("zip_2".to_string(), ADDRESS_CRED_ID.to_string(), ADDRESS_SCHEMA_ID.to_string(), ADDRESS_CRED_DEF_ID.to_string() );
         let selected_credentials : Value = json!({
-              "height_1":json!({
-                LICENCE_CRED_ID: CRED_MSG,
-              }),
-              "zip_2":json!({
-                ADDRESS_CRED_ID: ADDRESS_CRED_MSG,
-              }),
+           "attrs":{
+              "height_1":{
+                "cred_info":{
+                   "referent":LICENCE_CRED_ID,
+                   "attrs":{
+                      "sex":"male",
+                      "age":"111",
+                      "name":"Bob",
+                      "height":"4'11"
+                   },
+                   "schema_id": SCHEMA_ID,
+                   "cred_def_id": CRED_DEF_ID,
+                   "rev_reg_id":null,
+                   "cred_rev_id":null
+                },
+                "interval":null
+              },
+              "zip_2":{
+                "cred_info":{
+                   "referent":ADDRESS_CRED_ID,
+                   "attrs":{
+                      "address1":"101 Tela Lane",
+                      "address2":"101 Wilson Lane",
+                      "zip":"87121",
+                      "state":"UT",
+                      "city":"SLC"
+                   },
+                   "schema_id":ADDRESS_SCHEMA_ID,
+                   "cred_def_id":ADDRESS_CRED_DEF_ID,
+                   "rev_reg_id":null,
+                   "cred_rev_id":null
+                },
+                "interval":null
+             }
+           },
+           "predicates":{
+
+           }
         });
         let creds = credential_def_identifiers(&selected_credentials.to_string()).unwrap();
         assert_eq!(creds, vec![cred1, cred2]);
@@ -667,12 +750,44 @@ mod tests {
         proof_req.proof_request_data = serde_json::from_str(&indy_proof_req).unwrap();
 
         let selected_credentials : Value = json!({
-              "height_1":json!({
-                LICENCE_CRED_ID: CRED_MSG,
-              }),
-              "zip_2":json!({
-                ADDRESS_CRED_ID: ADDRESS_CRED_MSG,
-              }),
+           "attrs":{
+              "height_1":{
+                "cred_info":{
+                   "referent":LICENCE_CRED_ID,
+                   "attrs":{
+                      "sex":"male",
+                      "age":"111",
+                      "name":"Bob",
+                      "height":"4'11"
+                   },
+                   "schema_id": SCHEMA_ID,
+                   "cred_def_id": CRED_DEF_ID,
+                   "rev_reg_id":null,
+                   "cred_rev_id":null
+                },
+                "interval":null
+              },
+              "zip_2":{
+                "cred_info":{
+                   "referent":ADDRESS_CRED_ID,
+                   "attrs":{
+                      "address1":"101 Tela Lane",
+                      "address2":"101 Wilson Lane",
+                      "zip":"87121",
+                      "state":"UT",
+                      "city":"SLC"
+                   },
+                   "schema_id":ADDRESS_SCHEMA_ID,
+                   "cred_def_id":ADDRESS_CRED_DEF_ID,
+                   "rev_reg_id":null,
+                   "cred_rev_id":null
+                },
+                "interval":null
+             }
+           },
+           "predicates":{
+
+           }
         });
 
         let self_attested: Value = json!({
@@ -685,8 +800,6 @@ mod tests {
         let generated_proof = proof.generate_proof(&selected_credentials.to_string(), &self_attested.to_string());
 
         ::utils::devsetup::cleanup_dev_env(wallet_name);
-        println!("rc: {:?}", generated_proof);
         assert!(generated_proof.is_ok());
-        println!("{:?}", generated_proof.unwrap());
     }
 }

@@ -246,6 +246,12 @@ vcx_error_t vcx_disclosed_proof_serialize(vcx_command_handle_t command_handle, v
 /** Re-creates a disclosed_proof object from the specified serialization. */
 vcx_error_t vcx_disclosed_proof_deserialize(vcx_command_handle_t command_handle, const char *serialized_proof, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, vcx_proof_handle_t proof_handle));
 
+/** Generates a proof from proof request, selected credentials and self attested attributes */
+vcx_error_t vcx_disclosed_proof_generate_proof(vcx_command_handle_t command_handle, vcx_proof_handle_t proof_handle, const char *selected_credentials, const char *self_attested_attrs, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err));
+
+/** Returns credentials matching provided proof request. */
+vcx_error_t vcx_disclosed_proof_retrieve_credentials(vcx_command_handle_t command_handle, vcx_proof_handle_t proof_handle, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, const char *credentials));
+
 /** Releases the disclosed_proof from memory. */
 vcx_error_t vcx_disclosed_proof_release(vcx_proof_handle_t proof_handle);
 

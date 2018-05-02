@@ -199,8 +199,25 @@ async def test_send_proof_with_bad_connection():
         await disclosed_proof.send_proof(connection)
     assert ErrorCode.InvalidConnectionHandle == e.value.error_code
 
+
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_get_requests():
     connection = await Connection.create(source_id)
     await DisclosedProof.get_requests(connection)
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('vcx_init_test_mode')
+async def test_get_creds_for_req():
+    disclosed_proof = await DisclosedProof.create(source_id, request)
+    creds = await disclosed_proof.get_creds()
+    assert creds == {"attrs":{"height_1":[{"cred_info":{"referent":"a030c52e-0917-4e86-bc24-4bc7171db690","attrs":{"age":"111","sex":"male","name":"Bob","height":"4'11"},"schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:schema_name:0.0.11","cred_def_id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:1766","rev_reg_id":None,"cred_rev_id":None},"interval":None}],"zip_2":[{"cred_info":{"referent":"95303ecc-bdfd-440d-93ba-79df06253c81","attrs":{"address2":"101 Wilson Lane","zip":"87121","city":"SLC","state":"UT","address1":"101 Tela Lane"},"schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:Home Address - Test:0.0.1","cred_def_id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:2200","rev_reg_id":None,"cred_rev_id":None},"interval":None}]},"predicates":{}}
+
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('vcx_init_test_mode')
+async def test_generate_proof():
+    disclosed_proof = await DisclosedProof.create(source_id, request)
+    # An error would be thrown if generate_proof failed
+    assert await disclosed_proof.generate_proof({}, {}) is None

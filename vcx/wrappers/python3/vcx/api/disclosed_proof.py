@@ -74,6 +74,18 @@ class DisclosedProof(VcxStateful):
     def release(self) -> None:
         self._release(DisclosedProof, 'vcx_disclosed_proof_release')
 
+    async def get_creds(self) -> dict:
+        if not hasattr(DisclosedProof.get_creds, "cb"):
+            self.logger.debug("vcx_disclosed_proof_retrieve_credentials: Creating callback")
+            DisclosedProof.send_proof.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_char_p))
+
+        c_disclosed_proof_handle = c_uint32(self.handle)
+
+        data = await do_call('vcx_disclosed_proof_retrieve_credentials',
+                             c_disclosed_proof_handle,
+                             DisclosedProof.send_proof.cb)
+        return json.loads(data.decode())
+
     async def send_proof(self, connection: Connection):
         if not hasattr(DisclosedProof.send_proof, "cb"):
             self.logger.debug("vcx_disclosed_proof_send_proof: Creating callback")
@@ -85,4 +97,19 @@ class DisclosedProof(VcxStateful):
         await do_call('vcx_disclosed_proof_send_proof',
                       c_disclosed_proof_handle,
                       c_connection_handle,
+                      DisclosedProof.send_proof.cb)
+
+    async def generate_proof(self, selected_creds: dict, self_attested_attrs: dict):
+        if not hasattr(DisclosedProof.send_proof, "cb"):
+            self.logger.debug("vcx_disclosed_proof_generate_proof: Creating callback")
+            DisclosedProof.send_proof.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32))
+
+        c_disclosed_proof_handle = c_uint32(self.handle)
+        c_selected_creds = c_char_p(json.dumps(selected_creds).encode('utf-8'))
+        c_self_attested_attrs = c_char_p(json.dumps(self_attested_attrs).encode('utf-8'))
+
+        await do_call('vcx_disclosed_proof_generate_proof',
+                      c_disclosed_proof_handle,
+                      c_selected_creds,
+                      c_self_attested_attrs,
                       DisclosedProof.send_proof.cb)

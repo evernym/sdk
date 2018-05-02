@@ -96,6 +96,9 @@ export interface IFFIEntryPoint {
   vcx_disclosed_proof_update_state: (commandId: number, handle: string, cb: any) => number,
   vcx_disclosed_proof_get_state: (commandId: number, handle: string, cb: any) => number,
   vcx_disclosed_proof_get_requests: (commandId: number, connectionHandle: string, cb: any) => number,
+  vcx_disclosed_proof_retrieve_credentials: (commandId: number, handle: string, cb: any) => number,
+  vcx_disclosed_proof_generate_proof: (commandId: number, handle: string, selectedCreds: string,
+                                       selfAttestedAttrs: string, cb: any) => number,
 
   // credential
   vcx_credential_create_with_offer: (commandId: number, sourceId: string, offer: string, cb: any) => number,
@@ -197,6 +200,9 @@ export const FFIConfiguration: { [ Key in keyof IFFIEntryPoint ]: any } = {
   vcx_disclosed_proof_update_state: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_PROOF_HANDLE, FFI_CALLBACK_PTR]],
   vcx_disclosed_proof_get_state: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_PROOF_HANDLE, FFI_CALLBACK_PTR]],
   vcx_disclosed_proof_get_requests: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CONNECTION_HANDLE, FFI_CALLBACK_PTR]],
+  vcx_disclosed_proof_retrieve_credentials: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_PROOF_HANDLE, FFI_CALLBACK_PTR]],
+  vcx_disclosed_proof_generate_proof: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_PROOF_HANDLE, FFI_STRING_DATA,
+    FFI_STRING_DATA, FFI_CALLBACK_PTR]],
 
   // credential
   vcx_credential_create_with_offer: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_SOURCE_ID, FFI_STRING_DATA,
