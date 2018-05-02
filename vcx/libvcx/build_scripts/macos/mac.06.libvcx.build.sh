@@ -7,5 +7,6 @@ cargo clean
 #cargo build
 # To build for iOS
 #cargo lipo --release
-cargo lipo
+export RUST_BACKTRACE=1
+RUST_BACKTRACE=1 cargo lipo
 cargo test
