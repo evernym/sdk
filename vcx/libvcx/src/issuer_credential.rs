@@ -10,12 +10,12 @@ use settings;
 use messages::{ GeneralMessage, MessageResponseCode::MessageAccepted, send_message::parse_msg_uid };
 use connection;
 use credential_request::{ CredentialRequest };
-use utils::{ error,
-             error::INVALID_JSON,
-             libindy::{ anoncreds::{ libindy_issuer_create_credential, libindy_issuer_create_credential_offer }},
-             httpclient,
-             constants::{ SEND_MESSAGE_RESPONSE, CRED },
-             openssl::encode
+use utils::{error,
+            error::INVALID_JSON,
+            libindy::{ anoncreds::{ libindy_issuer_create_credential, libindy_issuer_create_credential_offer }},
+            httpclient,
+            constants::{SEND_MESSAGE_RESPONSE, CRED_MSG},
+            openssl::encode
 };
 use error::{ issuer_cred::IssuerCredError, ToErrorCode };
 
@@ -150,7 +150,7 @@ impl IssuerCredential {
 
         let to = connection::get_pw_did(connection_handle).map_err(|e| IssuerCredError::CommonError(e.to_error_code()))?;
         let attrs_with_encodings = self.create_attributes_encodings()?;
-        let data = if settings::test_indy_mode_enabled() {CRED.to_string()} else {
+        let data = if settings::test_indy_mode_enabled() { CRED_MSG.to_string()} else {
             let cred = self.generate_credential(&attrs_with_encodings, &to)?;
             serde_json::to_string(&cred).or(Err(IssuerCredError::InvalidCred()))?
         };
@@ -859,8 +859,6 @@ pub mod tests {
         let mut issuer_credential = create_standard_issuer_credential();
 
         let libindy_offer = libindy_issuer_create_credential_offer(CRED_DEF_ID).unwrap();
-
-        ::utils::libindy::anoncreds::libindy_prover_create_master_secret(settings::DEFAULT_LINK_SECRET_ALIAS).unwrap();
 
         let (libindy_cred_req, cred_req_meta) = libindy_prover_create_credential_req(
             &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),

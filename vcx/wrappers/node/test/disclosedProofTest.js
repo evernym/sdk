@@ -135,4 +135,18 @@ describe('A disclosedProof', function () {
     let val = await DisclosedProof.getRequests(connection)
     assert(val)
   })
+
+  it('retrieve credentials associated with a proof request', async () => {
+    const obj = await DisclosedProof.create({sourceId: 'Test', request: PROOF_REQ})
+    let creds = await obj.getCredentials()
+    assert(JSON.stringify(creds) === `{"attrs":{"height_1":[{"cred_info":{"referent":"a030c52e-0917-4e86-bc24-4bc7171db690","attrs":{"age":"111","sex":"male","name":"Bob","height":"4'11"},"schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:schema_name:0.0.11","cred_def_id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:1766","rev_reg_id":null,"cred_rev_id":null},"interval":null}],"zip_2":[{"cred_info":{"referent":"95303ecc-bdfd-440d-93ba-79df06253c81","attrs":{"address2":"101 Wilson Lane","zip":"87121","city":"SLC","state":"UT","address1":"101 Tela Lane"},"schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:Home Address - Test:0.0.1","cred_def_id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:2200","rev_reg_id":null,"cred_rev_id":null},"interval":null}]},"predicates":{}}`)
+  })
+
+  it('generate a proof', async () => {
+    const obj = await DisclosedProof.create({sourceId: 'Test', request: PROOF_REQ})
+    let retrievedCreds = await obj.getCredentials()
+    let selectedCreds = {'height_1': retrievedCreds['attrs']['height_1'][0]}
+    // Acception will be thrown if this doesn't work rather than undefined
+    assert(await obj.generateProof(selectedCreds, retrievedCreds) === undefined)
+  })
 })
