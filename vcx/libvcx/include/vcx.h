@@ -85,7 +85,7 @@ vcx_error_t vcx_schema_deserialize(vcx_command_handle_t command_handle, const ch
 /** Populates data with the contents of the schema handle. */
 vcx_error_t vcx_schema_get_attributes(vcx_command_handle_t command_handle, const char *source_id, vcx_schema_handle_t sequence_no,  void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, const char *schema_attrs));
 
-/** Populates sequence_no with the actual sequence number of the schema on the sovrin ledger. */
+/** Retrieves schema_id from schema object. */
 vcx_error_t vcx_schema_get_schema_id(vcx_command_handle_t command_handle, vcx_schema_handle_t schema_handle, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, const char *schema_id));
 
 /** Release memory associated with schema object. */
@@ -109,6 +109,9 @@ vcx_error_t vcx_credentialdef_deserialize(vcx_command_handle_t command_handle, c
 
 /** Release memory associated with credentialdef object. */
 vcx_error_t vcx_credentialdef_release(vcx_schema_handle_t handle);
+
+/** Retrieves cred_def_id from credentialdef object. */
+vcx_error_t vcx_credentialdef_get_cred_def_id(vcx_command_handle_t command_handle, vcx_credential_handle_t cred_def_handle, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, const char *cred_def_id));
 
 /**
  * connection object

@@ -191,7 +191,7 @@ pub extern fn vcx_credentialdef_deserialize(command_handle: u32,
 pub extern fn vcx_credentialdef_get_cred_def_id(command_handle: u32, cred_def_handle: u32, cb: Option<extern fn(xcommand_handle: u32, err: u32, cred_def_id: *const c_char)>) -> u32 {
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
-    info!("vcx_schema_get_schema_id(command_handle: {}, cred_def_handle: {})", command_handle, cred_def_handle);
+    info!("vcx_credentialdef_get_cred_def_id(command_handle: {}, cred_def_handle: {})", command_handle, cred_def_handle);
     if !credential_def::is_valid_handle(cred_def_handle) {
         return error::INVALID_CREDENTIAL_DEF_HANDLE.code_num;
     }
