@@ -8,7 +8,8 @@ mkdir -p $WORK_DIR
 WORK_DIR=$(abspath "$WORK_DIR")
 
 #LIBINDY_PATH=$PWD/vcx-indy-sdk/libindy/target/debug/libindy.dylib
-LIBINDY_PATH=$WORK_DIR/vcx-indy-sdk/libindy/target/universal/debug/libindy.a
+#LIBINDY_PATH=$WORK_DIR/vcx-indy-sdk/libindy/target/universal/debug/libindy.a
+LIBINDY_PATH=$WORK_DIR/vcx-indy-sdk/libindy/target/universal/release/libindy.a
 LIBINDY_HEADER_PATH=$WORK_DIR/vcx-indy-sdk/libindy/include
 VCXHEADER_PATH=$(abspath "$START_DIR/../../include")/vcx.h
 
