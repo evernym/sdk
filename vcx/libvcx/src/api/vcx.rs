@@ -307,7 +307,7 @@ mod tests {
     fn test_vcx_update_institution_info() {
         settings::set_defaults();
         let new_name = "new_name";
-        let new_url = "new_name";
+        let new_url = "http://www.evernym.com";
         assert_ne!(new_name, &settings::get_config_value(::settings::CONFIG_INSTITUTION_NAME).unwrap());
         assert_ne!(new_url, &settings::get_config_value(::settings::CONFIG_INSTITUTION_LOGO_URL).unwrap());
 
@@ -316,5 +316,6 @@ mod tests {
 
         assert_eq!(new_name, &settings::get_config_value(::settings::CONFIG_INSTITUTION_NAME).unwrap());
         assert_eq!(new_url, &settings::get_config_value(::settings::CONFIG_INSTITUTION_LOGO_URL).unwrap());
+        ::settings::set_defaults();
     }
 }
