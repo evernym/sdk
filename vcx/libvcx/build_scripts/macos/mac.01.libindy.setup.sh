@@ -9,6 +9,9 @@ if [ "$?" != "0" ]; then
     else
         curl https://sh.rustup.rs -sSf | sh
         source $HOME/.cargo/env
+        rustup component add rust-src
+        rustup component add rust-docs
+        rustup update
         RUSTC_VERSION=`rustc --version`
     fi
 fi
@@ -16,6 +19,10 @@ fi
 # rustup self uninstall
 
 if [[ $RUSTC_VERSION =~ ^'rustc ' ]]; then
+    rustup component add rls-preview rust-analysis rust-src
+    rustup target add aarch64-apple-ios armv7-apple-ios armv7s-apple-ios x86_64-apple-ios i386-apple-ios
+    cargo install cargo-lipo
+    
     BREW_VERSION=`brew --version`
     if ! [[ $BREW_VERSION =~ ^'Homebrew ' ]]; then
         /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
