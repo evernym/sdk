@@ -48,6 +48,5 @@ describe('provisioning and updating agents and updating configs', function () {
   it('can update the name and logo for the config', () => {
     let rc = vcx.updateInstitutionConfigs('new name', 'http://www.google.com')
     assert.equal(rc, 0)
-
   })
 })
