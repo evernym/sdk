@@ -22,7 +22,7 @@ mod tests {
     #[test]
     fn test_real_proof() {
         self::vcx::utils::logger::LoggerUtils::init();
-        settings::set_to_defaults();
+        settings::set_defaults();
         let cred_def_id = vcx::utils::constants::CRED_DEF_ID.to_string();
         //BE INSTITUTION AND GENERATE INVITE FOR CONSUMER
         self::vcx::utils::devsetup::setup_dev_env("test_real_proof");

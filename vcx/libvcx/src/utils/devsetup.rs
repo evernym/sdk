@@ -164,7 +164,7 @@ static DEV_ENTRIES: &[[&str; 3]; 23] = &[
 
 pub fn setup_dev_env(wallet_name: &str) {
     settings::set_defaults();
-    settings::set_to_defaults();
+    settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
     pool::open_sandbox_pool();
     set_institution_dev_config(wallet_name);
 

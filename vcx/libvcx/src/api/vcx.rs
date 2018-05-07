@@ -34,6 +34,7 @@ pub extern fn vcx_init_with_config(command_handle: u32,
 
     if config == "ENABLE_TEST_MODE" {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
+        settings::set_defaults();
     } else {
         match settings::process_config_string(&config) {
             Err(e) => {
@@ -72,6 +73,7 @@ pub extern fn vcx_init (command_handle: u32,
 
         if config_path == "ENABLE_TEST_MODE" {
             settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
+            settings::set_defaults();
         } else {
             match settings::process_config_file(&config_path) {
                 Err(e) => {
@@ -93,9 +95,9 @@ fn _finish_init(command_handle: u32, cb: extern fn(xcommand_handle: u32, err: u3
 
     ::utils::logger::LoggerUtils::init();
 
-    settings::set_defaults();
     settings::log_settings();
 
+    // TODO: wallet may already be opened in vcx_wallet_init(), change to settings::is_agent_configured()
     if wallet::get_wallet_handle() > 0 {
         error!("Library was already initialized");
         return error::ALREADY_INITIALIZED.code_num;
@@ -188,18 +190,18 @@ mod tests {
 
     extern "C" fn init_cb(command_handle: u32, err: u32) {
         if err != 0 {panic!("create_cb failed: {}", err)}
-        println!("successfully called init_cb")
     }
 
     #[test]
     fn test_init_with_file() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
-        settings::tests::remove_file_if_exists(settings::DEFAULT_GENESIS_PATH);
-        settings::tests::create_default_genesis_file();
+        let wallet_name = "test_init_with_file";
+        // make sure there's a valid wallet and pool before trying to use them.
+        ::utils::devsetup::setup_dev_env(wallet_name);
+        wallet::close_wallet().unwrap();
+        pool::close().unwrap();
 
         let config_path = "/tmp/test_init.json";
-        let content = "{ \"pool_name\" : \"my_pool\", \"config_name\":\"config1\", \"wallet_name\":\"my_wallet\", \
+        let content = "{ \"pool_name\" : \"my_pool\", \"config_name\":\"config1\", \"wallet_name\":\"test_init_with_file\", \
         \"agency_did\" : \"72x8p4HubxzUK1dwxcc5FU\", \"remote_to_sdk_did\" : \"UJGjM6Cea2YVixjWwHN9wq\", \
         \"sdk_to_remote_did\" : \"AB3JM851T4EQmhh8CdagSP\", \"institution_name\" : \"evernym enterprise\",\
         \"agency_verkey\" : \"91qMFrZjXDoi2Vc8Mm14Ys112tEZdDegBZZoembFEATE\", \"remote_to_sdk_verkey\" : \"91qMFrZjXDoi2Vc8Mm14Ys112tEZdDegBZZoembFEATE\"}";
@@ -211,17 +213,12 @@ mod tests {
         thread::sleep(Duration::from_secs(1));
         // Leave file around or other concurrent tests will fail
 
-        // cleanup
-        wallet::delete_wallet("my_wallet").unwrap();
-        settings::tests::remove_file_if_exists(settings::DEFAULT_GENESIS_PATH);
+        ::utils::devsetup::cleanup_dev_env(wallet_name);
     }
 
     #[test]
     fn test_init_with_config() {
         let wallet_name = "test_init_with_config";
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-        // make sure there's a valid wallet and pool before trying to use them.
         ::utils::devsetup::setup_dev_env(wallet_name);
         wallet::close_wallet().unwrap();
         pool::close().unwrap();
