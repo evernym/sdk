@@ -29,7 +29,7 @@
 
 ## OSX
 
-To build libvcx using scripts do the following steps --
+To build libvcx for OSX and iOS using scripts do the following steps --
 1) Add the following environment variables to your .bash_profile
 export PKG_CONFIG_ALLOW_CROSS=1
 export CARGO_INCREMENTAL=1
@@ -44,10 +44,10 @@ export PKG_CONFIG_PATH=/usr/lib/pkgconfig:/usr/local/Cellar/zeromq/4.2.5/lib/pkg
 3) cd sdk/vcx/libvcx/build/macos
 4) ./mac.01.libindy.setup.sh
 5) source ./mac.02.libindy.env.sh
-6) ./mac.03.libindy.build.sh
+6) ./mac.03.libindy.build.sh > mac.03.libindy.build.sh 2<&1
 7) ./mac.04.libvcx.setup.sh
 8) source ./mac.05.libvcx.env.sh
-9) ./mac.06.libvcx.build.sh
+9) ./mac.06.libvcx.build.sh > mac.06.libvcx.build.sh.out 2>&1
 10) If the script ./mac.06.libvcx.build.sh terminates with the message
 "signal: 11, SIGSEGV: invalid memory reference" OR "signal: 4, SIGILL: illegal instruction"
 then that means the 'cargo test' command was unsuccessful OR if you have intermittent
@@ -59,6 +59,8 @@ above and they should all be successful. If they are not successful then run the
 ./mac.build.and.install.rust.tools.sh script one more time (it will be fast this time)
 and DO NOT restart your terminal but run the ./mac.06.libvcx.build.sh script and
 it should finish successfully.
+11) ./mac.07.libvcx.prepare.ios.deps.sh
+
 
 To build libvcx on your own you can follow these steps --
 1) Install rust and rustup (https://www.rust-lang.org/install.html).
