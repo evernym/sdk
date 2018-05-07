@@ -389,8 +389,7 @@ mod tests {
 
     #[cfg(feature = "pool_tests")]
     #[test]
-    fn test_create_schema(){
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
+    fn test_create_schema_with_pool(){
         let wallet_name = "test_create_schema";
         ::utils::devsetup::setup_dev_env(wallet_name);
 
@@ -410,7 +409,6 @@ mod tests {
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_create_duplicate_fails(){
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         let wallet_name = "test_create_duplicate_schema_fails";
         ::utils::devsetup::setup_dev_env(wallet_name);
 
@@ -426,7 +424,6 @@ mod tests {
     #[cfg(feature = "pool_tests")]
     #[test]
     fn from_pool_ledger_with_id(){
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         let wallet_name = "from_pool_ledger_with_id";
         ::utils::devsetup::setup_dev_env(wallet_name);
 

@@ -338,7 +338,6 @@ mod tests {
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_build_get_schema_and_parse_response() {
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         let wallet_name = "test_create_schema_req";
         ::utils::devsetup::setup_dev_env(wallet_name);
 
@@ -390,7 +389,6 @@ mod tests {
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_create_schema_and_cred_def_on_ledger() {
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         let wallet_name = "create_schema_and_cred_def";
         ::utils::devsetup::setup_dev_env(wallet_name);
 
@@ -460,7 +458,6 @@ mod tests {
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_build_get_cred_def_req_and_parse_response() {
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         let wallet_name = "test_create_schema_req";
         ::utils::devsetup::setup_dev_env(wallet_name);
 

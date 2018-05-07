@@ -916,7 +916,6 @@ mod tests {
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_proof_verification() {
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         let wallet_name = "test_proof_verification";
         ::utils::devsetup::setup_dev_env(wallet_name);
 

@@ -370,10 +370,11 @@ mod tests {
         thread::sleep(Duration::from_millis(200));
     }
 
+    #[ignore]
+    // This test is ignored because The call-back can take more than 5 seconds which causes side-effects in future tests
     #[cfg(feature="pool_tests")]
     #[test]
     fn test_vcx_create_schema_with_pool() {
-        settings::set_defaults();
         let wallet_name = "test_api_create_schema";
         ::utils::devsetup::setup_dev_env(wallet_name);
 
@@ -390,14 +391,13 @@ mod tests {
                                      0,
                                      Some(create_cb)), error::SUCCESS.code_num);
 
-        thread::sleep(Duration::from_secs(2));
+        thread::sleep(Duration::from_secs(5));
         ::utils::devsetup::cleanup_dev_env(wallet_name);
     }
 
     #[cfg(feature="pool_tests")]
     #[test]
     fn test_vcx_schema_get_attrs_with_pool() {
-        ::settings::set_defaults();
         let wallet_name = "get_schema_atters_api";
         ::utils::devsetup::setup_dev_env(wallet_name);
 
@@ -406,7 +406,7 @@ mod tests {
                                      CString::new(SCHEMA_ID).unwrap().into_raw(),
                                      Some(get_attrs_pool_cb)), error::SUCCESS.code_num);
 
-        thread::sleep(Duration::from_millis(200));
+        thread::sleep(Duration::from_millis(1000));
         ::utils::devsetup::cleanup_dev_env(wallet_name);
     }
 
