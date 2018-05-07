@@ -21,6 +21,9 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		8E4F852F20A10625008CCD43 /* NSError+VcxError.h in Headers */ = {isa = PBXBuildFile; fileRef = 8E4F852B20A0FC9B008CCD43 /* NSError+VcxError.h */; };
+		8E4F853020A1062C008CCD43 /* NSError+VcxError.m in Sources */ = {isa = PBXBuildFile; fileRef = 8E4F852C20A0FC9B008CCD43 /* NSError+VcxError.m */; };
+		8E4F853420A10935008CCD43 /* VcxCallbacks.mm in Sources */ = {isa = PBXBuildFile; fileRef = 8E4F853320A10935008CCD43 /* VcxCallbacks.mm */; };
 		8E509293209BBD5A003A2496 /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8E509292209BBD5A003A2496 /* libresolv.tbd */; };
 		8EA356FD209D713800A73C1F /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8EA356FC209D713800A73C1F /* libcrypto.a */; };
 		8EA356FF209D714400A73C1F /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8EA356FE209D714400A73C1F /* libssl.a */; };
@@ -93,6 +96,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		8E4F852B20A0FC9B008CCD43 /* NSError+VcxError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSError+VcxError.h"; sourceTree = "<group>"; };
+		8E4F852C20A0FC9B008CCD43 /* NSError+VcxError.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSError+VcxError.m"; sourceTree = "<group>"; };
+		8E4F853220A10935008CCD43 /* VcxCallbacks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VcxCallbacks.h; sourceTree = "<group>"; };
+		8E4F853320A10935008CCD43 /* VcxCallbacks.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = VcxCallbacks.mm; sourceTree = "<group>"; };
+		8E4F853520A109C1008CCD43 /* VcxTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VcxTypes.h; sourceTree = "<group>"; };
+		8E4F853620A10D2E008CCD43 /* VcxErrors.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VcxErrors.h; sourceTree = "<group>"; };
 		8E509292209BBD5A003A2496 /* libresolv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libresolv.tbd; path = usr/lib/libresolv.tbd; sourceTree = SDKROOT; };
 		8EA356FC209D713800A73C1F /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrypto.a; path = lib/libcrypto.a; sourceTree = "<group>"; };
 		8EA356FE209D714400A73C1F /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libssl.a; path = lib/libssl.a; sourceTree = "<group>"; };
@@ -227,6 +236,10 @@
 		DD2567172097138F002EBEBA /* vcx-demo */ = {
 			isa = PBXGroup;
 			children = (
+				8E4F853220A10935008CCD43 /* VcxCallbacks.h */,
+				8E4F853320A10935008CCD43 /* VcxCallbacks.mm */,
+				8E4F852B20A0FC9B008CCD43 /* NSError+VcxError.h */,
+				8E4F852C20A0FC9B008CCD43 /* NSError+VcxError.m */,
 				DD2567182097138F002EBEBA /* AppDelegate.h */,
 				DD2567192097138F002EBEBA /* AppDelegate.m */,
 				DD25671B2097138F002EBEBA /* ViewController.h */,
@@ -236,6 +249,8 @@
 				DD2567232097138F002EBEBA /* LaunchScreen.storyboard */,
 				DD2567262097138F002EBEBA /* Info.plist */,
 				DD2567272097138F002EBEBA /* main.m */,
+				8E4F853520A109C1008CCD43 /* VcxTypes.h */,
+				8E4F853620A10D2E008CCD43 /* VcxErrors.h */,
 			);
 			path = "vcx-demo";
 			sourceTree = "<group>";
@@ -282,6 +297,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8E4F852F20A10625008CCD43 /* NSError+VcxError.h in Headers */,
 				DD25670C20970CB7002EBEBA /* init.h in Headers */,
 				DD2566FF209705E3002EBEBA /* vcx.h in Headers */,
 			);
@@ -503,6 +519,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8E4F853020A1062C008CCD43 /* NSError+VcxError.m in Sources */,
 				DD256709209709B9002EBEBA /* init.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -519,6 +536,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8E4F853420A10935008CCD43 /* VcxCallbacks.mm in Sources */,
 				DD25671D2097138F002EBEBA /* ViewController.m in Sources */,
 				DD2567282097138F002EBEBA /* main.m in Sources */,
 				DD25671A2097138F002EBEBA /* AppDelegate.m in Sources */,
