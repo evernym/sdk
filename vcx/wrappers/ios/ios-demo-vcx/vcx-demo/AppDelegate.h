@@ -7,6 +7,11 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "vcx.h"
+
+extern void IndyWrapperCommonStringCallback(vcx_command_handle_t xcommand_handle,
+                                            vcx_error_t err,
+                                            const char *const arg1);
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
 

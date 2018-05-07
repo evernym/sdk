@@ -29,13 +29,33 @@
 
 @end
 
-void IndyWrapperProvisionCallback(vcx_command_handle_t command_handle, vcx_error_t err, const char *config) {
-    NSData *dataData = [NSData dataWithBytes:config length:sizeof(config)];
-    [Console log:dataData];
+//void IndyWrapperProvisionCallback(vcx_command_handle_t command_handle, vcx_error_t err, const char *config) {
+//    NSData *dataData = [NSData dataWithBytes:config length:sizeof(config)];
+//    [Console log:dataData];
+//}
+
+
+void IndyWrapperCommonStringCallback(vcx_command_handle_t xcommand_handle,
+                                     vcx_error_t err,
+                                     const char *const config) {
+    //id block = [[IndyCallbacks sharedInstance] commandCompletionFor:xcommand_handle];
+    //[[IndyCallbacks sharedInstance] deleteCommandHandleFor:xcommand_handle];
+    
+    //void (^completion)(NSError *, NSString *) = (void (^)(NSError *, NSString *config)) block;
+    NSString *sconfig = [NSString stringWithUTF8String:config];
+    
+    //if (completion) {
+    //    dispatch_async(dispatch_get_main_queue(), ^{
+    //        NSError *error = [NSError errorFromIndyError:err];
+    //        completion(error, sconfig);
+    //    });
+    //}
 }
+
 void IndyWrapperCommonCallback(vcx_command_handle_t command_handle, vcx_error_t err) {
     
 }
+
 @implementation AppDelegate
 
 
@@ -67,7 +87,7 @@ void IndyWrapperCommonCallback(vcx_command_handle_t command_handle, vcx_error_t 
     [Console log:@"applicationDidBecomeActive"];
 
     vcx_command_handle_t provisionHandle =10;
-    vcx_error_t err = vcx_agent_provision_async(provisionHandle, "{\"agency_url\": \"https://cagency.pdev.evernym.com\", \"agency_did\": \"dTLdJqRZLwMuWSogcKfBT\", \"agency_verkey\": \"LsPQTDHi294TexkFmZK9Q9vW4YGtQRuLV8wuyZi94yH\",}", &IndyWrapperProvisionCallback);
+    vcx_error_t err = vcx_agent_provision_async(provisionHandle, "{\"agency_url\": \"https://cagency.pdev.evernym.com\", \"agency_did\": \"dTLdJqRZLwMuWSogcKfBT\", \"agency_verkey\": \"LsPQTDHi294TexkFmZK9Q9vW4YGtQRuLV8wuyZi94yH\",}", &IndyWrapperCommonStringCallback);
     
     vcx_command_handle_t handle =10;
     //vcx_error_t vcx_init(vcx_command_handle_t handle, const char *config_path,void (*cb)(vcx_command_handle_t command_handle, vcx_error_t err));

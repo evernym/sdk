@@ -10,11 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "vcx-demo/AppDelegate.m"
-            timestampString = "547403696.665809"
+            timestampString = "547407137.323576"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "74"
-            endingLineNumber = "74"
+            startingLineNumber = "94"
+            endingLineNumber = "94"
             landmarkName = "-applicationDidBecomeActive:"
             landmarkType = "7">
          </BreakpointContent>
@@ -26,12 +26,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "vcx-demo/AppDelegate.m"
-            timestampString = "547403696.666207"
+            timestampString = "547407137.324151"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "34"
-            endingLineNumber = "34"
-            landmarkName = "IndyWrapperProvisionCallback"
+            startingLineNumber = "45"
+            endingLineNumber = "45"
+            landmarkName = "IndyWrapperCommonStringCallback"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
