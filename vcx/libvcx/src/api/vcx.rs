@@ -226,7 +226,7 @@ mod tests {
         wallet::close_wallet().unwrap();
         pool::close().unwrap();
 
-        let content = "{ \"pool_name\" : \"my_pool\", \"config_name\":\"config1\", \"wallet_name\":\"test_init_with_config\", \
+        let content = "{ \"pool_name\" : \"pool1\", \"config_name\":\"config1\", \"wallet_name\":\"test_init_with_config\", \
         \"agency_did\" : \"72x8p4HubxzUK1dwxcc5FU\", \"remote_to_sdk_did\" : \"UJGjM6Cea2YVixjWwHN9wq\", \
         \"sdk_to_remote_did\" : \"AB3JM851T4EQmhh8CdagSP\", \"institution_name\" : \"evernym enterprise\",\
         \"agency_verkey\" : \"91qMFrZjXDoi2Vc8Mm14Ys112tEZdDegBZZoembFEATE\", \"remote_to_sdk_verkey\" : \"91qMFrZjXDoi2Vc8Mm14Ys112tEZdDegBZZoembFEATE\"}";

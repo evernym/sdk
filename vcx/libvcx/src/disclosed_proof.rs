@@ -725,13 +725,11 @@ mod tests {
         assert_eq!(creds, vec![cred1, cred2]);
     }
 
-    #[ignore]
+    #[cfg(feature = "pool_tests")]
     #[test]
     fn test_generate_proof() {
-        //Todo: move to integration
-        settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-        let wallet_name = "test_build_proof";
+        let wallet_name = "test_generate_proof";
         ::utils::devsetup::setup_dev_env(wallet_name);
 
         let mut proof_req = ProofRequestMessage::create();

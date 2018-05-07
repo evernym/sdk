@@ -264,17 +264,16 @@ pub extern fn vcx_schema_get_attributes(command_handle: u32,
 #[cfg(test)]
 mod tests {
     extern crate serde_json;
+    extern crate rand;
 
     use super::*;
-    use api::credential_def::vcx_credentialdef_create;
+    #[allow(unused_imports)]
+    use rand::Rng;
     use std::ffi::CString;
     use std::thread;
     use std::time::Duration;
     use settings;
-    use utils::libindy::pool;
-    use utils::libindy::signus::SignusUtils;
-    use utils::constants::{ DEMO_AGENT_PW_SEED, DEMO_ISSUER_PW_SEED, SCHEMA_ID };
-    use utils::libindy::wallet::{init_wallet, get_wallet_handle, delete_wallet};
+    use utils::constants::{ SCHEMA_ID };
 
     extern "C" fn create_cb(command_handle: u32, err: u32, schema_handle: u32) {
         assert_eq!(err, 0);
@@ -302,12 +301,19 @@ mod tests {
             panic!("schema_data is null");
         }
         check_useful_c_str!(schema_data, ());
-        let mut data = r#"{"data":["sex","age","name","height"],"version":"0.0.11","schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:schema_name:0.0.11","name":"schema_name","source_id":"Test Source ID","sequence_num":0}"#;
-        if settings::test_indy_mode_enabled() {
-            data = r#"{"data":["sex","age","name","height"],"version":"0.0.11","schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:schema_name:0.0.11","name":"schema_name","source_id":"Test Source ID","sequence_num":0}"#;
-        }
-        assert!(schema_data.contains(&data));
+        let data = r#"{"data":["sex","age","name","height"],"version":"0.0.11","schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:schema_name:0.0.11","name":"schema_name","source_id":"Test Source ID","sequence_num":0}"#;
+        assert_eq!(schema_data, data);
         println!("successfully called get_attrs_cb: {}", schema_data);
+    }
+
+    extern "C" fn get_attrs_pool_cb(command_handle: u32, err: u32, handle: u32, schema_data: *const c_char) {
+        assert_eq!(err, 0);
+        assert!(handle > 0);
+        if schema_data.is_null() {
+            panic!("schema_data is null");
+        }
+        check_useful_c_str!(schema_data, ());
+        println!("successfully called get_attrs_pool_cb: {}", schema_data);
     }
 
 
@@ -317,24 +323,6 @@ mod tests {
         println!("successfully called create_cb_get_seq_no");
         assert_eq!(vcx_schema_get_schema_id(0, schema_handle, Some(get_id_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
-    }
-
-    extern "C" fn create_schema_and_credentialdef_cb(command_handle: u32, err: u32, schema_handle: u32) {
-        assert_eq!(err, 0);
-        assert!(schema_handle > 0);
-        println!("successfully called create_schema_and_credentialdef_cb");
-        let schema_seq_no = schema::get_sequence_num(schema_handle).unwrap();
-        println!("created schema with schema_seq_no: {}", schema_seq_no);
-        assert_eq!(vcx_credentialdef_create(0,
-                                            CString::new("Test Source ID").unwrap().into_raw(),
-                                            CString::new("Test Credential Def").unwrap().into_raw(),
-                                            CString::new(SCHEMA_ID).unwrap().into_raw(),
-                                            ptr::null(),
-                                            CString::new("tag").unwrap().into_raw(),
-                                            CString::new("{}").unwrap().into_raw(),
-                                            0,
-                                            Some(create_cb)), error::SUCCESS.code_num);
-        thread::sleep(Duration::from_millis(800));
     }
 
     extern "C" fn serialize_cb(handle: u32, err: u32, schema_str: *const c_char) {
@@ -382,62 +370,44 @@ mod tests {
         thread::sleep(Duration::from_millis(200));
     }
 
-    #[ignore]
+    #[cfg(feature="pool_tests")]
     #[test]
     fn test_vcx_create_schema_with_pool() {
         settings::set_defaults();
-        pool::open_sandbox_pool();
-        init_wallet("a_test_wallet").unwrap();
-        let wallet_handle = get_wallet_handle();
-        let (my_did, _) = SignusUtils::create_and_store_my_did(wallet_handle, Some(DEMO_ISSUER_PW_SEED)).unwrap();
-        SignusUtils::create_and_store_my_did(wallet_handle, Some(DEMO_AGENT_PW_SEED)).unwrap();
-        settings::set_config_value(settings::CONFIG_INSTITUTION_DID, &my_did);
+        let wallet_name = "test_api_create_schema";
+        ::utils::devsetup::setup_dev_env(wallet_name);
+
         let data = r#"["name","male"]"#;
+        let schema_name: String = rand::thread_rng().gen_ascii_chars().take(25).collect::<String>();
+        let schema_version: String = format!("{}.{}",rand::thread_rng().gen::<u32>().to_string(),
+                                             rand::thread_rng().gen::<u32>().to_string());
+
         assert_eq!(vcx_schema_create(0,
                                      CString::new("Test Source ID").unwrap().into_raw(),
-                                     CString::new("Test Schema").unwrap().into_raw(),
-                                     CString::new("0.0.0").unwrap().into_raw(),
+                                     CString::new(schema_name).unwrap().into_raw(),
+                                     CString::new(schema_version).unwrap().into_raw(),
                                      CString::new(data).unwrap().into_raw(),
                                      0,
-                                     Some(create_schema_and_credentialdef_cb)), error::SUCCESS.code_num);
-        thread::sleep(Duration::from_secs(1));
-        delete_wallet("a_test_wallet").unwrap();
+                                     Some(create_cb)), error::SUCCESS.code_num);
+
+        thread::sleep(Duration::from_secs(2));
+        ::utils::devsetup::cleanup_dev_env(wallet_name);
     }
 
-    #[ignore]
-    #[test]
-    fn test_vcx_create_schema_and_create_credentialdef_with_pool() {
-        settings::set_defaults();
-        pool::open_sandbox_pool();
-        init_wallet("marks_test_wallet").unwrap();
-        let wallet_handle = get_wallet_handle();
-        let (my_did, _) = SignusUtils::create_and_store_my_did(wallet_handle, Some(DEMO_ISSUER_PW_SEED)).unwrap();
-        SignusUtils::create_and_store_my_did(wallet_handle, Some(DEMO_AGENT_PW_SEED)).unwrap();
-        settings::set_config_value(settings::CONFIG_INSTITUTION_DID, &my_did);
-        let data = r#"["name","male"]"#;
-        assert_eq!(vcx_schema_create(0,
-                                     CString::new("Test Source ID").unwrap().into_raw(),
-                                     CString::new("Test Schema").unwrap().into_raw(),
-                                     CString::new("0.0.0").unwrap().into_raw(),
-                                     CString::new(data).unwrap().into_raw(),
-                                     0,
-                                     Some(create_schema_and_credentialdef_cb)), error::SUCCESS.code_num);
-        thread::sleep(Duration::from_secs(60));
-        delete_wallet("marks_test_wallet").unwrap();
-    }
-
-    #[ignore]
+    #[cfg(feature="pool_tests")]
     #[test]
     fn test_vcx_schema_get_attrs_with_pool() {
-        settings::set_defaults();
-        pool::open_sandbox_pool();
-        init_wallet("a_test_wallet").unwrap();
+        ::settings::set_defaults();
+        let wallet_name = "get_schema_atters_api";
+        ::utils::devsetup::setup_dev_env(wallet_name);
+
         assert_eq!(vcx_schema_get_attributes(0,
                                      CString::new("Test Source ID").unwrap().into_raw(),
                                      CString::new(SCHEMA_ID).unwrap().into_raw(),
-                                     Some(get_attrs_cb)), error::SUCCESS.code_num);
+                                     Some(get_attrs_pool_cb)), error::SUCCESS.code_num);
+
         thread::sleep(Duration::from_millis(200));
-        delete_wallet("a_test_wallet").unwrap();
+        ::utils::devsetup::cleanup_dev_env(wallet_name);
     }
 
     #[test]

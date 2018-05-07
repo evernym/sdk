@@ -913,14 +913,13 @@ mod tests {
         wallet::delete_wallet("proof_errors").unwrap();
     }
 
-    #[ignore]
+    #[cfg(feature = "pool_tests")]
     #[test]
     fn test_proof_verification() {
-        //Todo: Move to integration tests
-        settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         let wallet_name = "test_proof_verification";
         ::utils::devsetup::setup_dev_env(wallet_name);
+
         let proof_req = json!({
                "nonce":"123432421212",
                "name":"proof_req_1",
