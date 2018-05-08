@@ -25,10 +25,10 @@
 		8E4F853020A1062C008CCD43 /* NSError+VcxError.m in Sources */ = {isa = PBXBuildFile; fileRef = 8E4F852C20A0FC9B008CCD43 /* NSError+VcxError.m */; };
 		8E4F853420A10935008CCD43 /* VcxCallbacks.mm in Sources */ = {isa = PBXBuildFile; fileRef = 8E4F853320A10935008CCD43 /* VcxCallbacks.mm */; };
 		8E509293209BBD5A003A2496 /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8E509292209BBD5A003A2496 /* libresolv.tbd */; };
+		8E7A458F20A15A2C00A1AE48 /* libindy.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8E7A458E20A15A2B00A1AE48 /* libindy.a */; };
 		8EA356FD209D713800A73C1F /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8EA356FC209D713800A73C1F /* libcrypto.a */; };
 		8EA356FF209D714400A73C1F /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8EA356FE209D714400A73C1F /* libssl.a */; };
 		8EE830E5209E57A300AE1114 /* libsqlite3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8EE830E4209E57A300AE1114 /* libsqlite3.a */; };
-		8EE830E7209E587D00AE1114 /* libindy.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8EE830E6209E587D00AE1114 /* libindy.a */; };
 		8EE830E920A0053F00AE1114 /* libsodium.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8EE830E820A0053F00AE1114 /* libsodium.a */; };
 		8EE830EB20A0130200AE1114 /* libzmq.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8EE830EA20A0130200AE1114 /* libzmq.a */; };
 		8EE830EF20A0149200AE1114 /* libstdc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8EE830EE20A0149100AE1114 /* libstdc++.tbd */; };
@@ -103,10 +103,10 @@
 		8E4F853520A109C1008CCD43 /* VcxTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VcxTypes.h; sourceTree = "<group>"; };
 		8E4F853620A10D2E008CCD43 /* VcxErrors.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VcxErrors.h; sourceTree = "<group>"; };
 		8E509292209BBD5A003A2496 /* libresolv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libresolv.tbd; path = usr/lib/libresolv.tbd; sourceTree = SDKROOT; };
+		8E7A458E20A15A2B00A1AE48 /* libindy.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libindy.a; path = lib/libindy.a; sourceTree = "<group>"; };
 		8EA356FC209D713800A73C1F /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libcrypto.a; path = lib/libcrypto.a; sourceTree = "<group>"; };
 		8EA356FE209D714400A73C1F /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libssl.a; path = lib/libssl.a; sourceTree = "<group>"; };
 		8EE830E4209E57A300AE1114 /* libsqlite3.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsqlite3.a; path = lib/libsqlite3.a; sourceTree = "<group>"; };
-		8EE830E6209E587D00AE1114 /* libindy.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libindy.a; path = lib/libindy.a; sourceTree = "<group>"; };
 		8EE830E820A0053F00AE1114 /* libsodium.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libsodium.a; path = lib/libsodium.a; sourceTree = "<group>"; };
 		8EE830EA20A0130200AE1114 /* libzmq.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libzmq.a; path = lib/libzmq.a; sourceTree = "<group>"; };
 		8EE830EE20A0149100AE1114 /* libstdc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libstdc++.tbd"; path = "usr/lib/libstdc++.tbd"; sourceTree = SDKROOT; };
@@ -159,10 +159,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8E7A458F20A15A2C00A1AE48 /* libindy.a in Frameworks */,
 				8EE830EF20A0149200AE1114 /* libstdc++.tbd in Frameworks */,
 				8EE830EB20A0130200AE1114 /* libzmq.a in Frameworks */,
 				8EE830E920A0053F00AE1114 /* libsodium.a in Frameworks */,
-				8EE830E7209E587D00AE1114 /* libindy.a in Frameworks */,
 				8EE830E5209E57A300AE1114 /* libsqlite3.a in Frameworks */,
 				8EA356FF209D714400A73C1F /* libssl.a in Frameworks */,
 				8EA356FD209D713800A73C1F /* libcrypto.a in Frameworks */,
@@ -276,10 +276,10 @@
 		DD25682F2098B53C002EBEBA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8E7A458E20A15A2B00A1AE48 /* libindy.a */,
 				8EE830EE20A0149100AE1114 /* libstdc++.tbd */,
 				8EE830EA20A0130200AE1114 /* libzmq.a */,
 				8EE830E820A0053F00AE1114 /* libsodium.a */,
-				8EE830E6209E587D00AE1114 /* libindy.a */,
 				8EE830E4209E57A300AE1114 /* libsqlite3.a */,
 				8EA356FE209D714400A73C1F /* libssl.a */,
 				8EA356FC209D713800A73C1F /* libcrypto.a */,
