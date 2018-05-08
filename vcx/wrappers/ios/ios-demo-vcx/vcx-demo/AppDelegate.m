@@ -44,9 +44,9 @@ void VcxWrapperCommonStringCallback(vcx_command_handle_t xcommand_handle,
     [[VcxCallbacks sharedInstance] deleteCommandHandleFor:xcommand_handle];
 
     void (^completion)(NSError *, NSString *) = (void (^)(NSError *, NSString *config)) block;
-    NSString *sconfig = [NSString stringWithUTF8String:config];
 
     if (completion) {
+        NSString *sconfig = [NSString stringWithUTF8String:config];
         dispatch_async(dispatch_get_main_queue(), ^{
             NSError *error = [NSError errorFromVcxError:err];
             completion(error, sconfig);
