@@ -10,7 +10,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "vcx-demo/AppDelegate.m"
-            timestampString = "547514839.372713"
+            timestampString = "547598375.968196"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "43"
@@ -26,45 +26,13 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "vcx-demo/AppDelegate.m"
-            timestampString = "547514839.372999"
+            timestampString = "547598375.970381"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "50"
             endingLineNumber = "50"
             landmarkName = "VcxWrapperCommonStringCallback"
             landmarkType = "9">
-            <Locations>
-               <Location
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "VcxWrapperCommonStringCallback"
-                  moduleName = "vcx-demo"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/norm/forge/work/code/evernym/sdk-evernym/vcx/wrappers/ios/ios-demo-vcx/vcx-demo/AppDelegate.m"
-                  timestampString = "547514839.4123"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "50"
-                  endingLineNumber = "50"
-                  offsetFromSymbolStart = "280">
-               </Location>
-               <Location
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "__VcxWrapperCommonStringCallback_block_invoke"
-                  moduleName = "vcx-demo"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/norm/forge/work/code/evernym/sdk-evernym/vcx/wrappers/ios/ios-demo-vcx/vcx-demo/AppDelegate.m"
-                  timestampString = "547514839.414783"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "50"
-                  endingLineNumber = "50"
-                  offsetFromSymbolStart = "32">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -74,7 +42,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "vcx-demo/AppDelegate.m"
-            timestampString = "547514839.37319"
+            timestampString = "547598375.970595"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "48"
