@@ -26,6 +26,11 @@ VCX_SDK=$(abspath "$VCX_SDK")
 
 cd $VCX_SDK/vcx/wrappers/ios/ios-demo-vcx/lib
 
+if [ -f $1.a ]; then
+    echo "The library $1.a already exists!!!"
+    exit 1
+fi
+
 archs=(armv7 armv7s arm64 x86_64)
 libraries=(*.a)
 libtool="/usr/bin/libtool"
