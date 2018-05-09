@@ -1,0 +1,19 @@
+PODS:
+  - Kiwi (3.0.0)
+  - vcx (0.0.2)
+
+DEPENDENCIES:
+  - Kiwi
+  - vcx (from `../`)
+
+EXTERNAL SOURCES:
+  vcx:
+    :path: ../
+
+SPEC CHECKSUMS:
+  Kiwi: fbeafef0f00e4d8f7dcb3420a4930afe70af77f7
+  vcx: 9fd0b3493d592698c9ae42e1a447c4435ccf9d6a
+
+PODFILE CHECKSUM: 4686d560e4f0e597e213e20b81eb1a3fa4a257a4
+
+COCOAPODS: 1.4.0
