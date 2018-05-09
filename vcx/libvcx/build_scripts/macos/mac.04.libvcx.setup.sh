@@ -17,6 +17,7 @@ ls -al $LIBINDY_PATH
 #ln -sf $LIBINDY_PATH /usr/local/lib/libindy.dylib
 ln -sf $LIBINDY_PATH /usr/local/lib/libindy.a
 otool -L /usr/local/lib/libindy.a
+lipo -info /usr/local/lib/libindy.a
 
 ln -sf $VCXHEADER_PATH /usr/local/include/vcx.h
 
