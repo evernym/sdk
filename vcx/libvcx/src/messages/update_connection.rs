@@ -93,6 +93,10 @@ impl DeleteConnection {
     }
 
     pub fn parse_response_as_delete_connection_payload(&self, response: &Vec<u8> ) -> Result<String, u32> {
+        if settings::test_agency_mode_enabled() {
+            let data = response.clone();
+            return Ok(serde_json::to_string(&DeleteConnectionPayload::deserialize(data.to_owned()).unwrap()).unwrap())
+        }
         let data = unbundle_from_agency(response.clone())?;
         let response = DeleteConnectionPayload::deserialize(data[0].to_owned()).map_err(|e| e.to_error_code())?;
         Ok(serde_json::to_string(&response).unwrap())
@@ -128,7 +132,6 @@ impl GeneralMessage for DeleteConnection{
         if self.validate_rc != error::SUCCESS.code_num {
             return Err(self.validate_rc)
         }
-        self.print_info();
         let payload = encode::to_vec_named(&self.payload).unwrap();
 
         let bundle = Bundled::create(payload);

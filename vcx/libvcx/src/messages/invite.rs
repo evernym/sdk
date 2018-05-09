@@ -397,7 +397,6 @@ impl GeneralMessage for SendInvite{
         }
 
         self.generate_signature()?;
-        self.print_info();
         debug!("connection invitation details: {}", serde_json::to_string(&self.payload.msg_detail_payload).unwrap_or("failure".to_string()));
         let create = encode::to_vec_named(&self.payload.create_payload).unwrap();
         let details = encode::to_vec_named(&self.payload.msg_detail_payload).unwrap();
@@ -436,7 +435,6 @@ impl GeneralMessage for AcceptInvite{
         }
 
         self.generate_signature()?;
-        self.print_info();
         debug!("connection invitation details: {}", serde_json::to_string(&self.payload.msg_detail_payload).unwrap_or("failure".to_string()));
         let create = encode::to_vec_named(&self.payload.create_payload).unwrap();
         let details = encode::to_vec_named(&self.payload.msg_detail_payload).unwrap();

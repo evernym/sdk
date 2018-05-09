@@ -110,6 +110,7 @@ impl Connection {
         }
     }
     pub fn delete_connection(&mut self) -> Result<u32, ConnectionError> {
+//        if settings::test_agency_mode_enabled() { return Ok(0) };
         match messages::delete_connection()
             .to(&self.pw_did)
             .to_vk(&self.pw_verkey)
@@ -120,7 +121,7 @@ impl Connection {
                 return Err(ConnectionError::CannotDeleteConnection())
             },
             Ok(response) => {
-                self.state = VcxStateType::VcxStateOfferSent;
+                self.state = VcxStateType::VcxStateNone;
                 Ok(error::SUCCESS.code_num)
             }
         }
@@ -564,7 +565,7 @@ pub fn delete_connection(handle:u32) -> Result<u32, ConnectionError> {
                 return Err(e.to_error_code())
             },
         }
-    }).map_err(|ec| ConnectionError::CommonError(ec))
+    }).or(Err(ConnectionError::CannotDeleteConnection())).and(release(handle))
 }
 
 pub fn connect(handle: u32, options: Option<String>) -> Result<u32, ConnectionError> {
@@ -777,7 +778,9 @@ mod tests {
         assert!(!get_pw_verkey(handle).unwrap().is_empty());
         assert_eq!(get_state(handle), VcxStateType::VcxStateInitialized as u32);
         connect(handle, Some("{}".to_string())).unwrap();
-        assert!(release(handle).is_ok());
+        assert_eq!(delete_connection(handle).unwrap(), 0);
+        // This errors b/c we release handle in delete connection
+        assert!(release(handle).is_err());
 
     }
 
@@ -1144,4 +1147,5 @@ mod tests {
         assert_eq!(set_invite_details(1, details).err(), Some(ConnectionError::InvalidHandle()));
         assert_eq!(set_pw_verkey(1, "blah").err(), Some(ConnectionError::InvalidHandle()));
     }
+
 }

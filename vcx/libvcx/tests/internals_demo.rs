@@ -18,29 +18,18 @@ mod tests {
     use serde_json::Value;
     use std::thread;
     use std::time::Duration;
-    #[ignore]
     #[test]
     fn test_delete_connection() {
         self::vcx::utils::logger::LoggerUtils::init();
         let test_name = "test_delete_connection";
         settings::set_to_defaults();
-//BE INSTITUTION AND GENERATE INVITE FOR CONSUMER
         self::vcx::utils::devsetup::setup_dev_env(test_name);
         let alice = connection::build_connection("alice").unwrap();
-        connection::connect(alice, Some("{}".to_string())).unwrap();
-        let details = connection::get_invite_details(alice, true).unwrap();
-//BE CONSUMER AND ACCEPT INVITE FROM INSTITUTION
-        self::vcx::utils::devsetup::be_consumer();
-        let faber = connection::build_connection_with_invite("faber", &details).unwrap();
-        assert_eq!(VcxStateType::VcxStateRequestReceived as u32, connection::get_state(faber));
-        assert_eq!(VcxStateType::VcxStateOfferSent as u32, connection::get_state(alice));
-        connection::connect(faber, Some("{}".to_string())).unwrap();
-//BE INSTITUTION AND CHECK THAT INVITE WAS ACCEPTED
-        self::vcx::utils::devsetup::be_institution();
-        thread::sleep(Duration::from_millis(2000));
-        connection::update_state(alice).unwrap();
-//        connection::delete_connection(alice).unwrap();
+        connection::delete_connection(alice).unwrap();
+        assert!(connection::release(alice).is_err());
+        self::vcx::utils::devsetup::cleanup_dev_env(test_name);
     }
+
     #[test]
     fn test_real_proof() {
         self::vcx::utils::logger::LoggerUtils::init();
