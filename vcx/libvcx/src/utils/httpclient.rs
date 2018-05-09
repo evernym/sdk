@@ -16,12 +16,13 @@ pub fn post_u8(body_content: &Vec<u8>, url: &str) -> Result<Vec<u8>,String> {
     let mut response = match  client.post(url).body(body_content.to_owned()).header(ContentType::octet_stream()).send() {
         Ok(result) => result,
         Err(err) => {
+            println!("\n****\n****\n\tRESPONSE: {}", err);
             error!("error: {}", err);
             return Err("could not connect".to_string())
         },
     };
 
-    debug!("Response Header: {:?}", response);
+    println!("\n****\n****\n\tResponse Header: {:?}", response);
     if !response.status().is_success() {
         let mut content = String::new();
         match response.read_to_string(&mut content) {

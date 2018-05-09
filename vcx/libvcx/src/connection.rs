@@ -57,7 +57,7 @@ impl Connection {
     fn _connect_send_invite(&mut self, options: Option<String>) -> Result<u32, ConnectionError> {
         debug!("\"_connect_send_invite\" for connection {}", self.source_id);
 
-        let options_obj: ConnectionOptions = match options{
+        let options_obj: ConnectionOptions = match options {
             Some(opt) => {
                 match opt.trim().is_empty() {
                     true => ConnectionOptions {
@@ -74,13 +74,12 @@ impl Connection {
                 }
             },
             None => {
-                ConnectionOptions{
+                ConnectionOptions {
                     connection_type: None,
                     phone: None
                 }
             }
         };
-
         match messages::send_invite()
             .to(&self.pw_did)
             .to_vk(&self.pw_verkey)
@@ -109,6 +108,23 @@ impl Connection {
                 Ok(error::SUCCESS.code_num)
             }
         }
+    }
+    pub fn delete_connection(&mut self) -> Result<u32, ConnectionError> {
+        match messages::delete_connection()
+            .to(&self.pw_did)
+            .to_vk(&self.pw_verkey)
+            .agent_did(&self.agent_did)
+            .agent_vk(&self.agent_vk)
+            .send_secure() {
+            Err(ec) => {
+                return Err(ConnectionError::CannotDeleteConnection())
+            },
+            Ok(response) => {
+                self.state = VcxStateType::VcxStateOfferSent;
+                Ok(error::SUCCESS.code_num)
+            }
+        }
+
     }
 
     fn _connect_accept_invite(&mut self, options: Option<String>) -> Result<u32,ConnectionError> {
@@ -539,6 +555,16 @@ pub fn update_state(handle: u32) -> Result<u32, ConnectionError> {
             //TODO: add expiration handling
         },
     }
+}
+pub fn delete_connection(handle:u32) -> Result<u32, ConnectionError> {
+    CONNECTION_MAP.get_mut(handle, |t| {
+        match t.delete_connection() {
+            Ok(x) => Ok(x),
+            Err(e) => {
+                return Err(e.to_error_code())
+            },
+        }
+    }).map_err(|ec| ConnectionError::CommonError(ec))
 }
 
 pub fn connect(handle: u32, options: Option<String>) -> Result<u32, ConnectionError> {

@@ -13,6 +13,7 @@ pub enum ConnectionError {
     InvalidHandle(),
     InvalidWalletSetup(),
     InvalidMessagePack(),
+    CannotDeleteConnection(),
     CommonError(u32),
 }
 
@@ -27,6 +28,7 @@ impl fmt::Display for ConnectionError {
             ConnectionError::ConnectionNotReady() => write!(f, "{}", NOT_READY.message),
             ConnectionError::InvalidMessagePack() => write!(f, "{}", INVALID_MSGPACK.message),
             ConnectionError::InvalidWalletSetup() => write!(f, "Invalid wallet keys...have you provisioned correctly?"),
+            ConnectionError::CannotDeleteConnection() => write!(f, "Cannot Delete Connection.  Check status of connection is appropriate to be deleted from agency."),
             ConnectionError::CommonError(x) => connection_message(f, x),
         }
     }
@@ -50,6 +52,7 @@ impl Error for ConnectionError {
             ConnectionError::InviteDetailError() => None,
             ConnectionError::InvalidMessagePack() => None,
             ConnectionError::InvalidWalletSetup() => None,
+            ConnectionError::CannotDeleteConnection() => None,
             ConnectionError::CommonError(x) => None,
         }
     }
@@ -64,6 +67,7 @@ impl Error for ConnectionError {
             ConnectionError::ConnectionNotReady() => NOT_READY.message,
             ConnectionError::InviteDetailError() => INVALID_INVITE_DETAILS.message,
             ConnectionError::InvalidWalletSetup() => "Provision your wallet and retry.",
+            ConnectionError::CannotDeleteConnection() => "Cannot Delete Connection.  Check status of connection is appropriate to be deleted from agency.",
             ConnectionError::CommonError(x) => "Common Error",
         }
     }
@@ -72,12 +76,13 @@ impl Error for ConnectionError {
 impl ToErrorCode for ConnectionError {
    fn to_error_code(&self) -> u32 {
        match *self {
-           ConnectionError::CreateError(key) => 9998,
            ConnectionError::InvalidHandle() => INVALID_CONNECTION_HANDLE.code_num,
            ConnectionError::GeneralConnectionError() => CONNECTION_ERROR.code_num,
            ConnectionError::ConnectionNotReady() => NOT_READY.code_num,
            ConnectionError::InviteDetailError() => INVALID_INVITE_DETAILS.code_num,
            ConnectionError::InvalidMessagePack() => INVALID_MSGPACK.code_num,
+           ConnectionError::CannotDeleteConnection() => 9997,
+           ConnectionError::CreateError(key) => 9998,
            ConnectionError::InvalidWalletSetup() => 9999,
            ConnectionError::CommonError(x) => x,
        }
