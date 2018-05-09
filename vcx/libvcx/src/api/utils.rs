@@ -56,11 +56,11 @@ pub extern fn vcx_provision_agent(json: *const c_char) -> *mut c_char {
                                                          my_config.enterprise_seed,
                                                          my_config.wallet_key) {
         Err(e) => {
-            error!("Provision Agent Error {}.", e);
+            println!("Provision Agent Error {}.", e);
             return ptr::null_mut();
         },
         Ok(s) => {
-            debug!("Provision Agent Successful");
+            println!("Provision Agent Successful");
             let msg = CStringUtils::string_to_cstring(s);
 
             msg.into_raw()
@@ -85,7 +85,8 @@ pub extern fn vcx_provision_agent(json: *const c_char) -> *mut c_char {
 pub extern fn vcx_agent_provision_async(command_handle : u32,
                                json: *const c_char,
                                cb: Option<extern fn(xcommand_handle: u32, err: u32, config: *const c_char)>) -> u32 {
-
+    println!("vcx_agent_provision_async got called {:?}",&json);
+    println!("vcx_agent_provision_async ");
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
     check_useful_c_str!(json, error::INVALID_OPTION.code_num);
 
@@ -96,7 +97,7 @@ pub extern fn vcx_agent_provision_async(command_handle : u32,
         },
     };
 
-    info!("vcx_agent_provision_async(command_handle: {}, json: {})",
+    println!("vcx_agent_provision_async(command_handle: {}, json: {})",
           command_handle, json);
 
     thread::spawn(move|| {
@@ -108,11 +109,11 @@ pub extern fn vcx_agent_provision_async(command_handle : u32,
                                                                 my_config.enterprise_seed,
                                                                 my_config.wallet_key) {
             Err(e) => {
-                error!("vcx_agent_provision_async_cb(command_handle: {}, rc: {}, config: NULL", command_handle, error_string(e));
+                println!("vcx_agent_provision_async_cb(command_handle: {}, rc: {}, config: NULL", command_handle, error_string(e));
                 cb(command_handle, 0, ptr::null_mut());
             },
             Ok(s) => {
-                info!("vcx_agent_provision_async_cb(command_handle: {}, rc: {}, config: {})",
+                println!("vcx_agent_provision_async_cb(command_handle: {}, rc: {}, config: {})",
                       command_handle, error_string(0), s);
                 let msg = CStringUtils::string_to_cstring(s);
                 cb(command_handle, 0, msg.as_ptr());
@@ -143,7 +144,7 @@ pub extern fn vcx_agent_update_info(command_handle: u32,
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
     check_useful_c_str!(json, error::INVALID_OPTION.code_num);
 
-    info!("vcx_agent_update_info(command_handle: {}, json: {})",
+    println!("vcx_agent_update_info(command_handle: {}, json: {})",
           command_handle, json);
 
     let agent_info: UpdateAgentInfo = match serde_json::from_str(&json) {
@@ -156,12 +157,12 @@ pub extern fn vcx_agent_update_info(command_handle: u32,
     thread::spawn(move|| {
         match messages::agent_utils::update_agent_info(&agent_info.id, &agent_info.value){
             Ok(x) => {
-                info!("vcx_agent_update_info_cb(command_handle: {}, rc: {})",
+                println!("vcx_agent_update_info_cb(command_handle: {}, rc: {})",
                       command_handle, error::error_string(0));
                 cb(command_handle, error::SUCCESS.code_num);
             },
             Err(e) => {
-                error!("vcx_agent_update_info_cb(command_handle: {}, rc: {})",
+                println!("vcx_agent_update_info_cb(command_handle: {}, rc: {})",
                       command_handle, error::error_string(e));
                 cb(command_handle, e);
             },
@@ -176,7 +177,7 @@ pub extern fn vcx_ledger_get_fees(command_handle: u32,
                                   cb: Option<extern fn(xcommand_handle: u32, err: u32, fees: *const c_char)>) -> u32 {
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
-    info!("vcx_ledger_get_fees(command_handle: {})",
+    println!("vcx_ledger_get_fees(command_handle: {})",
           command_handle);
     error::INVALID_OPTION.code_num
 }
