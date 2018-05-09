@@ -40,6 +40,7 @@
 void VcxWrapperCommonStringCallback(vcx_command_handle_t xcommand_handle,
                                      vcx_error_t err,
                                      const char *const config) {
+    NSLog(@"in side call back");
     id block = [[VcxCallbacks sharedInstance] commandCompletionFor:xcommand_handle];
     [[VcxCallbacks sharedInstance] deleteCommandHandleFor:xcommand_handle];
 
@@ -89,7 +90,7 @@ void VcxWrapperCommonCallback(vcx_command_handle_t command_handle, vcx_error_t e
     [Console log:@"applicationDidBecomeActive"];
 
     vcx_command_handle_t provisionHandle =10;
-    vcx_error_t err = vcx_agent_provision_async(provisionHandle, "{\"agency_url\": \"https://cagency.pdev.evernym.com\", \"agency_did\": \"dTLdJqRZLwMuWSogcKfBT\", \"agency_verkey\": \"LsPQTDHi294TexkFmZK9Q9vW4YGtQRuLV8wuyZi94yH\"}", VcxWrapperCommonStringCallback);
+    vcx_error_t err = vcx_agent_provision_async(provisionHandle, "{\"agency_url\": \"http://10.4.32.50:9001\", \"agency_did\": \"sFJZSHGFnsTBwFUeiV83q\",\"wallet_name\":\"wallet1\",\"wallet_key\":\"wallet-key\",\"agent_seed\":null,\"enterprise_seed\":null, \"agency_verkey\": \"UPPrbEH7WRSCdaDdgoUNX8jByvi59cHwHcEr1QESrgT\"}", VcxWrapperCommonStringCallback);
     //vcx_error_t err = vcx_agent_provision_async(provisionHandle, "{\"agency_url\": \"http://localhost:8081\", \"agency_did\": \"dTLdJqRZLwMuWSogcKfBT\", \"agency_verkey\": \"LsPQTDHi294TexkFmZK9Q9vW4YGtQRuLV8wuyZi94yH\"}", VcxWrapperCommonStringCallback);
 
     vcx_command_handle_t handle =10;
