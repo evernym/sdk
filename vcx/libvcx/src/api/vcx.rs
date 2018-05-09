@@ -80,8 +80,6 @@ pub extern fn vcx_init (command_handle: u32,
                 },
                 Ok(_) => (),
             };
-            ::utils::logger::LoggerUtils::init();
-            info!("config_path: {}", config_path);
         }
     } else {
         error!("Cannot initialize with given config path: config path is null.");
@@ -96,6 +94,7 @@ fn _finish_init(command_handle: u32, cb: extern fn(xcommand_handle: u32, err: u3
     ::utils::logger::LoggerUtils::init();
 
     settings::set_defaults();
+    settings::log_settings();
 
     if wallet::get_wallet_handle() > 0 {
         error!("Library was already initialized");
@@ -129,14 +128,17 @@ pub extern fn vcx_version() -> *const c_char {
     VERSION_STRING.as_ptr()
 }
 
+/// Reset libvcx to a pre-configured state, releasing/deleting any handles and freeing memory
+///
+/// libvcx will be inoperable and must be initialized again with vcx_init_with_config
+///
+/// #Params
+/// delete: specify whether wallet/pool should be deleted
+///
+/// #Returns
+/// Success
 #[no_mangle]
-pub extern fn vcx_reset() -> u32 {
-
-    ::schema::release_all();
-    ::connection::release_all();
-    ::issuer_credential::release_all();
-    ::credential_def::release_all();
-    ::proof::release_all();
+pub extern fn vcx_shutdown(delete: bool) -> u32 {
 
     match wallet::close_wallet() {
         Ok(_) => {},
@@ -148,7 +150,26 @@ pub extern fn vcx_reset() -> u32 {
         Err(_) => {},
     };
 
+    if delete {
+        match settings::get_config_value(settings::CONFIG_WALLET_NAME) {
+            Ok(w) => match wallet::delete_wallet(&w) {
+                Ok(_) => (),
+                Err(_) => (),
+            },
+            Err(_) => (),
+        };
+
+        match settings::get_config_value(settings::CONFIG_POOL_NAME) {
+            Ok(p) => match pool::delete(&p) {
+                Ok(_) => (),
+                Err(_) => (),
+            }
+            Err(_) => (),
+        }
+    }
+
     settings::set_defaults();
+    info!("vcx_shutdown(delete: {})", delete);
     error::SUCCESS.code_num
 }
 
@@ -158,14 +179,24 @@ pub extern fn vcx_error_c_message(error_code: u32) -> *const c_char {
     error::error_c_message(&error_code).as_ptr()
 }
 
+#[no_mangle]
+pub extern fn vcx_update_institution_info(name: *const c_char, logo_url: *const c_char) -> u32 {
+    check_useful_c_str!(name, error::INVALID_CONFIGURATION.code_num);
+    check_useful_c_str!(logo_url, error::INVALID_CONFIGURATION.code_num);
+    info!("vcx_update_institution_info(name: {}, logo_url: {})", name, logo_url);
+
+    settings::set_config_value(::settings::CONFIG_INSTITUTION_NAME, &name);
+    settings::set_config_value(::settings::CONFIG_INSTITUTION_LOGO_URL, &logo_url);
+
+    error::SUCCESS.code_num
+}
+
 #[cfg(test)]
 mod tests {
 
     use super::*;
     use std::time::Duration;
     use std::ptr;
-    use error::*;
-    use error::proof::ProofError;
 
     extern "C" fn init_cb(command_handle: u32, err: u32) {
         if err != 0 {panic!("create_cb failed: {}", err)}
@@ -243,26 +274,11 @@ mod tests {
     }
 
     #[test]
-    fn test_reset() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
-        let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#;
-        let req_attr = "[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]";
-        let req_predicates = "[{\"attr_name\":\"age\",\"p_type\":\"GE\",\"value\":18,\"schema_seq_no\":1,\"issuer_did\":\"8XFh8yBzrpJQmNyZzgoTqB\"}]";
-
-        wallet::init_wallet("wallet1").unwrap();
-        let connection = ::connection::build_connection("h1").unwrap();
-        let credential = ::issuer_credential::issuer_credential_create(0,"1".to_string(),"8XFh8yBzrpJQmNyZzgoTqB".to_owned(),"credential_name".to_string(),"{\"attr\":\"value\"}".to_owned()).unwrap();
-        let proof = ::proof::create_proof("1".to_string(),req_attr.to_owned(),req_predicates.to_owned(),"Optional".to_owned()).unwrap();
-        let credentialdef = ::credential_def::create_new_credentialdef("SID".to_string(),"NAME".to_string(),15,"4fUDR9R7fjwELRvH9JT6HH".to_string(),false).unwrap();
-        let schema = ::schema::create_new_schema("5", "name".to_string(), "VsKV7grR1BUE29mG2Fm2kX".to_string(), data.to_string()).unwrap();
-        vcx_reset();
-        assert_eq!(::connection::release(connection),Err(connection::ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num)));
-        assert_eq!(::issuer_credential::release(credential),Err(issuer_cred::IssuerCredError::InvalidHandle()));
-        assert_eq!(::schema::release(schema).err(),Some(schema::SchemaError::InvalidHandle()));
-        assert_eq!(::proof::release(proof).err(),Some(ProofError::InvalidHandle()));
-        assert_eq!(::credential_def::release(credentialdef),error::INVALID_CREDENTIAL_DEF_HANDLE.code_num);
-        assert_eq!(wallet::get_wallet_handle(), 0);
+    fn test_shutdown() {
+        ::utils::devsetup::setup_dev_env("test_shutdown");
+        vcx_shutdown(true);
+        ::utils::devsetup::setup_dev_env("test_shutdown");
+        vcx_shutdown(true);
     }
 
     #[test]
@@ -285,5 +301,21 @@ mod tests {
     fn test_vcx_version() {
         let return_version = CStringUtils::c_str_to_string(vcx_version()).unwrap().unwrap();
         assert!(return_version.len() > 5);
+    }
+
+    #[test]
+    fn test_vcx_update_institution_info() {
+        settings::set_defaults();
+        let new_name = "new_name";
+        let new_url = "http://www.evernym.com";
+        assert_ne!(new_name, &settings::get_config_value(::settings::CONFIG_INSTITUTION_NAME).unwrap());
+        assert_ne!(new_url, &settings::get_config_value(::settings::CONFIG_INSTITUTION_LOGO_URL).unwrap());
+
+        assert_eq!(error::SUCCESS.code_num, vcx_update_institution_info(CString::new(new_name.to_string()).unwrap().into_raw(),
+                                                                        CString::new(new_url.to_string()).unwrap().into_raw()));
+
+        assert_eq!(new_name, &settings::get_config_value(::settings::CONFIG_INSTITUTION_NAME).unwrap());
+        assert_eq!(new_url, &settings::get_config_value(::settings::CONFIG_INSTITUTION_LOGO_URL).unwrap());
+        ::settings::set_defaults();
     }
 }
