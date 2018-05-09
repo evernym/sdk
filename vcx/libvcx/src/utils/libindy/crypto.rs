@@ -54,7 +54,7 @@ pub fn prep_msg(wallet_handle: i32, sender_vk: &str, recipient_vk: &str, msg: &[
         return Ok(Vec::from(msg).to_owned());
     }
 
-    debug!("prep_msg svk: {} rvk: {}",sender_vk, recipient_vk);
+    println!("prep_msg svk: {} rvk: {}",sender_vk, recipient_vk);
 
     let rtn_obj = Return_I32_BIN::new()?;
     let sender_vk = CString::new(sender_vk).map_err(map_string_error)?;
@@ -78,7 +78,7 @@ pub fn prep_msg(wallet_handle: i32, sender_vk: &str, recipient_vk: &str, msg: &[
 pub fn prep_anonymous_msg(recipient_vk: &str, msg: &[u8]) -> Result<Vec<u8>, u32> {
     if settings::test_indy_mode_enabled() {return Ok(Vec::from(msg).to_owned())}
 
-    debug!("prep_anonymous_msg rvk: {}",recipient_vk);
+    println!("prep_anonymous_msg rvk: {}",recipient_vk);
 
     let rtn_obj = Return_I32_BIN::new()?;
     let recipient_vk = CString::new(recipient_vk).map_err(map_string_error)?;
