@@ -234,6 +234,7 @@ pub fn get_schema_attrs(source_id: String, schema_id: String) -> Result<(u32, St
         debug!("inserting handle {} into schema table", new_handle);
         m.insert(new_handle, new_schema);
     }
+
     Ok((new_handle, to_string(new_handle)?))
 }
 
@@ -306,97 +307,13 @@ pub fn release_all() {
 
 #[cfg(test)]
 mod tests {
+    extern crate rand;
+
     use super::*;
+    #[allow(unused_imports)]
+    use rand::Rng;
     use settings;
-    use utils::libindy::pool;
-    use utils::libindy::wallet::{ delete_wallet, init_wallet, get_wallet_handle };
     use utils::error::INVALID_JSON;
-
-    static  EXAMPLE: &str = r#"{
-    "seqNo": 15,
-    "dest": "4fUDR9R7fjwELRvH9JT6HH",
-    "identifier":"4fUDR9R7fjwELRvH9JT6HH",
-    "txnTime": 1510246647,
-    "type": "107",
-    "data": {
-       "version": "0.1",
-       "name": "Home Address",
-       "attr_names": [
-         "address1",
-         "address2",
-         "city",
-         "state",
-         "zip"
-       ]
-    }
-}"#;
-
-    static DIRTY_EXAMPLE: &str = r#"
-{
-  "auditPath":[
-    "ERHXC95c5GkeGN1Cn8AsFL8ruU65Mmc5948ey4FybZMk",
-    "8RPu6xcwmSaEgVohv83GtZu2hjJm5ghWQ6UEvSdjYCg4",
-    "FUUbzChmnGjrGChBv3LZoKunodBPrVuMcg2vUrhkndmz"
-  ],
-  "data":{
-    "attr_names":[
-      "address1",
-      "address2",
-      "city",
-      "state",
-      "zip"
-    ],
-    "name":"Home Address",
-    "version":"0.1"
-  },
-  "identifier":"4fUDR9R7fjwELRvH9JT6HH",
-  "reqId":1510246647859168767,
-  "rootHash":"Gnrip4cJgwJ3HE1fbrTBAPcuJ9RejAhX12PAUaF5HMij",
-  "seqNo":15,
-  "signature":"2paGvrWEfsCAYFAD47Qh7hedinymLy8VsbfatUrjWW7tpcryFtTsikJjWhKkD5QA3PLr7dLTmBFteNr4LWRHhrEn",
-  "txnTime":1510246647,
-  "type":"101"
-}"#;
-    static BAD_LEDGER_SAMPLE: &str = r#"{"result":{}"#;
-    static LEDGER_SAMPLE: &str = r#"
-        {
-          "result":{
-            "data":{
-              "rootHash":"Gnrip4cJgwJ3HE1fbrTBAPcuJ9RejAhX12PAUaF5HMij",
-              "data":{
-                "version":"0.1",
-                "name":"Home Address",
-                "attr_names":[
-                  "address1",
-                  "address2",
-                  "city",
-                  "state",
-                  "zip"
-                ]
-              },
-              "reqId":1510246647859168767,
-              "seqNo":15,
-              "txnTime":1510246647,
-              "signature":"2paGvrWEfsCAYFAD47Qh7hedinymLy8VsbfatUrjWW7tpcryFtTsikJjWhKkD5QA3PLr7dLTmBFteNr4LWRHhrEn",
-              "type":"101",
-              "identifier":"4fUDR9R7fjwELRvH9JT6HH",
-              "auditPath":[
-                "ERHXC95c5GkeGN1Cn8AsFL8ruU65Mmc5948ey4FybZMk",
-                "8RPu6xcwmSaEgVohv83GtZu2hjJm5ghWQ6UEvSdjYCg4",
-                "FUUbzChmnGjrGChBv3LZoKunodBPrVuMcg2vUrhkndmz"
-              ]
-            },
-            "type":"3",
-            "identifier":"GGBDg1j8bsKmr4h5T9XqYf",
-            "reqId":1513364428103873981,
-            "seqNo":15
-          },
-          "op":"REPLY"
-        }
-        "#;
-
-    static  EXAMPLE_OPTIONAL: &str = r#"{
-}"#;
 
     #[test]
     fn test_ledger_schema_to_string(){
@@ -453,65 +370,72 @@ mod tests {
         assert_eq!(schema.err(),Some(SchemaError::InvalidSchemaCreation()));
     }
 
-    #[ignore]
+    #[cfg(feature = "pool_tests")]
     #[test]
     fn test_get_schema_attrs_from_ledger(){
-        settings::set_defaults();
-        pool::open_sandbox_pool();
+        let wallet_name = "test_get_schema_attrs_from_ledger";
+        ::utils::devsetup::setup_dev_env(wallet_name);
+
         let data = r#""data":{"name":"New Credential - Credential5","version":"1.0","attr_names":["New Credential","credential5","a5","b5","c5","d5"]}"#.to_string();
-        init_wallet("test_get_schema_attrs_from_ledger").unwrap();
-        let wallet_handle = get_wallet_handle();
+
         let (_, schema_attrs ) = get_schema_attrs("id".to_string(), SCHEMA_ID.to_string()).unwrap();
-        assert!(schema_attrs.contains(r#""version":"0.0.1""#));
-        assert!(schema_attrs.contains(r#""schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:schema_name:0.0.1""#));
-        delete_wallet("test_get_schema_attrs_from_ledger").unwrap();
+
+        println!("{}", schema_attrs);
+        assert!(schema_attrs.contains(r#""version":"0.0.11""#));
+        assert!(schema_attrs.contains(r#""schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:schema_name:0.0.11""#));
+
+        ::utils::devsetup::cleanup_dev_env(wallet_name);
     }
 
-    #[ignore]
+    #[cfg(feature = "pool_tests")]
     #[test]
-    fn test_create_schema(){
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-        ::utils::devsetup::setup_dev_env("test_create_schema");
+    fn test_create_schema_with_pool(){
+        let wallet_name = "test_create_schema";
+        ::utils::devsetup::setup_dev_env(wallet_name);
 
         let data = r#"["address1","address2","zip","city","state"]"#.to_string();
-        //Todo: use new version number
-        let version = r#"0.0.314"#.to_string();
+        let schema_name: String = rand::thread_rng().gen_ascii_chars().take(25).collect::<String>();
+        let schema_version: String = format!("{}.{}",rand::thread_rng().gen::<u32>().to_string(),
+                                             rand::thread_rng().gen::<u32>().to_string());
         let did = r#"2hoqvcwupRTUNkXn6ArYzs"#.to_string();
-        let handle = create_new_schema("id", did, "name".to_string(), version,data).unwrap();
-        delete_wallet("test_create_schema").unwrap();
+
+        let handle = create_new_schema("id", did, schema_name, schema_version, data).unwrap();
+
+        ::utils::devsetup::cleanup_dev_env(wallet_name);
         assert!(handle > 0);
-        let rc = get_schema_id(handle);
-        assert!(rc.is_ok());
+        let schema_id = get_schema_id(handle).unwrap();
     }
 
-
-    #[ignore]
+    #[cfg(feature = "pool_tests")]
     #[test]
     fn test_create_duplicate_fails(){
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-        ::utils::devsetup::setup_dev_env("test_create_schema");
+        let wallet_name = "test_create_duplicate_schema_fails";
+        ::utils::devsetup::setup_dev_env(wallet_name);
 
         let data = r#"["address1","address2","zip","city","state"]"#.to_string();
         let version = r#"0.0.2"#.to_string();
         let did = r#"2hoqvcwupRTUNkXn6ArYzs"#.to_string();
         let rc = create_new_schema("id", did, "name".to_string(), version,data);
-        delete_wallet("test_create_schema").unwrap();
+
+        ::utils::devsetup::cleanup_dev_env(wallet_name);
         assert!(rc.is_err());
     }
 
-    #[ignore]
+    #[cfg(feature = "pool_tests")]
     #[test]
     fn from_pool_ledger_with_id(){
-        //Todo: Add to integration tests so that its not ignored
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-        pool::open_sandbox_pool();
+        let wallet_name = "from_pool_ledger_with_id";
+        ::utils::devsetup::setup_dev_env(wallet_name);
+
         let schema_id = r#"2hoqvcwupRTUNkXn6ArYzs:2:schema_nam:2.2.2"#;
         let expected_schema_data = r#"{"ver":"1.0","id":"2hoqvcwupRTUNkXn6ArYzs:2:schema_nam:2.2.2","name":"schema_nam","version":"2.2.2","attrNames":["sex","age","name","height"],"seqNo":1659}"#;
-        let (id, retrieved_schema) = LedgerSchema::retrieve_schema("2hoqvcwupRTUNkXn6ArYzs", schema_id).unwrap();
+
+        let rc = LedgerSchema::retrieve_schema("3hoqvcwupRTUNkXn6ArYzs", schema_id);
+        ::utils::devsetup::cleanup_dev_env(wallet_name);
+
+        let (id, retrieved_schema) = rc.unwrap();
         assert!(retrieved_schema.contains(r#""ver":"1.0","id":"2hoqvcwupRTUNkXn6ArYzs:2:schema_nam:2.2.2","name":"schema_nam","version":"2.2.2""#));
+
     }
 
     #[test]
@@ -550,13 +474,7 @@ mod tests {
         assert_eq!(get_sequence_num(145661).err(), Some(SchemaError::InvalidHandle()));
         assert_eq!(to_string(13435178).err(), Some(SchemaError::InvalidHandle()));
         let test: Result<LedgerSchema, SchemaError> = LedgerSchema::new_from_ledger(SCHEMA_ID);
-        // This error will throw when run outside of all the other test modules, but will NOT
-        // error when a pool is open from any previous test.  Ideally we fix this by closing our
-        // opened pools.
-//        use utils::error::NO_POOL_OPEN;
-//        assert_eq!(test.err(), Some(SchemaError::CommonError(NO_POOL_OPEN.code_num)));
-        let bad_schema = EXAMPLE;
-        assert_eq!(from_string(bad_schema).err(), Some(SchemaError::CommonError(INVALID_JSON.code_num)));
+        assert_eq!(from_string("{}").err(), Some(SchemaError::CommonError(INVALID_JSON.code_num)));
     }
 
     #[test]

@@ -22,6 +22,7 @@ pub fn map_indy_error_code<C: PrimInt>(error_code: C) -> u32 {
         None => return error::UNKNOWN_LIBINDY_ERROR.code_num
     };
 
+    println!("libindyerr: {}", error_code);
     if error_code >= error::UNKNOWN_ERROR.code_num {
         return error_code;
     }

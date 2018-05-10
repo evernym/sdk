@@ -529,6 +529,7 @@ pub mod tests {
     use settings;
     use connection::{ build_connection };
     use credential_request::CredentialRequest;
+    #[allow(unused_imports)]
     use utils::{ constants::*,
                  libindy::{ set_libindy_rc,
                           anoncreds::{ libindy_create_and_store_credential_def,
@@ -661,13 +662,12 @@ pub mod tests {
         assert_eq!(get_offer_uid(handle).unwrap(), "ntc2ytb");
     }
 
-    #[ignore]
+    #[cfg(feature = "pool_tests")]
     #[test]
     fn test_generate_cred_offer() {
-        //Todo: Move test to integration location
         ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
-        let wallet_name = "test_create_cred";
+        let wallet_name = "test_create_cred_offer";
         ::utils::devsetup::setup_dev_env(wallet_name);
         let wallet_h = get_wallet_handle();
 
@@ -811,20 +811,11 @@ pub mod tests {
             agent_vk: VERKEY.to_string(),
         };
 
-        //Todo: update the responses with new format of message
         httpclient::set_next_u8_response(CREDENTIAL_REQ_RESPONSE.to_vec());
         httpclient::set_next_u8_response(UPDATE_CREDENTIAL_RESPONSE.to_vec());
 
         credential.update_state();
         assert_eq!(credential.get_state(), VcxStateType::VcxStateRequestReceived as u32);
-        let credential_request = credential.credential_request.clone().unwrap();
-        //Todo: use latest libindy
-//        assert_eq!(credential_request.libindy_cred_req.issuer_did.clone().unwrap(), "2hoqvcwupRTUNkXn6ArYzs");
-//        assert_eq!(credential_request.schema_seq_no.unwrap(), 15);
-        credential.credential_attributes = CREDENTIAL_DATA.to_owned();
-        println!("{}", &credential.credential_attributes);
-//        println!("{:?}", &credential.generate_credential_offer(&credential_request.libindy_cred_req.issuer_did.unwrap()).unwrap());
-        println!("{:?}", serde_json::to_string(&credential.generate_credential_offer("QTrbV4raAcND4DWWzBmdsh").unwrap()).unwrap());
     }
 
     #[test]

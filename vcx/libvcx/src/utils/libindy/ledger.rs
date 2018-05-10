@@ -1,4 +1,5 @@
 extern crate libc;
+
 use self::libc::c_char;
 use std::ffi::CString;
 use settings;
@@ -260,6 +261,7 @@ pub fn libindy_build_create_credential_def_txn(submitter_did: &str,
     let credential_def_json = CString::new(credential_def_json).map_err(map_string_error)?;
     unsafe {
         indy_function_eval(
+
             indy_build_cred_def_request(rtn_obj.command_handle,
                                      s_did.as_ptr(),
                                      credential_def_json.as_ptr(),
@@ -273,7 +275,11 @@ pub fn libindy_build_create_credential_def_txn(submitter_did: &str,
 
 #[cfg(test)]
 mod tests {
+    extern crate rand;
     use super::*;
+
+    #[allow(unused_imports)]
+    use rand::Rng;
     use utils::constants::{SCHEMA_ID, CRED_DEF_ID};
     use utils::libindy::{
         SigTypes,
@@ -316,8 +322,8 @@ mod tests {
         let schema_data = r#"["name", "age", "sex", "height"]"#;
         let (id, create_schema_json) = libindy_issuer_create_schema(
             &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
-            "schema_nam",
-            "2.2.2",
+            "schema_name",
+            "1.0",
             schema_data).unwrap();
 
         let schema_request = libindy_build_schema_request(
@@ -329,49 +335,9 @@ mod tests {
         println!("{}", schema_request.unwrap());
     }
 
-
-    #[ignore]
-    #[test]
-    fn test_create_schema_req_and_submit() {
-        //Todo: Move to integration tests
-        //Todo: find way to increment schema
-        //schema response will have op=REJECT if schema is already created
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-        let wallet_name = "test_create_schema_req";
-        ::utils::devsetup::setup_dev_env(wallet_name);
-
-        let schema_data = r#"["name", "age", "sex", "height"]"#;
-        let version = "0.0.2";
-        let (id, create_schema_json) = libindy_issuer_create_schema(
-            &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
-            "schema_name",
-            version,
-            schema_data).unwrap();
-        println!("schema_id: {}", id);
-        println!("create_schema_json: {}", create_schema_json);
-
-        let schema_request = libindy_build_schema_request(
-            &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
-            &create_schema_json).unwrap();
-
-        println!("{}", schema_request);
-
-        let schema_response = libindy_sign_and_submit_request(
-            &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
-            &schema_request).unwrap();
-
-        println!("schema_response: {}", schema_response);
-
-        ::utils::devsetup::cleanup_dev_env(wallet_name);
-    }
-
-    #[ignore]
+    #[cfg(feature = "pool_tests")]
     #[test]
     fn test_build_get_schema_and_parse_response() {
-        //Todo: Move to integration tests
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         let wallet_name = "test_create_schema_req";
         ::utils::devsetup::setup_dev_env(wallet_name);
 
@@ -420,23 +386,22 @@ mod tests {
         println!("{}", cred_def_req.unwrap());
     }
 
-    #[ignore]
+    #[cfg(feature = "pool_tests")]
     #[test]
-    fn test_create_cred_def_on_ledger() {
-        //Todo: Better way to increment version number. Currently, manually change version number
-        //Should be a full integration test going from create unique schema, create unique cred_def, and submit to ledger
-
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
+    fn test_create_schema_and_cred_def_on_ledger() {
         let wallet_name = "create_schema_and_cred_def";
         ::utils::devsetup::setup_dev_env(wallet_name);
 
         //Create Schema-------------
         let schema_data = r#"["name", "age", "sex", "height"]"#;
+        let schema_name: String = rand::thread_rng().gen_ascii_chars().take(25).collect::<String>();
+        let schema_version: String = format!("{}.{}",rand::thread_rng().gen::<u32>().to_string(),
+                                             rand::thread_rng().gen::<u32>().to_string());
+
         let (schema_id, create_schema_json) = libindy_issuer_create_schema(
             &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
-            "schema_name",
-            "0.0.12",
+            &schema_name,
+            &schema_version,
             schema_data).unwrap();
 
         let schema_request = libindy_build_schema_request(
@@ -490,12 +455,9 @@ mod tests {
         ::utils::devsetup::cleanup_dev_env(wallet_name);
     }
 
-    #[ignore]
+    #[cfg(feature = "pool_tests")]
     #[test]
     fn test_build_get_cred_def_req_and_parse_response() {
-        //Todo: Move to integration tests
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         let wallet_name = "test_create_schema_req";
         ::utils::devsetup::setup_dev_env(wallet_name);
 
