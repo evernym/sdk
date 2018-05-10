@@ -372,7 +372,6 @@ impl AcceptInvite{
 }
 
 
-
 //Todo: Every GeneralMessage extension, duplicates code
 impl GeneralMessage for SendInvite{
     type Msg = SendInvite;
@@ -462,7 +461,7 @@ fn parse_response(response: Vec<u8>) -> Result<String, u32> {
     let response: MsgDetailResponse = match Deserialize::deserialize(&mut de) {
         Ok(x) => x,
         Err(x) => {
-            debug!("Could not parse messagepack: {}", x);
+            error!("Could not parse messagepack: {}", x);
             return Err(error::INVALID_MSGPACK.code_num)
         },
     };

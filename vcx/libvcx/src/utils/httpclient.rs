@@ -21,6 +21,7 @@ pub fn post_u8(body_content: &Vec<u8>, url: &str) -> Result<Vec<u8>,String> {
         },
     };
 
+    debug!("Response Header: {:?}", response);
     if !response.status().is_success() {
         let mut content = String::new();
         match response.read_to_string(&mut content) {

@@ -341,5 +341,3 @@ pub mod tests {
     fn deserialize_msg_type() {
     }
 }
-
-
