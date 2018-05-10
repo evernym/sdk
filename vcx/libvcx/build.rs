@@ -56,9 +56,8 @@ struct Contents {
 fn main() {
     let target = env::var("TARGET").unwrap();
     println!("target={}", target);
-
-    if target.contains("aarch64-linux-android"){
-
+    
+    if let Ok(mode) = env::var("LIBINDY_STATIC") {
         let libindy_lib_path = env::var("LIBINDY_DIR").unwrap();
         println!("cargo:rustc-link-search=native={}",libindy_lib_path);
         println!("cargo:rustc-link-lib=static=indy");
