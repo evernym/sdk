@@ -11,7 +11,7 @@ RUN chmod 0440 /etc/sudoers.d/sodium_user
 
 USER sodium_user
 WORKDIR /home/sodium_user
-ENV ANDROID_NDK_ROOT /home/sodium_user/android-ndk-16b
+ENV ANDROID_NDK_ROOT /home/sodium_user/android-ndk-r16b
 ENV TOOLCHAIN_DIR /home/sodium_user/${TARGET_ARCH}
 COPY make_libsodium.sh /home/sodium_user/
 COPY android-ndk-r16b-linux-x86_64.zip /home/sodium_user/

@@ -236,4 +236,6 @@ cd openssl-1.1.0h
 ./config -D__ANDROID_API__=${TARGET_ARCH} --openssldir=${HOME}/openssl_${TARGET_ARCH} --prefix=${HOME}/openssl_${TARGET_ARCH} -lc -lgcc -ldl
 make
 make install
+cd $HOME
+zip openssl_${TARGET_ARCH}.zip -r openssl_${TARGET_ARCH}
 echo "openssl android build successful"

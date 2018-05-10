@@ -1,6 +1,6 @@
-ARG TARGET_ARCH
-ARG TARGET_API
-ARG CROSS_COMPILE
+ARG TARGET_ARCH=x86
+ARG TARGET_API=21
+ARG CROSS_COMPILE=i686-linux-android
 FROM ubuntu:16.04
 MAINTAINER Michael Lodder <redmike7@gmail.com>
 
@@ -11,7 +11,7 @@ RUN chmod 0440 /etc/sudoers.d/openssl_user
 
 USER openssl_user
 WORKDIR /home/openssl_user
-ENV ANDROID_NDK_ROOT /home/openssl_user/android-ndk-16b
+ENV ANDROID_NDK_ROOT /home/openssl_user/android-ndk-r16b
 ENV TOOLCHAIN_DIR /home/openssl_user/${TARGET_ARCH}
 COPY make_openssl.sh /home/openssl_user/
 COPY android-ndk-r16b-linux-x86_64.zip /home/openssl_user/

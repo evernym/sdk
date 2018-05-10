@@ -11,4 +11,6 @@ cd libsodium-1.0.12
 ./configure --prefix=${HOME}/libsodium_${TARGET_ARCH} --disable-soname-versions --host=${CROSS_COMPILE}
 make
 make install
+cd $HOME
+zip libsodium_${TARGET_ARCH}.zip -r libsodium_${TARGET_ARCH}
 echo "libsodium android build successful"
