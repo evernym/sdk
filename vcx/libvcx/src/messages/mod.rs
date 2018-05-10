@@ -336,8 +336,4 @@ pub mod tests {
         let buf = to_i8(&vec);
         println!("new bundle: {:?}", buf);
     }
-
-    #[test]
-    fn deserialize_msg_type() {
-    }
 }

@@ -110,7 +110,6 @@ impl Connection {
         }
     }
     pub fn delete_connection(&mut self) -> Result<u32, ConnectionError> {
-//        if settings::test_agency_mode_enabled() { return Ok(0) };
         match messages::delete_connection()
             .to(&self.pw_did)
             .to_vk(&self.pw_verkey)
