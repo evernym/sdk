@@ -11,12 +11,12 @@ RUN chmod 0440 /etc/sudoers.d/openssl_user
 
 USER openssl_user
 WORKDIR /home/openssl_user
-ENV ANDROID_NDK_ROOT /home/openssl_dir/android-ndk-16b
-ENV TOOLCHAIN_DIR /home/openssl_dir/${TARGET_ARCH}
-COPY make_openssl.sh /home/openssl_dir/
-COPY android-ndk-r16b-linux-x86_64.zip /home/openssl_dir/
-COPY openssl-1.1.0h.tar.gz /home/openssl_dir/
-RUN unzip -qq /home/openssl_dir/android-ndk-r16b-linux-x86_64.zip -d /home/openssl_dir/
-RUN tar xf /home/openssl_dir/openssl-1.1.0h.tar.gz -C /home/openssl_dir/
+ENV ANDROID_NDK_ROOT /home/openssl_user/android-ndk-16b
+ENV TOOLCHAIN_DIR /home/openssl_user/${TARGET_ARCH}
+COPY make_openssl.sh /home/openssl_user/
+COPY android-ndk-r16b-linux-x86_64.zip /home/openssl_user/
+COPY openssl-1.1.0h.tar.gz /home/openssl_user/
+RUN unzip -qq /home/openssl_user/android-ndk-r16b-linux-x86_64.zip -d /home/openssl_user/
+RUN tar xf /home/openssl_user/openssl-1.1.0h.tar.gz -C /home/openssl_user/
 RUN python3 ${ANDROID_NDK_ROOT}/build/tools/make_standalone_toolchain.py --arch ${TARGET_ARCH} --api ${TARGET_API} --install-dir ${TOOLCHAIN_DIR}
 RUN bash make_openssl.sh
