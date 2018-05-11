@@ -446,6 +446,7 @@ mod tests {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         let wallet_name = "test_libindy_create_cred_offer";
         ::utils::devsetup::setup_wallet(wallet_name);
+        ::utils::devsetup::set_institution_dev_config(wallet_name);
         open_wallet(wallet_name, None).unwrap();
 
         let result = libindy_issuer_create_credential_offer(CRED_DEF_ID);
