@@ -1,7 +1,7 @@
 #!/bin/sh
 
 source ./mac.05.libvcx.env.sh
-cd ../..
+cd ../../..
 cargo clean
 # To build for macos
 #cargo build

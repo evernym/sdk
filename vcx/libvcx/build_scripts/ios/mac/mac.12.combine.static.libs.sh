@@ -16,12 +16,12 @@
 source ./shared.functions.sh
 
 START_DIR=$PWD
-WORK_DIR=$START_DIR/../../../../.macosbuild
+WORK_DIR=$START_DIR/../../../../../.macosbuild
 mkdir -p $WORK_DIR
 WORK_DIR=$(abspath "$WORK_DIR")
 
 INDY_SDK=$WORK_DIR/vcx-indy-sdk
-VCX_SDK=$START_DIR/../../../..
+VCX_SDK=$START_DIR/../../../../..
 VCX_SDK=$(abspath "$VCX_SDK")
 
 cd $VCX_SDK/vcx/wrappers/ios/ios-demo-vcx/lib

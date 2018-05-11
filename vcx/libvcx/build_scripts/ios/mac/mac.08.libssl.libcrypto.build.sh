@@ -3,7 +3,7 @@
 source ./shared.functions.sh
 
 START_DIR=$PWD
-WORK_DIR=$START_DIR/../../../../.macosbuild
+WORK_DIR=$START_DIR/../../../../../.macosbuild
 mkdir -p $WORK_DIR
 WORK_DIR=$(abspath "$WORK_DIR")
 
