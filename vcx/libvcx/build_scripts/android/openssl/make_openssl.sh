@@ -119,10 +119,10 @@ fi
 
 case $_ANDROID_ARCH in
 	arch-arm)	  
-      ANDROID_TOOLS="arm-linux-androideabi-gcc arm-linux-androideabi-ranlib arm-linux-androideabi-ld"
+      ANDROID_TOOLS="arm-linux-androideabi-clang arm-linux-androideabi-ranlib arm-linux-androideabi-ld"
 	  ;;
 	arch-x86)	  
-      ANDROID_TOOLS="i686-linux-android-gcc i686-linux-android-ranlib i686-linux-android-ld"
+      ANDROID_TOOLS="i686-linux-android-clang i686-linux-android-ranlib i686-linux-android-ld"
 	  ;;	  
 	*)
 	  echo "ERROR ERROR ERROR"
@@ -217,7 +217,7 @@ export ANDROID_API="$_ANDROID_API"
 # CROSS_COMPILE and ANDROID_DEV are DFW (Don't Fiddle With). Its used by OpenSSL build system.
 # export CROSS_COMPILE="arm-linux-androideabi-"
 export ANDROID_DEV="$ANDROID_NDK_ROOT/platforms/$_ANDROID_API/$_ANDROID_ARCH/usr"
-export HOSTCC=gcc
+export HOSTCC=clang
 
 VERBOSE=1
 if [ ! -z "$VERBOSE" ] && [ "$VERBOSE" != "0" ]; then
@@ -236,6 +236,13 @@ cd openssl-1.1.0h
 ./config -D__ANDROID_API__=${TARGET_ARCH} --openssldir=${HOME}/openssl_${TARGET_ARCH} --prefix=${HOME}/openssl_${TARGET_ARCH} -lc -lgcc -ldl
 make
 make install
-cd $HOME
+rm -rf ${HOME}/openssl_${TARGET_ARCH}/share
+rm -rf ${HOME}/openssl_${TARGET_ARCH}/misc
+rm -rf ${HOME}/openssl_${TARGET_ARCH}/certs
+rm -rf ${HOME}/openssl_${TARGET_ARCH}/private
+rm -rf ${HOME}/openssl_${TARGET_ARCH}/bin
+rm -f ${HOME}/openssl_${TARGET_ARCH}/openssl.cnf
+rm -f ${HOME}/openssl_${TARGET_ARCH}/openssl.cnf.dist
+cd ${HOME}
 zip openssl_${TARGET_ARCH}.zip -r openssl_${TARGET_ARCH}
 echo "openssl android build successful"

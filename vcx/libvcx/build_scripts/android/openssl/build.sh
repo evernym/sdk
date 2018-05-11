@@ -36,5 +36,10 @@ else
     echo "Skipping download openssl-1.1.0h.tar.gz"
 fi
 
-docker build -t openssl-android:latest . --build-arg TARGET_ARCH=${TARGET_ARCH} --build-arg TARGET_API=${TARGET_API} --build-arg CROSS_COMPILE=${CROSS_COMPILE}
-docker run -v .:/data openssl-android:latest "cp -v /home/openssl_user/openssl_${TARGET_ARCH}.zip /data/"
+docker build -t openssl-android:latest . --build-arg target_arch=${TARGET_ARCH} --build-arg target_api=${TARGET_API} --build-arg cross_compile=${CROSS_COMPILE} && \ 
+docker run openssl-android:latest && \
+docker_id=$(docker ps -a | grep openssl-android:latest | grep Exited | tail -n 1 | cut -d ' ' -f 1) && \
+docker_image_id=$(docker image ls | grep openssl-android | perl -pe 's/\s+/ /g' | cut -d ' ' -f 3) && \
+docker cp ${docker_id}:/home/openssl_user/openssl_${TARGET_ARCH}.zip . && \
+docker rm ${docker_id} > /dev/null && \
+docker rmi ${docker_image_id} > /dev/null
