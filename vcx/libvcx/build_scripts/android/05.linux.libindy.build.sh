@@ -33,4 +33,6 @@ else
     cargo build --target armv7-linux-androideabi --verbose --release
     mkdir -p $ANDROID_PREBUILT_BINARIES/libindy/armv7
     cp -v target/armv7-linux-androideabi/release/libindy.so $ANDROID_PREBUILT_BINARIES/libindy/armv7
+    cp -v target/armv7-linux-androideabi/release/libindy.a $ANDROID_PREBUILT_BINARIES/libindy/armv7
+
 fi
