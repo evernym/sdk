@@ -36,5 +36,10 @@ else
     echo "Skipping download libsodium-1.0.12.tar.gz"
 fi
 
-docker build -t sodium-android:latest . --build-arg TARGET_ARCH=${TARGET_ARCH} --build-arg TARGET_API=${TARGET_API} --build-arg CROSS_COMPILE=${CROSS_COMPILE}
-docker run -v .:/data sodium-android:latest "cp -v /home/sodium_user/sodium_${TARGET_ARCH}.zip /data/"
+docker build -t sodium-android:latest . --build-arg target_arch=${TARGET_ARCH} --build-arg target_api=${TARGET_API} --build-arg cross_compile=${CROSS_COMPILE} &&
+docker run sodium-android:latest && \
+docker_id=$(docker ps -a | grep sodium-android:latest | grep Exited | tail -n 1 | cut -d ' ' -f 1) && \
+docker_image_id=$(docker image ls | grep sodium-android | perl -pe 's/\s+/ /g' | cut -d ' ' -f 3) && \
+docker cp ${docker_id}:/home/sodium_user/libsodium_${TARGET_ARCH}.zip . && \
+docker rm ${docker_id} > /dev/null && \
+docker rmi ${docker_image_id} > /dev/null
