@@ -39,4 +39,6 @@ if [[ $RUSTC_VERSION =~ ^'rustc ' ]]; then
     brew install cmake
     brew install openssl
     brew install zmq
+    brew install wget
+    brew install truncate
 fi
