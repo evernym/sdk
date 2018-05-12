@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 function abspath() {
     # generate absolute path from relative path

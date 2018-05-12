@@ -1,7 +1,6 @@
 #!/bin/bash
 source ./02.set.build.env.sh
 
-export OPENSSL=openssl_1.1.0c
 export OPENSSL_DIR=${ANDROID_PREBUILT_BINARIES}/$OPENSSL
 export LIBINDY_DIR=$ANDROID_PREBUILT_BINARIES/libindy/armv7
 export AR=${NDK_TOOLCHAIN_DIR}/arm/bin/arm-linux-androideabi-ar
