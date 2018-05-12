@@ -61,6 +61,26 @@ fn main() {
         let libindy_lib_path = env::var("LIBINDY_DIR").unwrap();
         println!("cargo:rustc-link-search=native={}",libindy_lib_path);
         println!("cargo:rustc-link-lib=static=indy");
+    }else if target.contains("aarch64") || target.contains("armv7") || target.contains("arm")  {
+
+        let libindy_lib_path = match env::var("LIBINDY_DIR"){
+            Ok(val) => val,
+            Err(..) => panic!("Missing required environment variables OPENSSL_DIR or OPENSSL_LIB_DIR")
+        };
+
+        let openssl = match env::var("OPENSSL_LIB_DIR") {
+            Ok(val) => val,
+            Err(..) => match env::var("OPENSSL_DIR") {
+                Ok(dir) => Path::new(&dir[..]).join("/lib").to_string_lossy().into_owned(),
+                Err(..) => panic!("Missing required environment variables OPENSSL_DIR or OPENSSL_LIB_DIR")
+            }
+        };
+
+        println!("cargo:rustc-link-search=native={}",libindy_lib_path);
+        println!("cargo:rustc-link-lib=static=indy");
+        println!("cargo:rustc-link-search=native={}", openssl);
+        println!("cargo:rustc-link-lib=static=crypto");
+        println!("cargo:rustc-link-lib=static=ssl");
     }else if target.contains("darwin"){
         //OSX specific logic
         println!("cargo:rustc-link-lib=indy");
