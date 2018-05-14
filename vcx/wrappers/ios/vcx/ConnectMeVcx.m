@@ -258,7 +258,7 @@ void VcxWrapperCommonStringStringLongCallback(vcx_command_handle_t xcommand_hand
 
 @implementation ConnectMeVcx
 
-- (void)agentProvision:(NSString *)config completion:(void (^)(NSError *error, NSString *config))completion{
+- (void)createOneTimeInfo:(NSString *)config completion:(void (^)(NSError *error, NSString *config))completion{
     const char *config_char = [config cString];
     vcx_command_handle_t handle= [[VcxCallbacks sharedInstance] createCommandHandleFor:completion] ;
     vcx_error_t ret = vcx_agent_provision_async(handle, config_char, VcxWrapperCommonStringCallback);

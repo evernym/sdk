@@ -89,8 +89,8 @@ void VcxWrapperCommonStringStringLongCallback(vcx_command_handle_t xcommand_hand
  @param metadata Optional. Dictionaty with format: {String: Any}.
  @param completion Completion block, returns error and json with info about generated pairwise did. Will be invoked in Main thread.
  */
-- (void)agentProvision:(NSString *)config
-            completion:(void (^)(NSError *error, NSString *config))completion;
+- (void)createOneTimeInfo:(NSString *)config
+               completion:(void (^)(NSError *error, NSString *config))completion;
 
 - (void)createConnectionWithInvite:(NSString *)invitationId
                      inviteDetails:(NSString *)inviteDetails
@@ -102,7 +102,7 @@ void VcxWrapperCommonStringStringLongCallback(vcx_command_handle_t xcommand_hand
 
 - (void)updatePushToken:(NSString *)config
              completion:(void (^)(NSError *error, NSString *config))completion;
-             
+
 @end
 
 #endif /* init_h */
