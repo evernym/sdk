@@ -98,5 +98,8 @@ export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_x86_64/li
 export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_x86_64/lib
 cargo build --target x86_64-linux-android --release --verbose
 
+# This builds the library for code that runs in OSX
+cargo build --target x86_64-apple-darwin --release --verbose
+
 export PATH=$ORIGINAL_PATH
 #export PKG_CONFIG_PATH=$ORIGINAL_PKG_CONFIG_PATH

@@ -50,6 +50,10 @@ export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_x86_64/lib
 export LIBINDY_DIR=$WORK_DIR/vcx-indy-sdk/libindy/target/x86_64-linux-android/release
 cargo build --target x86_64-linux-android --release --verbose
 
+# This builds the library for code that runs in OSX
+ln -s $WORK_DIR/vcx-indy-sdk/libindy/target/x86_64-apple-darwin/release/libindy.dylib /usr/local/lib/libindy.dylib
+cargo build --target x86_64-apple-darwin --release --verbose
+
 #cargo test
 
 export PATH=$ORIGINAL_PATH
