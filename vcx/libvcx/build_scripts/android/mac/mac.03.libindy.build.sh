@@ -20,9 +20,11 @@ fi
 cd $WORK_DIR/vcx-indy-sdk
 #git checkout tags/v1.3.0
 cd $WORK_DIR/vcx-indy-sdk/libindy
-# Modify the build.rs of indy-sdk to handle android static libraries
+
+# !IMPORTANT STEPS NEXT -- Modify the build.rs of indy-sdk to handle android static libraries
 tail -n 1 build.rs | wc -c | xargs -I {} truncate build.rs -s -{}
 cat $START_DIR/indy-sdk.build.rs.android.target.static.libs.template >> build.rs
+###################################################################################################
 
 if [ ! -d $WORK_DIR/libzmq-android/libsodium/libsodium_arm ]; then
     cd $WORK_DIR/libzmq-android/libsodium
@@ -61,12 +63,10 @@ if [ ! -d $WORK_DIR/libzmq-android/zmq/libzmq_x86_64 ]; then
 fi
 
 cd $WORK_DIR/vcx-indy-sdk/libindy
-#cargo clean
-# To build for macos
-#cargo build
-# To build for android
 export ORIGINAL_PATH=$PATH
 #export ORIGINAL_PKG_CONFIG_PATH=$PKG_CONFIG_PATH
+
+cargo clean
 
 export PATH=$WORK_DIR/NDK/arm/bin:$ORIGINAL_PATH
 export OPENSSL_DIR=$WORK_DIR/openssl_for_ios_and_android/output/android/openssl-armeabi

@@ -65,7 +65,7 @@ fn main() {
 
         let libindy_lib_path = match env::var("LIBINDY_DIR"){
             Ok(val) => val,
-            Err(..) => panic!("Missing required environment variables OPENSSL_DIR or OPENSSL_LIB_DIR")
+            Err(..) => panic!("Missing required environment variable LIBINDY_DIR")
         };
 
         let openssl = match env::var("OPENSSL_LIB_DIR") {
