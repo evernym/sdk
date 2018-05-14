@@ -439,18 +439,29 @@ mod tests {
     use utils::libindy::wallet::{ init_wallet, delete_wallet, open_wallet};
     use utils::constants::*;
 
-    #[test]
-    fn simple_libindy_create_credential_offer_test() {
+    fn setup_non_pool_tests(wallet_name: &str) {
         ::utils::logger::LoggerUtils::init();
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-        let wallet_name = "test_libindy_create_cred_offer";
         ::utils::devsetup::setup_wallet(wallet_name);
         ::utils::devsetup::set_institution_dev_config(wallet_name);
         open_wallet(wallet_name, None).unwrap();
+    }
+
+    fn cleanup_non_pool_tests(wallet_name: &str) {
+        delete_wallet(wallet_name).unwrap();
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
+    }
+
+    #[test]
+    fn simple_libindy_create_credential_offer_test() {
+        let wallet_name = "test_libindy_create_cred_offer";
+        setup_non_pool_tests(wallet_name);
 
         let result = libindy_issuer_create_credential_offer(CRED_DEF_ID);
-        delete_wallet(wallet_name).unwrap();
+
+        cleanup_non_pool_tests(wallet_name);
         assert!(result.is_ok());
         println!("{}", result.unwrap());
     }
@@ -592,7 +603,7 @@ mod tests {
     fn simple_libindy_prover_store_cred() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-        let wallet_name = "test_store_cred";
+        let wallet_name = "test_store_cred2";
         ::utils::devsetup::setup_wallet(wallet_name);
         open_wallet(wallet_name, None).unwrap();
 

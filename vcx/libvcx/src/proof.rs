@@ -722,9 +722,9 @@ mod tests {
         let credentials = vec![cred1.clone(), cred2.clone(), cred3.clone()];
         let credential_json = proof.build_credential_defs_json(&credentials).unwrap();
 
-        assert!(credential_json.contains(r#""cred_def_key1":{"id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:1766""#));
-        assert!(credential_json.contains(r#""cred_def_key2":{"id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:1766""#));
-        assert!(credential_json.contains(r#""cred_def_key3":{"id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:1766""#));
+        assert!(credential_json.contains(r#""cred_def_key1":{"id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:2471""#));
+        assert!(credential_json.contains(r#""cred_def_key2":{"id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:2471""#));
+        assert!(credential_json.contains(r#""cred_def_key3":{"id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:2471""#));
     }
 
     #[test]
@@ -738,9 +738,9 @@ mod tests {
         let credentials = vec![cred1.clone(), cred2.clone(), cred3.clone()];
         let credential_json = proof.build_schemas_json(&credentials).unwrap();
 
-        assert!(credential_json.contains(r#""schema_key1":{"attrNames":["sex","age","name","height"],"id":"2hoqvcwupRTUNkXn6ArYzs:2:schema_name:0.0.11""#));
-        assert!(credential_json.contains(r#""schema_key2":{"attrNames":["sex","age","name","height"],"id":"2hoqvcwupRTUNkXn6ArYzs:2:schema_name:0.0.11""#));
-        assert!(credential_json.contains(r#""schema_key3":{"attrNames":["sex","age","name","height"],"id":"2hoqvcwupRTUNkXn6ArYzs:2:schema_name:0.0.11""#));
+        assert!(credential_json.contains(r#""schema_key1":{"attrNames":["height","name","sex","age"],"id":"2hoqvcwupRTUNkXn6ArYzs:2:test-licence:4.4.4""#));
+        assert!(credential_json.contains(r#""schema_key2":{"attrNames":["height","name","sex","age"],"id":"2hoqvcwupRTUNkXn6ArYzs:2:test-licence:4.4.4""#));
+        assert!(credential_json.contains(r#""schema_key3":{"attrNames":["height","name","sex","age"],"id":"2hoqvcwupRTUNkXn6ArYzs:2:test-licence:4.4.4""#));
     }
 
     #[test]

@@ -333,7 +333,7 @@ mod tests {
             sequence_num: 306,
         };
         println!("{}", create_schema.to_string());
-        let create_schema_str = r#"{"data":["name","age","sex","height"],"version":"1.0","schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:schema_name:0.0.11","name":"schema_name","source_id":"testId","sequence_num":306}"#;
+        let create_schema_str = r#"{"data":["name","age","sex","height"],"version":"1.0","schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:test-licence:4.4.4","name":"schema_name","source_id":"testId","sequence_num":306}"#;
         assert_eq!(create_schema.to_string(), create_schema_str.to_string());
     }
 
@@ -353,8 +353,8 @@ mod tests {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
         let (handle, schema_attrs ) = get_schema_attrs("Check For Success".to_string(), SCHEMA_ID.to_string()).unwrap();
-        assert!(schema_attrs.contains(r#""schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:schema_name:0.0.11""#));
-        assert!(schema_attrs.contains(r#""data":["sex","age","name","height"]"#));
+        assert!(schema_attrs.contains(r#""schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:test-licence:4.4.4""#));
+        assert!(schema_attrs.contains(r#""data":["height","name","sex","age"]"#));
         assert!(handle > 0);
     }
 
@@ -376,13 +376,11 @@ mod tests {
         let wallet_name = "test_get_schema_attrs_from_ledger";
         ::utils::devsetup::setup_dev_env(wallet_name);
 
-        let data = r#""data":{"name":"New Credential - Credential5","version":"1.0","attr_names":["New Credential","credential5","a5","b5","c5","d5"]}"#.to_string();
-
         let (_, schema_attrs ) = get_schema_attrs("id".to_string(), SCHEMA_ID.to_string()).unwrap();
 
         println!("{}", schema_attrs);
-        assert!(schema_attrs.contains(r#""version":"0.0.11""#));
-        assert!(schema_attrs.contains(r#""schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:schema_name:0.0.11""#));
+        assert!(schema_attrs.contains(r#""version":"4.4.4""#));
+        assert!(schema_attrs.contains(r#""schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:test-licence:4.4.4""#));
 
         ::utils::devsetup::cleanup_dev_env(wallet_name);
     }
@@ -480,6 +478,6 @@ mod tests {
     #[test]
     fn test_extract_data_from_schema_json() {
         let data: SchemaData = serde_json::from_str(SCHEMA_JSON).unwrap();
-        assert_eq!(data.name, "schema_name".to_string());
+        assert_eq!(data.name, "test-licence".to_string());
     }
 }
