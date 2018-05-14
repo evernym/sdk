@@ -13,6 +13,6 @@ public class InvalidStructureException extends VcxException
 	 */
 	public InvalidStructureException() 
     {
-    	super(message, ErrorCode.CommonInvalidStructure.value());
+    	super(message, ErrorCode.CommonIOError.value());
     }
 }

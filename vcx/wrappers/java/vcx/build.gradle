@@ -1,5 +1,6 @@
-apply plugin: 'java'
+//apply plugin: 'java'
 apply plugin: 'maven'
+apply plugin: 'com.android.library'
 
 group = 'com.evernym.sdk'
 version = '1.0.0'
@@ -13,11 +14,39 @@ tasks.withType(JavaCompile) {
     test.enabled = false
 }
 
+android {
+    compileSdkVersion 23
+
+
+
+    defaultConfig {
+        minSdkVersion 23
+        targetSdkVersion 23
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        ndk {
+            abiFilters "armeabi-v7a"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+}
+
+
 buildscript {
 
     repositories {
-        google()
+        mavenLocal()
         jcenter()
+        google()
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.0.0'
@@ -39,7 +68,7 @@ allprojects {
     }
 }
 dependencies {
-    compile group: 'net.java.dev.jna', name: 'jna', version:'4.4.0'
+    compile 'net.java.dev.jna:jna:4.5.0@aar'
     compile group: 'org.apache.commons', name: 'commons-lang3', version:'3.5'
     compile 'net.sourceforge.streamsupport:android-retrofuture:1.6.2'
     compile group: 'net.sourceforge.streamsupport', name: 'android-retrostreams', version: '1.6.2'

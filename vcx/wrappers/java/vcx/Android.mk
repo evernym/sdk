@@ -3,10 +3,6 @@ LOCAL_ALLOW_UNDEFINED_SYMBOLS := true
 include $(CLEAR_VARS)
 PREBUILT_DEPS=$(LOCAL_PATH)/prebuilt/libs
 
-include $(CLEAR_VARS)
-LOCAL_MODULE := gnustl_shared
-LOCAL_SRC_FILES := libgnustl_shared.so
-include $(PREBUILT_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 LOCAL_MODULE := libzmq
@@ -47,7 +43,7 @@ include $(PREBUILT_STATIC_LIBRARY)
 include $(CLEAR_VARS)
 LOCAL_MODULE := vcx_shim
 LOCAL_WHOLE_STATIC_LIBRARIES := libcrypto libssl libsodium
-LOCAL_SHARED_LIBRARIES := gnustl_shared libzmq libvcx
+LOCAL_SHARED_LIBRARIES :=  libzmq libvcx
 LOCAL_LDLIBS += -lz -ldl -static-libgcc
 include $(BUILD_SHARED_LIBRARY)
 

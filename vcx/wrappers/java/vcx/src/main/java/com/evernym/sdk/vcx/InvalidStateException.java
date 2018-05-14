@@ -3,7 +3,7 @@ package com.evernym.sdk.vcx;
 /**
  * Exception thrown when the SDK reports that it is in an invalid state.
  */
-public class InvalidStateException extends VcxException
+public class InvalidStateException extends com.evernym.sdk.vcx.VcxException
 {
 	private static final long serialVersionUID = -1741244553102207886L;
 	private final static String message = "The SDK library experienced an unexpected internal error.";
@@ -13,6 +13,6 @@ public class InvalidStateException extends VcxException
 	 */
 	public InvalidStateException() 
     {
-    	super(message, ErrorCode.CommonInvalidState.value());
+    	super(message, ErrorCode.CommonIOError.value());
     }
 }
