@@ -1,4 +1,4 @@
-##How to run
+## How to run
 
 - Run 10.linux.android.lib.build.sh
 
@@ -7,7 +7,7 @@
 - Copy vcx-debug.aar and past it in vcx-debug folder in Wrapper test.
 
 
-##Steps to include aar in new project
+## Steps to include aar in new project
 
 - In Android project Add new Module > Import Jar/AAR
 
