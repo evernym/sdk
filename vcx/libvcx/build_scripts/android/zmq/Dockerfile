@@ -15,10 +15,12 @@ ENV ANDROID_NDK_ROOT /home/zeromq_user/android-ndk-r16b
 ENV TOOLCHAIN_DIR /home/zeromq_user/${target_arch}
 ENV PATH ${TOOLCHAIN_DIR}/bin:${PATH}
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get -qq update -y && apt-get -qq install -y zip unzip autoconf cmake libtool pkg-config wget python3 2>&1 > /dev/null
-RUN useradd -m -d /home/zeromq_user -s /bin/bash zeromq_user && mkdir -p /etc/sudoers.d/
-RUN echo "zeromq_user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/zeromq_user
-RUN chmod 0440 /etc/sudoers.d/zeromq_user
+RUN DEBIAN_FRONTEND=noninteractive apt-get -qq update -y && apt-get -qq install -y apt-utils zip unzip autoconf cmake libtool sudo pkg-config wget python3 2>&1 > /dev/null
+RUN useradd -m -d /home/zeromq_user -p $(openssl passwd -1 "zeromq") -s /bin/bash zeromq_user
+# && mkdir -p /etc/sudoers.d/
+RUN usermod -aG sudo zeromq_user
+#RUN echo "zeromq_user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/zeromq_user
+#RUN chmod 0440 /etc/sudoers.d/zeromq_user
 
 USER zeromq_user
 WORKDIR /home/zeromq_user
