@@ -212,7 +212,7 @@ async def test_get_requests():
 async def test_get_creds_for_req():
     disclosed_proof = await DisclosedProof.create(source_id, request)
     creds = await disclosed_proof.get_creds()
-    assert creds == {"attrs":{"height_1":[{"cred_info":{"referent":"a030c52e-0917-4e86-bc24-4bc7171db690","attrs":{"age":"111","sex":"male","name":"Bob","height":"4'11"},"schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:schema_name:0.0.11","cred_def_id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:1766","rev_reg_id":None,"cred_rev_id":None},"interval":None}],"zip_2":[{"cred_info":{"referent":"95303ecc-bdfd-440d-93ba-79df06253c81","attrs":{"address2":"101 Wilson Lane","zip":"87121","city":"SLC","state":"UT","address1":"101 Tela Lane"},"schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:Home Address - Test:0.0.1","cred_def_id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:2200","rev_reg_id":None,"cred_rev_id":None},"interval":None}]},"predicates":{}}
+    assert creds == {"attrs":{"height_1":[{"cred_info":{"referent":"92556f60-d290-4b58-9a43-05c25aac214e","attrs":{"name":"Bob","height":"4'11","sex":"male","age":"111"},"schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:test-licence:4.4.4","cred_def_id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:2471","rev_reg_id":None,"cred_rev_id":None},"interval":None}],"zip_2":[{"cred_info":{"referent":"2dea21e2-1404-4f85-966f-d03f403aac71","attrs":{"address2":"101 Wilson Lane","city":"SLC","state":"UT","zip":"87121","address1":"101 Tela Lane"},"schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:Home Address:5.5.5","cred_def_id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:2479","rev_reg_id":None,"cred_rev_id":None},"interval":None}]},"predicates":{}}
 
 
 @pytest.mark.asyncio

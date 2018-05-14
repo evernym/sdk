@@ -194,11 +194,14 @@ impl Credential {
                         let cred_req: &CredentialRequest = self.credential_request.as_ref()
                             .ok_or(CredentialError::InvalidCredentialJson().to_error_code())?;
 
+                        let (_, cred_def_json) = ::credential_def::retrieve_credential_def(&cred_req.cred_def_id)
+                            .map_err(|err| CredentialError::CommonError(err.to_error_code()).to_error_code())?;
+
                         self.credential = Some(credential);
                         self.cred_id = Some(libindy_prover_store_credential(None,
                                                                       &cred_req.libindy_cred_req_meta,
                                                                       &credential_msg.libindy_cred,
-                                                                      &cred_req.cred_def_id,
+                                                                      &cred_def_json,
                                                                       None)?);
                         self.state = VcxStateType::VcxStateAccepted;
                     },

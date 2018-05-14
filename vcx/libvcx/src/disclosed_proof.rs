@@ -549,7 +549,7 @@ mod tests {
         let proof: DisclosedProof = Default::default();
         let schemas = proof._find_schemas(&creds).unwrap();
         assert!(schemas.len() > 0);
-        assert!(schemas.contains(r#""id":"2hoqvcwupRTUNkXn6ArYzs:2:schema_name:0.0.11","name":"schema_name""#));
+        assert!(schemas.contains(r#""id":"2hoqvcwupRTUNkXn6ArYzs:2:test-licence:4.4.4","name":"test-licence""#));
     }
 
     #[test]
@@ -574,7 +574,7 @@ mod tests {
         let proof: DisclosedProof = Default::default();
         let credential_def = proof._find_credential_def(&creds).unwrap();
         assert!(credential_def.len() > 0);
-        assert!(credential_def.contains(r#""id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:1766","schemaId":"1766""#));
+        assert!(credential_def.contains(r#""id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:2471","schemaId":"2471""#));
     }
 
     #[test]
@@ -725,13 +725,11 @@ mod tests {
         assert_eq!(creds, vec![cred1, cred2]);
     }
 
-    #[ignore]
+    #[cfg(feature = "pool_tests")]
     #[test]
     fn test_generate_proof() {
-        //Todo: move to integration
-        settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-        let wallet_name = "test_build_proof";
+        let wallet_name = "test_generate_proof";
         ::utils::devsetup::setup_dev_env(wallet_name);
 
         let mut proof_req = ProofRequestMessage::create();
