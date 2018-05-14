@@ -22,5 +22,7 @@ unzip -qq $LIBZ.zip
 #housekeeping
 mv arm-linux-androideabi-4.9 $LIBZMQ
 mv android-armeabi-v7a $LIBZ
+mkdir -p $ANDROID_PREBUILT_BINARIES/libindy/armv7
+mkdir -p $ANDROID_PREBUILT_BINARIES/libvcx/armv7
 popd
 

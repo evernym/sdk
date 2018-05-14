@@ -1,7 +1,14 @@
 #!/bin/bash
 
 source ./shared.functions.sh
-source ./04.download.prebuilt.deps.sh
+source ./02.set.build.env.sh
+#Download prebuilts only if not present in /tmp
+if [ -d "${ANDROID_PREBUILT_BINARIES}" ]; then
+   source ./04.download.prebuilt.deps.sh
+else
+  source ./03.set.libindy.env.sh
+
+fi
 
 START_DIR=$PWD
 WORK_DIR=$START_DIR/../../../../.linux.libindy
@@ -19,7 +26,7 @@ git checkout android_support
 
 
 
-echo "Building for armv7-linux-androideabi"
+echo "Building libindy for armv7-linux-androideabi"
 
 
 if [ "$2" == "test" ]; then
@@ -31,8 +38,8 @@ else
     #Make sure cargo buildis always in release mode.
     #Due to a bug in amcl crate in debug mode the library will panic at runtime
     cargo build --target armv7-linux-androideabi --verbose --release
-    mkdir -p $ANDROID_PREBUILT_BINARIES/libindy/armv7
-    cp -v target/armv7-linux-androideabi/release/libindy.so $ANDROID_PREBUILT_BINARIES/libindy/armv7
-    cp -v target/armv7-linux-androideabi/release/libindy.a $ANDROID_PREBUILT_BINARIES/libindy/armv7
+    cp -v target/armv7-linux-androideabi/release/libindy.so $LIBINDY_ARMV7
+    cp -v target/armv7-linux-androideabi/release/libindy.a $LIBINDY_ARMV7
 
 fi
+popd
