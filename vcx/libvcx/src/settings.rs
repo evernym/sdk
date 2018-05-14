@@ -41,7 +41,7 @@ pub static DEFAULT_POOL_NAME: &str = "pool1";
 pub static DEFAULT_LINK_SECRET_ALIAS: &str = "main";
 pub static DEFAULT_DEFAULT: &str = "default";
 pub static DEFAULT_URL: &str = "http://127.0.0.1:8080";
-pub static DEFAULT_DID: &str = "LZ46KqKd1VrNFjXuVFUSY9";
+pub static DEFAULT_DID: &str = "2hoqvcwupRTUNkXn6ArYzs";
 pub static DEFAULT_VERKEY: &str = "FuN98eH2eZybECWkofW6A9BKJxxnTatBCopfUiNxo6ZB";
 pub static DEFAULT_ENABLE_TEST_MODE: &str = "false";
 

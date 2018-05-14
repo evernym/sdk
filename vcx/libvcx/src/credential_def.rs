@@ -237,7 +237,9 @@ pub mod tests {
 
         ::utils::devsetup::cleanup_dev_env(wallet_name);
         assert_eq!(&id, CRED_DEF_ID);
-        assert_eq!(&cred_def_json, CRED_DEF_JSON);
+        let def1: serde_json::Value = serde_json::from_str(&cred_def_json).unwrap();
+        let def2: serde_json::Value = serde_json::from_str(CRED_DEF_JSON).unwrap();
+        assert_eq!(def1, def2);
     }
 
     #[test]
