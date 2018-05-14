@@ -87,8 +87,8 @@ async def test_release():
 async def test_lookup():
     schema_id = 'id1'
     schema = await Schema.lookup(source_id, schema_id)
-    assert schema.attrs == ['sex', 'age', 'name', 'height']
-    assert schema.name == 'schema_name'
+    assert schema.attrs.sort() == ['sex', 'age', 'name', 'height'].sort()
+    assert schema.name == 'test-licence'
     assert schema.handle > 0
 
 
