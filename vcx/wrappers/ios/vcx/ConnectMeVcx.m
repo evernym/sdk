@@ -274,7 +274,57 @@ void VcxWrapperCommonStringStringLongCallback(vcx_command_handle_t xcommand_hand
     
 }
 
+- (void)createConnectionWithInvite:(NSString *)invitationId
+                inviteDetails:(NSString *)inviteDetails
+             completion:(void (^)(NSError *error, NSString *credentialHandle)) completion
+{
+   vcx_error_t ret;
 
+   vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
+   ret = vcx_connection_create_with_invite(handle, invitationId, inviteDetails, VcxWrapperCommonCallback);
+   if( ret != Success )
+   {
+       [[VcxCallbacks sharedInstance] deleteCommandHandleFor: handle];
 
+       dispatch_async(dispatch_get_main_queue(), ^{
+           completion([NSError errorFromVcxError: ret], nil);
+       });
+   }
+}
+
+- (void)acceptInvitation: (NSInteger *) connectionHandle
+        connectionType: (NSString *) connectionType
+            completion: (void (^)(NSError *error, NSString *inviteDetails)) completion
+{
+   vcx_error_t ret;
+   
+   vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
+   ret = vcx_connection_connect(handle, connectionHandle, connectionType, VcxWrapperCommonCallback)
+   if( ret != Success )
+   {
+       [[VcxCallbacks sharedInstance] deleteCommandHandleFor: handle];
+       
+       dispatch_async(dispatch_get_main_queue(), ^{
+           completion([NSError errorFromVcxError: ret], nil);
+       });
+   }
+}
+
+- (void)updatePushToken: (NSInteger *) config
+            completion: (void (^)(NSError *error)) completion
+{
+   vcx_error_t ret;
+   
+   vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
+   ret = vcx_agent_update_info(handle, config, VcxWrapperCommonCallback)
+   if( ret != Success )
+   {
+       [[VcxCallbacks sharedInstance] deleteCommandHandleFor: handle];
+       
+       dispatch_async(dispatch_get_main_queue(), ^{
+           completion([NSError errorFromVcxError: ret]);
+       });
+   }
+}
 
 @end

@@ -92,6 +92,17 @@ void VcxWrapperCommonStringStringLongCallback(vcx_command_handle_t xcommand_hand
 - (void)agentProvision:(NSString *)config
             completion:(void (^)(NSError *error, NSString *config))completion;
 
+- (void)createConnectionWithInvite:(NSString *)invitationId
+                     inviteDetails:(NSString *)inviteDetails
+                        completion:(void (^)(NSError *error, NSString *credentialHandle))completion;
+
+- (void)connectionHandle:(VcxHandle *)connectionHandle
+          connectionType:(NSString *)connectionType
+              completion:(void (^)(NSError *error, NSString *inviteDetails))completion;
+
+- (void)updatePushToken:(NSString *)config
+             completion:(void (^)(NSError *error, NSString *config))completion;
+             
 @end
 
 #endif /* init_h */
