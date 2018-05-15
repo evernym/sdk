@@ -50,11 +50,10 @@ else
 fi
 
 
-docker build -t zeromq-android:latest . --build-arg target_arch=${TARGET_ARCH} --build-arg target_api=${TARGET_API} --build-arg cross_compile=${CROSS_COMPILE} --build-arg sodium_lib_dir=${SODIUM_LIB_DIR}
-
+docker build -t zeromq-android:latest . --build-arg target_arch=${TARGET_ARCH} --build-arg target_api=${TARGET_API} --build-arg cross_compile=${CROSS_COMPILE} --build-arg sodium_lib_dir=${SODIUM_LIB_DIR} && \
 docker run zeromq-android:latest && \
 docker_id=$(docker ps -a | grep zeromq-android:latest | grep Exited | tail -n 1 | cut -d ' ' -f 1) && \
 docker_image_id=$(docker image ls | grep zeromq-android | perl -pe 's/\s+/ /g' | cut -d ' ' -f 3) && \
 docker cp ${docker_id}:/home/zeromq_user/libzmq_${TARGET_ARCH}.zip . && \
-docker rm ${docker_id} > /dev/null
-#docker rmi ${docker_image_id} > /dev/null
+docker rm ${docker_id} > /dev/null && \
+docker rmi ${docker_image_id} > /dev/null
