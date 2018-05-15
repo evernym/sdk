@@ -79,4 +79,4 @@ async def test_release():
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_get_cred_def_id():
     credential_def = await CredentialDef.create(source_id, name, schema_id, 0)
-    assert await credential_def.get_cred_def_id() == '2hoqvcwupRTUNkXn6ArYzs:3:CL:1766'
+    assert await credential_def.get_cred_def_id() == '2hoqvcwupRTUNkXn6ArYzs:3:CL:2471'

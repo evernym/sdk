@@ -37,10 +37,11 @@ pub static CONFIG_LINK_SECRET_ALIAS: &str = "link_secret_alias";
 pub static UNINITIALIZED_WALLET_KEY: &str = "<KEY_IS_NOT_SET>";
 pub static DEFAULT_GENESIS_PATH: &str = "/tmp/genesis.txn";
 pub static DEFAULT_WALLET_NAME: &str = "LIBVCX_SDK_WALLET";
+pub static DEFAULT_POOL_NAME: &str = "pool1";
 pub static DEFAULT_LINK_SECRET_ALIAS: &str = "main";
 pub static DEFAULT_DEFAULT: &str = "default";
 pub static DEFAULT_URL: &str = "http://127.0.0.1:8080";
-pub static DEFAULT_DID: &str = "LZ46KqKd1VrNFjXuVFUSY9";
+pub static DEFAULT_DID: &str = "2hoqvcwupRTUNkXn6ArYzs";
 pub static DEFAULT_VERKEY: &str = "FuN98eH2eZybECWkofW6A9BKJxxnTatBCopfUiNxo6ZB";
 pub static DEFAULT_ENABLE_TEST_MODE: &str = "false";
 
@@ -53,7 +54,7 @@ pub fn set_defaults() -> u32 {
     // if this fails the program should exit
     let mut settings = SETTINGS.write().unwrap();
 
-    settings.set(CONFIG_POOL_NAME,DEFAULT_DEFAULT);
+    settings.set(CONFIG_POOL_NAME,DEFAULT_POOL_NAME);
     settings.set(CONFIG_WALLET_NAME,DEFAULT_WALLET_NAME);
     settings.set(CONFIG_WALLET_TYPE,DEFAULT_DEFAULT);
     settings.set(CONFIG_AGENCY_ENDPOINT,DEFAULT_URL);

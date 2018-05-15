@@ -61,11 +61,13 @@ fn main() {
         let libindy_lib_path = env::var("LIBINDY_DIR").unwrap();
         println!("cargo:rustc-link-search=native={}",libindy_lib_path);
         println!("cargo:rustc-link-lib=static=indy");
-    }else if target.contains("aarch64") || target.contains("armv7") || target.contains("arm")  {
+    }else if target.contains("aarch64") || target.contains("armv7") ||
+        target.contains("arm") || target.contains("i686-linux-android") ||
+        target.contains("x86_64-linux-android") {
 
         let libindy_lib_path = match env::var("LIBINDY_DIR"){
             Ok(val) => val,
-            Err(..) => panic!("Missing required environment variables OPENSSL_DIR or OPENSSL_LIB_DIR")
+            Err(..) => panic!("Missing required environment variable LIBINDY_DIR")
         };
 
         let openssl = match env::var("OPENSSL_LIB_DIR") {
