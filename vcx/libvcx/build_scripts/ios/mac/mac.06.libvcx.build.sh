@@ -14,4 +14,4 @@ cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios,armv
 #LIBINDY_DIR=/usr/local/lib cargo test
 cargo test
 
-lipo -info 
+#lipo -info 

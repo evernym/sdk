@@ -17,10 +17,12 @@ ENV CXX ${TOOLCHAIN_DIR}/bin/${cross_compile}-clang++
 ENV CXXLD ${TOOLCHAIN_DIR}/bin/${cross_compile}-ld
 ENV RANLIB ${TOOLCHAIN_DIR}/bin/${cross_compile}-ranlib
 
-RUN DEBIAN_FRONTEND=noninteractive apt-get -qq update -y && apt-get -qq install -y zip unzip autoconf cmake libtool wget python3 2>&1 > /dev/null
-RUN useradd -m -d /home/sodium_user -s /bin/bash sodium_user && mkdir -p /etc/sudoers.d/
-RUN echo "sodium_user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/sodium_user
-RUN chmod 0440 /etc/sudoers.d/sodium_user
+RUN DEBIAN_FRONTEND=noninteractive apt-get -qq update -y && apt-get -qq install -y apt-utils zip unzip autoconf cmake libtool wget sudo pkg-config python3 2>&1 > /dev/null
+RUN useradd -m -d /home/sodium_user -p $(openssl passwd -1 "sodium") -s /bin/bash sodium_user
+# && mkdir -p /etc/sudoers.d/
+RUN usermod -aG sudo sodium_user
+#RUN echo "sodium_user ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/sodium_user
+#RUN chmod 0440 /etc/sudoers.d/sodium_user
 
 USER sodium_user
 WORKDIR /home/sodium_user

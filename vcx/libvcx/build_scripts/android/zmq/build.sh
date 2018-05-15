@@ -23,7 +23,10 @@ if [ -z "${CROSS_COMPILE}" ]; then
 fi
 
 if [ -z "${SODIUM_LIB_DIR}" ]; then
-    if [ -z "$4" ]; then
+    SODIUM_LIB_DIR="libsodium_${TARGET_ARCH}/lib"
+    if [ -d "${SODIUM_LIB_DIR}" ] ; then
+        echo "Found ${SODIUM_LIB_DIR}"
+    elif [ -z "$4" ] ; then
         echo STDERR "Missing SODIUM_LIB_DIR argument and environment variable"
         echo STDERR "e.g. set SODIUM_LIB_DIR=<path> for environment or libsodium_${TARGET_ARCH}/lib"
         exit 1
@@ -47,7 +50,7 @@ else
 fi
 
 
-docker build -t zeromq-android:latest . --build-arg target_arch=${TARGET_ARCH} --build-arg target_api=${TARGET_API} --build-arg cross_compile=${CROSS_COMPILE} --build-arg sodium_lib_dir=${SODIUM_LIB_DIR} &&
+docker build -t zeromq-android:latest . --build-arg target_arch=${TARGET_ARCH} --build-arg target_api=${TARGET_API} --build-arg cross_compile=${CROSS_COMPILE} --build-arg sodium_lib_dir=${SODIUM_LIB_DIR} && \
 docker run zeromq-android:latest && \
 docker_id=$(docker ps -a | grep zeromq-android:latest | grep Exited | tail -n 1 | cut -d ' ' -f 1) && \
 docker_image_id=$(docker image ls | grep zeromq-android | perl -pe 's/\s+/ /g' | cut -d ' ' -f 3) && \
