@@ -68,30 +68,10 @@ void VcxWrapperCommonStringStringLongCallback(vcx_command_handle_t xcommand_hand
                                               const char *arg2,
                                               unsigned long long arg3);
 
-
 @interface ConnectMeVcx : NSObject
 
-/**
- Calls when peer accepts a connection request from remoteDid.
- 
- Alghoritm:
- 1. Prepare pool and wallet if needed.
- 2. Check if a pairwiseDid is already stored for remoteDid
- 3. If pairwise is not stored:
-     Create myDid with IndySignus:createAndStoreMyDid.
-     Create pairwise pair remoteDid:myDid and store in wallet with IndyPairwise: createPairwise.
- 4. Store metadata.
- 5. Return completion block, containing error and json in format: {"verificationKey": "generatedVerificationKey", "userDID": "generated pairwise DID for passed remoteDID"}
- 
- 
- @param remoteDid Id of receiver identity.
- @param remoteVerkey Verification key of remoteDID.
- @param metadata Optional. Dictionaty with format: {String: Any}.
- @param completion Completion block, returns error and json with info about generated pairwise did. Will be invoked in Main thread.
- */
-
 - (void)init:(NSString *)config
-               completion:(void (^)(NSError *error))completion;
+    completion:(void (^)(NSError *error))completion;
 
 - (void)createOneTimeInfo:(NSString *)config
                completion:(void (^)(NSError *error, NSString *config))completion;
@@ -106,6 +86,19 @@ void VcxWrapperCommonStringStringLongCallback(vcx_command_handle_t xcommand_hand
 
 - (void)updatePushToken:(NSString *)config
              completion:(void (^)(NSError *error))completion;
+
+- (void)getCredential:(NSInteger *)credentailHandle
+           completion:(void (^)(NSError *error, NSString *credential))completion;
+
+- (void)generateCredentail:(NSString *)credentialOffer
+                 remoteDid:(NSString *)sourceId
+                completion:(void (^)(NSError *error, NSInteger *credentailHandle))completion;
+
+- (void)sendCredentialRequest:(NSInteger *)credentailHandle
+             connectionHandle:(VcxHandle *)connectionHandle
+                   completion:(void (^)(NSError *error))completion;
+- (void)getCredentialState:(NSInteger *)credentailHandle
+                completion:(void (^)(NSError *error, NSInteger *state))completion;
 
 @end
 
