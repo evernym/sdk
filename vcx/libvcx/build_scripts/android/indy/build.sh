@@ -1,9 +1,5 @@
 #!/bin/bash
 
-TARGET_ARCH=$1
-TARGET_API=$2
-CROSS_COMPILE=$3
-GIT_INSTALL=${4:-master}
 FINAL="0"
 
 while getopts ":f" opt; do
@@ -13,6 +9,11 @@ while getopts ":f" opt; do
     esac
 done
 shift $((OPTIND -1))
+
+TARGET_ARCH=$1
+TARGET_API=$2
+CROSS_COMPILE=$3
+GIT_INSTALL=${4:-master}
 
 if [ -z "${TARGET_ARCH}" ]; then
     echo STDERR "Missing TARGET_ARCH argument"
