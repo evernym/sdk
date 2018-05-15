@@ -11,10 +11,10 @@ source ./mac.02.libindy.env.sh
 if [ -d $WORK_DIR/vcx-indy-sdk ]; then
     #rm -rf $WORK_DIR/vcx-indy-sdk
     cd $WORK_DIR/vcx-indy-sdk
-    git pull
     git checkout .
     git clean -f
     git clean -fd
+    git pull
 else
     git clone https://github.com/hyperledger/indy-sdk.git $WORK_DIR/vcx-indy-sdk
 fi

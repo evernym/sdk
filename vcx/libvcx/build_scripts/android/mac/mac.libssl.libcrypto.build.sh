@@ -10,10 +10,10 @@ WORK_DIR=$(abspath "$WORK_DIR")
 if [ -d $WORK_DIR/openssl_for_ios_and_android ]; then
     #rm -rf $WORK_DIR/openssl_for_ios_and_android
     cd $WORK_DIR/openssl_for_ios_and_android
-    git pull
     git checkout .
     git clean -f
     git clean -fd
+    git pull
 else
     git clone https://github.com/nsivraj/openssl_for_ios_and_android.git $WORK_DIR/openssl_for_ios_and_android
     cd $WORK_DIR/openssl_for_ios_and_android
