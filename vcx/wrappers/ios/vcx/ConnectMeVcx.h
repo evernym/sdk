@@ -87,6 +87,19 @@ void VcxWrapperCommonStringStringLongCallback(vcx_command_handle_t xcommand_hand
 - (void)updatePushToken:(NSString *)config
              completion:(void (^)(NSError *error))completion;
 
+- (void)getCredential:(NSInteger *)credentailHandle
+           completion:(void (^)(NSError *error, NSString *credential))completion;
+
+- (void)generateCredentail:(NSString *)credentialOffer
+                 remoteDid:(NSString *)sourceId
+                completion:(void (^)(NSError *error, NSInteger *credentailHandle))completion;
+
+- (void)sendCredentialRequest:(NSInteger *)credentailHandle
+             connectionHandle:(VcxHandle *)connectionHandle
+                   completion:(void (^)(NSError *error))completion;
+- (void)getCredentialState:(NSInteger *)credentailHandle
+                completion:(void (^)(NSError *error, NSInteger *state))completion;
+
 @end
 
 #endif /* init_h */
