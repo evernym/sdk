@@ -65,4 +65,5 @@ if [[ $RUSTC_VERSION =~ ^'rustc ' ]]; then
     brew install zmq
     brew install wget
     brew install truncate
+    brew install libz
 fi
