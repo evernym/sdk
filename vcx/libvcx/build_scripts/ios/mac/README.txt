@@ -18,6 +18,9 @@ is installed at /Users/[username]/Library/Android/sdk (YES, this is for iOS but 
 12) Run the script ./mac.04.libvcx.setup.sh
 13) Run the script 'source ./mac.05.libvcx.env.sh'
 14) Run the script ./mac.06.libvcx.build.sh (Test failures do not prevent the .a files from being correctly built)
+If you get the error
+error: failed to add native library /usr/local/lib/libindy.a: File too small to be an archive
+then that means the build.rs file in the sdk/vcx/libvcx folder is setup incorrectly
 15) Run the script ./mac.08.libssl.libcrypto.build.sh
 16) Run the script ./mac.09.libzmq.libsodium.build.sh
 17) Run the script ./mac.10.libminiz.libsqlite3.combine.sh
@@ -37,6 +40,9 @@ when you have ALREADY built them before on this machine
 3) Run the script ./mac.04.libvcx.setup.sh
 4) Run the script 'source ./mac.05.libvcx.env.sh'
 5) Run the script ./mac.06.libvcx.build.sh (Test failures do not prevent the .a files from being correctly built)
+If you get the error
+error: failed to add native library /usr/local/lib/libindy.a: File too small to be an archive
+then that means the build.rs file in the sdk/vcx/libvcx folder is setup incorrectly
 6) Run the script ./mac.11.copy.static.libs.to.app.sh
 7) Run the script ./mac.12.combine.static.libs.sh
 8) Now you should be able to open up the file sdk/vcx/wrappers/ios/vcx/vcx.xcodeproj
