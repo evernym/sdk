@@ -259,7 +259,7 @@ void VcxWrapperCommonStringStringLongCallback(vcx_command_handle_t xcommand_hand
 @implementation ConnectMeVcx
 
 - (void)init:(NSString *)config 
-completion:(void (^)(NSError *error))completion
+  completion:(void (^)(NSError *error))completion
 {
     const char *config_char = [config cString];
     vcx_command_handle_t handle= [[VcxCallbacks sharedInstance] createCommandHandleFor:completion] ;
@@ -295,8 +295,8 @@ completion:(void (^)(NSError *error))completion
 }
 
 - (void)createConnectionWithInvite:(NSString *)invitationId
-                inviteDetails:(NSString *)inviteDetails
-             completion:(void (^)(NSError *error, NSString *credentialHandle)) completion
+                     inviteDetails:(NSString *)inviteDetails
+                        completion:(void (^)(NSError *error, NSString *credentialHandle)) completion
 {
    vcx_error_t ret;
 
@@ -315,8 +315,8 @@ completion:(void (^)(NSError *error))completion
 }
 
 - (void)acceptInvitation: (NSInteger *) connectionHandle
-        connectionType: (NSString *) connectionType
-            completion: (void (^)(NSError *error, NSString *inviteDetails)) completion
+          connectionType: (NSString *) connectionType
+              completion: (void (^)(NSError *error, NSString *inviteDetails)) completion
 {
    vcx_error_t ret;
    
@@ -333,8 +333,8 @@ completion:(void (^)(NSError *error))completion
    }
 }
 
-- (void)updatePushToken: (NSInteger *) config
-            completion: (void (^)(NSError *error)) completion
+- (void)updatePushToken: (NSString *) config
+             completion: (void (^)(NSError *error)) completion
 {
    vcx_error_t ret;
    
@@ -351,76 +351,28 @@ completion:(void (^)(NSError *error))completion
    }
 }
 
-- (void)getCredential:(NSInteger *)credentailHandle
-           completion:(void (^)(NSError *error, NSString *credential))completion{
+- (void)generateProof:(NSString *)proofRequestId
+       requestedAttrs:(NSString *)requestedAttrs
+  requestedPredicates:(NSString *)requestedPredicates
+            proofName:(NSString *)proofName
+           completion:(void (^)(NSError *error, NSString *proofHandle))completion;
+{
    vcx_error_t ret;
+
    vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
-
-   ret = vcx_get_credential(handle, credentailHandle, VcxWrapperCommonStringCallback)
-
+   const char *proofRequestId_char = [proofRequestId cString];
+   const char *requestedAttrs_char = [requestedAttrs cString];
+   const char *requestedPredicates_char = [requestedPredicates cString];
+   const char *proofName_char = [proofName cString];
+   ret = vcx_proof_create(handle, proofRequestId_char, requestedAttrs_char, requestedPredicates_char, proofName_char, VcxWrapperCommonStringCallback)
    if( ret != Success )
    {
        [[VcxCallbacks sharedInstance] deleteCommandHandleFor: handle];
-       
+
        dispatch_async(dispatch_get_main_queue(), ^{
            completion([NSError errorFromVcxError: ret], nil);
        });
    }
 }
-
-- (void)generateCredentail:(NSString *)credentialOffer
-            remoteDid:(NSString *)sourceId
-           completion:(void (^)(NSError *error, NSInteger *credentailHandle))completion{
-   vcx_error_t ret;
-   vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
-   const char * credential_offer=[credentialOffer cString];
-   const char * source_id = [sourceId cString];
-   ret = vcx_credential_create_with_offer(handle, source_id,credential_offer, VcxWrapperCommonNumberCallback)
-
-   if( ret != Success )
-   {
-       [[VcxCallbacks sharedInstance] deleteCommandHandleFor: handle];
-       
-       dispatch_async(dispatch_get_main_queue(), ^{
-           completion([NSError errorFromVcxError: ret], nil);
-       });
-   }
-}
-
-- (void)sendCredentialRequest:(NSInteger *)credentailHandle
-             connectionHandle:(VcxHandle *)connectionHandle
-                   completion:(void (^)(NSError *error, NSString *credential))completion{
-    vcx_error_t ret;
-   vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
-
-   ret = vcx_credential_send_request(handle, credentailHandle,connectionHandle, VcxWrapperCommonCallback)
-
-   if( ret != Success )
-   {
-       [[VcxCallbacks sharedInstance] deleteCommandHandleFor: handle];
-       
-       dispatch_async(dispatch_get_main_queue(), ^{
-           completion([NSError errorFromVcxError: ret],nil);
-       });
-   }
-}
-- (void)getCredentialState:(NSInteger *)credentailHandle
-                completion:(void (^)(NSError *error,NSInteger *state))completion{
-   vcx_error_t ret;
-   vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
-
-   ret = vcx_credential_get_state(handle, credentailHandle,connectionHandle, VcxWrapperCommonNumberCallback)
-
-   if( ret != Success )
-   {
-       [[VcxCallbacks sharedInstance] deleteCommandHandleFor: handle];
-       
-       dispatch_async(dispatch_get_main_queue(), ^{
-           completion([NSError errorFromVcxError: ret],nil);
-       });
-   }
-}
-
-
 
 @end
