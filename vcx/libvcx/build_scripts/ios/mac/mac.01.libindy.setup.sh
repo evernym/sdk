@@ -1,24 +1,46 @@
 #!/bin/sh
 
 #1) Install Rust and rustup (https://www.rust-lang.org/install.html).
-RUSTC_VERSION=`rustc --version`
+RUSTUP_VERSION=`rustup --version`
 if [ "$?" != "0" ]; then
-    if [ -f $HOME/.cargo/bin/rustc ]; then
+    if [ -f $HOME/.cargo/bin/rustup ]; then
         echo "You need to add $HOME/.cargo/bin to your PATH environment variable or simply restart your terminal"
         exit 1
     else
+        if [ -f /usr/local/bin/rustc ]; then
+            sudo mv /usr/local/bin/rustc /usr/local/bin/rustc.bak
+            sudo mv /usr/local/bin/rustdoc /usr/local/bin/rustdoc.bak
+            sudo mv /usr/local/bin/rust-lldb /usr/local/bin/rust-lldb.bak
+            sudo mv /usr/local/bin/rust-gdb /usr/local/bin/rust-gdb.bak
+        fi
+        if [ -d /usr/local/lib/rustlib ]; then
+            sudo mv /usr/local/lib/rustlib /usr/local/lib/rustlib.bak
+            sudo mkdir /usr/local/lib/rustlib.bak/libs
+            sudo mv /usr/local/lib/librustc* /usr/local/lib/rustlib.bak/libs
+        fi
         curl https://sh.rustup.rs -sSf | sh
         source $HOME/.cargo/env
         rustup component add rust-src
         rustup component add rust-docs
         rustup update
-        RUSTC_VERSION=`rustc --version`
+        RUSTUP_VERSION=`rustup --version`
+        if [ -f /usr/local/bin/rustc.bak ]; then
+            sudo mv /usr/local/bin/rustc.bak /usr/local/bin/rustc
+            sudo mv /usr/local/bin/rustdoc.bak /usr/local/bin/rustdoc
+            sudo mv /usr/local/bin/rust-lldb.bak /usr/local/bin/rust-lldb
+            sudo mv /usr/local/bin/rust-gdb.bak /usr/local/bin/rust-gdb
+        fi
+        if [ -d /usr/local/lib/rustlib.bak ]; then
+            sudo mv /usr/local/lib/rustlib.bak /usr/local/lib/rustlib
+            sudo mv /usr/local/lib/rustlib/libs/* /usr/local/lib
+            sudo rm -rf /usr/local/lib/rustlib/libs
+        fi
     fi
 fi
 # Steps to uninstall rustup to test that the step 1) works again
 # rustup self uninstall
 
-if [[ $RUSTC_VERSION =~ ^'rustc ' ]]; then
+if [[ $RUSTUP_VERSION =~ ^'rustup ' ]]; then
     rustup component add rls-preview rust-analysis rust-src
     rustup target add aarch64-apple-ios armv7-apple-ios armv7s-apple-ios x86_64-apple-ios i386-apple-ios
     cargo install cargo-lipo
