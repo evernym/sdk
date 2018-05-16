@@ -2,7 +2,7 @@
 
 source ./mac.05.libvcx.env.sh
 cd ../../..
-#cargo clean
+cargo clean
 # To build for macos
 #cargo build
 #export LIBINDY_DIR=/usr/local/lib
@@ -13,6 +13,6 @@ cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios,armv
 #LIBINDY_DIR=/usr/local/lib RUST_BACKTRACE=1 cargo lipo
 #LIBINDY_DIR=/usr/local/lib cargo test
 
-#cargo test
+cargo test
 
 #lipo -info 
