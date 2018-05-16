@@ -31,7 +31,7 @@ if [ -f $1.a ]; then
     exit 1
 fi
 
-if [ "$1" = "" ]; then
+if [ "$1" = "" || "$1" = "libvcx" ]; then
     echo "You must provide a name for the resultant library, not libvcx.a as it is already used!"
     exit 1
 fi
