@@ -80,15 +80,12 @@ void VcxWrapperCommonStringStringLongCallback(vcx_command_handle_t xcommand_hand
                      inviteDetails:(NSString *)inviteDetails
                         completion:(void (^)(NSError *error, NSString *credentialHandle))completion;
 
-- (void)acceptInvitation:(VcxHandle *)connectionHandle
+- (void)connectionHandle:(VcxHandle *)connectionHandle
           connectionType:(NSString *)connectionType
               completion:(void (^)(NSError *error, NSString *inviteDetails))completion;
 
-- (void)generateProof:(NSString *)proofRequestId
-       requestedAttrs:(NSString *)requestedAttrs
-  requestedPredicates:(NSString *)requestedPredicates
-            proofName:(NSString *)proofName
-           completion:(void (^)(NSError *error, NSString *proofHandle))completion;
+- (void)updatePushToken:(NSString *)config
+             completion:(void (^)(NSError *error))completion;
 
 - (void)getCredential:(NSInteger *)credentailHandle
            completion:(void (^)(NSError *error, NSString *credential))completion;
