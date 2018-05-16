@@ -44,7 +44,7 @@ You must comment out the lines 68 to 85 that look like this, then rerun the scri
 16) Run the script ./mac.09.libzmq.libsodium.build.sh
 17) Run the script ./mac.10.libminiz.libsqlite3.combine.sh
 18) Run the script ./mac.11.copy.static.libs.to.app.sh
-19) Run the script ./mac.12.combine.static.libs.sh
+19) Run the script ./mac.12.combine.static.libs.sh libvcxall
 20) Now you should be able to open up the file sdk/vcx/wrappers/ios/vcx/vcx.xcodeproj
 in Xcode and build and run the iphone app in the simulator
 
