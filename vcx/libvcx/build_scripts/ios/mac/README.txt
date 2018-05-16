@@ -92,12 +92,13 @@ using the macOS launchd daemon
 when you have ALREADY built them before on this machine
 --------------------------------------------------------------------------
 1) Change the value of the Program key in the launchd.daemon.build.libvxc.plist file to the location of the launchd.daemon.build.libvxc.sh script on your machine
-2) To see if it is already loaded do: launchctl list|grep local.build_libvcx
+2) Change the value of the UserName key to the username of the user who will run the script
+2) To see if it is already loaded do: sudo launchctl list|grep local.build_libvcx
 3) If it is not already loaded then do:
-   a) cp sdk/vcx/libvcx/build_scripts/ios/mac/launchd.daemon.build.libvxc.plist /Library/LaunchDaemons
-   b) launchctl load /Library/LaunchDaemons/launchd.daemon.build.libvxc.plist
+   a) sudo cp sdk/vcx/libvcx/build_scripts/ios/mac/launchd.daemon.build.libvxc.plist /Library/LaunchDaemons
+   b) sudo launchctl load /Library/LaunchDaemons/launchd.daemon.build.libvxc.plist
 4) Now the building of libvcx will happen automatically once a day at the time listed in the launchd.daemon.build.libvxc.plist file
-5) To unload the script so that it will not run do: launchctl unload /Library/LaunchDaemons/launchd.daemon.build.libvxc.plist
+5) To unload the script so that it will not run do: sudo launchctl unload /Library/LaunchDaemons/launchd.daemon.build.libvxc.plist
 6) To start the job immediately rather than wait until the time listed in the launchd.daemon.build.libvxc.plist file do
-   launchctl start local.build_libvcx
+   sudo launchctl start local.build_libvcx
 

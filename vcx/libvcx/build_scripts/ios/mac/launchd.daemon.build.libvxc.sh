@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 START_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $START_DIR
