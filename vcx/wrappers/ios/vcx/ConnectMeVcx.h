@@ -70,35 +70,45 @@ void VcxWrapperCommonStringStringLongCallback(vcx_command_handle_t xcommand_hand
 
 @interface ConnectMeVcx : NSObject
 
-- (void)init:(NSString *)config
-    completion:(void (^)(NSError *error))completion;
+- (void)initWithConfig:(NSString *)config
+            completion:(void (^)(NSError *error))completion;
 
-- (void)createOneTimeInfo:(NSString *)config
-               completion:(void (^)(NSError *error, NSString *config))completion;
+- (void)agentProvisionAsync:(NSString *)config
+                 completion:(void (^)(NSError *error, NSString *config))completion;
 
-- (void)createConnectionWithInvite:(NSString *)invitationId
+- (void)connectionCreateWithInvite:(NSString *)invitationId
                      inviteDetails:(NSString *)inviteDetails
                         completion:(void (^)(NSError *error, NSString *credentialHandle))completion;
 
-- (void)connectionHandle:(VcxHandle *)connectionHandle
-          connectionType:(NSString *)connectionType
-              completion:(void (^)(NSError *error, NSString *inviteDetails))completion;
+- (void)connectionConnect:(VcxHandle *)connectionHandle
+           connectionType:(NSString *)connectionType
+               completion:(void (^)(NSError *error, NSString *inviteDetails))completion;
 
-- (void)updatePushToken:(NSString *)config
+- (void)agentUpdateInfo:(NSString *)config
              completion:(void (^)(NSError *error))completion;
 
 - (void)getCredential:(NSInteger *)credentailHandle
            completion:(void (^)(NSError *error, NSString *credential))completion;
 
-- (void)generateCredentail:(NSString *)credentialOffer
-                 remoteDid:(NSString *)sourceId
-                completion:(void (^)(NSError *error, NSInteger *credentailHandle))completion;
+- (void)credentialCreateWithOffer:(NSString *)sourceId
+                            offer:(NSString *)credentialOffer
+                       completion:(void (^)(NSError *error, NSInteger *credentailHandle))completion;
 
-- (void)sendCredentialRequest:(NSInteger *)credentailHandle
+- (void)credentialSendRequest:(NSInteger *)credentailHandle
              connectionHandle:(VcxHandle *)connectionHandle
                    completion:(void (^)(NSError *error))completion;
-- (void)getCredentialState:(NSInteger *)credentailHandle
+
+- (void)credentialGetState:(NSInteger *)credentailHandle
                 completion:(void (^)(NSError *error, NSInteger *state))completion;
+
+- (void)credentialGetOffers:(VcxHandle *)connectionHandle
+                 completion:(void (^)(NSError *error, NSString *offers))completion;
+
+- (void)credentialSerialize:(NSInteger *)credentailHandle
+                 completion:(void (^)(NSError *error, NSString *state))completion;
+
+- (void)credentialDeserialize:(NSString *)serializedCredential
+                   completion:(void (^)(NSError *error, NSInteger *credentailHandle))completion;
 
 @end
 
