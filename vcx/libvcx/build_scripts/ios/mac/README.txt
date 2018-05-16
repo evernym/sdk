@@ -20,7 +20,26 @@ is installed at /Users/[username]/Library/Android/sdk (YES, this is for iOS but 
 14) Run the script ./mac.06.libvcx.build.sh (Test failures do not prevent the .a files from being correctly built)
 If you get the error
 error: failed to add native library /usr/local/lib/libindy.a: File too small to be an archive
-then that means the build.rs file in the sdk/vcx/libvcx folder is setup incorrectly
+then that means the build.rs file in the sdk/vcx/libvcx folder is setup incorrectly.
+You must comment out the lines 68 to 85 that look like this, then rerun the script...
+        let libindy_lib_path = match env::var("LIBINDY_DIR"){
+            Ok(val) => val,
+            Err(..) => panic!("Missing required environment variable LIBINDY_DIR")
+        };
+
+        let openssl = match env::var("OPENSSL_LIB_DIR") {
+            Ok(val) => val,
+            Err(..) => match env::var("OPENSSL_DIR") {
+                Ok(dir) => Path::new(&dir[..]).join("/lib").to_string_lossy().into_owned(),
+                Err(..) => panic!("Missing required environment variables OPENSSL_DIR or OPENSSL_LIB_DIR")
+            }
+        };
+
+        println!("cargo:rustc-link-search=native={}",libindy_lib_path);
+        println!("cargo:rustc-link-lib=static=indy");
+        println!("cargo:rustc-link-search=native={}", openssl);
+        println!("cargo:rustc-link-lib=static=crypto");
+        println!("cargo:rustc-link-lib=static=ssl");
 15) Run the script ./mac.08.libssl.libcrypto.build.sh
 16) Run the script ./mac.09.libzmq.libsodium.build.sh
 17) Run the script ./mac.10.libminiz.libsqlite3.combine.sh
@@ -42,7 +61,26 @@ when you have ALREADY built them before on this machine
 5) Run the script ./mac.06.libvcx.build.sh (Test failures do not prevent the .a files from being correctly built)
 If you get the error
 error: failed to add native library /usr/local/lib/libindy.a: File too small to be an archive
-then that means the build.rs file in the sdk/vcx/libvcx folder is setup incorrectly
+then that means the build.rs file in the sdk/vcx/libvcx folder is setup incorrectly.
+You must comment out the lines 68 to 85 that look like this, then rerun the script...
+        let libindy_lib_path = match env::var("LIBINDY_DIR"){
+            Ok(val) => val,
+            Err(..) => panic!("Missing required environment variable LIBINDY_DIR")
+        };
+
+        let openssl = match env::var("OPENSSL_LIB_DIR") {
+            Ok(val) => val,
+            Err(..) => match env::var("OPENSSL_DIR") {
+                Ok(dir) => Path::new(&dir[..]).join("/lib").to_string_lossy().into_owned(),
+                Err(..) => panic!("Missing required environment variables OPENSSL_DIR or OPENSSL_LIB_DIR")
+            }
+        };
+
+        println!("cargo:rustc-link-search=native={}",libindy_lib_path);
+        println!("cargo:rustc-link-lib=static=indy");
+        println!("cargo:rustc-link-search=native={}", openssl);
+        println!("cargo:rustc-link-lib=static=crypto");
+        println!("cargo:rustc-link-lib=static=ssl");
 6) Run the script ./mac.11.copy.static.libs.to.app.sh
 7) Run the script ./mac.12.combine.static.libs.sh
 8) Now you should be able to open up the file sdk/vcx/wrappers/ios/vcx/vcx.xcodeproj
