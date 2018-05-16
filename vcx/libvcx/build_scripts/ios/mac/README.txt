@@ -87,18 +87,19 @@ You must comment out the lines 68 to 85 that look like this, then rerun the scri
 in Xcode and build and run the iphone app in the simulator with the latest changes in libindy and libvcx
 
 
-Steps to re-build libindy.a and libvcx.a for iOS
-using the macOS launchd daemon
+Steps to automatically re-build libindy.a and libvcx.a for iOS
+every day using the macOS launchd daemon
 when you have ALREADY built them before on this machine
 --------------------------------------------------------------------------
 1) Change the value of the Program key in the launchd.daemon.build.libvxc.plist file to the location of the launchd.daemon.build.libvxc.sh script on your machine
 2) Change the value of the UserName key to the username of the user who will run the script
-2) To see if it is already loaded do: sudo launchctl list|grep local.build_libvcx
-3) If it is not already loaded then do:
+3) Change the username iosbuild1 to the username of the user who will run the script
+4) To see if it is already loaded do: sudo launchctl list|grep local.build_libvcx
+5) If it is not already loaded then do:
    a) sudo cp sdk/vcx/libvcx/build_scripts/ios/mac/launchd.daemon.build.libvxc.plist /Library/LaunchDaemons
    b) sudo launchctl load /Library/LaunchDaemons/launchd.daemon.build.libvxc.plist
-4) Now the building of libvcx will happen automatically once a day at the time listed in the launchd.daemon.build.libvxc.plist file
-5) To unload the script so that it will not run do: sudo launchctl unload /Library/LaunchDaemons/launchd.daemon.build.libvxc.plist
-6) To start the job immediately rather than wait until the time listed in the launchd.daemon.build.libvxc.plist file do
+6) Now the building of libvcx will happen automatically once a day at the time listed in the launchd.daemon.build.libvxc.plist file
+7) To unload the script so that it will not run do: sudo launchctl unload /Library/LaunchDaemons/launchd.daemon.build.libvxc.plist
+8) To start the job immediately rather than wait until the time listed in the launchd.daemon.build.libvxc.plist file do
    sudo launchctl start local.build_libvcx
 
