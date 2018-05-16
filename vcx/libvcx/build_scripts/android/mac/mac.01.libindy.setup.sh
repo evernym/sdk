@@ -34,6 +34,7 @@ if [ "$ANDROID_SDK_MANAGER" != "" ]; then
             ./mac.build.ndk.standalone.toolchain.sh
             ./mac.libssl.libcrypto.build.sh
             ./mac.libzmq.libsodium.build.sh
+            ./mac.build.libz.sh
         fi
 else
     echo "ERROR: You must first install the android sdkmanager and set the environment variable ANDROID_HOME, the easiest way is via Android Studio!!"
