@@ -14,6 +14,7 @@ if [ -d $WORK_DIR/vcx-indy-sdk ]; then
     git checkout .
     git clean -f
     git clean -fd
+    git pull
 else
     git clone https://github.com/hyperledger/indy-sdk.git $WORK_DIR/vcx-indy-sdk
 fi

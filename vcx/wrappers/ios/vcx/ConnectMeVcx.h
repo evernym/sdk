@@ -109,6 +109,11 @@ void VcxWrapperCommonStringStringLongCallback(vcx_command_handle_t xcommand_hand
 
 - (void)credentialDeserialize:(NSString *)serializedCredential
                    completion:(void (^)(NSError *error, NSInteger *credentailHandle))completion;
+- (void)generateProof:(NSString *)proofRequestId
+         requestedAttrs:(NSString *)requestedAttrs
+    requestedPredicates:(NSString *)requestedPredicates
+              proofName:(NSString *)proofName
+             completion:(void (^)(NSError *error, NSString *proofHandle))completion;
 
 @end
 
