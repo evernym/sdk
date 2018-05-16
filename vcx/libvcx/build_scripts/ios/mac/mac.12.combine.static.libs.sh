@@ -24,7 +24,7 @@ INDY_SDK=$WORK_DIR/vcx-indy-sdk
 VCX_SDK=$START_DIR/../../../../..
 VCX_SDK=$(abspath "$VCX_SDK")
 
-cd $VCX_SDK/vcx/wrappers/ios/ios-demo-vcx/lib
+cd $VCX_SDK/vcx/wrappers/ios/vcx/lib
 
 if [ -f $1.a ]; then
     echo "The library $1.a already exists!!!"
