@@ -1,6 +1,8 @@
+#[allow(unused_imports)]
 #[macro_use]
 extern crate serde_json;
 
+#[allow(unused_imports)]
 #[cfg(test)]
 mod tests {
     extern crate vcx;
