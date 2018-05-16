@@ -421,6 +421,29 @@ completion:(void (^)(NSError *error))completion
    }
 }
 
+- (void)generateProof:(NSString *)proofRequestId
+       requestedAttrs:(NSString *)requestedAttrs
+  requestedPredicates:(NSString *)requestedPredicates
+            proofName:(NSString *)proofName
+           completion:(void (^)(NSError *error, NSString *proofHandle))completion;
+{
+   vcx_error_t ret;
+
+   vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
+   const char *proofRequestId_char = [proofRequestId cString];
+   const char *requestedAttrs_char = [requestedAttrs cString];
+   const char *requestedPredicates_char = [requestedPredicates cString];
+   const char *proofName_char = [proofName cString];
+   ret = vcx_proof_create(handle, proofRequestId_char, requestedAttrs_char, requestedPredicates_char, proofName_char, VcxWrapperCommonStringCallback)
+   if( ret != Success )
+   {
+       [[VcxCallbacks sharedInstance] deleteCommandHandleFor: handle];
+
+       dispatch_async(dispatch_get_main_queue(), ^{
+           completion([NSError errorFromVcxError: ret], nil);
+       });
+   }
+}
 
 
 @end
