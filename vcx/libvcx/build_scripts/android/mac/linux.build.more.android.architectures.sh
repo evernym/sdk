@@ -1,25 +1,28 @@
 #!/bin/bash
 
+
 declare -a archs=(
-    "arm" "21" "arm-linux-androideabi"
-    "arm64" "21" "aarch64-linux-android"
-    "x86" "21" "i686-linux-android"
-    "x86_64" "21" "x86_64-linux-android"
+    "arm" "arm" "16" "arm-linux-androideabi"
+    "arm" "armv7" "16" "arm-linux-androideabi"
+    "arm64" "arm64" "21" "aarch64-linux-android"
+    "x86" "x86" "16" "i686-linux-android"
+    "x86_64" "x86_64" "21" "x86_64-linux-android"
     )
 archslen=${#archs[@]}
 
 # !IMPORTANT: The architecture at index 0 is already built by the first invocation of the libsodium Dockerfile
-# that is why this for loop starts at index 3
-for (( arch=3; arch<${archslen}; arch=arch+3 ));
+# that is why this for loop starts at index 4
+for (( arch=4; arch<${archslen}; arch=arch+4 ));
 do
     #echo $arch " / " ${archslen} " : " ${archs[$arch]}
-    export target_arch=${archs[$arch]}
-    export target_api=${archs[$arch+1]}
-    export cross_compile=${archs[$arch+2]}
+    export ndk_arch=${archs[$arch]}
+    export target_arch=${archs[$arch+1]}
+    export target_api=${archs[$arch+2]}
+    export cross_compile=${archs[$arch+3]}
     export TARGET_ARCH=${target_arch}
     export TARGET_API=${target_api}
     export CROSS_COMPILE=${cross_compile}
-    export TOOLCHAIN_DIR=/home/sodium_user/${target_arch}
+    export TOOLCHAIN_DIR=/home/sodium_user/${ndk_arch}
     export PATH=${TOOLCHAIN_DIR}/bin:${PATH}
     export CC=${TOOLCHAIN_DIR}/bin/${cross_compile}-clang
     export AR=${TOOLCHAIN_DIR}/bin/${cross_compile}-ar
@@ -28,7 +31,7 @@ do
     export RANLIB=${TOOLCHAIN_DIR}/bin/${cross_compile}-ranlib
     cd /home/sodium_user
     echo "Building Android NDK for architecture ${target_arch}"
-    python3 ${ANDROID_NDK_ROOT}/build/tools/make_standalone_toolchain.py --arch ${target_arch} --api ${target_api} --install-dir ${TOOLCHAIN_DIR}
+    python3 ${ANDROID_NDK_ROOT}/build/tools/make_standalone_toolchain.py --arch ${ndk_arch} --api ${target_api} --install-dir ${TOOLCHAIN_DIR}
     cd /home/sodium_user/libsodium-1.0.12
     make clean
     ./autogen.sh
@@ -51,20 +54,21 @@ else
     echo "Skipping download zeromq-4.2.5.tar.gz"
 fi
 
-for (( arch=0; arch<${archslen}; arch=arch+3 ));
+for (( arch=0; arch<${archslen}; arch=arch+4 ));
 do
-    export target_arch=${archs[$arch]}
-    export target_api=${archs[$arch+1]}
-    export cross_compile=${archs[$arch+2]}
-    export sodium_lib_dir=/home/sodium_user/libsodium_${TARGET_ARCH}/lib
+    export ndk_arch=${archs[$arch]}
+    export target_arch=${archs[$arch+1]}
+    export target_api=${archs[$arch+2]}
+    export cross_compile=${archs[$arch+3]}
     export TARGET_ARCH=${target_arch}
+    export sodium_lib_dir=/home/sodium_user/libsodium_${TARGET_ARCH}/lib
     export TARGET_API=${target_api}
     export CROSS_COMPILE=${cross_compile}
     export ZMQ_HAVE_ANDROID=1
     export SODIUM_LIB_DIR=${sodium_lib_dir}
-    export TOOLCHAIN_DIR=/home/sodium_user/${target_arch}
+    export TOOLCHAIN_DIR=/home/sodium_user/${ndk_arch}
     export PATH=${TOOLCHAIN_DIR}/bin:${PATH}
-    python3 ${ANDROID_NDK_ROOT}/build/tools/make_standalone_toolchain.py --arch ${target_arch} --api ${target_api} --install-dir ${TOOLCHAIN_DIR}
+    python3 ${ANDROID_NDK_ROOT}/build/tools/make_standalone_toolchain.py --arch ${ndk_arch} --api ${target_api} --install-dir ${TOOLCHAIN_DIR}
     cd /home/sodium_user/zeromq-4.2.5
     make clean
     ./autogen.sh
