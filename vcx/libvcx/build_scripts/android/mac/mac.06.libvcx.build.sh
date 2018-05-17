@@ -54,7 +54,7 @@ cargo build --target x86_64-linux-android --release --verbose
 ln -s $WORK_DIR/vcx-indy-sdk/libindy/target/x86_64-apple-darwin/release/libindy.dylib /usr/local/lib/libindy.dylib
 cargo build --target x86_64-apple-darwin --release --verbose
 
-#cargo test
+cargo test
 
 export PATH=$ORIGINAL_PATH
 #export PKG_CONFIG_PATH=$ORIGINAL_PKG_CONFIG_PATH

@@ -42,7 +42,10 @@ fi
 
 if [[ $RUSTUP_VERSION =~ ^'rustup ' ]]; then
     rustup component add rls-preview rust-analysis rust-src
+    
+    rustup target remove aarch64-linux-android armv7-linux-androideabi arm-linux-androideabi i686-linux-android x86_64-linux-android
     rustup target add aarch64-apple-ios armv7-apple-ios armv7s-apple-ios x86_64-apple-ios i386-apple-ios
+
     cargo install cargo-lipo
     cargo install cargo-xcode
     
@@ -63,4 +66,5 @@ if [[ $RUSTUP_VERSION =~ ^'rustup ' ]]; then
     brew install zmq
     brew install wget
     brew install truncate
+    brew install libzip
 fi
