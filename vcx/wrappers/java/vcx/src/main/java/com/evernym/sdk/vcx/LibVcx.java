@@ -1,5 +1,8 @@
 package com.evernym.sdk.vcx;
 
+
+import android.util.Log;
+
 import java.io.File;
 
 import com.sun.jna.Callback;
@@ -10,7 +13,7 @@ import com.sun.jna.NativeLibrary;
 public abstract class LibVcx {
 
     public static final String LIBRARY_NAME = "vcx";
-
+    private static final String TAG ="VCX_ANDROID_WRAPPER";
 	/*
      * Native library interface
 	 */
@@ -38,7 +41,9 @@ public abstract class LibVcx {
     public interface API extends Library {
 
         // pool.rs
-
+        public int vcx_init_with_config(int command_handle,
+                                           String config,
+                                           Callback cb);
         public int vcx_init(int command_handle, String config_path, Callback cb);
 
         public String vcx_error_c_message(int error_code);
@@ -375,7 +380,19 @@ public abstract class LibVcx {
          */
         public int vcx_claim_release(int claim_handle);
 
+/**
+ * Utils object
+ *
+ */
+        public String vcx_provision_agent(String json);
 
+        public int vcx_agent_provision_async(int command_handle, String json,Callback cb);
+
+        public int vcx_agent_update_info(int command_handle,String json,Callback cb);
+
+        public int vcx_ledger_get_fees(int command_handle, Callback cb);
+
+        public void vcx_set_next_agency_response(int message_index);
 
     }
 
@@ -392,6 +409,7 @@ public abstract class LibVcx {
             init();
         } catch (UnsatisfiedLinkError ex) {
 
+            Log.e(TAG, "static initializer: ", ex );
             // Library could not be found in standard OS locations.
             // Call init(File file) explicitly with absolute library path.
         }
