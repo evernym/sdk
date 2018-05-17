@@ -12,6 +12,7 @@ cargo clean
 cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios,armv7s-apple-ios,i386-apple-ios,x86_64-apple-ios"
 #LIBINDY_DIR=/usr/local/lib RUST_BACKTRACE=1 cargo lipo
 #LIBINDY_DIR=/usr/local/lib cargo test
+
 cargo test
 
 #lipo -info 
