@@ -63,8 +63,8 @@
 - (void)applicationDidBecomeActive:(UIApplication *)application {
     // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
     
-    NSString  *config=@"{\"agency_url\": \"http://10.4.32.50:9001\", \"agency_did\": \"sFJZSHGFnsTBwFUeiV83q\",\"wallet_name\":\"wallet1\",\"wallet_key\":\"wallet-key\",\"agent_seed\":null,\"enterprise_seed\":null, \"agency_verkey\": \"UPPrbEH7WRSCdaDdgoUNX8jByvi59cHwHcEr1QESrgT\"}";
-    [[[ConnectMeVcx alloc] init] agentProvision:config completion:^(NSError *error, NSString *config) {
+    NSString  *config=@"{\"agency_url\": \"https://cagency.pdev.evernym.com\", \"agency_did\": \"dTLdJqRZLwMuWSogcKfBT\",\"wallet_name\":\"wallet1\",\"wallet_key\":\"wallet-key\",\"agent_seed\":null,\"enterprise_seed\":null, \"agency_verkey\": \"LsPQTDHi294TexkFmZK9Q9vW4YGtQRuLV8wuyZi94yH\"}";
+    [[[ConnectMeVcx alloc] init] agentProvisionAsync:config completion:^(NSError *error, NSString *config) {
         NSLog(@"applicationDidBecomeActive callback:%@",config);
         if(error){
             
