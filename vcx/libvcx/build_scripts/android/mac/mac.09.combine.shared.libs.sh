@@ -27,6 +27,7 @@ do
     export target_arch=${archs[$arch+1]}
     export cross_compile=${archs[$arch+2]}
 
+    cd $VCX_SDK/vcx/wrappers/java/android/vcxtest/app/jni/${target_arch}
     $NDK_DIR/${ndk_arch}/bin/${cross_compile}-clang -shared -o libvcxall.so -Wl,--whole-archive \
     libindy.so -Wl,-rpath,. \
     libvcx.so -Wl,-rpath,. \

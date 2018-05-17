@@ -26,6 +26,7 @@ do
     export target_arch=${archs[$arch+1]}
     export cross_compile=${archs[$arch+2]}
 
+    mkdir -p $VCX_SDK/vcx/wrappers/java/android/vcxtest/app/jni/${target_arch}
     ln $INDY_SDK/libindy/target/${cross_compile}/release/libindy.so $VCX_SDK/vcx/wrappers/java/android/vcxtest/app/jni/${target_arch}
     ln $VCX_SDK/vcx/libvcx/target/${cross_compile}/release/libvcx.so $VCX_SDK/vcx/wrappers/java/android/vcxtest/app/jni/${target_arch}
     ln $WORK_DIR/libzmq-android/libsodium/libsodium_${target_arch}/lib/libsodium.so $VCX_SDK/vcx/wrappers/java/android/vcxtest/app/jni/${target_arch}
