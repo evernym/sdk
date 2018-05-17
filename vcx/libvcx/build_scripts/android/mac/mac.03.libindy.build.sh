@@ -38,6 +38,15 @@ if [ ! -d $WORK_DIR/libzmq-android/zmq/libzmq_arm ]; then
     unzip libzmq_arm.zip
 fi
 
+if [ ! -d $WORK_DIR/libzmq-android/libsodium/libsodium_armv7 ]; then
+    cd $WORK_DIR/libzmq-android/libsodium
+    unzip libsodium_armv7.zip
+fi
+if [ ! -d $WORK_DIR/libzmq-android/zmq/libzmq_armv7 ]; then
+    cd $WORK_DIR/libzmq-android/zmq
+    unzip libzmq_armv7.zip
+fi
+
 if [ ! -d $WORK_DIR/libzmq-android/libsodium/libsodium_arm64 ]; then
     cd $WORK_DIR/libzmq-android/libsodium
     unzip libsodium_arm64.zip
