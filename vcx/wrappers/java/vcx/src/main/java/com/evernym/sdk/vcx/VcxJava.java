@@ -1,5 +1,7 @@
 package com.evernym.sdk.vcx;
 
+import android.util.Log;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -18,7 +20,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
  * by the Java wrapper of libvcx.
  */
 public class VcxJava {
-
+	static String TAG ="JAVA_WRAPPER:VCX_JAVA ";
 	/*
 	 * API
 	 */
@@ -113,7 +115,7 @@ public class VcxJava {
 		 * @throws VcxException Thrown if the error code does not indicate success.
 		 */
 		protected static void checkResult(int err) throws VcxException {
-
+			Log.d(TAG, "checkResult: " + err);
 			ErrorCode errorCode = ErrorCode.valueOf(err);
 			if (! ErrorCode.Success.equals(errorCode)) throw VcxException.fromSdkError(err);
 		}
