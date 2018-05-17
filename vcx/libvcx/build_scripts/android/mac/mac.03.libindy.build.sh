@@ -17,8 +17,10 @@ if [ -d $WORK_DIR/vcx-indy-sdk ]; then
     git pull
 else
     git clone https://github.com/hyperledger/indy-sdk.git $WORK_DIR/vcx-indy-sdk
+    cd $WORK_DIR/vcx-indy-sdk
+    git checkout tags/v1.4.0
 fi
-cd $WORK_DIR/vcx-indy-sdk
+#cd $WORK_DIR/vcx-indy-sdk
 #git checkout tags/v1.3.0
 cd $WORK_DIR/vcx-indy-sdk/libindy
 
@@ -69,6 +71,8 @@ export ORIGINAL_PATH=$PATH
 
 cargo clean
 
+export OPENSSL_DIR_DARWIN=$OPENSSL_DIR
+
 export PATH=$WORK_DIR/NDK/arm/bin:$ORIGINAL_PATH
 export OPENSSL_DIR=$WORK_DIR/openssl_for_ios_and_android/output/android/openssl-armeabi
 export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_arm/lib
@@ -100,6 +104,7 @@ export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_x86_64/lib
 cargo build --target x86_64-linux-android --release --verbose
 
 # This builds the library for code that runs in OSX
+export OPENSSL_DIR=$OPENSSL_DIR_DARWIN
 cargo build --target x86_64-apple-darwin --release --verbose
 
 export PATH=$ORIGINAL_PATH

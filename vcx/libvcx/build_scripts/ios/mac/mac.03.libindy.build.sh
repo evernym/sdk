@@ -17,8 +17,10 @@ if [ -d $WORK_DIR/vcx-indy-sdk ]; then
     git pull
 else
     git clone https://github.com/hyperledger/indy-sdk.git $WORK_DIR/vcx-indy-sdk
+    cd $WORK_DIR/vcx-indy-sdk
+    git checkout tags/v1.4.0
 fi
-cd $WORK_DIR/vcx-indy-sdk
+#cd $WORK_DIR/vcx-indy-sdk
 #git checkout tags/v1.3.0
 cd $WORK_DIR/vcx-indy-sdk/libindy
 

@@ -15,6 +15,8 @@ export ORIGINAL_PATH=$PATH
 
 cargo clean
 
+export OPENSSL_DIR_DARWIN=$OPENSSL_DIR
+
 export PATH=$WORK_DIR/NDK/arm/bin:$ORIGINAL_PATH
 export OPENSSL_DIR=$WORK_DIR/openssl_for_ios_and_android/output/android/openssl-armeabi
 export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_arm/lib
@@ -52,6 +54,7 @@ cargo build --target x86_64-linux-android --release --verbose
 
 # This builds the library for code that runs in OSX
 ln -s $WORK_DIR/vcx-indy-sdk/libindy/target/x86_64-apple-darwin/release/libindy.dylib /usr/local/lib/libindy.dylib
+export OPENSSL_DIR=$OPENSSL_DIR_DARWIN
 cargo build --target x86_64-apple-darwin --release --verbose
 
 cargo test
