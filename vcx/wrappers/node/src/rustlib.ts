@@ -48,11 +48,24 @@ export interface IFFIEntryPoint {
   vcx_shutdown: (deleteIndyInfo: boolean) => number,
   vcx_error_c_message: (errorCode: number) => string,
   vcx_version: () => string,
+
+  // wallet
   vcx_wallet_get_token_info: (commandId: number, payment: number, cb: any) => number,
   vcx_wallet_send_tokens: (commandId: number, payment: number, tokens: number, recipient: string, cb: any) => number,
+  vcx_wallet_add_record: (commandId: number, type: string, id: string, value: string, tags: string, cb: any) => number,
+  vcx_wallet_update_record_value: (commandId: number, type: string, id: string, value: string, cb: any) => number,
+  vcx_wallet_update_record_tags: (commandId: number, type: string, id: string, tags: string, cb: any) => number,
+  vcx_wallet_add_record_tags: (commandId: number, type: string, id: string, tags: string, cb: any) => number,
+  vcx_wallet_delete_record_tags: (commandId: number, type: string, id: string, tagsList: string, cb: any) => number,
+  vcx_wallet_delete_record: (commandId: number, type: string, id: string, cb: any) => number,
+  vcx_wallet_get_record: (commandId: number, type: string, id: string, cb: any) => number,
+  vcx_wallet_open_search: (commandId: number, type: string, query: string, options: string, cb: any) => number,
+  vcx_wallet_close_search: (commandId: number, handle: number, cb: any) => number,
+  vcx_wallet_search_next_records: (commandId: number, handle: number, count: number, cb: any) => number,
   vcx_ledger_get_fees: (commandId: number, cb: any) => number,
   vcx_agent_provision_async: (commandId: number, config: string, cb: any) => number,
   vcx_agent_update_info: (commandId: number, config: string, cb: any) => number,
+
   // connection
   vcx_connection_connect: (commandId: number, handle: string, data: string, cb: any) => number,
   vcx_connection_create: (commandId: number, data: string, cb: any) => number,
@@ -147,10 +160,27 @@ export const FFIConfiguration: { [ Key in keyof IFFIEntryPoint ]: any } = {
   vcx_agent_provision_async: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_STRING_DATA, FFI_CALLBACK_PTR]],
   vcx_agent_update_info: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_STRING_DATA, FFI_CALLBACK_PTR]],
 
+  // wallet
   vcx_wallet_get_token_info: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_PAYMENT_HANDLE, FFI_CALLBACK_PTR]],
   vcx_wallet_send_tokens: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_PAYMENT_HANDLE, FFI_PRICE, FFI_STRING_DATA,
     FFI_CALLBACK_PTR]],
   vcx_ledger_get_fees: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CALLBACK_PTR]],
+  vcx_wallet_add_record: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_STRING, FFI_STRING, FFI_STRING,
+    FFI_STRING, FFI_CALLBACK_PTR]],
+  vcx_wallet_update_record_value: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_STRING, FFI_STRING, FFI_STRING,
+    FFI_CALLBACK_PTR]],
+  vcx_wallet_update_record_tags: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_STRING, FFI_STRING, FFI_STRING,
+    FFI_CALLBACK_PTR]],
+  vcx_wallet_add_record_tags: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_STRING, FFI_STRING, FFI_STRING,
+    FFI_CALLBACK_PTR]],
+  vcx_wallet_delete_record_tags: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_STRING, FFI_STRING, FFI_STRING,
+    FFI_CALLBACK_PTR]],
+  vcx_wallet_delete_record: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_STRING, FFI_STRING, FFI_CALLBACK_PTR]],
+  vcx_wallet_get_record: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_STRING, FFI_STRING, FFI_CALLBACK_PTR]],
+  vcx_wallet_open_search: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_STRING, FFI_STRING, FFI_STRING, FFI_CALLBACK_PTR]],
+  vcx_wallet_close_search: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_COMMAND_HANDLE, FFI_CALLBACK_PTR]],
+  vcx_wallet_search_next_records: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE,
+    FFI_COMMAND_HANDLE, FFI_COMMAND_HANDLE, FFI_CALLBACK_PTR]],
 
   // connection
   vcx_connection_connect: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CONNECTION_HANDLE, FFI_CONNECTION_DATA,
