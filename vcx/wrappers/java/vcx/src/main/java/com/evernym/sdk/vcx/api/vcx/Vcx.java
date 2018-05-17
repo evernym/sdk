@@ -12,45 +12,57 @@ public class Vcx extends VcxJava.API {
 
     private Vcx(){}
 
-    private static Callback vcxInitCb = new Callback() {
+    private static Callback vcxIniWithConfigCB = new Callback() {
         public void callback(int command_handle,int err){
-            CompletableFuture<Void> future = (CompletableFuture<Void>) removeFuture(command_handle);
+            CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
             if (!checkCallback(future,err)) return;
-            Void result = null;
+            Integer result = command_handle;
             future.complete(result);
         }
     };
 
-//    private static Callback vcxErrorMessageCb = new Callback() {
-//        public void callback(int command_handle,int err,String error_msg){
-//            CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(command_handle);
-//            if (!checkCallback(future,err)) return;
-//            String result = error_msg;
-//            future.complete(result);
-//        }
-//    };
+    public static Callback vcxInitCB = new Callback() {
 
-    public static CompletableFuture<Void> vcxInit(
-            String configPath
-    ) throws VcxException {
-        ParamGuard.notNullOrWhiteSpace(configPath,"configPath");
-        CompletableFuture<Void> future = new CompletableFuture<Void>();
+        @SuppressWarnings({"unused", "unchecked"})
+        public void callback(int xcommand_handle, int err) {
+            CompletableFuture<Void> future = (CompletableFuture<Void>) removeFuture(xcommand_handle);
+            if (!checkCallback(future, err)) return;
+            Void result = null;
+            future.complete(result);
+
+        }
+    };
+
+    public static CompletableFuture<Integer> vcxInitWithJsonConfig(String config_json) throws VcxException {
+
+        ParamGuard.notNullOrWhiteSpace(config_json,"config");
+        CompletableFuture<Integer> future = new CompletableFuture<Integer>();
         int commandHandle = addFuture(future);
 
-        int result = LibVcx.api.vcx_init(
+        int result = LibVcx.api.vcx_init_with_config(
                 commandHandle,
-                configPath,
-                vcxInitCb);
+                config_json,
+                vcxIniWithConfigCB);
         checkResult(result);
 
         return future;
 
     }
+    public static CompletableFuture<Integer> vcxInit(String configPath) throws VcxException {
+        ParamGuard.notNullOrWhiteSpace(configPath,"configPath");
+        CompletableFuture<Integer> future = new CompletableFuture<Integer>();
+        int commandHandle = addFuture(future);
 
-    public static String vcxErrorMessage(int errorCode) throws VcxException {
+        int result = LibVcx.api.vcx_init(
+                commandHandle, configPath,
+                vcxInitCB);
+        checkResult(result);
+        return future;
+    }
 
-        return LibVcx.api.vcx_error_c_message(
-                errorCode);
+    public static String vcxErrorMessage(int errorCode) {
+
+        return LibVcx.api.vcx_error_c_message(errorCode);
 
 
     }
