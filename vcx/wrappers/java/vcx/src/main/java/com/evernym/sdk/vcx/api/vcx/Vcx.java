@@ -21,7 +21,7 @@ public class Vcx extends VcxJava.API {
         }
     };
 
-    public static Callback vcxInitCB = new Callback() {
+    private static Callback vcxInitCB = new Callback() {
 
         @SuppressWarnings({"unused", "unchecked"})
         public void callback(int xcommand_handle, int err) {
@@ -33,7 +33,7 @@ public class Vcx extends VcxJava.API {
         }
     };
 
-    public static CompletableFuture<Integer> vcxInitWithJsonConfig(String config_json) throws VcxException {
+    public static CompletableFuture<Integer> vcxInitWithConfig(String config_json) throws VcxException {
 
         ParamGuard.notNullOrWhiteSpace(config_json,"config");
         CompletableFuture<Integer> future = new CompletableFuture<Integer>();
@@ -60,7 +60,7 @@ public class Vcx extends VcxJava.API {
         return future;
     }
 
-    public static String vcxErrorMessage(int errorCode) {
+    public static String vcxErrorCMessage(int errorCode) {
 
         return LibVcx.api.vcx_error_c_message(errorCode);
 

@@ -42,7 +42,7 @@ public class Utils extends VcxJava.API {
 
     }
 
-    public static CompletableFuture<String> vcxProvisionAgenctAsync(String conf) throws VcxException {
+    public static CompletableFuture<String> vcxAgentProvisionAsync(String conf) throws VcxException {
         CompletableFuture<String> future = new CompletableFuture<String>();
         int commandHandle = addFuture(future);
 
