@@ -1,11 +1,14 @@
 extern crate libc;
 
 use self::libc::c_char;
+use std::ptr;
 use std::thread;
 use utils::cstring::CStringUtils;
 use utils::error;
 use utils::error::error_string;
 use serde_json;
+use utils::libindy::payments::get_wallet_token_info;
+
 
 /// Get the total balance from all addresses contained in the configured wallet
 ///
@@ -30,13 +33,21 @@ pub extern fn vcx_wallet_get_token_info(command_handle: u32,
           command_handle, payment_handle);
 
     thread::spawn(move|| {
-        let msg = format!("{{\"balance\":\"500.00\"}}");
+        match get_wallet_token_info() {
+            Ok(x) => {
+                info!("vcx_wallet_get_token_info_cb(command_handle: {}, rc: {}, info: {})",
+                    command_handle, error_string(0), x);
 
-        info!("vcx_wallet_get_token_info_cb(command_handle: {}, rc: {}, info: {})",
-              command_handle, error_string(0), msg);
+                let msg = CStringUtils::string_to_cstring(x);
+                cb(command_handle, error::SUCCESS.code_num, msg.as_ptr());
+            },
+            Err(x) => {
+                warn!("vcx_wallet_get_token_info_cb(command_handle: {}, rc: {}, info: {})",
+                    command_handle, error_string(x), "null");
 
-        let msg = CStringUtils::string_to_cstring(msg);
-        cb(command_handle, error::SUCCESS.code_num, msg.as_ptr());
+                cb(command_handle, x, ptr::null_mut());
+            },
+        }
     });
 
     error::SUCCESS.code_num

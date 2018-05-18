@@ -122,7 +122,7 @@ pub extern fn vcx_credential_create_with_msgid(command_handle: u32,
                                                source_id: *const c_char,
                                                connection_handle: u32,
                                                msg_id: *const c_char,
-                                               cb: Option<extern fn(xcommand_handle: u32, err: u32, credential_handle: u32)>) -> u32 {
+                                               cb: Option<extern fn(xcommand_handle: u32, err: u32, credential_handle: u32, offer: *const c_char)>) -> u32 {
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
     check_useful_c_str!(source_id, error::INVALID_OPTION.code_num);
@@ -136,18 +136,19 @@ pub extern fn vcx_credential_create_with_msgid(command_handle: u32,
             Ok(offer) => {
                 match credential::credential_create_with_offer(&source_id, &offer) {
                     Ok(handle) => {
+                        let c_offer = CStringUtils::string_to_cstring(offer);
                         info!("vcx_credential_create_with_offer_cb(command_handle: {}, source_id: {}, rc: {}, handle: {})",
                               command_handle, source_id, error_string(0), handle);
-                        cb(command_handle, error::SUCCESS.code_num, handle)
+                        cb(command_handle, error::SUCCESS.code_num, handle, c_offer.as_ptr())
                     },
                     Err(e) => {
                         warn!("vcx_credential_create_with_offer_cb(command_handle: {}, source_id: {}, rc: {}, handle: {})",
                               command_handle, source_id, error_string(e), 0);
-                        cb(command_handle, e, 0);
+                        cb(command_handle, e, 0, ptr::null_mut());
                     },
                 };
             },
-            Err(e) => cb(command_handle, e.to_error_code(), 0),
+            Err(e) => cb(command_handle, e.to_error_code(), 0, ptr::null_mut()),
         };
     });
 
@@ -465,10 +466,15 @@ mod tests {
         println!("successfully called create_cb")
     }
 
+    extern "C" fn create_with_offer_cb(command_handle: u32, err: u32, credential_handle: u32, offer: *const c_char) {
+        assert_eq!(err, 0);
+        assert!(credential_handle > 0);
+        check_useful_c_str!(offer,());
+    }
+
     extern "C" fn bad_create_cb(command_handle: u32, err: u32, credential_handle: u32) {
         assert!(err > 0);
         assert_eq!(credential_handle, 0);
-        println!("successfully called bad_create_cb")
     }
 
     extern "C" fn serialize_cb(handle: u32, err: u32, credential_string: *const c_char) {
@@ -477,7 +483,6 @@ mod tests {
             panic!("credential_string is null");
         }
         check_useful_c_str!(credential_string, ());
-        println!("successfully called serialize_cb: {}", credential_string);
     }
 
     extern "C" fn get_credential_cb(handle: u32, err: u32, credential_string: *const c_char) {
@@ -602,7 +607,7 @@ mod tests {
                                          CString::new("test_vcx_credential_create").unwrap().into_raw(),
                                          cxn,
                                          CString::new("123").unwrap().into_raw(),
-                                         Some(create_cb)), error::SUCCESS.code_num);
+                                         Some(create_with_offer_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
 
