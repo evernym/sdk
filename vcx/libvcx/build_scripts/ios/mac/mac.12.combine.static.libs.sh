@@ -40,7 +40,7 @@ if [ -f $1.a ]; then
     exit 1
 fi
 
-archs=(armv7 armv7s arm64 x86_64)
+archs=(armv7 armv7s arm64 i386 x86_64)
 libraries=(*.a)
 libtool="/usr/bin/libtool"
 
