@@ -14,9 +14,9 @@ sudo chmod -R a+rwx $WORK_DIR/libzmq-android
 
 cd $WORK_DIR/libzmq-android/libsodium
 chmod a+x build.sh
-./build.sh arm 21 arm-linux-androideabi
+./build.sh arm 16 arm-linux-androideabi
 ##sudo docker run -it -v /Users/norm/forge/work/code/evernym/sdk-evernym/.macosbuild/libzmq-android:/data sodium-android:latest
 cp $START_DIR/linux.build.more.android.architectures.sh $WORK_DIR/libzmq-android
-sudo docker run -v $WORK_DIR/libzmq-android:/data --rm --entrypoint /data/linux.build.more.android.architectures.sh sodium-android
+sudo docker run -v $WORK_DIR/libzmq-android:/data --rm --entrypoint /data/linux.build.more.android.architectures.sh sodium-android:latest
 ##cp linux.build.more.android.architectures.sh ../../../../../.macosbuild/libzmq-android
-##sudo docker run -v /Users/norm/forge/work/code/evernym/sdk-evernym/.macosbuild/libzmq-android:/data --rm --entrypoint /data/linux.build.more.android.architectures.sh sodium-android
+##sudo docker run -v /Users/norm/forge/work/code/evernym/sdk-evernym/.macosbuild/libzmq-android:/data --rm --entrypoint /data/linux.build.more.android.architectures.sh sodium-android:latest
