@@ -301,7 +301,7 @@ mod tests {
             panic!("schema_data is null");
         }
         check_useful_c_str!(schema_data, ());
-        let data = r#"{"data":["sex","age","name","height"],"version":"0.0.11","schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:schema_name:0.0.11","name":"schema_name","source_id":"Test Source ID","sequence_num":0}"#;
+        let data = r#"{"data":["height","name","sex","age"],"version":"4.4.4","schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:test-licence:4.4.4","name":"test-licence","source_id":"Test Source ID","sequence_num":0}"#;
         assert_eq!(schema_data, data);
         println!("successfully called get_attrs_cb: {}", schema_data);
     }

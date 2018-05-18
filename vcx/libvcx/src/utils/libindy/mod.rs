@@ -9,6 +9,8 @@ pub mod return_types;
 pub mod return_types_u32;
 pub mod pool;
 pub mod crypto;
+pub mod payments;
+
 mod error_codes;
 
 extern crate libc;
