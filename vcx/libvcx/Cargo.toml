@@ -13,8 +13,10 @@ path = "src/lib.rs"
 crate-type = ["staticlib","rlib", "dylib"]
 
 [features]
-default = []
+default = ["no_payments", "pool_tests"]
 pool_tests = []
+no_payments = []
+nullpay = []
 
 # turn on release versioning
 ci = []
