@@ -51,6 +51,7 @@ export interface IFFIEntryPoint {
 
   // wallet
   vcx_wallet_get_token_info: (commandId: number, payment: number, cb: any) => number,
+  vcx_wallet_create_payment_address: (commandId: number, cb: any) => number,
   vcx_wallet_send_tokens: (commandId: number, payment: number, tokens: number, recipient: string, cb: any) => number,
   vcx_wallet_add_record: (commandId: number, type: string, id: string, value: string, tags: string, cb: any) => number,
   vcx_wallet_update_record_value: (commandId: number, type: string, id: string, value: string, cb: any) => number,
@@ -162,6 +163,7 @@ export const FFIConfiguration: { [ Key in keyof IFFIEntryPoint ]: any } = {
 
   // wallet
   vcx_wallet_get_token_info: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_PAYMENT_HANDLE, FFI_CALLBACK_PTR]],
+  vcx_wallet_create_payment_address: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CALLBACK_PTR]],
   vcx_wallet_send_tokens: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_PAYMENT_HANDLE, FFI_PRICE, FFI_STRING_DATA,
     FFI_CALLBACK_PTR]],
   vcx_ledger_get_fees: [FFI_ERROR_CODE, [FFI_COMMAND_HANDLE, FFI_CALLBACK_PTR]],

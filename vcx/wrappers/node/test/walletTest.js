@@ -54,8 +54,14 @@ describe('A Connection object with ', function () {
     assert(receipt)
   })
 
+  // createPaymentAddress tests
+  it('can create a payment address', async () => {
+    const address = await Wallet.createPaymentAddress()
+    assert(address)
+  })
+
   // wallet store
-  it.only('can perform record operations', async () => {
+  it('can perform record operations', async () => {
     await Wallet.addRecord(WALLET_RECORD)
     await Wallet.getRecord(WALLET_RECORD.type_, WALLET_RECORD.id)
     await Wallet.updateRecordValue(UPDATE_WALLET_RECORD)
@@ -64,7 +70,6 @@ describe('A Connection object with ', function () {
     await Wallet.deleteRecordTags(WALLET_RECORD, ['one', 'two'])
     await Wallet.deleteRecord(WALLET_RECORD.type_, WALLET_RECORD.id)
     var searchHandle = await Wallet.openSearch(WALLET_RECORD.type_, JSON.stringify(QUERY_JSON), 'null')
-    console.log('searchHandle: ' + searchHandle)
     assert(searchHandle === 1)
     var retrievedRecords = JSON.parse(await Wallet.searchNextRecords(searchHandle, 1))
     assert(JSON.stringify(retrievedRecords) === JSON.stringify(SEARCHED_RECORD))
