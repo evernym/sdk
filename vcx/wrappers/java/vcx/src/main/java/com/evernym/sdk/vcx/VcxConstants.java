@@ -24,4 +24,5 @@ public class VcxConstants {
 	public static final String OP_GET_NYM = "105";
 	public static final String OP_GET_SCHEMA = "107";
 	public static final String OP_GET_CLAIM_DEF = "108";
+
 }

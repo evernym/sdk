@@ -17,8 +17,10 @@ if [ -d $WORK_DIR/vcx-indy-sdk ]; then
     git pull
 else
     git clone https://github.com/hyperledger/indy-sdk.git $WORK_DIR/vcx-indy-sdk
+    cd $WORK_DIR/vcx-indy-sdk
+    git checkout tags/v1.4.0
 fi
-cd $WORK_DIR/vcx-indy-sdk
+#cd $WORK_DIR/vcx-indy-sdk
 #git checkout tags/v1.3.0
 cd $WORK_DIR/vcx-indy-sdk/libindy
 
@@ -34,6 +36,15 @@ fi
 if [ ! -d $WORK_DIR/libzmq-android/zmq/libzmq_arm ]; then
     cd $WORK_DIR/libzmq-android/zmq
     unzip libzmq_arm.zip
+fi
+
+if [ ! -d $WORK_DIR/libzmq-android/libsodium/libsodium_armv7 ]; then
+    cd $WORK_DIR/libzmq-android/libsodium
+    unzip libsodium_armv7.zip
+fi
+if [ ! -d $WORK_DIR/libzmq-android/zmq/libzmq_armv7 ]; then
+    cd $WORK_DIR/libzmq-android/zmq
+    unzip libzmq_armv7.zip
 fi
 
 if [ ! -d $WORK_DIR/libzmq-android/libsodium/libsodium_arm64 ]; then
@@ -69,6 +80,8 @@ export ORIGINAL_PATH=$PATH
 
 cargo clean
 
+export OPENSSL_DIR_DARWIN=$OPENSSL_DIR
+
 export PATH=$WORK_DIR/NDK/arm/bin:$ORIGINAL_PATH
 export OPENSSL_DIR=$WORK_DIR/openssl_for_ios_and_android/output/android/openssl-armeabi
 export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_arm/lib
@@ -77,8 +90,8 @@ cargo build --target arm-linux-androideabi --release --verbose
 
 export PATH=$WORK_DIR/NDK/arm/bin:$ORIGINAL_PATH
 export OPENSSL_DIR=$WORK_DIR/openssl_for_ios_and_android/output/android/openssl-armeabi-v7a
-export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_arm/lib
-export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_arm/lib
+export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_armv7/lib
+export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_armv7/lib
 cargo build --target armv7-linux-androideabi --release --verbose
 
 export PATH=$WORK_DIR/NDK/arm64/bin:$ORIGINAL_PATH
@@ -100,6 +113,7 @@ export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_x86_64/lib
 cargo build --target x86_64-linux-android --release --verbose
 
 # This builds the library for code that runs in OSX
+export OPENSSL_DIR=$OPENSSL_DIR_DARWIN
 cargo build --target x86_64-apple-darwin --release --verbose
 
 export PATH=$ORIGINAL_PATH

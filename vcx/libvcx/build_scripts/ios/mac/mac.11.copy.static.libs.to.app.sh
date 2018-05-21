@@ -17,7 +17,7 @@ cp $INDY_SDK/libindy/target/universal/release/libindy.a $VCX_SDK/vcx/wrappers/io
 cp $VCX_SDK/vcx/libvcx/target/universal/release/libvcx.a $VCX_SDK/vcx/wrappers/ios/vcx/lib
 cp $LIBSSL/lib/libcrypto.a $VCX_SDK/vcx/wrappers/ios/vcx/lib
 cp $LIBSSL/lib/libssl.a $VCX_SDK/vcx/wrappers/ios/vcx/lib
-cp $LIBZMQ/libzmq_dist/lib/libzmq.a $VCX_SDK/vcx/wrappers/ios/vcx/lib
-cp $LIBZMQ/libsodium-ios/libsodium_dist/lib/libsodium.a $VCX_SDK/vcx/wrappers/ios/vcx/lib
+cp $LIBZMQ/dist/ios/lib/libzmq.a $VCX_SDK/vcx/wrappers/ios/vcx/lib
+cp $LIBZMQ/libsodium-ios/dist/ios/lib/libsodium.a $VCX_SDK/vcx/wrappers/ios/vcx/lib
 cp $WORK_DIR/combine-libs/libsqlite3/libsqlite3.a $VCX_SDK/vcx/wrappers/ios/vcx/lib
 cp $WORK_DIR/combine-libs/libminiz/libminiz.a $VCX_SDK/vcx/wrappers/ios/vcx/lib

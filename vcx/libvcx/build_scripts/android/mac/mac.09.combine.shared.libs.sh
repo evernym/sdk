@@ -28,6 +28,7 @@ do
     export cross_compile=${archs[$arch+2]}
 
     cd $VCX_SDK/vcx/wrappers/java/android/vcxtest/app/jni/${target_arch}
+    rm ./libvcxall.so
     $NDK_DIR/${ndk_arch}/bin/${cross_compile}-clang -shared -o libvcxall.so -Wl,--whole-archive \
     libindy.so -Wl,-rpath,. \
     libvcx.so -Wl,-rpath,. \
@@ -35,4 +36,9 @@ do
     libsodium.so -Wl,-rpath,. \
     libz.so -Wl,-rpath,. \
     -Wl,--no-whole-archive -z muldefs
+    echo "Created $VCX_SDK/vcx/wrappers/java/android/vcxtest/app/jni/${target_arch}/libvcxall.so"
+    cd $VCX_SDK/vcx/wrappers/java/android/vcxtest/app/jni
+    rm libvcxall_${target_arch}.zip
+    zip -r libvcxall_${target_arch}.zip ${target_arch}
+    echo "Created $VCX_SDK/vcx/wrappers/java/android/vcxtest/app/jni/libvcxall_${target_arch}.zip"
 done
