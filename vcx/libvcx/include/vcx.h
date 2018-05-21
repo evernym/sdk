@@ -66,10 +66,15 @@ vcx_error_t vcx_ledger_get_fees(vcx_command_handle_t chandle, void (*cb)(vcx_com
 /**
  * Wallet
  */
+
+/** Returns wallet token information including address, utxo, and token information */
 vcx_error_t vcx_wallet_get_token_info(vcx_command_handle_t chandle, vcx_payment_handle_t phandle, void (*cb)(vcx_command_handle_t xhandle, vcx_error_t err, const char *info));
+
+/** Creates a new payment address in the wallet */
 vcx_error_t vcx_wallet_create_payment_address(vcx_command_handle_t chandle, void (*cb)(vcx_command_handle_t xhandle, vcx_error_t err, const char *address));
-vcx_error_t vcx_wallet_get_balance(vcx_command_handle_t chandle, vcx_payment_handle_t phandle, void (*cb)(vcx_command_handle_t xhandle, vcx_error_t err, vcx_float_t balance));
 vcx_error_t vcx_wallet_send_tokens(vcx_command_handle_t chandle, vcx_payment_handle_t phandle, vcx_float_t tokens, const char *recipient, void (*cb)(vcx_command_handle_t xhandle, vcx_error_t err, const char *receipt));
+
+/** Passthroughs to libindy wallet record API (see libindy documentation) */
 vcx_error_t vcx_wallet_add_record(vcx_command_handle_t chandle, const char * type_, const char *id, const char *value, const char *tags_json, void (*cb)(vcx_command_handle_t xhandle, vcx_error_t err));
 vcx_error_t vcx_wallet_update_record_value(vcx_command_handle_t chandle, const char * type_, const char *id, const char *value, const char *tags_json, void (*cb)(vcx_command_handle_t xhandle, vcx_error_t err));
 vcx_error_t vcx_wallet_update_record_tags(vcx_command_handle_t chandle, const char * type_, const char *id, const char *tags_json, void (*cb)(vcx_command_handle_t xhandle, vcx_error_t err));
@@ -81,8 +86,13 @@ vcx_error_t vcx_wallet_open_search(vcx_command_handle_t chandle, const char * ty
 vcx_error_t vcx_wallet_close_search(vcx_command_handle_t chandle, vcx_command_handle_t shandle, void (*cb)(vcx_command_handle_t xhandle, vcx_error_t err));
 vcx_error_t vcx_wallet_search_next_records(vcx_command_handle_t chandle, vcx_wallet_search_handle_t shandle, count_t count, void (*cb)(vcx_command_handle_t xhandle, vcx_error_t err, const char *results));
 
+/** Returns a human readable message for the associated error code */
 const char *vcx_error_c_message(int);
+
+/** Returns version information for libvcx */
 const char *vcx_version();
+
+/** Frees memory, resets configuration, closes wallet and pool, optionally deletes wallet */
 vcx_error_t vcx_shutdown(vcx_bool_t delete_wallet);
 
 
