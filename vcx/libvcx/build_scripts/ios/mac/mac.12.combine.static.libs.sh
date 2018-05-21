@@ -24,7 +24,16 @@ INDY_SDK=$WORK_DIR/vcx-indy-sdk
 VCX_SDK=$START_DIR/../../../../..
 VCX_SDK=$(abspath "$VCX_SDK")
 
-cd $VCX_SDK/vcx/wrappers/ios/ios-demo-vcx/lib
+cd $VCX_SDK/vcx/wrappers/ios/vcx/lib
+
+if [ "$1" = "" ] || [ "$1" = "libvcx" ]; then
+    echo "You must provide a name for the resultant library, not libvcx.a as it is already used!"
+    exit 1
+fi
+
+if [ "$2" = "delete" ]; then
+    rm $1.a
+fi
 
 if [ -f $1.a ]; then
     echo "The library $1.a already exists!!!"

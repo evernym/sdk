@@ -386,6 +386,25 @@ completion:(void (^)(NSError *error))completion
        });
    }
 }
+- (void)credentialCreateWithMsgid:(NSString *)sourceId
+                 connectionHandle:(VcxHandle *)connectionHandle
+                            msgId:(NSString *)msgId
+                       completion:(void (^)(NSError *error, NSInteger *credentailHandle))completion;{
+   vcx_error_t ret;
+   vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
+   const char * source_id = [sourceId cString];
+   const char * msg_id=[msgId cString];
+    ret = vcx_credential_create_with_msgid(handle, source_id,connectionHandle,msg_id, VcxWrapperCommonNumberCallback);
+
+   if( ret != 0 )
+   {
+       [[VcxCallbacks sharedInstance] deleteCommandHandleFor: handle];
+       
+       dispatch_async(dispatch_get_main_queue(), ^{
+           completion([NSError errorFromVcxError: ret], nil);
+       });
+   }
+}
 
 - (void)credentialSendRequest:(NSInteger *)credentailHandle
              connectionHandle:(VcxHandle *)connectionHandle

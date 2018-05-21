@@ -22,7 +22,7 @@ cd $WORK_DIR/vcx-indy-sdk
 #git checkout tags/v1.3.0
 cd $WORK_DIR/vcx-indy-sdk/libindy
 
-# !IMPORTANT STEPS NEXT -- Modify the build.rs of indy-sdk to handle android static libraries
+# !IMPORTANT STEPS NEXT -- Modify the build.rs of indy-sdk to handle android shared libraries
 tail -n 1 build.rs | wc -c | xargs -I {} truncate build.rs -s -{}
 cat $START_DIR/indy-sdk.build.rs.android.target.static.libs.template >> build.rs
 ###################################################################################################
