@@ -21,6 +21,7 @@ SEARCHED_RECORD = {
   "tags": TAGS
 }
 
+
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_get_token_info():

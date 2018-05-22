@@ -9,7 +9,6 @@ use utils::error::error_string;
 use serde_json;
 use utils::libindy::payments::{get_wallet_token_info, create_address};
 
-
 /// Get the total balance from all addresses contained in the configured wallet
 ///
 /// #Params

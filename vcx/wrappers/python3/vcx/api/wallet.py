@@ -6,6 +6,7 @@ import logging
 
 
 class Wallet():
+
     @staticmethod
     async def close_search(handle: int):
         logger = logging.getLogger(__name__)
@@ -118,6 +119,7 @@ class Wallet():
 
         logger.debug("vcx_wallet_delete_record_tags completed")
         return result
+
     @staticmethod
     async def add_record_tags(type_: str, id: str, tags: str):
         logger = logging.getLogger(__name__)

@@ -66,6 +66,9 @@ pub static INVALID_CREDENTIAL_HANDLE: Error = Error{code_num: 1053, message: "In
 pub static INVALID_CREDENTIAL_JSON: Error = Error{code_num: 1054, message: "Invalid credential json"};
 pub static CREATE_CREDENTIAL_REQUEST_ERROR: Error = Error{code_num: 1055, message: "could not create credential request"};
 pub static CREATE_PROOF_ERROR: Error = Error{code_num: 1056, message: "could not create proof"};
+pub static INVALID_WALLET_HANDLE: Error = Error{code_num: 1057, message: "Invalid Wallet handle"};
+pub static INVALID_WALLET_CREATION: Error = Error{code_num: 1058, message: "Error Creating a wallet"};
+pub static INVALID_POOL_NAME: Error = Error{code_num: 1059, message: "Pool Name in config was invalid"};
 
 lazy_static! {
     static ref ERROR_C_MESSAGES: HashMap<u32, CString> = {
@@ -125,6 +128,9 @@ lazy_static! {
         insert_c_message(&mut m, &INVALID_CREDENTIAL_JSON);
         insert_c_message(&mut m, &CREATE_CREDENTIAL_REQUEST_ERROR);
         insert_c_message(&mut m, &CREATE_PROOF_ERROR);
+        insert_c_message(&mut m, &INVALID_WALLET_HANDLE);
+        insert_c_message(&mut m, &INVALID_WALLET_CREATION);
+        insert_c_message(&mut m, &INVALID_POOL_NAME);
        m
     };
 }

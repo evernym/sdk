@@ -576,29 +576,6 @@ mod tests {
         println!("{}\n{}", cred_req, cred_req_meta);
     }
 
-    /*
-    #[test]
-    //Todo: Get working. Works individually but fails during cargo test
-    fn simple_libindy_create_cred() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-        let wallet_name = "test_create_cred";
-        ::utils::devsetup::setup_wallet(wallet_name);
-        open_wallet(wallet_name, None).unwrap();
-        let encoded_cred_data = r#"{"age":["111","111"],"height":["4'11","25730877424947290072821310314181366395232879096832067784637233452620527354832"],"name":["Bob","93006290325627508022776103386395994712401809437930957652111221015872244345185"],"sex":["male","5944657099558967239210949258394887428692050081607692519917050011144233115103"]}"#;
-
-        let result = libindy_issuer_create_credential(
-            CRED_OFFER,
-            CRED_REQ,
-            encoded_cred_data,
-            None,
-            None);
-        delete_wallet(wallet_name).unwrap();
-        assert!(result.is_ok());
-        let (cred, cred_revoc_id, revoc_reg_delta_json) = result.unwrap();
-        println!("{}\n{}\n{}", cred, cred_revoc_id, revoc_reg_delta_json);
-    }
-*/
     #[test]
     fn simple_libindy_prover_store_cred() {
         settings::set_defaults();
