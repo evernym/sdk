@@ -78,6 +78,7 @@ describe('A Credential', function () {
 
     const obj = await Credential.createWithMsgId(connection, 'Test', 'id')
     assert(obj)
+    assert(obj.getCredOffer())
   })
 
   // create tests

@@ -53,6 +53,7 @@ describe('A disclosedProof', function () {
     await connection.connect()
 
     const obj = await DisclosedProof.createWithMsgId(connection, 'Test', 'id')
+    assert(obj.getProofRequest())
     assert(obj)
   })
 
