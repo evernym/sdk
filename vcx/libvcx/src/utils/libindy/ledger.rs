@@ -105,6 +105,7 @@ extern {
 
 pub fn libindy_sign_and_submit_request(issuer_did: &str, request_json: &str) -> Result<String, u32>
 {
+    if settings::test_indy_mode_enabled() { return Ok(r#"{"rc":"success"}"#.to_string()); }
     let pool_handle = get_pool_handle().or(Err(error::NO_POOL_OPEN.code_num))?;
     let wallet_handle = get_wallet_handle();
     let rtn_obj = Return_I32_STR::new()?;

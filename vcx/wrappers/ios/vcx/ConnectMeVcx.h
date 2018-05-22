@@ -93,6 +93,10 @@ void VcxWrapperCommonStringStringLongCallback(vcx_command_handle_t xcommand_hand
 - (void)credentialCreateWithOffer:(NSString *)sourceId
                             offer:(NSString *)credentialOffer
                        completion:(void (^)(NSError *error, NSInteger *credentailHandle))completion;
+- (void)credentialCreateWithMsgid:(NSString *)sourceId
+                 connectionHandle:(VcxHandle *)connectionHandle
+                            msgId:(NSString *)msgId
+                       completion:(void (^)(NSError *error, NSInteger *credentailHandle))completion;
 
 - (void)credentialSendRequest:(NSInteger *)credentailHandle
              connectionHandle:(VcxHandle *)connectionHandle

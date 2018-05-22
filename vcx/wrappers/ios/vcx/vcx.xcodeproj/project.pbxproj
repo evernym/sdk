@@ -35,6 +35,13 @@
 		DD25673D2097138F002EBEBA /* vcx_demoUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = DD25673C2097138F002EBEBA /* vcx_demoUITests.m */; };
 		DD25674A2097173B002EBEBA /* vcx.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DD2566EE209705E3002EBEBA /* vcx.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		DD390C712099CD0A00B4EA94 /* vcx.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DD390C702099CD0A00B4EA94 /* vcx.framework */; };
+		DD64089E20AEB5160077EF05 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DD858CA620A47CE3004B3CB5 /* libcrypto.a */; };
+		DD64089F20AEB5160077EF05 /* libindy.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DD858CA220A47CE3004B3CB5 /* libindy.a */; };
+		DD6408A020AEB5160077EF05 /* libminiz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DD858CA420A47CE3004B3CB5 /* libminiz.a */; };
+		DD6408A120AEB5160077EF05 /* libsodium.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DD858CA720A47CE4004B3CB5 /* libsodium.a */; };
+		DD6408A220AEB5160077EF05 /* libsqlite3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DD858CA120A47CE3004B3CB5 /* libsqlite3.a */; };
+		DD6408A320AEB5160077EF05 /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DD858CA520A47CE3004B3CB5 /* libssl.a */; };
+		DD6408A420AEB5160077EF05 /* libzmq.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DD858CA320A47CE3004B3CB5 /* libzmq.a */; };
 		DD858C9E20A45C11004B3CB5 /* ConnectMeVcx.m in Sources */ = {isa = PBXBuildFile; fileRef = DD858C9C20A45C11004B3CB5 /* ConnectMeVcx.m */; };
 		DD858C9F20A45C11004B3CB5 /* ConnectMeVcx.h in Headers */ = {isa = PBXBuildFile; fileRef = DD858C9D20A45C11004B3CB5 /* ConnectMeVcx.h */; };
 		DD858CA020A467D6004B3CB5 /* libvcx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8E27AFF220A3BA8700EF8BA0 /* libvcx.a */; };
@@ -142,6 +149,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DD64089E20AEB5160077EF05 /* libcrypto.a in Frameworks */,
+				DD64089F20AEB5160077EF05 /* libindy.a in Frameworks */,
+				DD6408A020AEB5160077EF05 /* libminiz.a in Frameworks */,
+				DD6408A120AEB5160077EF05 /* libsodium.a in Frameworks */,
+				DD6408A220AEB5160077EF05 /* libsqlite3.a in Frameworks */,
+				DD6408A320AEB5160077EF05 /* libssl.a in Frameworks */,
+				DD6408A420AEB5160077EF05 /* libzmq.a in Frameworks */,
 				DD858CC520A53DD7004B3CB5 /* libresolv.tbd in Frameworks */,
 				DD858CC320A53DCB004B3CB5 /* libstdc++.tbd in Frameworks */,
 				DD858CA020A467D6004B3CB5 /* libvcx.a in Frameworks */,
@@ -724,7 +738,10 @@
 		DD256703209705E3002EBEBA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
+				ARCHS = (
+					"$(ARCHS_STANDARD)",
+					armv7s,
+				);
 				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = NO;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
@@ -737,6 +754,7 @@
 				"HEADER_SEARCH_PATHS[arch=*]" = $SOURCE_ROOT/include;
 				INFOPLIST_FILE = vcx/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -766,7 +784,10 @@
 		DD256704209705E3002EBEBA /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD)";
+				ARCHS = (
+					"$(ARCHS_STANDARD)",
+					armv7s,
+				);
 				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = NO;
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Automatic;
@@ -779,6 +800,7 @@
 				"HEADER_SEARCH_PATHS[arch=*]" = $SOURCE_ROOT/include;
 				INFOPLIST_FILE = vcx/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
