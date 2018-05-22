@@ -94,6 +94,10 @@ pub extern fn vcx_init (command_handle: u32,
 fn _finish_init(command_handle: u32, cb: extern fn(xcommand_handle: u32, err: u32)) -> u32 {
 
     ::utils::logger::LoggerUtils::init();
+    match ::utils::libindy::payments::init_payments() {
+        Ok(_) => (),
+        Err(x) => return x,
+    };
 
     settings::log_settings();
 

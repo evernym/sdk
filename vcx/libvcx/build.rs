@@ -92,6 +92,9 @@ fn main() {
         //Linux specific logic
         println!("cargo:rustc-link-lib=indy");
         println!("cargo:rustc-link-search=native=/usr/lib");
+        if cfg!(feature = "nullpay") {
+          println!("cargo:rustc-link-lib=nullpay");
+        }
     }
 
     match env::var("CARGO_FEATURE_CI") {
