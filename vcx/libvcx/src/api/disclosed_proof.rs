@@ -68,7 +68,7 @@ pub extern fn vcx_disclosed_proof_create_with_request(command_handle: u32,
 ///
 /// msg_id: msg_id that contains the proof request
 ///
-/// cb: Callback that provides proof handle or error status
+/// cb: Callback that provides proof handle and proof request or error status
 ///
 /// #Returns
 /// Error code as a u32
@@ -79,7 +79,7 @@ pub extern fn vcx_disclosed_proof_create_with_msgid(command_handle: u32,
                                                     source_id: *const c_char,
                                                     connection_handle: u32,
                                                     msg_id: *const c_char,
-                                                    cb: Option<extern fn(xcommand_handle: u32, err: u32, credential_handle: u32)>) -> u32 {
+                                                    cb: Option<extern fn(xcommand_handle: u32, err: u32, proof_handle: u32, proof_req: *const c_char)>) -> u32 {
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
     check_useful_c_str!(source_id, error::INVALID_OPTION.code_num);
@@ -92,20 +92,22 @@ pub extern fn vcx_disclosed_proof_create_with_msgid(command_handle: u32,
 
         match disclosed_proof::get_proof_request(connection_handle, &msg_id) {
             Ok(request) => {
-                match disclosed_proof::create_proof(source_id, request) {
+                match disclosed_proof::create_proof(source_id, request.clone()) {
                     Ok(handle) => {
-                        info!("vcx_disclosed_proof_create_with_msgid_cb(command_handle: {}, rc: {}, handle: {})",
-                              command_handle, error_string(0), handle);
-                        cb(command_handle, error::SUCCESS.code_num, handle)
+                        info!("vcx_disclosed_proof_create_with_msgid_cb(command_handle: {}, rc: {}, handle: {}, proof_req: {})",
+                              command_handle, error_string(0), handle, request);
+                        let msg = CStringUtils::string_to_cstring(request);
+                        cb(command_handle, error::SUCCESS.code_num, handle, msg.as_ptr())
                     },
                     Err(e) => {
-                        warn!("vcx_disclosed_proof_create_with_msgid_cb(command_handle: {}, rc: {}, handle: {})",
-                              command_handle, e.to_string(), 0);
-                        cb(command_handle, e.to_error_code(), 0);
+                        warn!("vcx_disclosed_proof_create_with_msgid_cb(command_handle: {}, rc: {}, handle: {}, proof_req: {})",
+                              command_handle, e.to_string(), 0, request);
+                        let msg = CStringUtils::string_to_cstring(request);
+                        cb(command_handle, e.to_error_code(), 0, msg.as_ptr());
                     },
                 };
             },
-            Err(e) => cb(command_handle, e.to_error_code(), 0),
+            Err(e) => cb(command_handle, e.to_error_code(), 0, ptr::null()),
         };
     });
 
@@ -502,6 +504,13 @@ mod tests {
         println!("successfully called create_cb")
     }
 
+    extern "C" fn create_with_id_cb(command_handle: u32, err: u32, proof_handle: u32, req: *const c_char) {
+        assert_eq!(err, 0);
+        assert!(proof_handle > 0);
+        check_useful_c_str!(req, ());
+        println!("successfully called create_cb")
+    }
+
     extern "C" fn create_and_retrieve_cb(command_handle: u32, err: u32, proof_handle: u32) {
         assert_eq!(err, 0);
         assert!(proof_handle > 0);
@@ -586,7 +595,7 @@ mod tests {
                                                          CString::new("test_create_with_msgid").unwrap().into_raw(),
                                                          cxn,
                                                          CString::new("123").unwrap().into_raw(),
-                                                         Some(create_cb)), error::SUCCESS.code_num);
+                                                         Some(create_with_id_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
 

@@ -39,6 +39,7 @@ export class DisclosedProof extends VCXBaseWithState {
   protected _getStFn = rustAPI().vcx_disclosed_proof_get_state
   protected _serializeFn = rustAPI().vcx_disclosed_proof_serialize
   protected _deserializeFn = rustAPI().vcx_disclosed_proof_deserialize
+  private _proofReq: string
 
   static async create ({ sourceId, request }: IDisclosedProofCreateData): Promise<DisclosedProof> {
     const newObj = new DisclosedProof(sourceId)
@@ -57,17 +58,27 @@ export class DisclosedProof extends VCXBaseWithState {
   }
 
   static async createWithMsgId (connection: Connection, sourceId, msgId): Promise<DisclosedProof> {
-    const newObj = new DisclosedProof(sourceId)
     try {
-      await newObj._create((cb) => rustAPI().vcx_disclosed_proof_create_with_msgid(
-        0,
-        sourceId,
-        connection.handle,
-        msgId,
-        cb
-        )
+      return await createFFICallbackPromise<DisclosedProof>(
+          (resolve, reject, cb) => {
+            const rc = rustAPI().vcx_disclosed_proof_create_with_msgid(0, sourceId, connection.handle, msgId, cb)
+            if (rc) {
+              reject(rc)
+            }
+          },
+          (resolve, reject) => Callback('void', ['uint32', 'uint32', 'uint32', 'string'],
+          (xHandle, err, handle, proofReq) => {
+
+            if (err) {
+              reject(err)
+              return
+            }
+            const newObj = new DisclosedProof(sourceId)
+            newObj._setHandle(handle)
+            newObj._setProofRequest(proofReq)
+            resolve( newObj )
+          })
       )
-      return newObj
     } catch (err) {
       throw new VCXInternalError(err, VCXBase.errorMessage(err), `vcx_disclosed_proof_create_with_msgid`)
     }
@@ -194,5 +205,13 @@ export class DisclosedProof extends VCXBaseWithState {
     } catch (err) {
       throw new VCXInternalError(err, VCXBase.errorMessage(err), `vcx_disclosed_proof_generate_proof`)
     }
+  }
+
+  getProofRequest (): string {
+    return this._proofReq
+  }
+
+  _setProofRequest (proofReq: string) {
+    this._proofReq = proofReq
   }
 }

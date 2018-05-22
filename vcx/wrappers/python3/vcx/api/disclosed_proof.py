@@ -12,10 +12,19 @@ class DisclosedProof(VcxStateful):
     def __init__(self, source_id: str):
         VcxStateful.__init__(self, source_id)
         self._name = source_id
+        self._proof_req = None
 
     def __del__(self):
         self.release()
         self.logger.debug("Deleted {} obj: {}".format(DisclosedProof, self.handle))
+
+    @property
+    def proof_request(self):
+        return self._proof_req
+
+    @proof_request.setter
+    def proof_request(self, x):
+        self._proof_req = x
 
     @staticmethod
     async def create(source_id: str, proof_request: str):
@@ -31,16 +40,24 @@ class DisclosedProof(VcxStateful):
 
     @staticmethod
     async def create_with_msgid(source_id: str, connection: Connection, msg_id: str):
-        constructor_params = (source_id,)
+        proof = DisclosedProof(source_id)
 
         c_source_id = c_char_p(source_id.encode('utf-8'))
         c_msg_id = c_char_p(json.dumps(msg_id).encode('utf-8'))
         c_connection_handle = c_uint32(connection.handle)
-        c_params = (c_source_id, c_connection_handle, c_msg_id, )
 
-        return await DisclosedProof._create("vcx_disclosed_proof_create_with_msgid",
-                                   constructor_params,
-                                   c_params)
+        if not hasattr(DisclosedProof.create_with_msgid, "cb"):
+            DisclosedProof.create_with_msgid.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_uint32, c_char_p))
+
+        proof.handle, proof_req = await do_call('vcx_disclosed_proof_create_with_msgid',
+                                                c_source_id,
+                                                c_connection_handle,
+                                                c_msg_id,
+                                                DisclosedProof.create_with_msgid.cb)
+
+        proof.proof_request = json.loads(proof_req.decode())
+
+        return proof
 
     @staticmethod
     async def deserialize(data: dict):

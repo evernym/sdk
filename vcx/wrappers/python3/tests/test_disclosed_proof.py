@@ -95,6 +95,7 @@ async def test_create_disclosed_proof_with_msgid():
     disclosed_proof = await DisclosedProof.create_with_msgid(source_id, connection, msg_id)
     assert disclosed_proof.source_id == source_id
     assert disclosed_proof.handle > 0
+    assert disclosed_proof.proof_request
     assert await disclosed_proof.get_state() == State.RequestReceived
 
 @pytest.mark.asyncio
