@@ -42,11 +42,6 @@ describe('A Connection object with ', function () {
     await vcx.initVcx('ENABLE_TEST_MODE')
   })
 
-  // create tests
-  it('can create wallet', async () => {
-    await Wallet.create()
-  })
-
   // getTokenInfo tests
   it('can get token info', async () => {
     const info = await Wallet.getTokenInfo(0)

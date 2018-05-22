@@ -6,46 +6,8 @@ use std::thread;
 use utils::cstring::CStringUtils;
 use utils::error;
 use utils::error::error_string;
-use error::ToErrorCode;
 use serde_json;
 use utils::libindy::payments::{get_wallet_token_info, create_address};
-
-/// Creates a wallet
-///
-/// #Params
-///
-/// command_handle: command handle to map callback to user context.
-///
-/// cb: Callback that provides the error code
-///
-/// #Returns
-/// Error code as a u32
-#[no_mangle]
-pub extern fn vcx_wallet_init(command_handle: u32,
-                              cb: Option<extern fn(xcommand_handle: u32, err: u32)>) -> u32 {
-
-    check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
-
-    info!("vcx_wallet_init(command_handle: {})",
-          command_handle);
-
-    thread::spawn(move|| {
-        match ::wallet::create() {
-            Ok(()) => {
-               info!("vcx_wallet_init_cb(command_handle: {}, err: {})",
-                     command_handle, error_string(0));
-                cb(command_handle, error::SUCCESS.code_num);
-            },
-            Err(x) => {
-                warn!("vcx_wallet_init_cb(command_handle: {}, err: {})",
-                      command_handle, error_string(x.to_error_code()));
-                cb(command_handle, x.to_error_code());
-            }
-        };
-    });
-
-    error::SUCCESS.code_num
-}
 
 /// Get the total balance from all addresses contained in the configured wallet
 ///
@@ -545,22 +507,6 @@ mod tests {
         assert_eq!(err, 0);
         check_useful_c_str!(msg, ());
         println!("successfully called callback - {}", msg);
-    }
-
-    extern "C" fn create_cb(command_handle: u32, err: u32) {
-        assert_eq!(err, 0);
-        println!("successfully called create_cb")
-    }
-
-    #[test]
-    fn test_create_wallet() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
-        assert_eq!(vcx_wallet_init(0,
-                                   Some(create_cb)), error::SUCCESS.code_num);
-        thread::sleep(Duration::from_millis(200));
-        ::utils::libindy::wallet::delete_wallet(::settings::DEFAULT_WALLET_NAME).unwrap();
-
     }
 
     #[test]

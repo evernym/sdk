@@ -8,20 +8,6 @@ import logging
 class Wallet():
 
     @staticmethod
-    async def create():
-        logger = logging.getLogger(__name__)
-
-        if not hasattr(Wallet.create, "cb"):
-            logger.debug("vcx_wallet_init: Creating callback")
-            Wallet.create.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32))
-
-        result = await do_call('vcx_wallet_init',
-                             Wallet.create.cb)
-
-        logger.debug("vcx_wallet_init completed")
-        return result
-
-    @staticmethod
     async def close_search(handle: int):
         logger = logging.getLogger(__name__)
 

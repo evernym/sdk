@@ -24,12 +24,6 @@ SEARCHED_RECORD = {
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
-async def test_create_wallet_success():
-    await Wallet.create()
-
-
-@pytest.mark.asyncio
-@pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_get_token_info():
     info = await Wallet.get_token_info(0)
     assert info

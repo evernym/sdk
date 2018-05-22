@@ -181,6 +181,7 @@ pub extern fn vcx_shutdown(delete: bool) -> u32 {
         }
     }
 
+    //Todo: set_defaults is not sufficient. Need to clear the configuration completely
     settings::set_defaults();
     info!("vcx_shutdown(delete: {})", delete);
     error::SUCCESS.code_num
@@ -265,11 +266,46 @@ mod tests {
     }
 
     #[test]
+    fn test_vcx_init_with_default_values() {
+        let wallet_name = "test_vcx_init_with_default_values";
+        ::utils::devsetup::setup_dev_env(wallet_name);
+        wallet::close_wallet().unwrap();
+        pool::close().unwrap();
+
+        let content = "{}".to_string();
+
+        let result = vcx_init_with_config(0,CString::new(content).unwrap().into_raw(),Some(init_cb));
+        assert_eq!(result,0);
+        thread::sleep(Duration::from_secs(1));
+
+        ::utils::devsetup::cleanup_dev_env(wallet_name);
+    }
+
+    #[test]
+    fn test_vcx_init_called_twice_fails() {
+        let wallet_name = "test_vcx_init_called_twice_fails";
+        ::utils::devsetup::setup_dev_env(wallet_name);
+        wallet::close_wallet().unwrap();
+        pool::close().unwrap();
+
+        let content = "{}";
+
+        let result = vcx_init_with_config(0,CString::new(content).unwrap().into_raw(),Some(init_cb));
+        assert_eq!(result,0);
+        thread::sleep(Duration::from_secs(1));
+
+        // Repeat call
+        let result = vcx_init_with_config(0,CString::new(content).unwrap().into_raw(),Some(init_cb));
+        assert_eq!(result,error::ALREADY_INITIALIZED.code_num);
+        thread::sleep(Duration::from_secs(1));
+
+        ::utils::devsetup::cleanup_dev_env(wallet_name);
+    }
+
+    #[test]
     fn test_init_fails_with_open_wallet() {
         let wallet_name = "test_init_fails_with_open_wallet";
-        ::settings::set_config_value(::settings::CONFIG_WALLET_NAME, wallet_name);
-        ::settings::set_config_value(::settings::CONFIG_WALLET_KEY, ::settings::DEFAULT_DEFAULT);
-        ::wallet::create().unwrap();
+        ::utils::devsetup::setup_dev_env(wallet_name);
 
 
         let config_path = "/tmp/test_init.json";
@@ -295,7 +331,7 @@ mod tests {
         thread::sleep(Duration::from_secs(1));
         // Leave file around or other concurrent tests will fail
 
-        wallet::delete_wallet(wallet_name).unwrap();
+        ::utils::devsetup::cleanup_dev_env(wallet_name);
     }
 
     #[test]

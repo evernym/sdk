@@ -177,7 +177,7 @@ pub fn set_config_value(key: &str, value: &str) {
 }
 
 pub fn get_wallet_credentials() -> Option<String> {
-    let key = get_config_value(CONFIG_WALLET_KEY).unwrap();
+    let key = get_config_value(CONFIG_WALLET_KEY).unwrap_or(UNINITIALIZED_WALLET_KEY.to_string());
 
     if key == UNINITIALIZED_WALLET_KEY { None } else { Some(format!("{{\"key\":\"{}\"}}", key)) }
 }

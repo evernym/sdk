@@ -25,36 +25,6 @@ export class Wallet {
 
   /**
    * @memberof Wallet
-   * @description Creates a wallet
-   * @static
-   * @async
-   * @returns {Promise<number>} Wallet handle
-   */
-  static async create (): Promise<void> {
-    try {
-      return await createFFICallbackPromise<void>(
-        (resolve, reject, cb) => {
-          const rc = rustAPI().vcx_wallet_init(0, cb)
-          if (rc) {
-            reject(rc)
-          }
-        },
-        (resolve, reject) => Callback('void', ['uint32','uint32','uint32'], (xhandle, err) => {
-          if (err) {
-            reject(err)
-            return
-          } else {
-            resolve()
-          }
-        })
-      )
-    } catch (err) {
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_wallet_init')
-    }
-  }
-
-  /**
-   * @memberof Wallet
    * @description Gets wallet token info
    * @static
    * @async

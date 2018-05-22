@@ -89,13 +89,13 @@ pub fn init_pool_and_wallet() -> Result<(), u32>  {
     if settings::test_indy_mode_enabled() {return Ok (()); }
 
     let pool_name = settings::get_config_value(settings::CONFIG_POOL_NAME)
-        .or(Err(error::INVALID_CONFIGURATION.code_num))?;
+        .unwrap_or(settings::DEFAULT_POOL_NAME.to_string());
 
     let wallet_name = settings::get_config_value(settings::CONFIG_WALLET_NAME)
-        .or(Err(error::INVALID_CONFIGURATION.code_num))?;
+        .unwrap_or(settings::DEFAULT_WALLET_NAME.to_string());
 
     let path: String = settings::get_config_value(settings::CONFIG_GENESIS_PATH)
-        .or(Err(error::INVALID_CONFIGURATION.code_num))?;
+        .unwrap_or(settings::DEFAULT_GENESIS_PATH.to_string());
 
     debug!("opening pool {} with genesis_path: {}", pool_name, path);
     let option_path = Some(Path::new(&path));
