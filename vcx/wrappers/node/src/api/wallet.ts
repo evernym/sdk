@@ -86,6 +86,37 @@ export class Wallet {
 
   /**
    * @memberof Wallet
+   * @description Creates payment address inside wallet
+   * @static
+   * @async
+   * @param
+   * @returns {Promise<string>} New address
+   */
+  static async createPaymentAddress ( ): Promise<string> {
+    try {
+      return await createFFICallbackPromise<string>(
+        (resolve, reject, cb) => {
+          const rc = rustAPI().vcx_wallet_create_payment_address(0, cb)
+          if (rc) {
+            reject(rc)
+          }
+        },
+        (resolve, reject) => Callback('void', ['uint32','uint32','string'], (xhandle, err, info) => {
+          if (err) {
+            reject(err)
+            return
+          } else {
+            resolve(info)
+          }
+        })
+      )
+    } catch (err) {
+      throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_wallet_create_payment_address')
+    }
+  }
+
+  /**
+   * @memberof Wallet
    * @description Sends token to a specified address
    * @static
    * @async
