@@ -13,7 +13,7 @@ class Wallet():
 
         if not hasattr(Wallet.create, "cb"):
             logger.debug("vcx_wallet_init: Creating callback")
-            Wallet.create.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_uint32))
+            Wallet.create.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32))
 
         result = await do_call('vcx_wallet_init',
                              Wallet.create.cb)

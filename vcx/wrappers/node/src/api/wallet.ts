@@ -30,21 +30,21 @@ export class Wallet {
    * @async
    * @returns {Promise<number>} Wallet handle
    */
-  static async create (): Promise<number> {
+  static async create (): Promise<void> {
     try {
-      return await createFFICallbackPromise<number>(
+      return await createFFICallbackPromise<void>(
         (resolve, reject, cb) => {
           const rc = rustAPI().vcx_wallet_init(0, cb)
           if (rc) {
             reject(rc)
           }
         },
-        (resolve, reject) => Callback('void', ['uint32','uint32','uint32'], (xhandle, err, handle) => {
+        (resolve, reject) => Callback('void', ['uint32','uint32','uint32'], (xhandle, err) => {
           if (err) {
             reject(err)
             return
           } else {
-            resolve(handle)
+            resolve()
           }
         })
       )
