@@ -2,14 +2,14 @@ use utils::libindy::{ wallet };
 use error::wallet::WalletError;
 use settings::{CONFIG_WALLET_NAME};
 
-pub fn create(source_id: String) -> Result<u32, WalletError> {
+pub fn create() -> Result<(), WalletError> {
     let wallet_name = ::settings::get_config_value(CONFIG_WALLET_NAME)
         .map_err(|err| WalletError::CommonError(err))?;
 
-    let wallet_h = wallet::init_wallet(&wallet_name)
+    wallet::init_wallet(&wallet_name)
         .map_err(|err| WalletError::CommonError(err))? as u32;
 
-    Ok(wallet_h)
+    Ok(())
 }
 
 #[cfg(test)]
@@ -27,7 +27,7 @@ mod tests {
         let wallet_name = "create_wallet_success";
         set_wallet_configs(wallet_name);
 
-        assert!(create("source_id 123".to_string()).unwrap() > 0);
+        assert!(create().is_ok());
 
         ::utils::libindy::wallet::delete_wallet(wallet_name).unwrap();
     }

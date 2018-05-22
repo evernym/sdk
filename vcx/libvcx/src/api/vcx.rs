@@ -269,7 +269,7 @@ mod tests {
         let wallet_name = "test_init_fails_with_open_wallet";
         ::settings::set_config_value(::settings::CONFIG_WALLET_NAME, wallet_name);
         ::settings::set_config_value(::settings::CONFIG_WALLET_KEY, ::settings::DEFAULT_DEFAULT);
-        ::wallet::create("id".to_string()).unwrap();
+        ::wallet::create().unwrap();
 
 
         let config_path = "/tmp/test_init.json";

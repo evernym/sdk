@@ -16,34 +16,30 @@ use utils::libindy::payments::get_wallet_token_info;
 ///
 /// command_handle: command handle to map callback to user context.
 ///
-/// source_id: id of wallet's owner.
-///
-/// cb: Callback that provides the handle to the wallet
+/// cb: Callback that provides the error code
 ///
 /// #Returns
 /// Error code as a u32
 #[no_mangle]
 pub extern fn vcx_wallet_init(command_handle: u32,
-                              source_id: *const c_char,
-                              cb: Option<extern fn(xcommand_handle: u32, err: u32, wallet_handle: u32)>) -> u32 {
+                              cb: Option<extern fn(xcommand_handle: u32, err: u32)>) -> u32 {
 
-    check_useful_c_str!(source_id, error::INVALID_OPTION.code_num);
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
-    info!("vcx_wallet_init(command_handle: {}, source_id: {})",
-          command_handle, source_id);
+    info!("vcx_wallet_init(command_handle: {})",
+          command_handle);
 
     thread::spawn(move|| {
-        match ::wallet::create(source_id) {
-            Ok(handle) => {
-               info!("vcx_wallet_init_cb(command_handle: {}, err: {}, wallet_handle: {})",
-                     command_handle, error_string(0), handle);
-                cb(command_handle, error::SUCCESS.code_num, handle);
+        match ::wallet::create() {
+            Ok(()) => {
+               info!("vcx_wallet_init_cb(command_handle: {}, err: {})",
+                     command_handle, error_string(0));
+                cb(command_handle, error::SUCCESS.code_num);
             },
             Err(x) => {
-                warn!("vcx_wallet_init_cb(command_handle: {}, err: {}, wallet_handle: {})",
-                      command_handle, error_string(x.to_error_code()), 0);
-                cb(command_handle, x.to_error_code(), 0);
+                warn!("vcx_wallet_init_cb(command_handle: {}, err: {})",
+                      command_handle, error_string(x.to_error_code()));
+                cb(command_handle, x.to_error_code());
             }
         };
     });
@@ -511,9 +507,8 @@ mod tests {
         println!("successfully called callback - {}", msg);
     }
 
-    extern "C" fn create_cb(command_handle: u32, err: u32, wallet_handle: u32) {
+    extern "C" fn create_cb(command_handle: u32, err: u32) {
         assert_eq!(err, 0);
-        assert!(wallet_handle > 0);
         println!("successfully called create_cb")
     }
 
@@ -522,7 +517,6 @@ mod tests {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
         assert_eq!(vcx_wallet_init(0,
-                                   CString::new("source_id").unwrap().into_raw(),
                                    Some(create_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
         ::utils::libindy::wallet::delete_wallet(::settings::DEFAULT_WALLET_NAME).unwrap();

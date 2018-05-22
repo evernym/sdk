@@ -21,6 +21,19 @@ SEARCHED_RECORD = {
   "tags": TAGS
 }
 
+
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('vcx_init_test_mode')
+async def test_create_wallet_success():
+    await Wallet.create()
+
+
+@pytest.mark.asyncio
+async def test_create_wallet_invalid_config_err():
+    with pytest.raises(VcxError) as e:
+        await Wallet.create()
+
+
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_get_token_info():

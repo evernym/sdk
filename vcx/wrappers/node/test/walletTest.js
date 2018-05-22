@@ -42,6 +42,11 @@ describe('A Connection object with ', function () {
     await vcx.initVcx('ENABLE_TEST_MODE')
   })
 
+  // create tests
+  it('can create wallet', async () => {
+    await Wallet.create()
+  })
+
   // getTokenInfo tests
   it('can get token info', async () => {
     const info = await Wallet.getTokenInfo(0)
@@ -55,7 +60,7 @@ describe('A Connection object with ', function () {
   })
 
   // wallet store
-  it.only('can perform record operations', async () => {
+  it('can perform record operations', async () => {
     await Wallet.addRecord(WALLET_RECORD)
     await Wallet.getRecord(WALLET_RECORD.type_, WALLET_RECORD.id)
     await Wallet.updateRecordValue(UPDATE_WALLET_RECORD)
