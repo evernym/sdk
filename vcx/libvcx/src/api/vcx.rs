@@ -318,7 +318,7 @@ mod tests {
         assert_eq!(settings::get_config_value("wallet_name").unwrap(), wallet_name.to_string());
         assert_eq!(settings::get_config_value("pool_name").unwrap(), "pool232".to_string());
 
-        //Insure shutdown was successful
+        //Verify shutdown was successful
         vcx_shutdown(true);
         assert_eq!(settings::get_config_value("wallet_name"), Err(error::INVALID_CONFIGURATION.code_num));
         assert_eq!(settings::get_config_value("pool_name"), Err(error::INVALID_CONFIGURATION.code_num));
