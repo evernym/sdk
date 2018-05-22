@@ -181,8 +181,7 @@ pub extern fn vcx_shutdown(delete: bool) -> u32 {
         }
     }
 
-    //Todo: set_defaults is not sufficient. Need to clear the configuration completely
-    settings::set_defaults();
+    settings::clear_config();
     info!("vcx_shutdown(delete: {})", delete);
     error::SUCCESS.code_num
 }
@@ -300,6 +299,39 @@ mod tests {
         thread::sleep(Duration::from_secs(1));
 
         ::utils::devsetup::cleanup_dev_env(wallet_name);
+    }
+
+    #[test]
+    fn test_vcx_init_called_twice_passes_after_shutdown() {
+        let wallet_name = "test_vcx_init_called_twice_fails";
+        ::utils::devsetup::setup_dev_env(wallet_name);
+        wallet::close_wallet().unwrap();
+        pool::close().unwrap();
+
+        let content = json!({"wallet_name": wallet_name, "pool_name":"pool232"});
+
+        let result = vcx_init_with_config(0,CString::new(content.to_string()).unwrap().into_raw(),Some(init_cb));
+        assert_eq!(result,0);
+        thread::sleep(Duration::from_secs(1));
+
+        //Assert config values were set correctly
+        assert_eq!(settings::get_config_value("wallet_name").unwrap(), wallet_name.to_string());
+        assert_eq!(settings::get_config_value("pool_name").unwrap(), "pool232".to_string());
+
+        //Insure shutdown was successful
+        vcx_shutdown(true);
+        assert_eq!(settings::get_config_value("wallet_name"), Err(error::INVALID_CONFIGURATION.code_num));
+        assert_eq!(settings::get_config_value("pool_name"), Err(error::INVALID_CONFIGURATION.code_num));
+
+        // Init for the second time works
+        ::utils::devsetup::setup_dev_env(wallet_name);
+        wallet::close_wallet().unwrap();
+        pool::close().unwrap();
+        let result = vcx_init_with_config(0,CString::new(content.to_string()).unwrap().into_raw(),Some(init_cb));
+        assert_eq!(result,0);
+        thread::sleep(Duration::from_secs(1));
+
+        vcx_shutdown(true);
     }
 
     #[test]
