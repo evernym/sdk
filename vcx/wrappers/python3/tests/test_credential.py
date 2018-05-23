@@ -101,6 +101,7 @@ async def test_create_credential():
     assert credential.handle > 0
     assert await credential.get_state() == State.RequestReceived
 
+
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_create_credential_with_msgid():
@@ -110,7 +111,9 @@ async def test_create_credential_with_msgid():
     credential = await Credential.create_with_msgid(source_id, connection, msg_id)
     assert credential.source_id == source_id
     assert credential.handle > 0
+    assert credential.cred_offer
     assert await credential.get_state() == State.RequestReceived
+
 
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')

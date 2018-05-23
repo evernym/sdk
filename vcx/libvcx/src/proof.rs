@@ -926,11 +926,11 @@ mod tests {
                "requested_attributes": json!({
                    "height_1": json!({
                        "name":"height",
-                       "restrictions": [json!({ "issuer_did": "2hoqvcwupRTUNkXn6ArYzs" })]
+                       "restrictions": [json!({ "issuer_did": "2hoqvcwupRTUNkXn6ArYzs", "cred_def_id": "2hoqvcwupRTUNkXn6ArYzs:3:CL:1766", "schema_id": "2hoqvcwupRTUNkXn6ArYzs:2:schema_name:0.0.11" })]
                    }),
                    "zip_2": json!({
                        "name":"zip",
-                       "restrictions": [json!({ "issuer_did": "2hoqvcwupRTUNkXn6ArYzs" })]
+                       "restrictions": [json!({ "issuer_did": "2hoqvcwupRTUNkXn6ArYzs", "cred_def_id": "2hoqvcwupRTUNkXn6ArYzs:3:CL:2200", "schema_name": "Home Address - Test", "schema_id": "2hoqvcwupRTUNkXn6ArYzs:2:Home Address - Test:0.0.1"  })]
                    }),
                    "self_attest_3": json!({
                        "name":"self_attest",
@@ -956,6 +956,5 @@ mod tests {
         assert!(rc.is_ok());
         assert_eq!(proof.proof_state,ProofStateType::ProofValidated);
     }
-
 }
 

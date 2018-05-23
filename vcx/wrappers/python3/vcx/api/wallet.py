@@ -6,6 +6,7 @@ import logging
 
 
 class Wallet():
+
     @staticmethod
     async def close_search(handle: int):
         logger = logging.getLogger(__name__)
@@ -118,6 +119,7 @@ class Wallet():
 
         logger.debug("vcx_wallet_delete_record_tags completed")
         return result
+
     @staticmethod
     async def add_record_tags(type_: str, id: str, tags: str):
         logger = logging.getLogger(__name__)
@@ -215,6 +217,20 @@ class Wallet():
                                Wallet.get_token_info.cb)
 
         logger.debug("vcx_wallet_get_token_info completed")
+        return result
+
+    @staticmethod
+    async def create_payment_address() -> str:
+        logger = logging.getLogger(__name__)
+
+        if not hasattr(Wallet.create_payment_address, "cb"):
+            logger.debug("vcx_wallet_create_payment_address: Creating callback")
+            Wallet.create_payment_address.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32, c_char_p))
+
+        result = await do_call('vcx_wallet_create_payment_address',
+                               Wallet.create_payment_address.cb)
+
+        logger.debug("vcx_wallet_create_payment_address completed")
         return result
 
     @staticmethod

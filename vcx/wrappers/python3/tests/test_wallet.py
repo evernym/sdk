@@ -21,6 +21,7 @@ SEARCHED_RECORD = {
   "tags": TAGS
 }
 
+
 @pytest.mark.asyncio
 @pytest.mark.usefixtures('vcx_init_test_mode')
 async def test_get_token_info():
@@ -34,6 +35,11 @@ async def test_send_tokens():
     receipt = await Wallet.send_tokens(0,50.0,"address")
     assert receipt
 
+@pytest.mark.asyncio
+@pytest.mark.usefixtures('vcx_init_test_mode')
+async def test_create_payment_address():
+    address = await Wallet.create_payment_address()
+    assert address
 
 @pytest.mark.asyncio
 async def test_wallet_storage():

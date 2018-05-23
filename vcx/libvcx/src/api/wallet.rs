@@ -7,8 +7,7 @@ use utils::cstring::CStringUtils;
 use utils::error;
 use utils::error::error_string;
 use serde_json;
-use utils::libindy::payments::get_wallet_token_info;
-
+use utils::libindy::payments::{get_wallet_token_info, create_address};
 
 /// Get the total balance from all addresses contained in the configured wallet
 ///
@@ -52,6 +51,46 @@ pub extern fn vcx_wallet_get_token_info(command_handle: u32,
 
     error::SUCCESS.code_num
 }
+
+/// Add a payment address to the wallet
+///
+/// #params
+///
+/// cb: Callback that provides payment address info
+///
+/// #Returns
+/// Error code as u32
+
+#[no_mangle]
+pub extern fn vcx_wallet_create_payment_address(command_handle: u32,
+                                                cb: Option<extern fn(xcommand_handle: u32, err:u32, address: *const c_char)>) -> u32 {
+
+    check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
+    info!("vcx_wallet_create_payment_address(command_handle: {})",
+          command_handle);
+
+    thread::spawn(move|| {
+        match create_address() {
+            Ok(x) => {
+                info!("vcx_wallet_create_payment_address_cb(command_handle: {}, rc: {}, address: {})",
+                    command_handle, error_string(0), x);
+
+                let msg = CStringUtils::string_to_cstring(x);
+                cb(command_handle, error::SUCCESS.code_num, msg.as_ptr());
+            },
+            Err(x) => {
+                warn!("vcx_wallet_create_payment_address_cb(command_handle: {}, rc: {}, address: {})",
+                    command_handle, error_string(x), "null");
+
+                cb(command_handle, x, ptr::null_mut());
+            },
+        }
+    });
+
+    error::SUCCESS.code_num
+}
+
+
 /// Adds a record to the wallet
 /// Assumes there is an open wallet.
 /// #Params
@@ -483,6 +522,14 @@ mod tests {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
         assert_eq!(vcx_wallet_send_tokens(0, 0, 50.0, CString::new("address").unwrap().into_raw(), Some(generic_cb)), error::SUCCESS.code_num);
+        thread::sleep(Duration::from_millis(200));
+    }
+
+    #[test]
+    fn test_create_address() {
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
+        assert_eq!(vcx_wallet_create_payment_address(0, Some(generic_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
 }
