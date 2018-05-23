@@ -146,7 +146,6 @@ describe('A Proof', function () {
     const sourceId = 'SerializeDeserialize'
     const proof = await Proof.create({ sourceId, attrs: ATTR, name: 'TestProof' })
     let jsonProof = await proof.serialize()
-    // console.log(jsonProof)
     jsonProof.proof = JSON.parse(PROOF_MSG)
     jsonProof.state = StateType.Accepted
     jsonProof.proof_state = ProofState.Invalid

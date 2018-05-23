@@ -85,7 +85,7 @@ export class IssuerCredential extends VCXBaseWithState {
    * @function create
    * @param {ICredentialConfig} config
    * @example <caption>Example of ICredentialConfig</caption>
-   * { sourceId: "12", schemaNum: 1, issuerDid: "did", attr: {key: "value"}, credentialName: "name of credential"}
+   * { sourceId: "12", credDefId: "credDefId", attr: {key: "value"}, credentialName: "name", price: 0}
    * @returns {Promise<IssuerCredential>} An Issuer credential Object
    */
   static async create ({ attr, sourceId, credDefId,
@@ -117,15 +117,11 @@ export class IssuerCredential extends VCXBaseWithState {
 /**
  * @memberof IssuerCredential
  * @description Builds an Issuer credential object with defined attributes.
- * Attributes are often provided by a previous call to the serialize function.
+ * Attributes are provided by a previous call to the serialize function.
  * @static
  * @async
  * @function deserialize
- * @param {ICredentialData} credentialData - contains the information that will be used to build an IssuerCredential
- *  object
- * @example <caption>Example of credentialData.</caption>
- * { source_id: "12", handle: 22, schema_seq_no: 1, credential_attributes: "{key: [\"value\"]}",
- * issuer_did: "did", state: 1 }
+ * @param {ICredentialData} credentialData - Data from the serialize api. Used to create IssuerCredential Object
  * @returns {Promise<IssuerCredential>} An Issuer credential Object
  */
   static async deserialize (credentialData: ICredentialData) {

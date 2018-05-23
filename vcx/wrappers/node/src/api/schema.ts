@@ -102,13 +102,11 @@ export class Schema extends VCXBase {
   /**
    * @memberof Schema
    * @description Builds Schema object with defined attributes.
-   * Attributes are often provided by a previous call to the serialize function.
+   * Attributes are provided by a previous call to the serialize function.
    * @static
    * @async
    * @function deserialize
    * @param {ISchemaObj} schema - contains the information that will be used to build a Schema object
-   * @example <caption>Example of schema.</caption>
-   * { source_id: string, handle: string, name: string, data: ISchemaTxn, sequence_num: number}
    * @returns {Promise<Schema>} A Schema Object
    */
   static async deserialize (schema: ISchemaObj) {
@@ -129,7 +127,7 @@ export class Schema extends VCXBase {
    * @description Looks up the attributes of an already created Schema.
    * @async
    * @function lookup
-   * @param {obj} data - contains sourceId and sequence number of schema to look up
+   * @param {obj} data - contains sourceId and schema id
    * @returns {Promise<Schema>} - A schema object with the attributes set
    */
   static async lookup (data: { sourceId: string, schemaId: string }): Promise<Schema> {
@@ -186,9 +184,16 @@ export class Schema extends VCXBase {
     }
   }
 
-  async getSchemaId (): Promise<number> {
+  /**
+   * @memberof Schema
+   * @description Retrieves the schema id associated with the created schema.
+   * @async
+   * @function getSchemaId
+   * @returns {Promise<string>} - Schema's Identifier
+   */
+  async getSchemaId (): Promise<string> {
     try {
-      const schemaId = await createFFICallbackPromise<number>(
+      const schemaId = await createFFICallbackPromise<string>(
           (resolve, reject, cb) => {
             const rc = rustAPI().vcx_schema_get_schema_id(0, this.handle, cb)
             if (rc) {
