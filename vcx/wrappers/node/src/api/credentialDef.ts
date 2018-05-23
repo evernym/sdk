@@ -58,13 +58,14 @@ export class CredentialDef extends VCXBase {
 
   /**
    * @memberof CredentialDef
-   * @description Builds a generic credentialDef object
+   * @description creates a credential definition on the ledger and returns an associated object.
    * @static
    * @async
    * @function create
-   * @param {IcredentialConfig} config
+   * @param {ICredentialDefinition} data
    * @example <caption>Example of ICredentialDefinition</caption>
-   * { sourceId: "12", schemaNum: 1, name: "name of credential", revocation: false}
+   * { sourceId: "12", schemaId: "2hoqvcwupRTUNkXn6ArYzs:2:test-licence:4.4.4", name: "test-licence", revocation: false}
+   * @param {number} paymentHandle
    * @returns {Promise<credentialDef>} A credentialDef Object
    */
   static async create (data: ICredentialDefinition, paymentHandle: number): Promise<CredentialDef> {
@@ -93,15 +94,12 @@ export class CredentialDef extends VCXBase {
   /**
    * @memberof CredentialDef
    * @description Builds a credentialDef object with defined attributes.
-   * Attributes are often provided by a previous call to the serialize function.
+   * Attributes are provided by a previous call to the serialize function.
    * @static
    * @async
    * @function deserialize
-   * @param {ICredentialDefObj} data - contains the information that will be used to build a credentialdef object
-   * @example <caption>Example of credentialData.</caption>
-   * { source_id: string, handle: number, name: string }
-   * credential_def: { ref: number, origin: string, signature_type: string, data: any}}
-   * @returns {Promise<credentialDef>} A credentialDef Obj
+   * @param {ICredentialDefObj} data - data obtained by serialize api. Used to build a credentialdef object.
+   * @returns {Promise<credentialDef>} A credentialDef Object
    */
   static async deserialize (data: ICredentialDefObj) {
     // Todo: update the ICredentialDefObj
@@ -134,6 +132,13 @@ export class CredentialDef extends VCXBase {
     }
   }
 
+  /**
+   * @memberof CredentialDef
+   * @description Retrieves the credential definition id associated with the created cred def.
+   * @async
+   * @function getCredDefId
+   * @returns {Promise<string>} - CredDef's Identifier
+   */
   async getCredDefId (): Promise<string> {
     try {
       const credDefId = await createFFICallbackPromise<string>(

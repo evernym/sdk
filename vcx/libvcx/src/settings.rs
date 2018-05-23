@@ -1,4 +1,3 @@
-extern crate config;
 extern crate url;
 extern crate serde_json;
 
