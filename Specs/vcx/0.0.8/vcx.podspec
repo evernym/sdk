@@ -28,7 +28,7 @@ through to the libvcx shared library.
   s.license          = { :type => 'MIT', :file => 'vcx/wrappers/ios/vcx/LICENSE' }
   s.author           = { 'yaswanthsvist' => 'iosdev@evernym.com' }
   #s.source           = { :git => 'git@github.com:evernym/sdk.git', :tag => s.version.to_s }
-  s.source           = { :http => 'https://repo.corp.evernym.com/filely/ios/vcx.podspec_20180523.1122_universal.zip' }
+  s.source           = { :http => 'https://repo.corp.evernym.com/filely/ios/vcx.podspec_20180523.1238_universal.zip' }
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
   s.ios.deployment_target = '8.0'
