@@ -25,21 +25,22 @@ through to the libvcx shared library.
 
   s.homepage         = 'https://www.evernym.com/'
   # s.screenshots     = 'www.example.com/screenshots_1', 'www.example.com/screenshots_2'
-  s.license          = { :type => 'MIT', :file => 'vcx/wrappers/ios/vcx/LICENSE' }
+  s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'yaswanthsvist' => 'iosdev@evernym.com' }
   #s.source           = { :git => 'git@github.com:evernym/sdk.git', :tag => s.version.to_s }
-  s.source           = { :http => 'https://repo.corp.evernym.com/filely/ios/vcx.framework_20180522.1635_universal.zip' }
+  s.source           = { :http => 'https://repo.corp.evernym.com/filely/ios/vcx.framework_20180523.1433_universal.zip' }
   # s.social_media_url = 'https://twitter.com/<TWITTER_USERNAME>'
 
   s.ios.deployment_target = '8.0'
-
-  s.source_files = '**/vcx/Classes/**/*'
+  s.ios.vendored_frameworks="vcx/vcx.framework"
+  s.compiler_flags = '-ObjC -lvcx'
   
   # s.resource_bundles = {
   #   'vcx' => ['**/vcx/Assets/*.png']
   # }
 
-  # s.public_header_files = 'Pod/Classes/**/*.h'
+  s.public_header_files = 'vcx/vcx.framework/include/*.h', 'vcx/vcx.framework/headers/*.h'
+  s.ios.vendored_library = 'vcx/vcx.framework/lib/libvcx.a'
   # s.frameworks = 'UIKit', 'MapKit'
   # s.dependency 'AFNetworking', '~> 2.3'
 end
