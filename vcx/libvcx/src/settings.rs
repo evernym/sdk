@@ -3,7 +3,6 @@ extern crate url;
 extern crate serde_json;
 
 use std::collections::HashMap;
-use config::Config;
 use std::sync::RwLock;
 use utils::error;
 use std::path::Path;
@@ -46,7 +45,7 @@ pub static DEFAULT_VERKEY: &str = "FuN98eH2eZybECWkofW6A9BKJxxnTatBCopfUiNxo6ZB"
 pub static DEFAULT_ENABLE_TEST_MODE: &str = "false";
 
 lazy_static! {
-    static ref SETTINGS: RwLock<Config> = RwLock::new(Config::default());
+    static ref SETTINGS: RwLock<HashMap<String, String>> = RwLock::new(HashMap::new());
 }
 
 pub fn set_defaults() -> u32 {
@@ -54,23 +53,23 @@ pub fn set_defaults() -> u32 {
     // if this fails the program should exit
     let mut settings = SETTINGS.write().unwrap();
 
-    settings.set(CONFIG_POOL_NAME,DEFAULT_POOL_NAME);
-    settings.set(CONFIG_WALLET_NAME,DEFAULT_WALLET_NAME);
-    settings.set(CONFIG_WALLET_TYPE,DEFAULT_DEFAULT);
-    settings.set(CONFIG_AGENCY_ENDPOINT,DEFAULT_URL);
-    settings.set(CONFIG_AGENCY_DID,DEFAULT_DID);
-    settings.set(CONFIG_AGENCY_VERKEY,DEFAULT_VERKEY);
-    settings.set(CONFIG_REMOTE_TO_SDK_DID,DEFAULT_DID);
-    settings.set(CONFIG_REMOTE_TO_SDK_VERKEY,DEFAULT_VERKEY);
-    settings.set(CONFIG_INSTITUTION_DID,DEFAULT_DID);
-    settings.set(CONFIG_INSTITUTION_NAME,DEFAULT_DEFAULT);
-    settings.set(CONFIG_INSTITUTION_LOGO_URL,DEFAULT_URL);
+    settings.insert(CONFIG_POOL_NAME.to_string(),DEFAULT_POOL_NAME.to_string());
+    settings.insert(CONFIG_WALLET_NAME.to_string(),DEFAULT_WALLET_NAME.to_string());
+    settings.insert(CONFIG_WALLET_TYPE.to_string(),DEFAULT_DEFAULT.to_string());
+    settings.insert(CONFIG_AGENCY_ENDPOINT.to_string(),DEFAULT_URL.to_string());
+    settings.insert(CONFIG_AGENCY_DID.to_string(),DEFAULT_DID.to_string());
+    settings.insert(CONFIG_AGENCY_VERKEY.to_string(),DEFAULT_VERKEY.to_string());
+    settings.insert(CONFIG_REMOTE_TO_SDK_DID.to_string(),DEFAULT_DID.to_string());
+    settings.insert(CONFIG_REMOTE_TO_SDK_VERKEY.to_string(),DEFAULT_VERKEY.to_string());
+    settings.insert(CONFIG_INSTITUTION_DID.to_string(),DEFAULT_DID.to_string());
+    settings.insert(CONFIG_INSTITUTION_NAME.to_string(),DEFAULT_DEFAULT.to_string());
+    settings.insert(CONFIG_INSTITUTION_LOGO_URL.to_string(),DEFAULT_URL.to_string());
 //    settings.set(CONFIG_ENABLE_TEST_MODE,DEFAULT_ENABLE_TEST_MODE);
-    settings.set(CONFIG_SDK_TO_REMOTE_DID,DEFAULT_DID);
-    settings.set(CONFIG_SDK_TO_REMOTE_VERKEY,DEFAULT_VERKEY);
-    settings.set(CONFIG_GENESIS_PATH, DEFAULT_GENESIS_PATH);
-    settings.set(CONFIG_WALLET_KEY,UNINITIALIZED_WALLET_KEY);
-    settings.set(CONFIG_LINK_SECRET_ALIAS, DEFAULT_LINK_SECRET_ALIAS);
+    settings.insert(CONFIG_SDK_TO_REMOTE_DID.to_string(),DEFAULT_DID.to_string());
+    settings.insert(CONFIG_SDK_TO_REMOTE_VERKEY.to_string(),DEFAULT_VERKEY.to_string());
+    settings.insert(CONFIG_GENESIS_PATH.to_string(), DEFAULT_GENESIS_PATH.to_string());
+    settings.insert(CONFIG_WALLET_KEY.to_string(),UNINITIALIZED_WALLET_KEY.to_string());
+    settings.insert(CONFIG_LINK_SECRET_ALIAS.to_string(), DEFAULT_LINK_SECRET_ALIAS.to_string());
 
     error::SUCCESS.code_num
 }
@@ -118,24 +117,24 @@ fn validate_optional_config_val<F, S, E>(val: Option<&String>, err: u32, closure
 
 pub fn log_settings() {
     let settings = SETTINGS.read().unwrap();
-    info!("loaded settings: {:?}", settings.deserialize::<HashMap<String, String>>().unwrap());
+    info!("loaded settings: {:?}", settings);
 }
 
 pub fn test_indy_mode_enabled() -> bool {
     let config = SETTINGS.read().unwrap();
 
-    match config.get_str(CONFIG_ENABLE_TEST_MODE) {
-        Err(_) => false,
-        Ok(value) => if value == "true" { true } else { if value == "indy" { true } else {false }},
+    match config.get(CONFIG_ENABLE_TEST_MODE) {
+        None => false,
+        Some(value) => if value == "true" { true } else { if value == "indy" { true } else {false }},
     }
 }
 
 pub fn test_agency_mode_enabled() -> bool {
     let config = SETTINGS.read().unwrap();
 
-    match config.get_str(CONFIG_ENABLE_TEST_MODE) {
-        Err(_) => false,
-        Ok(value) => if value == "true" { true } else { if value == "agency" { true } else {false }},
+    match config.get(CONFIG_ENABLE_TEST_MODE) {
+        None => false,
+        Some(value) => if value == "true" { true } else { if value == "agency" { true } else {false }},
     }
 }
 
@@ -152,7 +151,7 @@ pub fn process_config_string(config: &str) -> Result<u32, u32> {
     }
 
     let config = SETTINGS.read().unwrap();
-    validate_config(&config.deserialize::<HashMap<String, String>>().unwrap())
+    validate_config(&config.clone())
 }
 
 pub fn process_config_file(path: &str) -> Result<u32, u32> {
@@ -165,15 +164,14 @@ pub fn process_config_file(path: &str) -> Result<u32, u32> {
 }
 
 pub fn get_config_value(key: &str) -> Result<String, u32> {
-    // if this fails the program should exit
-    match SETTINGS.read().unwrap().get_str(key) {
-        Err(_) => Err(error::INVALID_CONFIGURATION.code_num),
-        Ok(value) => Ok(value),
+    match SETTINGS.read().unwrap().get(key) {
+        None => Err(error::INVALID_CONFIGURATION.code_num),
+        Some(value) => Ok(value.to_string()),
     }
 }
 
 pub fn set_config_value(key: &str, value: &str) {
-    SETTINGS.write().unwrap().set(key, value).unwrap();
+    SETTINGS.write().unwrap().insert(key.to_string(), value.to_string());
 }
 
 pub fn get_wallet_credentials() -> Option<String> {
@@ -210,6 +208,11 @@ pub fn remove_file_if_exists(filename: &str){
             Err(e) => println!("Unable to remove file: {:?}", e)
         }
     }
+}
+
+pub fn clear_config() {
+    let mut config = SETTINGS.write().unwrap();
+    config.clear();
 }
 
 pub fn create_default_genesis_file(){
@@ -402,4 +405,34 @@ pub mod tests {
         assert_eq!(get_config_value(&key).unwrap(), value1)
     }
 
+    #[test]
+    fn test_clear_config() {
+        let content = json!({
+            "pool_name" : "pool1",
+            "config_name":"config1",
+            "wallet_name":"test_clear_config",
+            "institution_name" : "evernym enterprise",
+            "genesis_path":"/tmp/pool1.txn",
+            "wallet_key":"<KEY_IS_NOT_SET>"
+        }).to_string();
+
+        assert_eq!(process_config_string(&content), Ok(error::SUCCESS.code_num));
+
+        assert_eq!(get_config_value("pool_name").unwrap(), "pool1".to_string());
+        assert_eq!(get_config_value("config_name").unwrap(), "config1".to_string());
+        assert_eq!(get_config_value("wallet_name").unwrap(), "test_clear_config".to_string());
+        assert_eq!(get_config_value("institution_name").unwrap(), "evernym enterprise".to_string());
+        assert_eq!(get_config_value("genesis_path").unwrap(), "/tmp/pool1.txn".to_string());
+        assert_eq!(get_config_value("wallet_key").unwrap(), "<KEY_IS_NOT_SET>".to_string());
+
+        clear_config();
+
+        // Fails after  config is cleared
+        assert_eq!(get_config_value("pool_name"), Err(error::INVALID_CONFIGURATION.code_num));
+        assert_eq!(get_config_value("config_name"), Err(error::INVALID_CONFIGURATION.code_num));
+        assert_eq!(get_config_value("wallet_name"), Err(error::INVALID_CONFIGURATION.code_num));
+        assert_eq!(get_config_value("institution_name"), Err(error::INVALID_CONFIGURATION.code_num));
+        assert_eq!(get_config_value("genesis_path"), Err(error::INVALID_CONFIGURATION.code_num));
+        assert_eq!(get_config_value("wallet_key"), Err(error::INVALID_CONFIGURATION.code_num));
+    }
 }
