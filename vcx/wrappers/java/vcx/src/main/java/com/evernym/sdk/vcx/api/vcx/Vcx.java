@@ -66,4 +66,78 @@ public class Vcx extends VcxJava.API {
 
 
     }
+
+    private static Callback vcxCreateConnectionWithInviteCB = new Callback() {
+        public void callback(int command_handle, int err, int connectionHandle){
+            CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
+            if (!checkCallback(future,err)) return;
+            Integer result = command_handle;
+            future.complete(result);
+        }
+    };
+
+    public static CompletableFuture<Integer> vcxCreateConnectionWithInvite(String invitationId, String inviteDetails) throws VcxException {
+        ParamGuard.notNullOrWhiteSpace(invitationId, "invitationId");
+        ParamGuard.notNullOrWhiteSpace(inviteDetails, "inviteDetails");
+        CompletableFuture<Integer> future = new CompletableFuture<Integer>();
+        int commandHandle = addFuture(future);
+
+        int result = LibVcx.api.vcx_connection_create_with_invite(
+            commandHandle,
+            invitationId,
+            inviteDetails,
+            vcxCreateConnectionWithInviteCB
+        );
+        checkResult(result);
+        return future;
+    }
+
+    private static Callback vcxAcceptInvitationCB = new Callback() {
+        public void callback(int command_handle, int err, String inviteDetails){
+            CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
+            if (!checkCallback(future,err)) return;
+            Integer result = command_handle;
+            future.complete(result);
+        }
+    };
+
+    public static CompletableFuture<Integer> vcxAcceptInvitation(int connectionHandle, String connectionType) throws VcxException {
+        ParamGuard.notNull(connectionHandle, "connectionHandle");
+        ParamGuard.notNullOrWhiteSpace(connectionType, "connectionType");
+        CompletableFuture<Integer> future = new CompletableFuture<Integer>();
+        int commandHandle = addFuture(future);
+
+        int result = LibVcx.api.vcx_connection_connect(
+            commandHandle,
+            connectionHandle,
+            connectionType,
+            vcxAcceptInvitationCB
+        );
+        checkResult(result);
+        return future;
+    }
+
+    private static Callback vcxUpdateAgentInfoCB = new Callback() {
+        public void callback(int command_handle, int err){
+            CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
+            if (!checkCallback(future,err)) return;
+            Integer result = command_handle;
+            future.complete(result);
+        }
+    };
+
+    public static CompletableFuture<Integer> vcxUpdateAgentInfo(String config) throws VcxException {
+        ParamGuard.notNullOrWhiteSpace(config, "config");
+        CompletableFuture<Integer> future = new CompletableFuture<Integer>();
+        int commandHandle = addFuture(future);
+
+        int result = LibVcx.api.vcx_agent_update_info(
+            commandHandle,
+            config,
+            vcxUpdateAgentInfoCB
+        );
+        checkResult(result);
+        return future;
+    }
+
 }
