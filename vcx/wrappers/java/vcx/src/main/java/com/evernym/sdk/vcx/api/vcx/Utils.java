@@ -53,4 +53,27 @@ public class Utils extends VcxJava.API {
         return future;
     }
 
+    private static Callback vcxUpdateAgentInfoCB = new Callback() {
+        public void callback(int command_handle, int err){
+            CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
+            if (!checkCallback(future,err)) return;
+            Integer result = command_handle;
+            future.complete(result);
+        }
+    };
+
+    public static CompletableFuture<Integer> vcxUpdateAgentInfo(String config) throws VcxException {
+        ParamGuard.notNullOrWhiteSpace(config, "config");
+        CompletableFuture<Integer> future = new CompletableFuture<Integer>();
+        int commandHandle = addFuture(future);
+
+        int result = LibVcx.api.vcx_agent_update_info(
+                commandHandle,
+                config,
+                vcxUpdateAgentInfoCB
+        );
+        checkResult(result);
+        return future;
+    }
+
 }
