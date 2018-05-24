@@ -171,6 +171,16 @@ pub extern fn vcx_agent_update_info(command_handle: u32,
     error::SUCCESS.code_num
 }
 
+/// Get ledger fees from the sovrin network
+///
+/// #Params
+/// command_handle: command handle to map callback to user context.
+///
+/// cb: Callback that provides the fee structure for the sovrin network
+///
+/// #Returns
+/// Error code as a u32
+
 #[no_mangle]
 pub extern fn vcx_ledger_get_fees(command_handle: u32,
                                   cb: Option<extern fn(xcommand_handle: u32, err: u32, fees: *const c_char)>) -> u32 {
