@@ -60,7 +60,7 @@ pub extern fn vcx_provision_agent(json: *const c_char) -> *mut c_char {
             return ptr::null_mut();
         },
         Ok(s) => {
-            error!("Provision Agent Successful");
+            debug!("Provision Agent Successful");
             let msg = CStringUtils::string_to_cstring(s);
 
             msg.into_raw()
@@ -85,6 +85,7 @@ pub extern fn vcx_provision_agent(json: *const c_char) -> *mut c_char {
 pub extern fn vcx_agent_provision_async(command_handle : u32,
                                json: *const c_char,
                                cb: Option<extern fn(xcommand_handle: u32, err: u32, config: *const c_char)>) -> u32 {
+    
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
     check_useful_c_str!(json, error::INVALID_OPTION.code_num);
 
