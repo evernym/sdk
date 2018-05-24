@@ -6,6 +6,7 @@ extern crate rand;
 extern crate reqwest;
 extern crate url;
 extern crate openssl;
+extern crate rust_indy_sdk as indy;
 
 #[macro_use]
 extern crate log;
