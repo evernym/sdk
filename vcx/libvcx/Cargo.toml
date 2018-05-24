@@ -44,6 +44,7 @@ openssl = "0.10"
 #rusqlite = { version = "0.13.0", features=["bundled"] }
 rusqlite = "0.13.0"
 num-traits = "0.2.0"
+rust-indy-sdk = {git="https://github.com/mikelodder7/rust-indy-sdk.git"}
 
 [build-dependencies]
 serde = "1.0"
