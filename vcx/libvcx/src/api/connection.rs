@@ -107,7 +107,7 @@ pub extern fn vcx_connection_create_with_invite(command_handle: u32,
 /// #Returns
 /// Error code as a u32
 #[no_mangle]
-pub extern fn   vcx_connection_connect(command_handle:u32,
+pub extern fn vcx_connection_connect(command_handle:u32,
                                      connection_handle: u32,
                                      connection_options: *const c_char,
                                      cb: Option<extern fn(xcommand_handle: u32, err: u32, invite_details: *const c_char)>) -> u32 {
