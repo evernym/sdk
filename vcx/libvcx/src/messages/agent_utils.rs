@@ -69,6 +69,7 @@ pub fn connect_register_provision(endpoint: &str,
                                   seed: Option<String>,
                                   issuer_seed: Option<String>,
                                   wallet_key: Option<String>) -> Result<String,u32> {
+    
     let (wallet_name_string, wallet_name) = match wallet_name {
         Some(x) => (format!("\"wallet_name\":\"{}\",", x), x),
         None => ("".to_string(), settings::DEFAULT_WALLET_NAME.to_string()),
@@ -127,7 +128,6 @@ pub fn connect_register_provision(endpoint: &str,
     };
     let data = Bundled::create(encode::to_vec_named(&payload).unwrap()).encode()?;
     let data = bundle_for_agency(data, &agency_did)?;
-
     let data = unbundle_from_agency(httpclient::post_u8(&data,&url).map_err(|e|error::INVALID_HTTP_RESPONSE.code_num).unwrap())?;
 
     trace!("deserializing connect response: {:?}", data);
