@@ -37,32 +37,10 @@ impl LoggerUtils {
 
             );
 
-                // logger for testing purposes, sends to stdout (set env RUST_LOG to configure log level
-//                env::set_var("RUST_LOG", "debug");
-//                LOGGER_INIT.call_once(|| {
-//                    env_logger::init().unwrap();
-//                });
-
         } else {
-            // turn libindy logging off if RUST_LOG is not specified
-    //        match env::var("RUST_LOG") {
-    //            Err(_) => {
-    //                env::set_var("RUST_LOG", "off");
-    //            },
-    //            Ok(value) =>  (),
-    //        };
-                    env::set_var("RUST_LOG", "trace");
+            env::set_var("RUST_LOG", "trace");
             LOGGER_INIT.call_once(|| {
                 env_logger::init().unwrap();
-    //            match settings::get_config_value(settings::CONFIG_LOG_CONFIG) {
-    //                Err(_) => {/* NO-OP - no logging configured */},
-    //                Ok(x) => {
-    //                    match log4rs::init_file(&x, Default::default()) {
-    //                        Err(e) => println!("invalid log configuration: {}", e),
-    //                        Ok(_) => {},
-    //                    }
-    //                }
-    //            }
             });
         }
     }
