@@ -8,18 +8,21 @@ CROSS_COMPILE=$3
 if [ -z "${TARGET_ARCH}" ]; then
     echo STDERR "Missing TARGET_ARCH argument"
     echo STDERR "e.g. x86 or arm"
+    echo "Sample : ./build.nondocker.sh x86 16 i686-linux-android openssl_x86 libsodium_x86 libzmq_x86 libindy"
     exit 1
 fi
 
 if [ -z "${TARGET_API}" ]; then
     echo STDERR "Missing TARGET_API argument"
     echo STDERR "e.g. 21"
+    echo "Sample : ./build.nondocker.sh x86 16 i686-linux-android openssl_x86 libsodium_x86 libzmq_x86 libindy"
     exit 1
 fi
 
 if [ -z "${CROSS_COMPILE}" ]; then
     echo STDERR "Missing CROSS_COMPILE argument"
     echo STDERR "e.g. i686-linux-android"
+    echo "Sample : ./build.nondocker.sh x86 16 i686-linux-android openssl_x86 libsodium_x86 libzmq_x86 libindy"
     exit 1
 fi
 
