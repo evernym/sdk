@@ -69,8 +69,6 @@ pub fn connect_register_provision(endpoint: &str,
                                   seed: Option<String>,
                                   issuer_seed: Option<String>,
                                   wallet_key: Option<String>) -> Result<String,u32> {
-    println!("connect_register_    provision");
-    
     let (wallet_name_string, wallet_name) = match wallet_name {
         Some(x) => (format!("\"wallet_name\":\"{}\",", x), x),
         None => ("".to_string(), settings::DEFAULT_WALLET_NAME.to_string()),
@@ -121,20 +119,18 @@ pub fn connect_register_provision(endpoint: &str,
     /* STEP 1 - CONNECT */
 
     let url = format!("{}/agency/msg", endpoint);
-    println!("url: {:?}", url);
+
     let payload = ConnectMsg {
         msg_type: MsgType { name: "CONNECT".to_string(), ver: "1.0".to_string(), },
         from_did: my_did.to_string(),
         from_vk: my_vk.to_string(),
     };
     let data = Bundled::create(encode::to_vec_named(&payload).unwrap()).encode()?;
-     println!("Bundled::create: {:?}", data);
-     let data = bundle_for_agency(data, &agency_did)?;
-     println!("bundle_for_agency: {:?}", data);
+    let data = bundle_for_agency(data, &agency_did)?;
 
     let data = unbundle_from_agency(httpclient::post_u8(&data,&url).map_err(|e|error::INVALID_HTTP_RESPONSE.code_num).unwrap())?;
 
-    println!("deserializing connect response: {:?}", data);
+    trace!("deserializing connect response: {:?}", data);
     let mut de = Deserializer::new(&data[0][..]);
     let response: ConnectResponseMsg = Deserialize::deserialize(&mut de).map_err(|ec| {error::INVALID_OPTION.code_num}).unwrap();
     //self.my_vk = Some(connection::get_pw_verkey(connection_handle).map_err(|ec| CredentialError::CommonError(ec.to_error_code()))?);
@@ -154,7 +150,7 @@ pub fn connect_register_provision(endpoint: &str,
     let data = bundle_for_agency(data, &agency_pw_did)?;
     let data = unbundle_from_agency(httpclient::post_u8(&data,&url).map_err(|e|error::INVALID_HTTP_RESPONSE.code_num).unwrap())?;
 
-    println!("deserializing register response: {:?}", data);
+    trace!("deserializing register response: {:?}", data);
     let mut de = Deserializer::new(&data[0][..]);
     let response: RegisterResponse = Deserialize::deserialize(&mut de).map_err(|e|error::INVALID_HTTP_RESPONSE.code_num).unwrap();
 
@@ -168,7 +164,7 @@ pub fn connect_register_provision(endpoint: &str,
     let data = bundle_for_agency(data, &agency_pw_did)?;
     let data = unbundle_from_agency(httpclient::post_u8(&data,&url).map_err(|e|error::INVALID_HTTP_RESPONSE.code_num).unwrap())?;
 
-    println!("deserializing provision response: {:?}", data);
+    trace!("deserializing provision response: {:?}", data);
     let mut de = Deserializer::new(&data[0][..]);
     let response: ConnectResponseMsg = Deserialize::deserialize(&mut de).map_err(|e|error::INVALID_HTTP_RESPONSE.code_num).unwrap();
     let agent_did = response.from_did;
