@@ -85,7 +85,7 @@ if [ "$(uname)" == "Darwin" ]; then
     export TOOLCHAIN_PREFIX=${WORKDIR}/toolchains/darwin
     mkdir -p ${TOOLCHAIN_PREFIX}
     pushd $TOOLCHAIN_PREFIX
-    if [ ! -f "android-ndk-r16b-darwin-x86_64.zip" ] ; then
+    if [ ! -d "android-ndk-r16b" ] ; then
         echo "Downloading android-ndk-r16b-darwin-x86_64.zip"
         wget -q https://dl.google.com/android/repository/android-ndk-r16b-darwin-x86_64.zip
         unzip -qq android-ndk-r16b-darwin-x86_64.zip
@@ -99,7 +99,7 @@ elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
     export TOOLCHAIN_PREFIX=${WORKDIR}/toolchains/linux
     mkdir -p ${TOOLCHAIN_PREFIX}
     pushd $TOOLCHAIN_PREFIX
-    if [ ! -f "android-ndk-r16b-linux-x86_64.zip" ] ; then
+    if [ ! -d "android-ndk-r16b" ] ; then
         echo "Downloading android-ndk-r16b-linux-x86_64.zip"
         wget -q https://dl.google.com/android/repository/android-ndk-r16b-linux-x86_64.zip
         unzip -qq android-ndk-r16b-linux-x86_64.zip
@@ -151,6 +151,7 @@ rustup target add ${CROSS_COMPILE}
 
 pushd $LIBVCX
 export OPENSSL_STATIC=1
+cargo clean
 cargo build --release --target=${CROSS_COMPILE}
 popd
 $CC -v -shared -o ${WORKDIR}/libvcx.so -Wl,--whole-archive ${LIBVCX}/target/${CROSS_COMPILE}/release/libvcx.a ${TOOLCHAIN_DIR}/sysroot/usr/lib/libz.a ${TOOLCHAIN_DIR}/sysroot/usr/lib/libm.a ${TOOLCHAIN_DIR}/sysroot/usr/lib/liblog.so ${LIBINDY_DIR}/libindy.a ${OPENSSL_DIR}/lib/libssl.a ${OPENSSL_DIR}/lib/libcrypto.a ${SODIUM_LIB_DIR}/libsodium.a ${LIBZMQ_LIB_DIR}/libzmq.a ${TOOLCHAIN_DIR}/${CROSS_COMPILE}/lib/libstdc++.a -Wl,--no-whole-archive -z muldefs

@@ -254,7 +254,7 @@ mod tests {
             .clone();
 
         let serialized_msg = request.serialize_message().unwrap();
-        println!("{}", serialized_msg);
+        info!("{}", serialized_msg);
         assert!(serialized_msg.contains(r#""@type":{"name":"PROOF_REQUEST","version":"1.3"}"#));
         assert!(serialized_msg.contains(r#"@topic":{"mid":98,"tid":89}"#));
         assert!(serialized_msg.contains(r#"proof_request_data":{"nonce":"123432421212","name":"Test","version":"3.75","requested_attributes""#));

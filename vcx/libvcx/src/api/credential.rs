@@ -463,7 +463,7 @@ mod tests {
     extern "C" fn create_cb(command_handle: u32, err: u32, credential_handle: u32) {
         assert_eq!(err, 0);
         assert!(credential_handle > 0);
-        println!("successfully called create_cb")
+        info!("successfully called create_cb")
     }
 
     extern "C" fn create_with_offer_cb(command_handle: u32, err: u32, credential_handle: u32, offer: *const c_char) {
@@ -492,7 +492,7 @@ mod tests {
             panic!("credential_string is null");
         }
         let cred = format!(r#"{{"{}":{}}}"#, "cred_id", CRED_MSG);
-        println!("get_credential(): {}", CStringUtils::c_str_to_string(credential_string).unwrap().unwrap());
+        info!("get_credential(): {}", CStringUtils::c_str_to_string(credential_string).unwrap().unwrap());
         assert_eq!(CStringUtils::c_str_to_string(credential_string).unwrap().unwrap(), cred);
         check_useful_c_str!(credential_string, ());
     }
@@ -556,7 +556,7 @@ mod tests {
 
     extern "C" fn init_cb(command_handle: u32, err: u32) {
         if err != 0 {panic!("create_cb failed: {}", err)}
-        println!("successfully called init_cb")
+        info!("successfully called init_cb")
     }
 
     extern "C" fn deserialize_cb(command_handle: u32, err: u32, credential_handle: u32) {
@@ -566,7 +566,7 @@ mod tests {
         }
         assert_eq!(err, 0);
         assert!(credential_handle > 0);
-        println!("successfully called deserialize_cb");
+        info!("successfully called deserialize_cb");
         let original = formatter(DEFAULT_SERIALIZED_CREDENTIAL);
         let new = formatter(&credential::to_string(credential_handle).unwrap());
         assert_eq!(original, new);
@@ -584,7 +584,7 @@ mod tests {
     extern "C" fn get_offers_cb(command_handle: u32, err:u32, offers: *const c_char) {
         assert_eq!(err,0);
         check_useful_c_str!(offers, ());
-        println!("successfully called get_offers_cb: {:?}", offers);
+        info!("successfully called get_offers_cb: {:?}", offers);
     }
 
     #[test]
@@ -613,7 +613,7 @@ mod tests {
 
     extern "C" fn get_state_cb(command_handle: u32, err: u32, state: u32) {
         assert!(state > 0);
-        println!("successfully called get_state_cb: {}", state);
+        info!("successfully called get_state_cb: {}", state);
     }
 
     #[test]

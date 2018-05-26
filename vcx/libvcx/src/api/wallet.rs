@@ -506,7 +506,7 @@ mod tests {
     extern "C" fn generic_cb(command_handle: u32, err: u32, msg: *const c_char) {
         assert_eq!(err, 0);
         check_useful_c_str!(msg, ());
-        println!("successfully called callback - {}", msg);
+        info!("successfully called callback - {}", msg);
     }
 
     #[test]

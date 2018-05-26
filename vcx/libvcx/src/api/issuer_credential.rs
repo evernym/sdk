@@ -393,7 +393,7 @@ mod tests {
     extern "C" fn create_cb(command_handle: u32, err: u32, credential_handle: u32) {
         assert_eq!(err, 0);
         assert!(credential_handle > 0);
-        println!("successfully called create_cb")
+        info!("successfully called create_cb")
     }
 
     extern "C" fn serialize_cb(handle: u32, err: u32, credential_string: *const c_char) {
@@ -402,7 +402,7 @@ mod tests {
             panic!("credential_string is null");
         }
         check_useful_c_str!(credential_string, ());
-        println!("successfully called serialize_cb: {}", credential_string);
+        info!("successfully called serialize_cb: {}", credential_string);
     }
 
     #[test]
@@ -439,7 +439,7 @@ mod tests {
     extern "C" fn create_and_serialize_cb(command_handle: u32, err: u32, credential_handle: u32) {
         assert_eq!(err, 0);
         assert!(credential_handle > 0);
-        println!("successfully called create_and_serialize_cb");
+        info!("successfully called create_and_serialize_cb");
         assert_eq!(vcx_issuer_credential_serialize(0,credential_handle,Some(serialize_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
@@ -501,7 +501,7 @@ mod tests {
         }
         assert_eq!(err, 0);
         assert!(credential_handle > 0);
-        println!("successfully called deserialize_cb");
+        info!("successfully called deserialize_cb");
         let serialized_issuer_credential = r#"{"source_id":"1","credential_attributes":"{\"attr\":\"value\"}","msg_uid":"","schema_seq_no":0,"issuer_did":"8XFh8yBzrpJQmNyZzgoTqB","state":1,"credential_request":null,"credential_offer":null,"credential_name":"credential_name","credential_id":"2936720225","cred_def_id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:1766","ref_msg_id":null,"agent_did":"","agent_vk":"","issued_did":"","issued_vk":"","remote_did":"","remote_vk":""}"#;
         let original = formatter(&serialized_issuer_credential);
         let new = formatter(&issuer_credential::to_string(credential_handle).unwrap());
@@ -534,7 +534,7 @@ mod tests {
 
     extern "C" fn get_state_cb(command_handle: u32, err: u32, state: u32) {
         assert!(state > 0);
-        println!("successfully called get_state_cb");
+        info!("successfully called get_state_cb");
     }
 
     #[test]

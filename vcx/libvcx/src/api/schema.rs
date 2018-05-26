@@ -278,18 +278,18 @@ mod tests {
     extern "C" fn create_cb(command_handle: u32, err: u32, schema_handle: u32) {
         assert_eq!(err, 0);
         assert!(schema_handle > 0);
-        println!("successfully called create_cb")
+        info!("successfully called create_cb")
     }
 
     extern "C" fn create_cb_err(command_handle: u32, err: u32, schema_handle: u32) {
         assert_ne!(err, 0);
-        println!("successfully called create_cb_err")
+        info!("successfully called create_cb_err")
     }
 
     extern "C" fn create_and_serialize_cb(command_handle: u32, err: u32, schema_handle: u32) {
         assert_eq!(err, 0);
         assert!(schema_handle > 0);
-        println!("successfully called create_and_serialize_cb");
+        info!("successfully called create_and_serialize_cb");
         assert_eq!(vcx_schema_serialize(0, schema_handle, Some(serialize_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
@@ -303,7 +303,7 @@ mod tests {
         check_useful_c_str!(schema_data, ());
         let data = r#"{"data":["height","name","sex","age"],"version":"4.4.4","schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:test-licence:4.4.4","name":"test-licence","source_id":"Test Source ID","sequence_num":0}"#;
         assert_eq!(schema_data, data);
-        println!("successfully called get_attrs_cb: {}", schema_data);
+        info!("successfully called get_attrs_cb: {}", schema_data);
     }
 
     extern "C" fn get_attrs_pool_cb(command_handle: u32, err: u32, handle: u32, schema_data: *const c_char) {
@@ -313,14 +313,14 @@ mod tests {
             panic!("schema_data is null");
         }
         check_useful_c_str!(schema_data, ());
-        println!("successfully called get_attrs_pool_cb: {}", schema_data);
+        info!("successfully called get_attrs_pool_cb: {}", schema_data);
     }
 
 
     extern "C" fn create_cb_get_id(command_handle: u32, err: u32, schema_handle: u32) {
         assert_eq!(err, 0);
         assert!(schema_handle > 0);
-        println!("successfully called create_cb_get_seq_no");
+        info!("successfully called create_cb_get_seq_no");
         assert_eq!(vcx_schema_get_schema_id(0, schema_handle, Some(get_id_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
@@ -331,7 +331,7 @@ mod tests {
             panic!("schema_str is null");
         }
         check_useful_c_str!(schema_str, ());
-        println!("successfully called serialize_cb: {}", schema_str);
+        info!("successfully called serialize_cb: {}", schema_str);
     }
 
     extern "C" fn get_id_cb(handle: u32, err: u32, schema_id: *const c_char) {
@@ -340,13 +340,13 @@ mod tests {
             panic!("id is null");
         }
         check_useful_c_str!(schema_id, ());
-        println!("successfully called get_id_cb: {}", schema_id);
+        info!("successfully called get_id_cb: {}", schema_id);
     }
 
     extern "C" fn deserialize_cb(command_handle: u32, err: u32, schema_handle: u32) {
         assert_eq!(err, 0);
         assert!(schema_handle > 0);
-        println!("successfully called deserialize_cb");
+        info!("successfully called deserialize_cb");
         let expected = r#"{"data":["age","name","height","sex"],"version":"0.0.11","schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:schema_name:0.0.11","name":"schema_name","source_id":"Test Source ID","sequence_num":0}"#;
         let new = schema::to_string(schema_handle).unwrap();
         assert_eq!(expected, new);

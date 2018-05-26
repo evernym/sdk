@@ -31,11 +31,14 @@ impl LoggerUtils {
         log_panics::init(); //Logging of panics is essential for android. As android does not log to stdout for native code
         
         if cfg!(target_os = "android") {
-            #[cfg(target_os = "android")]
-            android_logger::init_once(
-                Filter::default().with_min_level(log::Level::Trace)
+            LOGGER_INIT.call_once(|| {
+                #[cfg(target_os = "android")]
+                    android_logger::init_once(
+                    Filter::default().with_min_level(log::Level::Trace)
 
-            );
+                );
+            });
+
 
                 // logger for testing purposes, sends to stdout (set env RUST_LOG to configure log level
 //                env::set_var("RUST_LOG", "debug");
@@ -58,7 +61,7 @@ impl LoggerUtils {
     //                Err(_) => {/* NO-OP - no logging configured */},
     //                Ok(x) => {
     //                    match log4rs::init_file(&x, Default::default()) {
-    //                        Err(e) => println!("invalid log configuration: {}", e),
+    //                        Err(e) => info!("invalid log configuration: {}", e),
     //                        Ok(_) => {},
     //                    }
     //                }

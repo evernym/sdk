@@ -528,7 +528,7 @@ mod tests {
         settings::set_defaults();
         let handle = create_proof("id".to_string(),::utils::constants::PROOF_REQUEST_JSON.to_string()).unwrap();
         let serialized = to_string(handle).unwrap();
-        println!("serizlied: {}", serialized);
+        info!("serizlied: {}", serialized);
         from_string(&serialized).unwrap();
     }
 
@@ -613,7 +613,7 @@ mod tests {
 
         let proof: DisclosedProof = Default::default();
         let requested_credential = proof._build_requested_credentials(&creds, &self_attested_attrs).unwrap();
-        println!("requested_cred: {}", requested_credential);
+        info!("requested_cred: {}", requested_credential);
         assert_eq!(test.to_string(), requested_credential);
     }
 

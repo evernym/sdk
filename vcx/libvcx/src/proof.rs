@@ -489,7 +489,7 @@ mod tests {
     extern "C" fn create_cb(command_handle: u32, err: u32, connection_handle: u32) {
         assert_eq!(err, 0);
         assert!(connection_handle > 0);
-        println!("successfully called create_cb")
+        info!("successfully called create_cb")
     }
 
     fn set_default_and_enable_test_mode() {
@@ -704,7 +704,7 @@ mod tests {
         assert_eq!(proof.get_proof_state(), ProofStateType::ProofInvalid as u32);
         assert_eq!(proof.prover_did, "GxtnGN6ypZYgEqcftSQFnC");
         let proof_data = proof.get_proof().unwrap();
-        println!("proof_data: {}", proof_data);
+        info!("proof_data: {}", proof_data);
         assert!(proof_data.contains(r#""cred_def_id":"NcYxiDXkpYi6ov5FcYDi1e:3:CL:NcYxiDXkpYi6ov5FcYDi1e:2:gvt:1.0""#));
         assert!(proof_data.contains(r#""schema_id":"NcYxiDXkpYi6ov5FcYDi1e:2:gvt:1.0""#));
         /* converting proof to a string produces non-deterministic results */
@@ -952,7 +952,7 @@ mod tests {
         let rc = proof.proof_validation();
         ::utils::devsetup::cleanup_dev_env(wallet_name);
 
-        println!("{}", serde_json::to_string(&proof).unwrap());
+        info!("{}", serde_json::to_string(&proof).unwrap());
         assert!(rc.is_ok());
         assert_eq!(proof.proof_state,ProofStateType::ProofValidated);
     }

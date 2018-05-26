@@ -116,7 +116,8 @@ publishing {
                 password 'password'
             }
             // change to point to your repo, e.g. http://my.org/repo
-            url "http://localhost:8081/artifactory/generic-local/"
+
+            url "http://localhost:8085/artifactory/gradle-dev-local/"
         }
     }
 }

@@ -54,7 +54,7 @@ pub fn prep_msg(wallet_handle: i32, sender_vk: &str, recipient_vk: &str, msg: &[
         return Ok(Vec::from(msg).to_owned());
     }
 
-    println!("prep_msg svk: {} rvk: {}",sender_vk, recipient_vk);
+    info!("prep_msg svk: {} rvk: {}",sender_vk, recipient_vk);
 
     let rtn_obj = Return_I32_BIN::new()?;
     let sender_vk = CString::new(sender_vk).map_err(map_string_error)?;
@@ -78,7 +78,7 @@ pub fn prep_msg(wallet_handle: i32, sender_vk: &str, recipient_vk: &str, msg: &[
 pub fn prep_anonymous_msg(recipient_vk: &str, msg: &[u8]) -> Result<Vec<u8>, u32> {
     if settings::test_indy_mode_enabled() {return Ok(Vec::from(msg).to_owned())}
 
-    println!("prep_anonymous_msg rvk: {}",recipient_vk);
+    info!("prep_anonymous_msg rvk: {}",recipient_vk);
 
     let rtn_obj = Return_I32_BIN::new()?;
     let recipient_vk = CString::new(recipient_vk).map_err(map_string_error)?;
@@ -219,8 +219,8 @@ pub mod tests {
         let decrypted_message = parse_anonymous_msg(my_wallet,their_vk.as_ref(),&encrypted_message[..]).unwrap();
 
         assert_eq!(message.as_bytes().to_vec(), decrypted_message);
-        println!("{:?}", message.as_bytes().to_vec());
-        println!("{:?}", decrypted_message);
+        info!("{:?}", message.as_bytes().to_vec());
+        info!("{:?}", decrypted_message);
         wallet::delete_wallet("test_anon_encrypt_decrypt").unwrap();
     }
 }

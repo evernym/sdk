@@ -11,25 +11,25 @@ lazy_static!{
 /* TODO: remove and use generics */
 pub fn post_u8(body_content: &Vec<u8>, url: &str) -> Result<Vec<u8>,String> {
     let client = reqwest::Client::new();
-    println!("Posting encrypted bundle to: \"{}\"", url);
+    info!("Posting encrypted bundle to: \"{}\"", url);
     if settings::test_agency_mode_enabled() {return Ok(NEXT_U8_RESPONSE.lock().unwrap().pop().unwrap_or(Vec::new()));}
     let mut response = match  client.post(url).body(body_content.to_owned()).header(ContentType::octet_stream()).send() {
         Ok(result) => {
-            println!("got the result");
+            info!("got the result");
             result
         },
         Err(err) => {
-            println!("error: {}", err);
+            info!("error: {}", err);
             return Err("could not connect".to_string())
         },
     };
 
-    println!("Response Header: {:?}", response);
+    info!("Response Header: {:?}", response);
     if !response.status().is_success() {
         let mut content = String::new();
         match response.read_to_string(&mut content) {
-            Ok(x) => println!("Request failed: {}", content),
-            Err(x) => println!("could not read response"),
+            Ok(x) => info!("Request failed: {}", content),
+            Err(x) => info!("could not read response"),
         };
         return Err("POST failed".to_string());
     }

@@ -248,18 +248,18 @@ mod tests {
     extern "C" fn create_cb(command_handle: u32, err: u32, credentialdef_handle: u32) {
         assert_eq!(err, 0);
         assert!(credentialdef_handle > 0);
-        println!("successfully called create_cb")
+        info!("successfully called create_cb")
     }
 
     extern "C" fn create_cb_err(command_handle: u32, err: u32, credentialdef_handle: u32) {
         assert_ne!(err, 0);
-        println!("successfully called create_cb_err")
+        info!("successfully called create_cb_err")
     }
 
     extern "C" fn create_cb_get_id(command_handle: u32, err: u32, cred_def_handle: u32) {
         assert_eq!(err, 0);
         assert!(cred_def_handle > 0);
-        println!("successfully called create_cb_get_id");
+        info!("successfully called create_cb_get_id");
         assert_eq!(vcx_credentialdef_get_cred_def_id(0, cred_def_handle, Some(get_id_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
@@ -270,18 +270,18 @@ mod tests {
             panic!("id is null");
         }
         check_useful_c_str!(id, ());
-        println!("successfully called get_id_cb: {}", id);
+        info!("successfully called get_id_cb: {}", id);
     }
 
     extern "C" fn credential_def_on_ledger_err_cb(command_handle: u32, err: u32, credentialdef_handle: u32) {
         assert_eq!(err, error::CREDENTIAL_DEF_ALREADY_CREATED.code_num);
-        println!("successfully called credential_def_on_ledger_err_cb")
+        info!("successfully called credential_def_on_ledger_err_cb")
     }
 
     extern "C" fn create_and_serialize_cb(command_handle: u32, err: u32, credentialdef_handle: u32) {
         assert_eq!(err, 0);
         assert!(credentialdef_handle > 0);
-        println!("successfully called create_and_serialize_cb");
+        info!("successfully called create_and_serialize_cb");
         assert_eq!(vcx_credentialdef_serialize(0,credentialdef_handle,Some(serialize_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
@@ -292,13 +292,13 @@ mod tests {
             panic!("credentialdef is null");
         }
         check_useful_c_str!(credentialdef_str, ());
-        println!("successfully called serialize_cb: {}", credentialdef_str);
+        info!("successfully called serialize_cb: {}", credentialdef_str);
     }
 
     extern "C" fn deserialize_cb(command_handle: u32, err: u32, credentialdef_handle: u32) {
         assert_eq!(err, 0);
         assert!(credentialdef_handle > 0);
-        println!("successfully called deserialize_cb");
+        info!("successfully called deserialize_cb");
         let expected = r#"{"id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:1697","tag":"tag","name":"Test Credential Definition","source_id":"SourceId"}"#;
         let new = credential_def::to_string(credentialdef_handle).unwrap();
         let mut def1: credential_def::CredentialDef = serde_json::from_str(expected).unwrap();

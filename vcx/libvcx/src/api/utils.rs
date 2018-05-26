@@ -10,6 +10,7 @@ use utils::constants::*;
 use utils::cstring::CStringUtils;
 use utils::error;
 use utils::error::error_string;
+use settings;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
@@ -39,7 +40,7 @@ pub struct UpdateAgentInfo {
 
 #[no_mangle]
 pub extern fn vcx_provision_agent(json: *const c_char) -> *mut c_char {
-
+    ::utils::logger::LoggerUtils::init();
     check_useful_c_str!(json, ptr::null_mut());
     let my_config: Config = match serde_json::from_str(&json) {
         Ok(x) => x,
@@ -85,7 +86,7 @@ pub extern fn vcx_provision_agent(json: *const c_char) -> *mut c_char {
 pub extern fn vcx_agent_provision_async(command_handle : u32,
                                json: *const c_char,
                                cb: Option<extern fn(xcommand_handle: u32, err: u32, config: *const c_char)>) -> u32 {
-
+    ::utils::logger::LoggerUtils::init();
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
     check_useful_c_str!(json, error::INVALID_OPTION.code_num);
 
@@ -254,7 +255,7 @@ mod tests {
 
     extern "C" fn update_cb(command_handle: u32, err: u32) {
         if err != 0 {panic!("update_cb failed")}
-        println!("successfully called update_cb")
+        info!("successfully called update_cb")
     }
 
     #[test]

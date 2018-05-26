@@ -441,7 +441,6 @@ public abstract class LibVcx {
      * Initializes the API with the default library.
      */
     public static void init() {
-
         api = Native.loadLibrary(LIBRARY_NAME, API.class);
     }
 

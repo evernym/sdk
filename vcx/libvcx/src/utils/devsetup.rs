@@ -235,7 +235,7 @@ fn setup_new_wallet_with_new_credential(wallet_name: &str) {
 
     for x in 0..12 {
         let seed = format!("000000000000000000000000Issuer{:02}", x);
-        println!("generating did/vk from seed: {}", seed);
+        info!("generating did/vk from seed: {}", seed);
         SignusUtils::create_and_store_my_did(wallet_handle, Some(&seed)).unwrap();
     }
 

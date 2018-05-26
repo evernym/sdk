@@ -38,7 +38,7 @@ pub extern fn vcx_init_with_config(command_handle: u32,
     } else {
         match settings::process_config_string(&config) {
             Err(e) => {
-                println!("Invalid configuration specified: {}", e);
+                info!("Invalid configuration specified: {}", e);
                 return e;
             },
             Ok(_) => (),
@@ -77,7 +77,7 @@ pub extern fn vcx_init (command_handle: u32,
         } else {
             match settings::process_config_file(&config_path) {
                 Err(e) => {
-                    println!("Invalid configuration specified: {}", e);
+                    info!("Invalid configuration specified: {}", e);
                     return error::INVALID_CONFIGURATION.code_num;
                 },
                 Ok(_) => (),

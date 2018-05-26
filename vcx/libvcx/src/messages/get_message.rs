@@ -311,11 +311,11 @@ mod tests {
 
         let data = encode::to_vec_named(&response).unwrap();
 
-        println!("generated response: {:?}", data);
+        info!("generated response: {:?}", data);
         let bundle = Bundled::create(data).encode().unwrap();
-        println!("bundle: {:?}", bundle);
+        info!("bundle: {:?}", bundle);
         let result = parse_get_messages_response(bundle).unwrap();
-        println!("response: {:?}", result);
+        info!("response: {:?}", result);
 
     }
 }

@@ -187,7 +187,7 @@ impl IssuerCredential {
             Ok(x) => x,
             Err(e) => {
                 warn!("Invalid Json for Attribute data");
-                println!("serde json error:\n{}", e);
+                info!("serde json error:\n{}", e);
                 return Err(IssuerCredError::CommonError(INVALID_JSON.code_num))
             }
         };

@@ -201,10 +201,10 @@ pub fn remove_default_genesis_file(){
 
 pub fn remove_file_if_exists(filename: &str){
     if Path::new(filename).exists() {
-        println!("{}", format!("Removing file for testing: {}.", &filename));
+        info!("{}", format!("Removing file for testing: {}.", &filename));
         match fs::remove_file(filename) {
             Ok(t) => (),
-            Err(e) => println!("Unable to remove file: {:?}", e)
+            Err(e) => info!("Unable to remove file: {:?}", e)
         }
     }
 }

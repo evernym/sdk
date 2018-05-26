@@ -178,16 +178,16 @@ pub fn extract_json_payload(data: &Vec<u8>) -> Result<String, u32> {
 
 pub fn bundle_for_agency(message: Vec<u8>, did: &str) -> Result<Vec<u8>, u32> {
     let agency_vk = settings::get_config_value(settings::CONFIG_AGENCY_VERKEY).unwrap();
-    println!("{}", agency_vk);
+    info!("{}", agency_vk);
     let agent_vk = settings::get_config_value(settings::CONFIG_REMOTE_TO_SDK_VERKEY).unwrap();
-    println!("{}", agent_vk);
+    info!("{}", agent_vk);
     let my_vk = settings::get_config_value(settings::CONFIG_SDK_TO_REMOTE_VERKEY).unwrap();
-    println!("{}", my_vk);
+    info!("{}", my_vk);
 
-    println!("pre encryption msg: {:?}", message);
+    info!("pre encryption msg: {:?}", message);
     let msg = crypto::prep_msg(wallet::get_wallet_handle(), &my_vk, &agent_vk, &message[..])?;
 
-    println!("forwarding agency bundle to {}", did);
+    info!("forwarding agency bundle to {}", did);
     let outer = Forward {
         msg_type: MsgType { name: "FWD".to_string(), ver: "1.0".to_string(), },
         fwd: did.to_owned(),
@@ -195,9 +195,9 @@ pub fn bundle_for_agency(message: Vec<u8>, did: &str) -> Result<Vec<u8>, u32> {
     };
     let outer = encode::to_vec_named(&outer).unwrap();
 
-    println!("forward bundle: {:?}", outer);
+    info!("forward bundle: {:?}", outer);
     let msg = Bundled::create(outer).encode()?;
-    println!("pre encryption bundle: {:?}", msg);
+    info!("pre encryption bundle: {:?}", msg);
     crypto::prep_anonymous_msg(&agency_vk, &msg[..])
 }
 
@@ -224,11 +224,11 @@ pub fn bundle_for_agent(message: Vec<u8>, pw_vk: &str, agent_did: &str, agent_vk
 
 pub fn unbundle_from_agency(message: Vec<u8>) -> Result<Vec<Vec<u8>>, u32> {
 
-    println!("unbundle before getting setting sdk to remote ver key");
+    info!("unbundle before getting setting sdk to remote ver key");
     let my_vk = settings::get_config_value(settings::CONFIG_SDK_TO_REMOTE_VERKEY).unwrap();
-    println!("unbundle after getting setting sdk to remote ver key {}", my_vk);
+    info!("unbundle after getting setting sdk to remote ver key {}", my_vk);
     let data = crypto::parse_msg(wallet::get_wallet_handle(), &my_vk, &message[..])?;
-    println!("deserializing {:?}", data);
+    info!("deserializing {:?}", data);
     let bundle:Bundled<Vec<u8>> = bundle_from_u8(data)?;
 
     Ok(bundle.bundled.clone())
@@ -330,13 +330,13 @@ pub mod tests {
         let vec: Vec<i8> = vec![-127, -89, 98, 117, 110, 100, 108, 101, 100, -111, -36, 5, -74];
 
         let buf = to_u8(&vec);
-        println!("new bundle: {:?}", buf);
+        info!("new bundle: {:?}", buf);
     }
 
     #[test]
     fn test_to_i8() {
         let vec: Vec<u8> = vec![129, 167, 98, 117, 110, 100, 108, 101, 100, 145, 220, 19, 13];
         let buf = to_i8(&vec);
-        println!("new bundle: {:?}", buf);
+        info!("new bundle: {:?}", buf);
     }
 }
