@@ -69,6 +69,8 @@ pub static CREATE_PROOF_ERROR: Error = Error{code_num: 1056, message: "could not
 pub static INVALID_WALLET_HANDLE: Error = Error{code_num: 1057, message: "Invalid Wallet handle"};
 pub static INVALID_WALLET_CREATION: Error = Error{code_num: 1058, message: "Error Creating a wallet"};
 pub static INVALID_POOL_NAME: Error = Error{code_num: 1059, message: "Pool Name in config was invalid"};
+pub static INSUFFICIENT_TOKEN_AMOUNT: Error = Error{code_num: 1060, message: "Insufficient amount of tokens to process request"};
+pub static UNKNOWN_TXN_TYPE: Error = Error{code_num: 1061, message: "Unknown ledger transaction type"};
 
 lazy_static! {
     static ref ERROR_C_MESSAGES: HashMap<u32, CString> = {
@@ -131,6 +133,8 @@ lazy_static! {
         insert_c_message(&mut m, &INVALID_WALLET_HANDLE);
         insert_c_message(&mut m, &INVALID_WALLET_CREATION);
         insert_c_message(&mut m, &INVALID_POOL_NAME);
+        insert_c_message(&mut m, &INSUFFICIENT_TOKEN_AMOUNT);
+        insert_c_message(&mut m, &UNKNOWN_TXN_TYPE);
        m
     };
 }
