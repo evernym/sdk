@@ -69,6 +69,10 @@ pub static CREATE_PROOF_ERROR: Error = Error{code_num: 1056, message: "could not
 pub static INVALID_WALLET_HANDLE: Error = Error{code_num: 1057, message: "Invalid Wallet handle"};
 pub static INVALID_WALLET_CREATION: Error = Error{code_num: 1058, message: "Error Creating a wallet"};
 pub static INVALID_POOL_NAME: Error = Error{code_num: 1059, message: "Pool Name in config was invalid"};
+pub static CANNOT_DELETE_CONNECTION: Error = Error{code_num: 1060, message: "Cannot Delete Connection. Check status of connection is appropriate to be deleted from agency."};
+pub static CREATE_CONNECTION_ERROR: Error = Error{code_num:1061, message: "Could not create connection"};
+pub static INVALID_WALLET_SETUP: Error = Error{code_num:1062, message: "Invalid wallet keys...have you provisioned correctly?"};
+pub static COMMON_ERROR: Error = Error{ code_num: 1063, message: "Common Error"};
 
 lazy_static! {
     static ref ERROR_C_MESSAGES: HashMap<u32, CString> = {
@@ -131,6 +135,10 @@ lazy_static! {
         insert_c_message(&mut m, &INVALID_WALLET_HANDLE);
         insert_c_message(&mut m, &INVALID_WALLET_CREATION);
         insert_c_message(&mut m, &INVALID_POOL_NAME);
+        insert_c_message(&mut m, &CANNOT_DELETE_CONNECTION);
+        insert_c_message(&mut m, &CREATE_CONNECTION_ERROR);
+        insert_c_message(&mut m, &INVALID_WALLET_SETUP);
+        insert_c_message(&mut m, &COMMON_ERROR);
        m
     };
 }

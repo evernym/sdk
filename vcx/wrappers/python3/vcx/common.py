@@ -43,7 +43,7 @@ def release(name, handle):
 
     if err != ErrorCode.Success:
         logger.warning("release: Function %s returned error %i", name, err)
-        raise VcxError(ErrorCode(err))
+        raise VcxError(ErrorCode(err), error_message(err))
 
 
 def error_message(error_code: int) -> str:
@@ -69,6 +69,17 @@ def get_version() -> str:
     logger.debug("error_message: Function %s returned version: %s", name, version)
 
     return version
+
+
+def update_institution_info(institution_name: str, logo_url: str) -> None:
+    logger = logging.getLogger(__name__)
+
+    name = 'vcx_update_institution_info'
+    c_name = c_char_p(institution_name.encode('utf-8'))
+    c_logo_url = c_char_p(logo_url.encode('utf-8'))
+
+    getattr(_cdll(), name)(c_name, c_logo_url)
+    logger.debug("vcx_init_with_config completed")
 
 
 def shutdown(delete_wallet: bool):

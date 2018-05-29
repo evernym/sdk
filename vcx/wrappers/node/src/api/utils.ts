@@ -81,3 +81,11 @@ export async function getLedgerFees (): Promise<string> {
 export function shutdownVcx (deleteWallet: boolean): number {
   return rustAPI().vcx_shutdown(deleteWallet)
 }
+
+export function updateInstitutionConfigs (name: string, logoUrl: string): number {
+  const rc = rustAPI().vcx_update_institution_info(name, logoUrl)
+  if (rc) {
+    throw new VCXInternalError(rc, VCXBase.errorMessage(rc), 'vcx_update_institution_info')
+  }
+  return rc
+}
