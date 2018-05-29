@@ -45,6 +45,7 @@ public class VcxProvisionAsync {
     };
     
     public static void main(String[] args) throws InterruptedException {
+    	System.out.println("**> Environment: " + System.getenv().toString());
     	//String config="{\"agency_url\": \"http://localhost:8081\", \"agency_did\": \"sFJZSHGFnsTBwFUeiV83q\",\"wallet_name\":\"wallet1\",\"wallet_key\":\"wallet-key\",\"agent_seed\":null,\"enterprise_seed\":null, \"agency_verkey\": \"UPPrbEH7WRSCdaDdgoUNX8jByvi59cHwHcEr1QESrgT\"}";
     	String config="{\"agency_url\": \"https://cagency.pdev.evernym.com\", \"agency_did\": \"dTLdJqRZLwMuWSogcKfBT\",\"wallet_name\":\"wallet1\",\"wallet_key\":\"wallet-key\",\"agent_seed\":null,\"enterprise_seed\":null, \"agency_verkey\": \"LsPQTDHi294TexkFmZK9Q9vW4YGtQRuLV8wuyZi94yH\"}";
     	
@@ -58,4 +59,3 @@ public class VcxProvisionAsync {
 //        }
     }
 }
-

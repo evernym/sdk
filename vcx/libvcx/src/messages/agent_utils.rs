@@ -128,13 +128,10 @@ pub fn connect_register_provision(endpoint: &str,
         from_vk: my_vk.to_string(),
     };
     let data = Bundled::create(encode::to_vec_named(&payload).unwrap()).encode()?;
-     info!("Bundled::create: {:?}", data);
-     let data = bundle_for_agency(data, &agency_did)?;
-     info!("bundle_for_agency: {:?}", data);
-
+    let data = bundle_for_agency(data, &agency_did)?;
     let data = unbundle_from_agency(httpclient::post_u8(&data,&url).map_err(|e|error::INVALID_HTTP_RESPONSE.code_num).unwrap())?;
 
-    info!("deserializing connect response: {:?}", data);
+    trace!("deserializing connect response: {:?}", data);
     let mut de = Deserializer::new(&data[0][..]);
     let response: ConnectResponseMsg = Deserialize::deserialize(&mut de).map_err(|ec| {error::INVALID_OPTION.code_num}).unwrap();
     //self.my_vk = Some(connection::get_pw_verkey(connection_handle).map_err(|ec| CredentialError::CommonError(ec.to_error_code()))?);
@@ -154,7 +151,7 @@ pub fn connect_register_provision(endpoint: &str,
     let data = bundle_for_agency(data, &agency_pw_did)?;
     let data = unbundle_from_agency(httpclient::post_u8(&data,&url).map_err(|e|error::INVALID_HTTP_RESPONSE.code_num).unwrap())?;
 
-    info!("deserializing register response: {:?}", data);
+    trace!("deserializing register response: {:?}", data);
     let mut de = Deserializer::new(&data[0][..]);
     let response: RegisterResponse = Deserialize::deserialize(&mut de).map_err(|e|error::INVALID_HTTP_RESPONSE.code_num).unwrap();
 
@@ -168,7 +165,7 @@ pub fn connect_register_provision(endpoint: &str,
     let data = bundle_for_agency(data, &agency_pw_did)?;
     let data = unbundle_from_agency(httpclient::post_u8(&data,&url).map_err(|e|error::INVALID_HTTP_RESPONSE.code_num).unwrap())?;
 
-    info!("deserializing provision response: {:?}", data);
+    trace!("deserializing provision response: {:?}", data);
     let mut de = Deserializer::new(&data[0][..]);
     let response: ConnectResponseMsg = Deserialize::deserialize(&mut de).map_err(|e|error::INVALID_HTTP_RESPONSE.code_num).unwrap();
     let agent_did = response.from_did;
