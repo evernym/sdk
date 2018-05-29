@@ -11,7 +11,7 @@ use settings;
 
 static NULL_PAYMENT: &str = "null";
 static EMPTY_CONFIG: &str = "{}";
-static FEES: &str = r#"{"1":1, "101":2}"#;
+static FEES: &str = r#"{"1":1, "101":2, "102":44}"#;
 
 static PAYMENT_INIT: Once = ONCE_INIT;
 
@@ -150,7 +150,7 @@ pub fn get_ledger_fees() -> Result<String, u32> {
     }
 }
 
-pub fn submit_and_pay_for_txn(req: &str, txn_type: &str) -> Result<String, u32> {
+pub fn pay_for_txn(req: &str, txn_type: &str) -> Result<String, u32> {
     // Find cost for txn_type
     // gen inputs and outputs
     // indy_add_request_fees
@@ -158,6 +158,14 @@ pub fn submit_and_pay_for_txn(req: &str, txn_type: &str) -> Result<String, u32> 
     // parse response to make sure its valid
     // return response
     Ok("{}".to_string())
+}
+
+fn get_txn_cost(txn_type: &str) -> Result<u32, u32> {
+    let ledger_fees = get_ledger_fees()?;
+
+    let fees: ::std::collections::HashMap<String, u32> = serde_json::from_str(&ledger_fees).unwrap();
+
+    Ok(fees.get(txn_type).ok_or(error::UNKNOWN_TXN_TYPE.code_num)?.clone())
 }
 
 fn _address_balance(address: &Vec<UTXO>) -> u32 {
@@ -205,7 +213,6 @@ pub fn outputs(amount: u32) -> Result<String, u32> {
 
 #[cfg(test)]
 pub mod tests {
-
     use super::*;
     use settings;
 
@@ -224,14 +231,14 @@ pub mod tests {
     #[test]
     fn test_init_payments() {
         settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
         init_payments().unwrap();
     }
 
     #[test]
     fn test_create_address() {
         settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
         init_payments().unwrap();
         create_address().unwrap();
     }
@@ -239,7 +246,7 @@ pub mod tests {
     #[test]
     fn test_get_addresses() {
         settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
         init_payments().unwrap();
         create_address().unwrap();
         let addresses = list_addresses().unwrap();
@@ -248,7 +255,7 @@ pub mod tests {
     #[test]
     fn test_get_wallet_token_info() {
         settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
         init_payments().unwrap();
         create_address().unwrap();
         let balance = get_wallet_token_info().unwrap();
@@ -272,7 +279,7 @@ pub mod tests {
     #[test]
     fn test_get_ledger_fees() {
         settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
         let fees = get_ledger_fees().unwrap();
         assert!(fees.contains(r#""101":2"#));
         assert!(fees.contains(r#""1":1"#));
@@ -304,7 +311,7 @@ pub mod tests {
     #[test]
     fn test_inputs() {
         settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
 
         // Success - Exact amount
         assert_eq!(inputs(6).unwrap(), (0, r#"["pov:null:1","pov:null:2","pov:null:1","pov:null:2"]"#.to_string()));
@@ -316,13 +323,13 @@ pub mod tests {
         assert_eq!(inputs(1).unwrap(), (0, r#"["pov:null:1"]"#.to_string()));
 
         // Err - request more than wallet contains
-        assert_eq!(inputs(7) , Err(error::INSUFFICIENT_TOKEN_AMOUNT.code_num));
+        assert_eq!(inputs(7), Err(error::INSUFFICIENT_TOKEN_AMOUNT.code_num));
     }
 
     #[test]
     fn test_select_outputs() {
         settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
 
         let cost = 6;
         let expected_output = r#"[{"amount":0,"extra":null,"paymentAddress":"pay:null:J81AxU9hVHYFtJc"}]"#;
@@ -331,10 +338,19 @@ pub mod tests {
     }
 
     #[test]
+    fn test_get_txn_cost() {
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
+
+        assert_eq!(get_txn_cost("101").unwrap(), 2);
+        assert_eq!(get_txn_cost("102").unwrap(), 44);
+        assert_eq!(get_txn_cost("Unknow txn type"), Err(error::UNKNOWN_TXN_TYPE.code_num));
+    }
+
+    #[test]
     fn test_pay_for_txn() {
         // Schema
         let create_schema_req = ::utils::constants::SCHEMA_CREATE_JSON.to_string();
-        let price_req = submit_and_pay_for_txn(&create_schema_req, "101").unwrap();
+        let price_req = pay_for_txn(&create_schema_req, "101").unwrap();
     }
-
 }
