@@ -4,7 +4,6 @@ use std::sync::Mutex;
 use reqwest;
 use reqwest::header::{ContentType};
 use std::env;
-
 lazy_static!{
     static ref NEXT_U8_RESPONSE: Mutex<Vec<Vec<u8>>> = Mutex::new(vec![]);
 }
@@ -16,7 +15,7 @@ pub fn post_u8(body_content: &Vec<u8>, url: &str) -> Result<Vec<u8>,String> {
     info!("::Setting ssl cert");
     if cfg!(target_os = "android") {
         info!("::Android code");
-        set_ssl_cesation();
+        set_ssl_cert_location();
     }
     let client = reqwest::ClientBuilder::new().danger_disable_hostname_verification().build().unwrap();
     info!("Posting encrypted bundle to: \"{}\"", url);
