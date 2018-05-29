@@ -47,9 +47,7 @@ android {
         versionName "${fullVersionName()}"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-        ndk {
-            abiFilters "x86"
-        }
+
     }
 
     buildTypes {

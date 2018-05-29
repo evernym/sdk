@@ -1,9 +1,18 @@
 ## Vcx SDK for Java and Android
 
 ###Development:
-- To include the latest Vcx binary 
-    - run `build.and.include.indy.sh`
-    - this will build latest Libvcx and copy the libvcx.so to appropriate place in project
+With Docker
 
-###Publishing
-- Run `./build.and.deploy.aar.sh` to publish the aar file to maven repository
+- run `build_scripts/android/vcx/build.sh`
+
+Without Docker
+
+- run `build_scripts/android/vcx/build.nondocker.sh`
+
+### Generate the AAR
+
+ - copy generated `libvcx.so` to `sdk/vcx/wrappers/java/vcx/src/main/jniLibs/<ARCH` folder
+ - run `./gradlew clean assemble` in folder `sdk/vcx/wrappers/java/vcx`
+
+###Publishing the AAR
+- run `./gradlew clean assemble` in folder `sdk/vcx/wrappers/java/vcx`

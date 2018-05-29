@@ -151,9 +151,12 @@ rustup target add ${CROSS_COMPILE}
 
 pushd $LIBVCX
 export OPENSSL_STATIC=1
-cargo clean
-cargo build --release --target=${CROSS_COMPILE}
+# cargo clean
+# cargo build --release --target=${CROSS_COMPILE}
 popd
-$CC -v -shared -o ${WORKDIR}/libvcx.so -Wl,--whole-archive ${LIBVCX}/target/${CROSS_COMPILE}/release/libvcx.a ${TOOLCHAIN_DIR}/sysroot/usr/lib/libz.a ${TOOLCHAIN_DIR}/sysroot/usr/lib/libm.a ${TOOLCHAIN_DIR}/sysroot/usr/lib/liblog.so ${LIBINDY_DIR}/libindy.a ${OPENSSL_DIR}/lib/libssl.a ${OPENSSL_DIR}/lib/libcrypto.a ${SODIUM_LIB_DIR}/libsodium.a ${LIBZMQ_LIB_DIR}/libzmq.a ${TOOLCHAIN_DIR}/${CROSS_COMPILE}/lib/libstdc++.a -Wl,--no-whole-archive -z muldefs
-cp "${LIBVCX}/target/${CROSS_COMPILE}/release/libvcx.a" ${WORKDIR}/
+
+LIBVCX_BUILDS=${WORKDIR}/libvcx_${TARGET_ARCH}
+mkdir -p ${LIBVCX_BUILDS}
+$CC -v -shared -o ${LIBVCX_BUILDS}/libvcx.so -Wl,--whole-archive ${LIBVCX}/target/${CROSS_COMPILE}/release/libvcx.a ${TOOLCHAIN_DIR}/sysroot/usr/lib/libz.so ${TOOLCHAIN_DIR}/sysroot/usr/lib/libm.a ${TOOLCHAIN_DIR}/sysroot/usr/lib/liblog.so ${LIBINDY_DIR}/libindy.a ${OPENSSL_DIR}/lib/libssl.a ${OPENSSL_DIR}/lib/libcrypto.a ${SODIUM_LIB_DIR}/libsodium.a ${LIBZMQ_LIB_DIR}/libzmq.a ${TOOLCHAIN_DIR}/${CROSS_COMPILE}/lib/libstdc++.a -Wl,--no-whole-archive -z muldefs
+cp "${LIBVCX}/target/${CROSS_COMPILE}/release/libvcx.a" ${LIBVCX_BUILDS}/
 
