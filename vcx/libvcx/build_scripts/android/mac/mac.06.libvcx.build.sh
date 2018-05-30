@@ -57,7 +57,7 @@ ln -s $WORK_DIR/vcx-indy-sdk/libindy/target/x86_64-apple-darwin/release/libindy.
 export OPENSSL_DIR=$OPENSSL_DIR_DARWIN
 cargo build --target x86_64-apple-darwin --release --verbose
 
-cargo test
+#cargo test
 
 export PATH=$ORIGINAL_PATH
 #export PKG_CONFIG_PATH=$ORIGINAL_PKG_CONFIG_PATH

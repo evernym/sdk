@@ -45,10 +45,10 @@ rusqlite = { version = "0.13.0", features=["bundled"] }
 #rusqlite = "0.13.0"
 num-traits = "0.2.0"
 log-panics = "2.0.0"
+rust-indy-sdk = {git="https://github.com/mikelodder7/rust-indy-sdk.git"}
 
 [target.'cfg(target_os = "android")'.dependencies]
 android_logger = "0.5"
-rust-indy-sdk = {git="https://github.com/mikelodder7/rust-indy-sdk.git"}
 
 [build-dependencies]
 serde = "1.0"
