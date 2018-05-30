@@ -7,11 +7,50 @@ use utils::error::error_string;
 use std::ptr;
 use std::thread;
 use error::ToErrorCode;
-use connection::{get_source_id, build_connection, build_connection_with_invite, connect, to_string, get_state, release, is_valid_handle, update_state, from_string, get_invite_details};
+use error::connection::ConnectionError;
+use connection::{get_source_id, build_connection, build_connection_with_invite, connect, to_string, get_state, release, is_valid_handle, update_state, from_string, get_invite_details, delete_connection};
 
 /**
  * connection object
  */
+
+/// -> Delete a Connection object and release its handle
+///
+/// #Params
+/// command_handle: command handle to map callback to user context.
+///
+/// connection_handle: handle of the connection to delete.
+///
+/// cb: Callback that provides feedback of the api call.
+///
+/// #Returns
+/// Error code as a u32
+#[no_mangle]
+#[allow(unused_assignments)]
+pub extern fn vcx_connection_delete_connection(command_handle: u32,
+                                               connection_handle: u32,
+                                               cb: Option<extern fn(
+                                                   xcommand_handle: u32,
+                                                   err: u32)>) -> u32 {
+    check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
+    if !is_valid_handle(connection_handle) {
+        return ConnectionError::InvalidHandle().to_error_code()
+    }
+    info!("vcx_connection_delete_connection(command_handle: {}, connection_handle: {})", command_handle, connection_handle);
+    thread::spawn(move|| {
+        match delete_connection(connection_handle) {
+            Ok(_) => {
+                info!("vcx_connection_delete_connection_cb(command_handle: {}, rc: {})", command_handle, 0);
+                cb(command_handle, error::SUCCESS.code_num)
+            },
+            Err(e) => {
+                info!("vcx_connection_delete_connection_cb(command_handle: {}, rc: {})", command_handle, e);
+                cb(command_handle, e.to_error_code())
+            },
+        }
+    });
+    error::SUCCESS.code_num
+}
 
 /// -> Create a Connection object that provides a pairwise connection for an institution's user
 ///
@@ -406,7 +445,12 @@ mod tests {
     extern "C" fn create_cb(command_handle: u32, err: u32, connection_handle: u32) {
         if err != 0 {panic!("create_cb failed")}
         if connection_handle == 0 {panic!("invalid handle")}
-        println!("successfully called create_cb")
+        info!("successfully called create_cb")
+    }
+
+    extern "C" fn delete_cb(command_handle: u32, err: u32) {
+        if err != 0 {panic!("create_cb failed")}
+        println!("successfully called delete_cb")
     }
 
     #[test]
@@ -436,7 +480,7 @@ mod tests {
     }
 
     extern "C" fn connect_cb(command_handle: u32, err: u32, details: *const c_char) {        if err != 0 {panic!("connect failed: {}", err);}
-        println!("successfully called connect_cb");
+        info!("successfully called connect_cb");
     }
 
     #[test]
@@ -454,7 +498,7 @@ mod tests {
 
     extern "C" fn update_state_cb(command_handle: u32, err: u32, state: u32) {
         assert_eq!(err, 0);
-        println!("successfully called update_state_cb");
+        info!("successfully called update_state_cb");
         assert_eq!(state,VcxStateType::VcxStateAccepted as u32);
     }
 
@@ -484,7 +528,7 @@ mod tests {
             panic!("credential_string is empty");
         }
         check_useful_c_str!(credential_string, ());
-        println!("successfully called serialize_cb: {}", credential_string);
+        info!("successfully called serialize_cb: {}", credential_string);
     }
 
     #[test]
@@ -516,12 +560,12 @@ mod tests {
     extern "C" fn deserialize_cb(command_handle: u32, err: u32, connection_handle: u32) {
         assert_eq!(err, 0);
         assert!(connection_handle > 0);
-        println!("successfully called deserialize_cb");
+        info!("successfully called deserialize_cb");
         let string = r#"{"source_id":"test_vcx_connection_deserialialize_succeeds","pw_did":"8XFh8yBzrpJQmNyZzgoTqB","pw_verkey":"EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A","state":1,"uuid":"","endpoint":"","invite_detail":{"statusCode":"","connReqId":"","senderDetail":{"name":"","agentKeyDlgProof":{"agentDID":"","agentDelegatedKey":"","signature":""},"DID":"","logoUrl":"","verKey":""},"senderAgencyDetail":{"DID":"","verKey":"","endpoint":""},"targetName":"","statusMsg":""},"agent_did":"U5LXs4U7P9msh647kToezy","agent_vk":"FktSZg8idAVzyQZrdUppK6FTrfAzW3wWVzAjJAfdUvJq","their_pw_did":"","their_pw_verkey":""}"#;
 
         let new = to_string(connection_handle).unwrap();
-        println!("original: {}",string);
-        println!("     new: {}",new);
+        info!("original: {}",string);
+        info!("     new: {}",new);
         assert_eq!(string,new);
     }
 
@@ -537,7 +581,7 @@ mod tests {
 
     extern "C" fn get_state_cb(command_handle: u32, err: u32, state: u32) {
         assert!(state > 0);
-        println!("successfully called get_state_cb");
+        info!("successfully called get_state_cb");
     }
 
     #[test]
@@ -549,5 +593,16 @@ mod tests {
         let rc = vcx_connection_get_state(0,handle,Some(get_state_cb));
         assert_eq!(rc, error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(300));
+    }
+
+    #[test]
+    fn test_vcx_connection_delete_connection() {
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
+        let test_name = "test_vcx_connection_delete_connection";
+        let connection_handle = build_connection(test_name).unwrap();
+        let command_handle = 0;
+        let cb = delete_cb;
+        assert_eq!(0, vcx_connection_delete_connection(command_handle, connection_handle, Some(cb)));
     }
 }

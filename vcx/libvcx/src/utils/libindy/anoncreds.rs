@@ -463,7 +463,8 @@ mod tests {
 
         cleanup_non_pool_tests(wallet_name);
         assert!(result.is_ok());
-        println!("{}", result.unwrap());
+        let (str1, str2, str3) = result.unwrap();
+        info!("{}\n{}\n{}", str1, str2, str3);
     }
 
     #[test]

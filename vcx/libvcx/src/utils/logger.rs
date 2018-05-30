@@ -1,10 +1,16 @@
 extern crate env_logger;
 extern crate log;
 extern crate log4rs;
+extern crate log_panics;
+#[cfg(target_os = "android")]
+extern crate android_logger;
 
 use settings;
 use std::sync::{Once, ONCE_INIT};
 use std::env;
+
+#[cfg(target_os = "android")]
+use self::android_logger::Filter;
 
 pub struct LoggerUtils {}
 
@@ -23,25 +29,31 @@ static LOGGER_INIT: Once = ONCE_INIT;
 
 impl LoggerUtils {
     pub fn init() {
+        log_panics::init(); //Logging of panics is essential for android. As android does not log to stdout for native code
+        
+        if cfg!(target_os = "android") {
+            LOGGER_INIT.call_once(|| {
+                #[cfg(target_os = "android")]
+                    android_logger::init_once(
+                    Filter::default().with_min_level(log::Level::Trace)
 
-        // turn libindy logging off if RUST_LOG is not specified
-        match env::var("RUST_LOG") {
-            Err(_) => {
-                env::set_var("RUST_LOG", "off");
-            },
-            Ok(value) =>  (),
-        };
+                );
+            });
 
+
+        } else {
+            env::set_var("RUST_LOG", "trace");
+            LOGGER_INIT.call_once(|| {
+                env_logger::init().unwrap();
+            });
+        }
+    }
+
+    pub fn init_test_logging() {
+        // logger for testing purposes, sends to stdout (set env RUST_LOG to configure log level
+        env::set_var("RUST_LOG", "trace");
         LOGGER_INIT.call_once(|| {
-            match settings::get_config_value(settings::CONFIG_LOG_CONFIG) {
-                Err(_) => {/* NO-OP - no logging configured */},
-                Ok(x) => {
-                    match log4rs::init_file(&x, Default::default()) {
-                        Err(e) => println!("invalid log configuration: {}", e),
-                        Ok(_) => {},
-                    }
-                }
-            }
+            env_logger::init().unwrap();
         });
     }
 

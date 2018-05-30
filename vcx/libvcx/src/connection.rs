@@ -56,7 +56,7 @@ impl Connection {
     fn _connect_send_invite(&mut self, options: Option<String>) -> Result<u32, ConnectionError> {
         debug!("\"_connect_send_invite\" for connection {}", self.source_id);
 
-        let options_obj: ConnectionOptions = match options{
+        let options_obj: ConnectionOptions = match options {
             Some(opt) => {
                 match opt.trim().is_empty() {
                     true => ConnectionOptions {
@@ -73,13 +73,12 @@ impl Connection {
                 }
             },
             None => {
-                ConnectionOptions{
+                ConnectionOptions {
                     connection_type: None,
                     phone: None
                 }
             }
         };
-
         match messages::send_invite()
             .to(&self.pw_did)
             .to_vk(&self.pw_verkey)
@@ -108,6 +107,23 @@ impl Connection {
                 Ok(error::SUCCESS.code_num)
             }
         }
+    }
+    pub fn delete_connection(&mut self) -> Result<u32, ConnectionError> {
+        match messages::delete_connection()
+            .to(&self.pw_did)
+            .to_vk(&self.pw_verkey)
+            .agent_did(&self.agent_did)
+            .agent_vk(&self.agent_vk)
+            .send_secure() {
+            Err(ec) => {
+                return Err(ConnectionError::CannotDeleteConnection())
+            },
+            Ok(response) => {
+                self.state = VcxStateType::VcxStateNone;
+                Ok(error::SUCCESS.code_num)
+            }
+        }
+
     }
 
     fn _connect_accept_invite(&mut self, options: Option<String>) -> Result<u32,ConnectionError> {
@@ -537,6 +553,16 @@ pub fn update_state(handle: u32) -> Result<u32, ConnectionError> {
         },
     }
 }
+pub fn delete_connection(handle:u32) -> Result<u32, ConnectionError> {
+    CONNECTION_MAP.get_mut(handle, |t| {
+        match t.delete_connection() {
+            Ok(x) => Ok(x),
+            Err(e) => {
+                return Err(e.to_error_code())
+            },
+        }
+    }).or(Err(ConnectionError::CannotDeleteConnection())).and(release(handle))
+}
 
 pub fn connect(handle: u32, options: Option<String>) -> Result<u32, ConnectionError> {
     CONNECTION_MAP.get_mut(handle, |t| {
@@ -750,7 +776,9 @@ mod tests {
         assert!(!get_pw_verkey(handle).unwrap().is_empty());
         assert_eq!(get_state(handle), VcxStateType::VcxStateInitialized as u32);
         connect(handle, Some("{}".to_string())).unwrap();
-        assert!(release(handle).is_ok());
+        assert_eq!(delete_connection(handle).unwrap(), 0);
+        // This errors b/c we release handle in delete connection
+        assert!(release(handle).is_err());
 
     }
 
@@ -817,11 +845,11 @@ mod tests {
 
         let handle = CONNECTION_MAP.add(c).unwrap();
 
-        println!("updating state, handle: {}", handle);
+        info!("updating state, handle: {}", handle);
         httpclient::set_next_u8_response(GET_MESSAGES_RESPONSE.to_vec());
         update_state(handle).unwrap();
         let details = get_invite_details(handle, true).unwrap();
-        println!("{}",details);
+        info!("{}",details);
         assert!(details.contains("\"dp\":"));
         assert_eq!(get_invite_details(12345, true).err(),
                    Some(ConnectionError::CommonError(error::INVALID_CONNECTION_HANDLE.code_num)));
@@ -838,8 +866,8 @@ mod tests {
         let handle = from_string(&first_string).unwrap();
         let second_string = to_string(handle).unwrap();
         assert!(release(handle).is_ok());
-        println!("{}",first_string);
-        println!("{}",second_string);
+        info!("{}",first_string);
+        info!("{}",second_string);
         assert_eq!(first_string,second_string);
     }
 
@@ -852,8 +880,8 @@ mod tests {
         let first_string = to_string(handle).unwrap();
         let handle = from_string(&first_string).unwrap();
         let second_string = to_string(handle).unwrap();
-        println!("{}",first_string);
-        println!("{}",second_string);
+        info!("{}",first_string);
+        info!("{}",second_string);
         assert_eq!(first_string,second_string);
     }
 
@@ -957,7 +985,7 @@ mod tests {
         connect(handle,Some("{ \"phone\": \"3852500260\" }".to_string())).unwrap();
 
         let string = to_string(handle).unwrap();
-        println!("my connection: {}", string);
+        info!("my connection: {}", string);
 
         while get_state(handle) != VcxStateType::VcxStateAccepted as u32{
             thread::sleep(Duration::from_millis(1000));
@@ -1117,4 +1145,5 @@ mod tests {
         assert_eq!(set_invite_details(1, details).err(), Some(ConnectionError::InvalidHandle()));
         assert_eq!(set_pw_verkey(1, "blah").err(), Some(ConnectionError::InvalidHandle()));
     }
+
 }

@@ -9,6 +9,7 @@ pub mod send_message;
 pub mod update_profile;
 pub mod proofs;
 pub mod agent_utils;
+pub mod update_connection;
 
 use std::u8;
 use settings;
@@ -17,15 +18,14 @@ use utils::libindy::wallet;
 use utils::error;
 use self::rmp_serde::encode;
 use self::create_key::CreateKeyMsg;
-use self::invite::SendInvite;
-use self::invite::AcceptInvite;
+use self::update_connection::DeleteConnection;
+use self::invite::{AcceptInvite, SendInvite};
 use self::update_profile::UpdateProfileData;
 use self::get_message::GetMessages;
 use self::send_message::SendMessage;
 use serde::Deserialize;
 use self::rmp_serde::Deserializer;
 use self::proofs::proof_request::{ProofRequestMessage};
-
 
 #[derive(Clone, Deserialize, Serialize, Debug, PartialEq, PartialOrd)]
 pub struct MsgInfo {
@@ -178,8 +178,11 @@ pub fn extract_json_payload(data: &Vec<u8>) -> Result<String, u32> {
 
 pub fn bundle_for_agency(message: Vec<u8>, did: &str) -> Result<Vec<u8>, u32> {
     let agency_vk = settings::get_config_value(settings::CONFIG_AGENCY_VERKEY).unwrap();
+    info!("{}", agency_vk);
     let agent_vk = settings::get_config_value(settings::CONFIG_REMOTE_TO_SDK_VERKEY).unwrap();
+    info!("{}", agent_vk);
     let my_vk = settings::get_config_value(settings::CONFIG_SDK_TO_REMOTE_VERKEY).unwrap();
+    info!("{}", my_vk);
 
     debug!("pre encryption msg: {:?}", message);
     let msg = crypto::prep_msg(wallet::get_wallet_handle(), &my_vk, &agent_vk, &message[..])?;
@@ -209,7 +212,6 @@ pub fn bundle_for_agent(message: Vec<u8>, pw_vk: &str, agent_did: &str, agent_vk
         fwd: agent_did.to_string(),
         msg,
     };
-
     let inner = encode::to_vec_named(&inner).unwrap();
     debug!("inner forward: {:?}", inner);
 
@@ -312,6 +314,7 @@ pub trait GeneralMessage{
 
 pub fn create_keys() -> CreateKeyMsg { CreateKeyMsg::create() }
 pub fn send_invite() -> SendInvite { SendInvite::create() }
+pub fn delete_connection() -> DeleteConnection { DeleteConnection::create() }
 pub fn accept_invite() -> AcceptInvite { AcceptInvite::create() }
 pub fn update_data() -> UpdateProfileData{ UpdateProfileData::create() }
 pub fn get_messages() -> GetMessages { GetMessages::create() }
@@ -327,13 +330,13 @@ pub mod tests {
         let vec: Vec<i8> = vec![-127, -89, 98, 117, 110, 100, 108, 101, 100, -111, -36, 5, -74];
 
         let buf = to_u8(&vec);
-        println!("new bundle: {:?}", buf);
+        info!("new bundle: {:?}", buf);
     }
 
     #[test]
     fn test_to_i8() {
         let vec: Vec<u8> = vec![129, 167, 98, 117, 110, 100, 108, 101, 100, 145, 220, 19, 13];
         let buf = to_i8(&vec);
-        println!("new bundle: {:?}", buf);
+        info!("new bundle: {:?}", buf);
     }
 }

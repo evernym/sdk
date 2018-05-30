@@ -69,7 +69,8 @@ pub fn connect_register_provision(endpoint: &str,
                                   seed: Option<String>,
                                   issuer_seed: Option<String>,
                                   wallet_key: Option<String>) -> Result<String,u32> {
-
+    info!("connect_register_    provision");
+    
     let (wallet_name_string, wallet_name) = match wallet_name {
         Some(x) => (format!("\"wallet_name\":\"{}\",", x), x),
         None => ("".to_string(), settings::DEFAULT_WALLET_NAME.to_string()),
@@ -91,6 +92,11 @@ pub fn connect_register_provision(endpoint: &str,
     };
 
     wallet::init_wallet(&wallet_name)?;
+
+    match ::utils::libindy::anoncreds::libindy_prover_create_master_secret(::settings::DEFAULT_LINK_SECRET_ALIAS) {
+        Ok(_) => (),
+        Err(_) => (),  // If MS is already in wallet then just continue
+    };
 
     let seed = match seed {
         Some(x) => x,
@@ -120,7 +126,7 @@ pub fn connect_register_provision(endpoint: &str,
     /* STEP 1 - CONNECT */
 
     let url = format!("{}/agency/msg", endpoint);
-
+    info!("url: {:?}", url);
     let payload = ConnectMsg {
         msg_type: MsgType { name: "CONNECT".to_string(), ver: "1.0".to_string(), },
         from_did: my_did.to_string(),
@@ -241,7 +247,7 @@ mod tests {
 
         let result = connect_register_provision(&host, &agency_did, &agency_vk, None, wallet_key, None, None).unwrap();
         assert!(result.len() > 0);
-        println!("result: {}", result);
+        info!("result: {}", result);
 
         wallet::delete_wallet("test_connect_register_provision").unwrap();
     }
@@ -258,7 +264,7 @@ mod tests {
 
         let result = connect_register_provision(&host, &agency_did, &agency_vk, Some(wallet_name.to_string()), None, Some(DEMO_ISSUER_PW_SEED.to_string()), None).unwrap();
         assert!(result.len() > 0);
-        println!("result: {}", result);
+        info!("result: {}", result);
 
         wallet::delete_wallet(&wallet_name).unwrap();
     }

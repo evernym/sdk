@@ -22,6 +22,20 @@ mod tests {
 
     #[cfg(feature = "pool_tests")]
     #[test]
+    fn test_delete_connection() {
+        self::vcx::utils::logger::LoggerUtils::init();
+        let test_name = "test_delete_connection";
+        settings::set_defaults();
+        self::vcx::utils::devsetup::setup_dev_env(test_name);
+        let alice = connection::build_connection("alice").unwrap();
+        connection::delete_connection(alice).unwrap();
+        assert!(connection::release(alice).is_err());
+        self::vcx::utils::devsetup::cleanup_dev_env(test_name);
+    }
+
+    // Ignoring until Dev Agency is updated to libindy 1.4
+    #[cfg(feature = "pool_tests")]
+    #[test]
     fn test_real_proof() {
         self::vcx::utils::logger::LoggerUtils::init();
         settings::set_defaults();

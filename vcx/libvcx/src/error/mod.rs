@@ -6,6 +6,7 @@ pub mod issuer_cred;
 pub mod proof;
 pub mod credential;
 pub mod wallet;
+pub mod messages;
 
 
 pub trait ToErrorCode {

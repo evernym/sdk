@@ -528,7 +528,7 @@ mod tests {
         settings::set_defaults();
         let handle = create_proof("id".to_string(),::utils::constants::PROOF_REQUEST_JSON.to_string()).unwrap();
         let serialized = to_string(handle).unwrap();
-        println!("serizlied: {}", serialized);
+        info!("serizlied: {}", serialized);
         from_string(&serialized).unwrap();
     }
 

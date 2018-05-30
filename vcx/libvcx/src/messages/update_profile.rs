@@ -161,7 +161,7 @@ mod tests {
             .name(&name)
             .logo_url(&url)
             .msgpack().unwrap();
-        println!("update_data_test: {:?}", msg);
+        info!("update_data_test: {:?}", msg);
     }
 
     #[test]

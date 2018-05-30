@@ -61,11 +61,11 @@ export class Connection extends VCXBaseWithState {
    * {id: "123"}
    * @returns {Promise<Connection>} A Connection Object
    */
-  static async create ( recipientInfo: IRecipientInfo): Promise<Connection> {
-    const connection = new Connection(recipientInfo.id)
+  static async create ({ id }: IRecipientInfo): Promise<Connection> {
+    const connection = new Connection(id)
     const commandHandle = 0
     try {
-      await connection._create((cb) => rustAPI().vcx_connection_create(commandHandle, recipientInfo.id, cb))
+      await connection._create((cb) => rustAPI().vcx_connection_create(commandHandle, id, cb))
       return connection
     } catch (err) {
       throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_connection_create')
@@ -83,12 +83,12 @@ export class Connection extends VCXBaseWithState {
    * {id: "123"}
    * @returns {Promise<Connection>} A Connection Object
    */
-  static async createWithInvite ( recipientInfo: IRecipientInfo, invite: string): Promise<Connection> {
-    const connection = new Connection(recipientInfo.id)
+  static async createWithInvite ({ id, invite }: IRecipientInviteInfo): Promise<Connection> {
+    const connection = new Connection(id)
     const commandHandle = 0
     try {
       await connection._create((cb) => rustAPI().vcx_connection_create_with_invite(commandHandle,
-                                                 recipientInfo.id, invite, cb))
+                                                 id, invite, cb))
 
       return connection
     } catch (err) {
@@ -117,7 +117,33 @@ export class Connection extends VCXBaseWithState {
       throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_connection_deserialize')
     }
   }
-
+  /**
+   * @memberof Connection
+   * @description Deletes and releases a connection
+   * @function delete
+   * @returns {Promis<void>}
+   */
+  async delete (): Promise<void> {
+    try {
+      return await createFFICallbackPromise<void>(
+        (resolve, reject, cb) => {
+          const rc = rustAPI().vcx_connection_delete_connection(0, this._handle, cb)
+          if (rc) {
+            reject(rc)
+          }
+        },
+        (resolve, reject) => ffi.Callback('void', ['uint32', 'uint32'], (xcommandHandle, err) => {
+          if (err) {
+            reject(err)
+            return
+          }
+          resolve(xcommandHandle)
+        })
+      )
+    } catch (err) {
+      throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_connection_delete_connection')
+    }
+  }
   /**
    * @memberof Connection
    * @description Creates a connection between enterprise and end user.

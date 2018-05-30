@@ -278,18 +278,18 @@ mod tests {
     extern "C" fn create_cb(command_handle: u32, err: u32, schema_handle: u32) {
         assert_eq!(err, 0);
         assert!(schema_handle > 0);
-        println!("successfully called create_cb")
+        info!("successfully called create_cb")
     }
 
     extern "C" fn create_cb_err(command_handle: u32, err: u32, schema_handle: u32) {
         assert_ne!(err, 0);
-        println!("successfully called create_cb_err")
+        info!("successfully called create_cb_err")
     }
 
     extern "C" fn create_and_serialize_cb(command_handle: u32, err: u32, schema_handle: u32) {
         assert_eq!(err, 0);
         assert!(schema_handle > 0);
-        println!("successfully called create_and_serialize_cb");
+        info!("successfully called create_and_serialize_cb");
         assert_eq!(vcx_schema_serialize(0, schema_handle, Some(serialize_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
@@ -331,7 +331,7 @@ mod tests {
             panic!("schema_str is null");
         }
         check_useful_c_str!(schema_str, ());
-        println!("successfully called serialize_cb: {}", schema_str);
+        info!("successfully called serialize_cb: {}", schema_str);
     }
 
     extern "C" fn get_id_cb(handle: u32, err: u32, schema_id: *const c_char) {
