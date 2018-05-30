@@ -1,7 +1,7 @@
 const assert = require('chai').assert
 const vcx = require('../dist/index')
 const { stubInitVCX, connectionCreateAndConnect } = require('./helpers')
-const { Connection, DisclosedProof } = vcx
+const { DisclosedProof } = vcx
 
 describe('A disclosedProof', function () {
   this.timeout(30000)
