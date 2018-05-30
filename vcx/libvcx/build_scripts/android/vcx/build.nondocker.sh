@@ -151,8 +151,8 @@ rustup target add ${CROSS_COMPILE}
 
 pushd $LIBVCX
 export OPENSSL_STATIC=1
-# cargo clean
-# cargo build --release --target=${CROSS_COMPILE}
+cargo clean 
+cargo build --release --target=${CROSS_COMPILE}
 popd
 
 LIBVCX_BUILDS=${WORKDIR}/libvcx_${TARGET_ARCH}
