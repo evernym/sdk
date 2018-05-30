@@ -14,6 +14,7 @@ export ORIGINAL_PATH=$PATH
 #export ORIGINAL_PKG_CONFIG_PATH=$PKG_CONFIG_PATH
 
 cargo clean
+cargo update
 
 export OPENSSL_DIR_DARWIN=$OPENSSL_DIR
 

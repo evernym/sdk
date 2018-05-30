@@ -613,7 +613,7 @@ mod tests {
 
         let proof: DisclosedProof = Default::default();
         let requested_credential = proof._build_requested_credentials(&creds, &self_attested_attrs).unwrap();
-        info!("requested_cred: {}", requested_credential);
+        println!("requested_cred: {}", requested_credential);
         assert_eq!(test.to_string(), requested_credential);
     }
 

@@ -38,7 +38,7 @@ pub extern fn vcx_init_with_config(command_handle: u32,
     } else {
         match settings::process_config_string(&config) {
             Err(e) => {
-                info!("Invalid configuration specified: {}", e);
+                println!("Invalid configuration specified: {}", e);
                 return e;
             },
             Ok(_) => (),
@@ -101,10 +101,10 @@ fn _finish_init(command_handle: u32, cb: extern fn(xcommand_handle: u32, err: u3
 
     settings::log_settings();
 
-//    if wallet::get_wallet_handle() > 0 {
-//        error!("Library was already initialized");
-//        return error::ALREADY_INITIALIZED.code_num;
-//    }
+    if wallet::get_wallet_handle() > 0 {
+        error!("Library was already initialized");
+        return error::ALREADY_INITIALIZED.code_num;
+    }
 
     info!("libvcx version: {}{}", version_constants::VERSION, version_constants::REVISION);
 
@@ -190,6 +190,18 @@ pub extern fn vcx_shutdown(delete: bool) -> u32 {
 pub extern fn vcx_error_c_message(error_code: u32) -> *const c_char {
     info!("vcx_error_message(error_code: {})", error_code);
     error::error_c_message(&error_code).as_ptr()
+}
+
+#[no_mangle]
+pub extern fn vcx_update_institution_info(name: *const c_char, logo_url: *const c_char) -> u32 {
+    check_useful_c_str!(name, error::INVALID_CONFIGURATION.code_num);
+    check_useful_c_str!(logo_url, error::INVALID_CONFIGURATION.code_num);
+    info!("vcx_update_institution_info(name: {}, logo_url: {})", name, logo_url);
+
+    settings::set_config_value(::settings::CONFIG_INSTITUTION_NAME, &name);
+    settings::set_config_value(::settings::CONFIG_INSTITUTION_LOGO_URL, &logo_url);
+
+    error::SUCCESS.code_num
 }
 
 #[cfg(test)]
@@ -439,5 +451,21 @@ mod tests {
     fn test_vcx_version() {
         let return_version = CStringUtils::c_str_to_string(vcx_version()).unwrap().unwrap();
         assert!(return_version.len() > 5);
+    }
+
+    #[test]
+    fn test_vcx_update_institution_info() {
+        settings::set_defaults();
+        let new_name = "new_name";
+        let new_url = "http://www.evernym.com";
+        assert_ne!(new_name, &settings::get_config_value(::settings::CONFIG_INSTITUTION_NAME).unwrap());
+        assert_ne!(new_url, &settings::get_config_value(::settings::CONFIG_INSTITUTION_LOGO_URL).unwrap());
+
+        assert_eq!(error::SUCCESS.code_num, vcx_update_institution_info(CString::new(new_name.to_string()).unwrap().into_raw(),
+                                                                        CString::new(new_url.to_string()).unwrap().into_raw()));
+
+        assert_eq!(new_name, &settings::get_config_value(::settings::CONFIG_INSTITUTION_NAME).unwrap());
+        assert_eq!(new_url, &settings::get_config_value(::settings::CONFIG_INSTITUTION_LOGO_URL).unwrap());
+        ::settings::set_defaults();
     }
 }

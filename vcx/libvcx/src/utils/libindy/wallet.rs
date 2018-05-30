@@ -241,7 +241,7 @@ pub mod tests {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
         settings::set_config_value(settings::CONFIG_WALLET_KEY,"pass");
-        info!("settigns: config wallet key: {}", settings::get_config_value(settings::CONFIG_WALLET_KEY).unwrap());
+        println!("settigns: config wallet key: {}", settings::get_config_value(settings::CONFIG_WALLET_KEY).unwrap());
 
         let handle = init_wallet("password_wallet").unwrap();
 

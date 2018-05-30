@@ -547,6 +547,49 @@ mod tests {
 
     }
 
+    extern "C" fn create_with_id_cb(command_handle: u32, err: u32, proof_handle: u32, req: *const c_char) {
+        assert_eq!(err, 0);
+        assert!(proof_handle > 0);
+        check_useful_c_str!(req, ());
+        println!("successfully called create_cb")
+    }
+
+    extern "C" fn create_and_retrieve_cb(command_handle: u32, err: u32, proof_handle: u32) {
+        assert_eq!(err, 0);
+        assert!(proof_handle > 0);
+        assert_eq!(vcx_disclosed_proof_retrieve_credentials(0, proof_handle, Some(retrieve_cb)),
+                   error::SUCCESS.code_num);
+        thread::sleep(Duration::from_millis(200));
+    }
+
+    extern "C" fn retrieve_cb(handle: u32, err: u32, credentials: *const c_char) {
+        assert_eq!(err, 0);
+        if credentials.is_null() {
+            panic!("credentials is null");
+        }
+        check_useful_c_str!(credentials, ());
+        println!("successfully called retrieve_cb: {}", credentials);
+    }
+
+    extern "C" fn create_and_generate_cb(command_handle: u32, err: u32, proof_handle: u32) {
+        assert_eq!(err, 0);
+        assert!(proof_handle > 0);
+
+        assert_eq!(vcx_disclosed_proof_generate_proof(0,
+                                                      proof_handle,
+                                                      CString::new("{}").unwrap().into_raw(),
+                                                      CString::new("{}").unwrap().into_raw(),
+                                                      Some(generate_cb)),
+                   error::SUCCESS.code_num);
+        thread::sleep(Duration::from_millis(200));
+    }
+
+    extern "C" fn generate_cb(command_handle: u32, err: u32) {
+        assert_eq!(err, 0);
+        println!("successfully called generate_cb");
+
+    }
+
     extern "C" fn bad_create_cb(command_handle: u32, err: u32, proof_handle: u32) {
         assert!(err > 0);
         assert_eq!(proof_handle, 0);

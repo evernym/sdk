@@ -472,6 +472,12 @@ mod tests {
         check_useful_c_str!(offer,());
     }
 
+    extern "C" fn create_with_offer_cb(command_handle: u32, err: u32, credential_handle: u32, offer: *const c_char) {
+        assert_eq!(err, 0);
+        assert!(credential_handle > 0);
+        check_useful_c_str!(offer,());
+    }
+
     extern "C" fn bad_create_cb(command_handle: u32, err: u32, credential_handle: u32) {
         assert!(err > 0);
         assert_eq!(credential_handle, 0);
@@ -492,7 +498,7 @@ mod tests {
             panic!("credential_string is null");
         }
         let cred = format!(r#"{{"{}":{}}}"#, "cred_id", CRED_MSG);
-        info!("get_credential(): {}", CStringUtils::c_str_to_string(credential_string).unwrap().unwrap());
+        println!("get_credential(): {}", CStringUtils::c_str_to_string(credential_string).unwrap().unwrap());
         assert_eq!(CStringUtils::c_str_to_string(credential_string).unwrap().unwrap(), cred);
         check_useful_c_str!(credential_string, ());
     }

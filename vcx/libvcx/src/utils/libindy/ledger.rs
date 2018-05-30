@@ -295,7 +295,7 @@ mod tests {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
         let result = libindy_build_get_txn_request("GGBDg1j8bsKmr4h5T9XqYf", 15);
         assert!(result.is_ok());
-        info!("{}", result.unwrap());
+        println!("{}", result.unwrap());
     }
 
     #[test]
@@ -303,7 +303,7 @@ mod tests {
         settings::set_defaults();
         let result = libindy_build_get_credential_def_txn(CRED_DEF_ID);
         assert!(result.is_ok());
-        info!("{}", result.unwrap());
+        println!("{}", result.unwrap());
     }
 
     #[test]
@@ -333,7 +333,7 @@ mod tests {
 
         delete_wallet(wallet_name).unwrap();
         assert!(schema_request.is_ok());
-        info!("{}", schema_request.unwrap());
+        println!("{}", schema_request.unwrap());
     }
 
     #[cfg(feature = "pool_tests")]
@@ -345,16 +345,16 @@ mod tests {
         let get_schema_req = libindy_build_get_schema_request(
             &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
            SCHEMA_ID).unwrap();
-        info!("get_schema_req: {}", get_schema_req);
+        println!("get_schema_req: {}", get_schema_req);
 
         let get_schema_response = libindy_submit_request(&get_schema_req).unwrap();
-        info!("get_schema_response: {}", get_schema_response);
+        println!("get_schema_response: {}", get_schema_response);
 
         ::utils::devsetup::cleanup_dev_env(wallet_name);
 
         let (id, schema_json) = libindy_parse_get_schema_response(&get_schema_response).unwrap();
-        info!("schema_id: {}", id);
-        info!("schema_json: {}", schema_json);
+        println!("schema_id: {}", id);
+        println!("schema_json: {}", schema_json);
 
         assert_eq!(id, SCHEMA_ID);
     }
@@ -376,15 +376,15 @@ mod tests {
             r#"{"support_revocation":false}"#
         ).unwrap();
 
-        info!("id: \n{}", id);
-        info!("create_cred_def: \n{}", create_cred_def_json);
+        println!("id: \n{}", id);
+        println!("create_cred_def: \n{}", create_cred_def_json);
         let cred_def_req = libindy_build_create_credential_def_txn(
             &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
             &create_cred_def_json);
 
         delete_wallet(wallet_name).unwrap();
         assert!(cred_def_req.is_ok());
-        info!("{}", cred_def_req.unwrap());
+        println!("{}", cred_def_req.unwrap());
     }
 
     #[cfg(feature = "pool_tests")]
@@ -414,21 +414,21 @@ mod tests {
             &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
             &schema_request).unwrap();
 
-        info!("schema_response: {}", schema_response);
+        println!("schema_response: {}", schema_response);
 
 
         // Get Schema Json
         let get_schema_req = libindy_build_get_schema_request(
             &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
             &schema_id).unwrap();
-        info!("get_schema_req: {}", get_schema_req);
+        println!("get_schema_req: {}", get_schema_req);
 
         let get_schema_response = libindy_submit_request(&get_schema_req).unwrap();
-        info!("get_schema_response: {}", get_schema_response);
+        println!("get_schema_response: {}", get_schema_response);
 
         let (schema_id, schema_json) = libindy_parse_get_schema_response(&get_schema_response).unwrap();
-        info!("schema_id: {}", schema_id);
-        info!("schema_json: {}", schema_json);
+        println!("schema_id: {}", schema_id);
+        println!("schema_json: {}", schema_json);
 
 
         //Create CredDef ---------------
@@ -440,8 +440,8 @@ mod tests {
             r#"{"support_revocation":false}"#
         ).unwrap();
 
-        info!("cred_id: \n{}", cred_id);
-        info!("create_cred_def: \n{}", create_cred_def_json);
+        println!("cred_id: \n{}", cred_id);
+        println!("create_cred_def: \n{}", create_cred_def_json);
         let cred_def_req = libindy_build_create_credential_def_txn(
             &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
             &create_cred_def_json).unwrap();
@@ -450,7 +450,7 @@ mod tests {
             &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
             &cred_def_req,
         ).unwrap();
-        info!("{}", submit_cred_def_response);
+        println!("{}", submit_cred_def_response);
 
 
         ::utils::devsetup::cleanup_dev_env(wallet_name);
@@ -463,14 +463,14 @@ mod tests {
         ::utils::devsetup::setup_dev_env(wallet_name);
 
         let get_cred_def_req = libindy_build_get_credential_def_txn(CRED_DEF_ID).unwrap();
-        info!("get_cred_def_req: {}", get_cred_def_req);
+        println!("get_cred_def_req: {}", get_cred_def_req);
 
         let get_cred_def_response = libindy_submit_request(&get_cred_def_req ).unwrap();
-        info!("get_cred_def_response : {}", get_cred_def_response);
+        println!("get_cred_def_response : {}", get_cred_def_response);
 
         let (id, cred_def_json) = libindy_parse_get_cred_def_response(&get_cred_def_response).unwrap();
-        info!("cred_def_id: {}", id);
-        info!("cred_def_json: {}", cred_def_json);
+        println!("cred_def_id: {}", id);
+        println!("cred_def_json: {}", cred_def_json);
 
         ::utils::devsetup::cleanup_dev_env(wallet_name);
         assert_eq!(id, CRED_DEF_ID);

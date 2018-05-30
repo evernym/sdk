@@ -219,8 +219,8 @@ pub mod tests {
         let decrypted_message = parse_anonymous_msg(my_wallet,their_vk.as_ref(),&encrypted_message[..]).unwrap();
 
         assert_eq!(message.as_bytes().to_vec(), decrypted_message);
-        info!("{:?}", message.as_bytes().to_vec());
-        info!("{:?}", decrypted_message);
+        println!("{:?}", message.as_bytes().to_vec());
+        println!("{:?}", decrypted_message);
         wallet::delete_wallet("test_anon_encrypt_decrypt").unwrap();
     }
 }

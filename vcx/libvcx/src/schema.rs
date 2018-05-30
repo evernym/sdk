@@ -93,7 +93,7 @@ pub trait Schema: ToString {
         let txn_val:  Value = serde_json::from_str(txn)
             .or(Err(SchemaError::CommonError(error::INVALID_JSON.code_num)))?;
 
-        info!("txn: {}", txn);
+        println!("txn: {}", txn);
         match txn_val.get("result") {
             Some(_) => return Ok(()),
             None => warn!("No result found in ledger txn. Must be Rejectd"),
@@ -318,7 +318,7 @@ mod tests {
     #[test]
     fn test_ledger_schema_to_string(){
         let schema = LedgerSchema {schema_json: "".to_string(), schema_id: "".to_string()};
-        info!("{}", schema.to_string())
+        println!("{}", schema.to_string())
     }
 
     #[test]
@@ -332,7 +332,7 @@ mod tests {
             name: "schema_name".to_string(),
             sequence_num: 306,
         };
-        info!("{}", create_schema.to_string());
+        println!("{}", create_schema.to_string());
         let create_schema_str = r#"{"data":["name","age","sex","height"],"version":"1.0","schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:test-licence:4.4.4","name":"schema_name","source_id":"testId","sequence_num":306}"#;
         assert_eq!(create_schema.to_string(), create_schema_str.to_string());
     }
@@ -378,7 +378,7 @@ mod tests {
 
         let (_, schema_attrs ) = get_schema_attrs("id".to_string(), SCHEMA_ID.to_string()).unwrap();
 
-        info!("{}", schema_attrs);
+        println!("{}", schema_attrs);
         assert!(schema_attrs.contains(r#""version":"4.4.4""#));
         assert!(schema_attrs.contains(r#""schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:test-licence:4.4.4""#));
 

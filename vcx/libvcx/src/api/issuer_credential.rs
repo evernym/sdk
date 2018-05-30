@@ -501,7 +501,7 @@ mod tests {
         }
         assert_eq!(err, 0);
         assert!(credential_handle > 0);
-        info!("successfully called deserialize_cb");
+        println!("successfully called deserialize_cb");
         let serialized_issuer_credential = r#"{"source_id":"1","credential_attributes":"{\"attr\":\"value\"}","msg_uid":"","schema_seq_no":0,"issuer_did":"8XFh8yBzrpJQmNyZzgoTqB","state":1,"credential_request":null,"credential_offer":null,"credential_name":"credential_name","credential_id":"2936720225","cred_def_id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:1766","ref_msg_id":null,"agent_did":"","agent_vk":"","issued_did":"","issued_vk":"","remote_did":"","remote_vk":""}"#;
         let original = formatter(&serialized_issuer_credential);
         let new = formatter(&issuer_credential::to_string(credential_handle).unwrap());

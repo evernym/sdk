@@ -91,6 +91,10 @@ const char *vcx_error_c_message(int);
 
 /** Returns version information for libvcx */
 const char *vcx_version();
+vcx_error_t vcx_shutdown(vcx_bool_t delete_wallet);
+
+/** Frees memory, resets configuration, closes wallet and pool, optionally deletes wallet */
+vcx_error_t vcx_shutdown(vcx_bool_t delete_wallet);
 
 /** Frees memory, resets configuration, closes wallet and pool, optionally deletes wallet */
 vcx_error_t vcx_shutdown(vcx_bool_t delete_wallet);
@@ -148,6 +152,9 @@ vcx_error_t vcx_credentialdef_get_cred_def_id(vcx_command_handle_t command_handl
  * For creating a connection with an identity owner for interactions such as exchanging
  * credentials and proofs.
  */
+
+/** Deletes a connection object releases it from memory */
+vcx_error_t vcx_connection_delete_connection(vcx_command_handle_t command_handle, vcx_connection_handle_t connection_handle, void (*cb)(vcx_command_handle_t command_handle, vcx_error_t err));
 
 /** Creates a connection object to a specific identity owner. Populates a handle to the new connection. */
 vcx_error_t vcx_connection_create(vcx_command_handle_t command_handle, const char *source_id, void (*cb)(vcx_command_handle_t command_handle, vcx_error_t err, vcx_connection_handle_t connection_handle));

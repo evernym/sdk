@@ -463,7 +463,8 @@ mod tests {
 
         cleanup_non_pool_tests(wallet_name);
         assert!(result.is_ok());
-        info!("{}", result.unwrap());
+        let (str1, str2, str3) = result.unwrap();
+        info!("{}\n{}\n{}", str1, str2, str3);
     }
 
     #[test]
@@ -475,14 +476,14 @@ mod tests {
         open_wallet(wallet_name, None).unwrap();
 
         let libindy_offer = libindy_issuer_create_credential_offer(CRED_DEF_ID).unwrap();
-        info!("CredOffer: \n{:?}", libindy_offer);
+        println!("CredOffer: \n{:?}", libindy_offer);
 
         let (libindy_cred_req, cred_req_meta) = libindy_prover_create_credential_req(
             &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
             &libindy_offer,
             CRED_DEF_JSON,
             None).unwrap();
-        info!("CredReq: \n{:?}", libindy_cred_req);
+        println!("CredReq: \n{:?}", libindy_cred_req);
 
         let encoded_cred_data = r#"{"age":["111","111"],"height":["4'11","25730877424947290072821310314181366395232879096832067784637233452620527354832"],"name":["Bob","93006290325627508022776103386395994712401809437930957652111221015872244345185"],"sex":["male","5944657099558967239210949258394887428692050081607692519917050011144233115103"]}"#;
 
@@ -493,10 +494,10 @@ mod tests {
             None,
             None);
         delete_wallet(wallet_name).unwrap();
-        info!("result: {:?}", result);
+        println!("result: {:?}", result);
         assert!(result.is_ok());
         let (str1, str2, str3) = result.unwrap();
-        info!("{}\n{}\n{}", str1, str2, str3);
+        println!("{}\n{}\n{}", str1, str2, str3);
     }
 
     #[test]
@@ -516,7 +517,7 @@ mod tests {
         delete_wallet("test_create_schema").unwrap();
         assert!(result.is_ok());
         let (id, schema) = result.unwrap();
-        info!("{}, {}", id, schema);
+        println!("{}, {}", id, schema);
     }
 
     #[test]
@@ -534,11 +535,11 @@ mod tests {
             Some(SigTypes::CL),
             r#"{"support_revocation":false}"#
         );
-        info!("result {:?}", result);
+        println!("result {:?}", result);
         delete_wallet(wallet_name).unwrap();
         assert!(result.is_ok());
         let (id, cred) = result.unwrap();
-        info!("{}, {}", id, cred);
+        println!("{}, {}", id, cred);
     }
 
     #[test]
@@ -553,7 +554,7 @@ mod tests {
         let rc = libindy_prover_create_master_secret("random_ms");
         delete_wallet(wallet_name).unwrap();
         assert!(rc.is_ok());
-        info!("{}", rc.unwrap())
+        println!("{}", rc.unwrap())
     }
 
     #[test]
@@ -573,7 +574,7 @@ mod tests {
         delete_wallet(wallet_name).unwrap();
         assert!(result.is_ok());
         let (cred_req, cred_req_meta) = result.unwrap();
-        info!("{}\n{}", cred_req, cred_req_meta);
+        println!("{}\n{}", cred_req, cred_req_meta);
     }
 
     #[test]
@@ -585,7 +586,7 @@ mod tests {
         open_wallet(wallet_name, None).unwrap();
 
         let libindy_offer = libindy_issuer_create_credential_offer(CRED_DEF_ID).unwrap();
-        info!("CredOffer: \n{:?}", libindy_offer);
+        println!("CredOffer: \n{:?}", libindy_offer);
 
         let (libindy_cred_req, cred_req_meta) = libindy_prover_create_credential_req(
             &settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap(),
@@ -593,7 +594,7 @@ mod tests {
             CRED_DEF_JSON,
             None,
             ).unwrap();
-        info!("CredReq: \n{:?}", libindy_cred_req);
+        println!("CredReq: \n{:?}", libindy_cred_req);
 
         let encoded_cred_data = r#"{"age":["111","111"],"height":["4'11","25730877424947290072821310314181366395232879096832067784637233452620527354832"],"name":["Bob","93006290325627508022776103386395994712401809437930957652111221015872244345185"],"sex":["male","5944657099558967239210949258394887428692050081607692519917050011144233115103"]}"#;
 
@@ -614,7 +615,7 @@ mod tests {
         delete_wallet(wallet_name).unwrap();
         assert!(result.is_ok());
         let cred_id = result.unwrap();
-        info!("{}", cred_id);
+        println!("{}", cred_id);
     }
 
     #[test]
@@ -646,7 +647,7 @@ mod tests {
         delete_wallet(wallet_name).unwrap();
         assert!(result.is_ok());
         let creds = result.unwrap();
-        info!("{}", creds);
+        println!("{}", creds);
     }
 
     #[test]
@@ -712,7 +713,7 @@ mod tests {
         delete_wallet(wallet_name).unwrap();
         assert!(result.is_ok());
         let proof = result.unwrap();
-        info!("{}", proof);
+        println!("{}", proof);
     }
 
     #[test]
@@ -767,6 +768,6 @@ mod tests {
         assert!(result.is_ok());
         let proof_validation = result.unwrap();
         assert!(proof_validation, true);
-        info!("{}", proof_validation);
+        println!("{}", proof_validation);
     }
 }
