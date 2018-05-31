@@ -996,4 +996,14 @@ pub mod tests {
 
         let encoded_attributes = self::get_encoded_attributes(issuer_credential_handle).unwrap();
     }
+
+    #[test]
+    fn test_payment_information() {
+        let payment_info = PaymentInfo {
+            payment_addr: "OsdjtGKavZDBuG2xFw2QunVwwGs5IB3j".to_string(),
+            payment_required: "one-time".to_string(),
+            price:  1000,
+        };
+        println!("{}", serde_json::to_string(&payment_info).unwrap())
+    }
 }

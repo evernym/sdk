@@ -264,6 +264,10 @@ impl Credential {
     fn set_credential_offer(&mut self, offer: CredentialOffer){
         self.credential_offer = Some(offer);
     }
+
+    fn is_payment_required(&self) -> bool {
+        self.payment_info.is_some()
+    }
 }
 
 //********************************************
@@ -519,7 +523,13 @@ mod tests {
         let cred1: Credential = serde_json::from_str(&credential_string).unwrap();
         assert_eq!(cred1.get_state(), 3);
         let cred2: Credential = serde_json::from_str(&to_string(handle).unwrap()).unwrap();
+        assert!(!cred1.is_payment_required());
         assert_eq!(cred1, cred2);
+        use utils::constants::DEFAULT_SERIALIZED_CREDENTIAL_PAYMENT_REQUIRED;
+        let handle = from_string(DEFAULT_SERIALIZED_CREDENTIAL_PAYMENT_REQUIRED).unwrap();
+        let payment_required_credential: Credential = serde_json::from_str(&to_string(handle).unwrap()).unwrap();
+        assert!(payment_required_credential.is_payment_required())
+//        assert!(payment_required_credential.)
     }
 
     #[test]
@@ -556,7 +566,10 @@ mod tests {
         wallet::init_wallet(test_name).unwrap();
         let connection_h = connection::build_connection("test_get_credential_offer").unwrap();
         let offer = get_credential_offer_messages(connection_h, None).unwrap();
+        let o: serde_json::Value = serde_json::from_str(&offer).unwrap();
+        let credential_offer: CredentialOffer = serde_json::from_str(&o[0][0].to_string()).unwrap();
         assert!(offer.len() > 50);
         wallet::delete_wallet(test_name).unwrap();
     }
+
 }

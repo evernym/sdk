@@ -170,10 +170,10 @@ pub fn pay_for_txn(req: &str, txn_type: &str) -> Result<(String, String), u32> {
     let output = outputs(refund, None, None)?;
 
     let (response, payment_method) = match Payment::add_request_fees(get_wallet_handle(),
-                                                   &did,
-                                                   req,
-                                                   &inputs,
-                                                   &output) {
+                                                                     &did,
+                                                                     req,
+                                                                     &inputs,
+                                                                     &output) {
         Ok((req, payment_method)) => (libindy_sign_and_submit_request(&did, &req)?, payment_method),
         Err(x) => return Err(x as u32),
     };
@@ -181,6 +181,19 @@ pub fn pay_for_txn(req: &str, txn_type: &str) -> Result<(String, String), u32> {
     // Todo: Handle libindy error
     let parsed_response = Payment::parse_response_with_fees(NULL_PAYMENT, &response).map_err(|err| err as u32)?;
     Ok((parsed_response, response))
+}
+
+pub fn pay_a_payee(price: u64, address: &str) -> Result<String, u32> {
+    let (remainder, input) = inputs(price)?;
+    let output = outputs(remainder, Some(address.to_string()), Some(price))?;
+    let my_did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
+    match Payment::build_payment_req(get_wallet_handle(), &my_did, &input, &output) {
+        Ok((request, payment_method)) => libindy_sign_and_submit_request(&my_did, &request),
+        Err(e) => {
+            println!("error: {:?}", e);
+            Err(1)
+        },
+    }
 }
 
 fn get_txn_price(txn_type: &str) -> Result<u64, u32> {
@@ -228,8 +241,9 @@ pub fn outputs(remainder: u64, payee_address: Option<String>, payee_amount: Opti
     //Todo: create a struct for outputs?
 
     let mut outputs = Vec::new();
-
-    outputs.push(json!({ "paymentAddress": create_address()?, "amount": remainder, "extra": null }));
+    if remainder > 0 {
+        outputs.push(json!({ "paymentAddress": create_address()?, "amount": remainder, "extra": null }));
+    }
 
     if let Some(address) = payee_address {
         outputs.push(json!({
@@ -326,6 +340,7 @@ pub mod tests {
         create_address().unwrap();
         create_address().unwrap();
         create_address().unwrap();
+        println!("{}", create_address().unwrap());
         let balance = get_wallet_token_info().unwrap();
         assert!(balance.contains(r#""balance":0"#));
         ::utils::devsetup::tests::cleanup_dev_env(name);
@@ -387,8 +402,12 @@ pub mod tests {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
 
         let cost = 6;
-        let expected_output = r#"[{"amount":0,"extra":null,"paymentAddress":"pay:null:J81AxU9hVHYFtJc"}]"#;
+        // I spoke with token team about this behavior and they agree that if
+        // all of the tokens are going to fees, there doesn't need to be a
+        // 'change' address.
+        let expected_output = r#"[]"#;
         let (remainder, _) = inputs(cost).unwrap();
+        assert_eq!(remainder, 0);
         assert_eq!(&outputs(remainder, None, None).unwrap(), expected_output);
     }
 
@@ -460,5 +479,34 @@ pub mod tests {
 
         ::utils::devsetup::tests::cleanup_dev_env(name);
         assert_eq!(rc, Err(error::INSUFFICIENT_TOKEN_AMOUNT.code_num));
+    }
+    #[cfg(feature = "nullpay")]
+    #[test]
+    fn test_build_payment_request() {
+        fn get_my_balance() -> u64 {
+            let info:serde_json::Value = serde_json::from_str(&get_wallet_token_info().unwrap()).unwrap();
+            info["balance"].as_u64().unwrap()
+        }
+        let name = "test_build_payment_request";
+        use utils::devsetup::tests;
+        tests::setup_dev_env(name);
+        init_payments().unwrap();
+        mint_tokens().unwrap();
+
+        let price = get_my_balance();
+        let address = "pay:null:4jtvRvSl6OTDEMqrUBsqAfCFWeTOF86H";
+        let (remainder, inputs_str) = inputs(price).unwrap();
+        let outputs = outputs(remainder, Some(address.to_string()), Some(price)).unwrap();
+        let result_from_paying = pay_a_payee(price, address);
+        assert!(result_from_paying.is_ok());
+        assert_eq!(get_my_balance(), 0);
+        mint_tokens().unwrap();
+        assert_eq!(get_my_balance(), 45);
+        tests::cleanup_dev_env(name);
+    }
+
+    #[test]
+    fn test_build_payment_test_mode() {
+
     }
 }
