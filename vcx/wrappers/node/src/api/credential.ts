@@ -128,11 +128,56 @@ export class Credential extends VCXBaseWithState {
     }
   }
 
+  async getPaymentInfo (): Promise<string> {
+    try {
+      return await createFFICallbackPromise<string> (
+          (resolve, reject, cb) => {
+            const rc = rustAPI().vcx_credential_get_payment_info(0, this.handle, cb)
+            if (rc) {
+              reject(rc)
+            }
+          },
+          (resolve, reject) => Callback('void', ['uint32', 'uint32', 'string'], (xcommandHandle, err, info) => {
+            if (err) {
+              reject(err)
+            } else {
+              resolve(info)
+            }
+          })
+        )
+    } catch (err) {
+      throw new VCXInternalError(err, VCXBase.errorMessage(err), `vcx_credential_get_payment_info`)
+    }
+  }
+
   async serialize (): Promise<ICredentialStructData> {
     try {
       return JSON.parse(await super._serialize())
     } catch (err) {
       throw new VCXInternalError(err, VCXBase.errorMessage(err), `vcx_credential_serialize`)
+    }
+  }
+
+  async submitPayment (): Promise<void> {
+    try {
+      await createFFICallbackPromise<void>(
+          (resolve, reject, cb) => {
+            const rc = rustAPI().vcx_credential_submit_payment(0, this.handle, cb)
+            if (rc) {
+              reject(rc)
+            }
+          },
+          (resolve, reject) => Callback('void', ['uint32', 'uint32'], (xcommandHandle, err) => {
+            if (err) {
+              reject(err)
+            } else {
+              resolve()
+            }
+          })
+        )
+    } catch (err) {
+      // TODO handle error
+      throw new VCXInternalError(err, VCXBase.errorMessage(err), `vcx_credential_submit_payment`)
     }
   }
 

@@ -58,7 +58,12 @@ describe('A Credential', function () {
     my_did: null,
     my_vk: null,
     their_did: null,
-    their_vk: null
+    their_vk: null,
+    payment_info: {
+      payment_required: 'one-time',
+      payment_addr: 'pov:null:OsdjtGKavZDBuG2xFw2QunVwwGs5IB3j',
+      price: 25
+    }
   }
 
   before(async () => {
@@ -161,6 +166,10 @@ describe('A Credential', function () {
     const connection = await connectionCreateAndConnect()
     let val = await Credential.getOffers(connection)
     assert(val)
+    const obj3 = await Credential.deserialize(SERIALIZED_CREDENTIAL)
+    const paymentInfo = JSON.parse(await obj3.getPaymentInfo())
+    assert(paymentInfo['payment_addr'] === SERIALIZED_CREDENTIAL['payment_info']['payment_addr'])
+    obj3.submitPayment()
   })
 
   const credentialCreateCheckAndDelete = async () => {

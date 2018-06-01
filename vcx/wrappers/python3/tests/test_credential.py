@@ -241,3 +241,4 @@ async def test_credential_payments():
     payment_info = await credential.get_payment_info()
     assert(payment_info['payment_addr'] == credential_json['payment_info']['payment_addr'])
     await credential.submit_payment()
+
