@@ -451,7 +451,6 @@ pub mod tests {
         let end_wallet: WalletInfo = serde_json::from_str(&get_wallet_token_info().unwrap()).unwrap();
 
         ::utils::devsetup::tests::cleanup_dev_env(name);
-        ::utils::devsetup::tests::cleanup_dev_env(name);
         assert!(price_response.contains(r#""amount":13"#));
         let output_address: Vec<Value> = serde_json::from_str(&price_response).unwrap();
         assert_eq!(output_address.len(), 1);
