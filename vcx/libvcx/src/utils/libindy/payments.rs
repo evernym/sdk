@@ -193,6 +193,7 @@ fn _submit_fees_request(req: &str, inputs: &str, outputs: &str) -> Result<(Strin
 pub fn pay_a_payee(price: u64, address: &str) -> Result<String, PaymentError> {
     let (remainder, input) = inputs(price)?;
     let output = outputs(remainder, Some(address.to_string()), Some(price))?;
+
     let my_did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
     match Payment::build_payment_req(get_wallet_handle(), &my_did, &input, &output) {
         Ok((request, payment_method)) => libindy_sign_and_submit_request(&my_did, &request).map_err(|ec| PaymentError::CommonError(ec)),
@@ -246,7 +247,6 @@ pub fn outputs(remainder: u64, payee_address: Option<String>, payee_amount: Opti
     // In the future we might provide a way for users to specify multiple output address for their remainder tokens
     // As of now, we only handle one output address which we create
 
-    if remainder == 0 { return Ok("[]".to_string()); }
     let mut outputs = Vec::new();
     if remainder > 0 {
         outputs.push(json!({ "paymentAddress": create_address().map_err(|ec| PaymentError::CommonError(ec))?, "amount": remainder, "extra": null }));
