@@ -30,6 +30,7 @@ use utils::constants::{ SEND_MESSAGE_RESPONSE };
 
 use error::ToErrorCode;
 use error::credential::CredentialError;
+use error::payment::PaymentError;
 
 use serde_json::Value;
 
@@ -268,6 +269,21 @@ impl Credential {
     fn is_payment_required(&self) -> bool {
         self.payment_info.is_some()
     }
+
+    fn submit_payment(&self) -> Result<String, CredentialError> {
+        use utils::libindy::payments::pay_a_payee;
+        match &self.payment_info {
+            &Some(ref pi) => {
+                let address = &pi.get_address()?;
+                println!("address: {}", address);
+                let price = pi.get_price()?;
+                println!("price: {}", price);
+                let receipt = pay_a_payee(price, address)?;
+                Ok(receipt)
+            },
+            &None => Err(CredentialError::NoPaymentInformation()),
+        }
+    }
 }
 
 //********************************************
@@ -482,6 +498,19 @@ pub fn from_string(credential_data: &str) -> Result<u32, u32> {
     Ok(new_handle)
 }
 
+pub fn is_payment_required(handle: u32) -> Result<bool, CredentialError> {
+    HANDLE_MAP.get(handle, |obj| {
+        Ok(obj.is_payment_required())
+    }).map_err(handle_err)
+}
+
+pub fn submit_payment(handle: u32) -> Result<String, CredentialError> {
+    HANDLE_MAP.get(handle, |obj| {
+        obj.submit_payment().map_err(|e| e.to_error_code())
+    }).map_err(handle_err)
+
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -490,8 +519,13 @@ mod tests {
     use utils::httpclient;
     use api::VcxStateType;
     use serde_json::Value;
+    use utils::devsetup::tests;
+    use utils::libindy::payments::init_payments;
+    use utils::libindy::payments::tests::mint_tokens;
 
     pub const BAD_CREDENTIAL_OFFER: &str = r#"{"version": "0.1","to_did": "LtMgSjtFcyPwenK9SHCyb8","from_did": "LtMgSjtFcyPwenK9SHCyb8","claim": {"account_num": ["8BEaoLf8TBmK4BUyX8WWnA"],"name_on_account": ["Alice"]},"schema_seq_no": 48,"issuer_did": "Pd4fnFtRBcMKRVC2go5w3j","claim_name": "Account Certificate","claim_id": "3675417066","msg_ref_id": "ymy5nth"}"#;
+    use utils::constants::{DEFAULT_SERIALIZED_CREDENTIAL,
+                           DEFAULT_SERIALIZED_CREDENTIAL_PAYMENT_REQUIRED};
 
     #[test]
     fn test_credential_defaults() {
@@ -525,11 +559,25 @@ mod tests {
         let cred2: Credential = serde_json::from_str(&to_string(handle).unwrap()).unwrap();
         assert!(!cred1.is_payment_required());
         assert_eq!(cred1, cred2);
-        use utils::constants::DEFAULT_SERIALIZED_CREDENTIAL_PAYMENT_REQUIRED;
         let handle = from_string(DEFAULT_SERIALIZED_CREDENTIAL_PAYMENT_REQUIRED).unwrap();
         let payment_required_credential: Credential = serde_json::from_str(&to_string(handle).unwrap()).unwrap();
         assert!(payment_required_credential.is_payment_required())
-//        assert!(payment_required_credential.)
+    }
+
+    #[test]
+    fn test_pay_for_credential_using_handles() {
+        let test_name = "test_pay_for_credential";
+        tests::setup_dev_env(test_name);
+        let handle2 = from_string(DEFAULT_SERIALIZED_CREDENTIAL).unwrap();
+        assert!(!is_payment_required(handle2).unwrap());
+        let handle = from_string(DEFAULT_SERIALIZED_CREDENTIAL_PAYMENT_REQUIRED).unwrap();
+        assert!(is_payment_required(handle).unwrap());
+        let invalid_handle = 12345;
+        assert_eq!(is_payment_required(invalid_handle).err(), Some(CredentialError::InvalidHandle()));
+//        pay_for_credential(handle).unwrap();
+//        assert!(get_payment_request(handle).unwrap());
+        tests::cleanup_dev_env(test_name);
+
     }
 
     #[test]
@@ -572,4 +620,51 @@ mod tests {
         wallet::delete_wallet(test_name).unwrap();
     }
 
+    #[cfg(feature = "nullpay")]
+    #[test]
+    fn test_pay_for_credential_with_sufficient_funds() {
+        let test_name = "test_pay_for_credential_with_sufficient_funds";
+        tests::setup_dev_env(test_name);
+        init_payments().unwrap();
+        mint_tokens().unwrap();
+        let mut cred: Credential = serde_json::from_str(DEFAULT_SERIALIZED_CREDENTIAL).unwrap();
+        cred.payment_info = Some(PaymentInfo {
+            payment_required: "one-time".to_string(),
+            payment_addr: "pov:null:OsdjtGKavZDBuG2xFw2QunVwwGs5IB3j".to_string(),
+            price: 25,
+        });
+        assert!(cred.is_payment_required());
+        cred.submit_payment().unwrap();
+        tests::cleanup_dev_env(test_name);
+    }
+
+    #[cfg(feature = "nullpay")]
+    #[test]
+    fn test_pay_for_credential_with_insufficient_funds() {
+        let test_name = "test_pay_for_credential_with_insufficient_funds";
+        tests::setup_dev_env(test_name);
+        init_payments().unwrap();
+        mint_tokens().unwrap();
+        let mut cred: Credential = serde_json::from_str(DEFAULT_SERIALIZED_CREDENTIAL).unwrap();
+        cred.payment_info = Some(PaymentInfo {
+            payment_required: "one-time".to_string(),
+            payment_addr: "pov:null:OsdjtGKavZDBuG2xFw2QunVwwGs5IB3j".to_string(),
+            price: 10000,
+        });
+        assert!(cred.is_payment_required());
+        assert_eq!(cred.submit_payment().err(), Some(CredentialError::PaymentError(PaymentError::InsufficientFunds())));
+        tests::cleanup_dev_env(test_name);
+    }
+
+    #[cfg(feature = "nullpay")]
+    #[test]
+    fn test_pay_for_credential_with_handle() {
+        let test_name = "test_pay_for_credential_with_handle";
+        tests::setup_dev_env(test_name);
+        init_payments().unwrap();
+        mint_tokens().unwrap();
+        let handle = from_string(DEFAULT_SERIALIZED_CREDENTIAL_PAYMENT_REQUIRED).unwrap();
+        submit_payment(handle).unwrap();
+        tests::cleanup_dev_env(test_name);
+    }
 }

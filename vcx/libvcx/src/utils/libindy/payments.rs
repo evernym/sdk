@@ -5,6 +5,9 @@ use utils::libindy::wallet::get_wallet_handle;
 use utils::constants::{ SUBMIT_SCHEMA_RESPONSE };
 use utils::libindy::ledger::libindy_sign_and_submit_request;
 use utils::error;
+use error::payment::PaymentError;
+use error::ToErrorCode;
+
 use indy::payments::Payment;
 use std::sync::{Once, ONCE_INIT};
 use std::collections::HashMap;
@@ -165,9 +168,9 @@ pub fn pay_for_txn(req: &str, txn_type: &str) -> Result<(String, String), u32> {
 
     let txn_price = get_txn_price(txn_type)?;
 
-    let (refund, inputs) = inputs(txn_price)?;
+    let (refund, inputs) = inputs(txn_price).map_err(|e| e.to_error_code())?;
 
-    let output = outputs(refund, None, None)?;
+    let output = outputs(refund, None, None).map_err(|e| e.to_error_code())?;
 
     let (response, payment_method) = match Payment::add_request_fees(get_wallet_handle(),
                                                                      &did,
@@ -183,15 +186,15 @@ pub fn pay_for_txn(req: &str, txn_type: &str) -> Result<(String, String), u32> {
     Ok((parsed_response, response))
 }
 
-pub fn pay_a_payee(price: u64, address: &str) -> Result<String, u32> {
+pub fn pay_a_payee(price: u64, address: &str) -> Result<String, PaymentError> {
     let (remainder, input) = inputs(price)?;
     let output = outputs(remainder, Some(address.to_string()), Some(price))?;
     let my_did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
     match Payment::build_payment_req(get_wallet_handle(), &my_did, &input, &output) {
-        Ok((request, payment_method)) => libindy_sign_and_submit_request(&my_did, &request),
-        Err(e) => {
-            println!("error: {:?}", e);
-            Err(1)
+        Ok((request, payment_method)) => libindy_sign_and_submit_request(&my_did, &request).map_err(|ec| PaymentError::CommonError(ec)),
+        Err(ec) => {
+            error!("error: {:?}", ec);
+            Err(PaymentError::CommonError(ec as u32))
         },
     }
 }
@@ -208,16 +211,16 @@ fn _address_balance(address: &Vec<UTXO>) -> u32 {
     address.iter().fold(0, |balance, utxo| balance + utxo.amount) as u32
 }
 
-pub fn inputs(cost: u64) -> Result<(u64, String), u32> {
+pub fn inputs(cost: u64) -> Result<(u64, String), PaymentError> {
     let mut inputs: Vec<String> = Vec::new();
     let mut balance = 0;
 
-    let wallet_info: WalletInfo = serde_json::from_str(&get_wallet_token_info()?)
-        .or(Err(error::INVALID_JSON.code_num))?;
+    let wallet_info: WalletInfo = serde_json::from_str(&get_wallet_token_info().map_err(|ec| PaymentError::CommonError(ec))?)
+        .or(Err(PaymentError::InvalidWalletJson()))?;
 
     if wallet_info.balance < cost {
         warn!("not enough tokens in wallet to pay");
-        return Err(error::INSUFFICIENT_TOKEN_AMOUNT.code_num);
+        return Err(PaymentError::InsufficientFunds());
     }
 
     // Todo: explore 'smarter' ways of selecting utxos ie bitcoin algorithms etc
@@ -232,17 +235,17 @@ pub fn inputs(cost: u64) -> Result<(u64, String), u32> {
 
     let remainder = balance - cost;
 
-    Ok((remainder, serde_json::to_string(&inputs).or(Err(error::INVALID_JSON.code_num))?))
+    Ok((remainder, serde_json::to_string(&inputs).or(Err(PaymentError::InvalidWalletJson()))?))
 }
 
-pub fn outputs(remainder: u64, payee_address: Option<String>, payee_amount: Option<u64>) -> Result<String, u32> {
+pub fn outputs(remainder: u64, payee_address: Option<String>, payee_amount: Option<u64>) -> Result<String, PaymentError> {
     // In the future we might provide a way for users to specify multiple output address for their remainder tokens
     // As of now, we only handle one output address which we create
     //Todo: create a struct for outputs?
 
     let mut outputs = Vec::new();
     if remainder > 0 {
-        outputs.push(json!({ "paymentAddress": create_address()?, "amount": remainder, "extra": null }));
+        outputs.push(json!({ "paymentAddress": create_address().map_err(|ec| PaymentError::CommonError(ec))?, "amount": remainder, "extra": null }));
     }
 
     if let Some(address) = payee_address {
@@ -393,7 +396,7 @@ pub mod tests {
         assert_eq!(inputs(1).unwrap(), (0, r#"["pov:null:1"]"#.to_string()));
 
         // Err - request more than wallet contains
-        assert_eq!(inputs(7), Err(error::INSUFFICIENT_TOKEN_AMOUNT.code_num));
+        assert_eq!(inputs(7).err(), Some(PaymentError::InsufficientFunds()));
     }
 
     #[test]
@@ -480,6 +483,7 @@ pub mod tests {
         ::utils::devsetup::tests::cleanup_dev_env(name);
         assert_eq!(rc, Err(error::INSUFFICIENT_TOKEN_AMOUNT.code_num));
     }
+
     #[cfg(feature = "nullpay")]
     #[test]
     fn test_build_payment_request() {
@@ -495,18 +499,25 @@ pub mod tests {
 
         let price = get_my_balance();
         let address = "pay:null:4jtvRvSl6OTDEMqrUBsqAfCFWeTOF86H";
-        let (remainder, inputs_str) = inputs(price).unwrap();
-        let outputs = outputs(remainder, Some(address.to_string()), Some(price)).unwrap();
         let result_from_paying = pay_a_payee(price, address);
         assert!(result_from_paying.is_ok());
         assert_eq!(get_my_balance(), 0);
         mint_tokens().unwrap();
         assert_eq!(get_my_balance(), 45);
+
+        let price = get_my_balance() - 5;
+        let address = "pay:null:4jtvRvSl6OTDEMqrUBsqAfCFWeTOF86H";
+        let result_from_paying = pay_a_payee(price, address);
+        assert!(result_from_paying.is_ok());
+        assert_eq!(get_my_balance(), 5);
+
+        let price = get_my_balance() + 5;
+        let address = "pay:null:4jtvRvSl6OTDEMqrUBsqAfCFWeTOF86H";
+        let result_from_paying = pay_a_payee(price, address);
+        assert_eq!(result_from_paying.err(), Some(PaymentError::InsufficientFunds()));
+        assert_eq!(get_my_balance(), 5);
+
+
         tests::cleanup_dev_env(name);
-    }
-
-    #[test]
-    fn test_build_payment_test_mode() {
-
     }
 }

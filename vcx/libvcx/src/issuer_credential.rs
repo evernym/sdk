@@ -17,7 +17,7 @@ use utils::{error,
             constants::{SEND_MESSAGE_RESPONSE, CRED_MSG},
             openssl::encode
 };
-use error::{ issuer_cred::IssuerCredError, ToErrorCode };
+use error::{ issuer_cred::IssuerCredError, ToErrorCode, payment::PaymentError};
 
 lazy_static! {
     static ref ISSUER_CREDENTIAL_MAP: Mutex<HashMap<u32, Box<IssuerCredential>>> = Default::default();
@@ -83,6 +83,16 @@ pub struct PaymentInfo {
     pub payment_required: String,
     pub payment_addr: String,
     pub price: u64,
+}
+
+impl PaymentInfo {
+    pub fn get_address(&self) -> Result<String, PaymentError> {
+        Ok(self.payment_addr.to_string())
+    }
+
+    pub fn get_price(&self) -> Result<u64, PaymentError> {
+        Ok(self.price)
+    }
 }
 
 impl IssuerCredential {
