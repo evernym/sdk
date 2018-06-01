@@ -299,6 +299,7 @@ impl Credential {
 
     fn submit_payment(&self) -> Result<String, CredentialError> {
         use utils::libindy::payments::pay_a_payee;
+        if settings::test_indy_mode_enabled() { return Ok("RECEIPT OF SUBMISSION".to_string())};
         match &self.payment_info {
             &Some(ref pi) => {
                 let address = &pi.get_address()?;
@@ -310,6 +311,10 @@ impl Credential {
             },
             &None => Err(CredentialError::NoPaymentInformation()),
         }
+    }
+
+    fn get_payment_info(&self) -> Result<Option<PaymentInfo>, CredentialError> {
+        Ok(self.payment_info.clone())
     }
 }
 
@@ -544,6 +549,12 @@ pub fn submit_payment(handle: u32) -> Result<String, CredentialError> {
 
 }
 
+pub fn get_payment_information(handle: u32) -> Result<Option<PaymentInfo>, CredentialError> {
+    HANDLE_MAP.get(handle, |obj| {
+        obj.get_payment_info().map_err(|e| e.to_error_code())
+    }).map_err(handle_err)
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -698,6 +709,7 @@ mod tests {
         mint_tokens().unwrap();
         let handle = from_string(DEFAULT_SERIALIZED_CREDENTIAL_PAYMENT_REQUIRED).unwrap();
         submit_payment(handle).unwrap();
+        get_payment_information(handle).unwrap();
         tests::cleanup_dev_env(test_name);
     }
 

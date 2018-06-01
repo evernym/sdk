@@ -93,6 +93,8 @@ impl PaymentInfo {
     pub fn get_price(&self) -> Result<u64, PaymentError> {
         Ok(self.price)
     }
+
+    pub fn to_string(&self) -> Result<String, PaymentError> { serde_json::to_string(&self).or(Err(PaymentError::InvalidWalletJson()))}
 }
 
 impl IssuerCredential {
