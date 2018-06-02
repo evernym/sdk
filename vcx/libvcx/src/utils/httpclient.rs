@@ -17,7 +17,7 @@ pub fn post_u8(body_content: &Vec<u8>, url: &str) -> Result<Vec<u8>,String> {
         info!("::Android code");
         set_ssl_cert_location();
     }
-    let client = reqwest::ClientBuilder::new().danger_disable_hostname_verification().build().unwrap();
+    let client = reqwest::ClientBuilder::new().build().unwrap();
     info!("Posting encrypted bundle to: \"{}\"", url);
     if settings::test_agency_mode_enabled() {return Ok(NEXT_U8_RESPONSE.lock().unwrap().pop().unwrap_or(Vec::new()));}
     let mut response = match  client.post(url).body(body_content.to_owned()).header(ContentType::octet_stream()).send() {
