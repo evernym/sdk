@@ -9,16 +9,16 @@ use std::sync::Mutex;
 use std::string::ToString;
 use std::collections::HashMap;
 use utils::error;
-use utils::constants::{ SCHEMA_ID, SCHEMA_JSON };
+use utils::constants::{ SCHEMA_ID, SCHEMA_JSON, SCHEMA_TXN_TYPE };
 use utils::libindy::{
     ledger::{
         libindy_build_get_schema_request,
         libindy_submit_request,
         libindy_build_schema_request,
         libindy_parse_get_schema_response,
-        libindy_sign_and_submit_request
     },
-    anoncreds::libindy_issuer_create_schema
+    anoncreds::libindy_issuer_create_schema,
+    payments::pay_for_txn
 };
 use error::schema::SchemaError;
 
@@ -81,8 +81,8 @@ pub trait Schema: ToString {
         let request = libindy_build_schema_request(submitter_did, &create_schema)
             .or(Err(SchemaError::InvalidSchemaCreation()))?;
 
-        let response = libindy_sign_and_submit_request(submitter_did, &request)
-            .or(Err(SchemaError::InvalidSchemaCreation()))?;
+        let (payment_info, response) = pay_for_txn(&request, SCHEMA_TXN_TYPE)
+            .map_err(|err| SchemaError::CommonError(err))?;
 
         Self::check_submit_schema_response(&response)?;
 
@@ -93,7 +93,6 @@ pub trait Schema: ToString {
         let txn_val:  Value = serde_json::from_str(txn)
             .or(Err(SchemaError::CommonError(error::INVALID_JSON.code_num)))?;
 
-        println!("txn: {}", txn);
         match txn_val.get("result") {
             Some(_) => return Ok(()),
             None => warn!("No result found in ledger txn. Must be Rejectd"),
@@ -314,6 +313,8 @@ mod tests {
     use rand::Rng;
     use settings;
     use utils::error::INVALID_JSON;
+    #[allow(unused_imports)]
+    use utils::libindy::payments::tests::token_setup;
 
     #[test]
     fn test_ledger_schema_to_string(){
@@ -374,7 +375,7 @@ mod tests {
     #[test]
     fn test_get_schema_attrs_from_ledger(){
         let wallet_name = "test_get_schema_attrs_from_ledger";
-        ::utils::devsetup::setup_dev_env(wallet_name);
+        ::utils::devsetup::tests::setup_dev_env(wallet_name);
 
         let (_, schema_attrs ) = get_schema_attrs("id".to_string(), SCHEMA_ID.to_string()).unwrap();
 
@@ -382,14 +383,16 @@ mod tests {
         assert!(schema_attrs.contains(r#""version":"4.4.4""#));
         assert!(schema_attrs.contains(r#""schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:test-licence:4.4.4""#));
 
-        ::utils::devsetup::cleanup_dev_env(wallet_name);
+        ::utils::devsetup::tests::cleanup_dev_env(wallet_name);
     }
 
+    #[cfg(feature = "nullpay")]
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_create_schema_with_pool(){
         let wallet_name = "test_create_schema";
-        ::utils::devsetup::setup_dev_env(wallet_name);
+        ::utils::devsetup::tests::setup_dev_env(wallet_name);
+        token_setup();
 
         let data = r#"["address1","address2","zip","city","state"]"#.to_string();
         let schema_name: String = rand::thread_rng().gen_ascii_chars().take(25).collect::<String>();
@@ -399,23 +402,25 @@ mod tests {
 
         let handle = create_new_schema("id", did, schema_name, schema_version, data).unwrap();
 
-        ::utils::devsetup::cleanup_dev_env(wallet_name);
+        ::utils::devsetup::tests::cleanup_dev_env(wallet_name);
         assert!(handle > 0);
         let schema_id = get_schema_id(handle).unwrap();
     }
 
+    #[cfg(feature = "nullpay")]
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_create_duplicate_fails(){
         let wallet_name = "test_create_duplicate_schema_fails";
-        ::utils::devsetup::setup_dev_env(wallet_name);
+        ::utils::devsetup::tests::setup_dev_env(wallet_name);
+        token_setup();
 
         let data = r#"["address1","address2","zip","city","state"]"#.to_string();
         let version = r#"0.0.2"#.to_string();
         let did = r#"2hoqvcwupRTUNkXn6ArYzs"#.to_string();
         let rc = create_new_schema("id", did, "name".to_string(), version,data);
 
-        ::utils::devsetup::cleanup_dev_env(wallet_name);
+        ::utils::devsetup::tests::cleanup_dev_env(wallet_name);
         assert!(rc.is_err());
     }
 
@@ -423,13 +428,13 @@ mod tests {
     #[test]
     fn from_pool_ledger_with_id(){
         let wallet_name = "from_pool_ledger_with_id";
-        ::utils::devsetup::setup_dev_env(wallet_name);
+        ::utils::devsetup::tests::setup_dev_env(wallet_name);
 
         let schema_id = r#"2hoqvcwupRTUNkXn6ArYzs:2:schema_nam:2.2.2"#;
         let expected_schema_data = r#"{"ver":"1.0","id":"2hoqvcwupRTUNkXn6ArYzs:2:schema_nam:2.2.2","name":"schema_nam","version":"2.2.2","attrNames":["sex","age","name","height"],"seqNo":1659}"#;
 
         let rc = LedgerSchema::retrieve_schema("3hoqvcwupRTUNkXn6ArYzs", schema_id);
-        ::utils::devsetup::cleanup_dev_env(wallet_name);
+        ::utils::devsetup::tests::cleanup_dev_env(wallet_name);
 
         let (id, retrieved_schema) = rc.unwrap();
         assert!(retrieved_schema.contains(r#""ver":"1.0","id":"2hoqvcwupRTUNkXn6ArYzs:2:schema_nam:2.2.2","name":"schema_nam","version":"2.2.2""#));

@@ -8,13 +8,13 @@ use rand::Rng;
 use utils::error;
 use settings;
 use schema::LedgerSchema;
-use utils::constants::{ CRED_DEF_ID, CRED_DEF_JSON };
+use utils::constants::{ CRED_DEF_ID, CRED_DEF_JSON, CRED_DEF_TXN_TYPE };
 use utils::libindy::SigTypes;
+use utils::libindy::payments::pay_for_txn;
 use utils::libindy::anoncreds::{libindy_create_and_store_credential_def};
 use utils::libindy::ledger::{libindy_submit_request,
                              libindy_build_get_credential_def_txn,
                              libindy_build_create_credential_def_txn,
-                             libindy_sign_and_submit_request,
                              libindy_parse_get_cred_def_response};
 use error::ToErrorCode;
 use error::cred_def::CredDefError;
@@ -117,7 +117,7 @@ fn _create_and_store_credential_def(issuer_did: &str,
     let cred_def_req = libindy_build_create_credential_def_txn(issuer_did, &cred_def_json)
         .or(Err(CredDefError::CreateCredDefError()))?;
 
-    libindy_sign_and_submit_request(issuer_did, &cred_def_req)
+    let (payment_info, response) = pay_for_txn(&cred_def_req, CRED_DEF_TXN_TYPE)
         .map_err(|err| CredDefError::CommonError(err))?;
 
     Ok(id)
@@ -231,15 +231,43 @@ pub mod tests {
     fn test_get_credential_def() {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         let wallet_name = "get_cred_def_test";
-        ::utils::devsetup::setup_dev_env(wallet_name);
+        ::utils::devsetup::tests::setup_dev_env(wallet_name);
 
         let (id, cred_def_json) = retrieve_credential_def(CRED_DEF_ID).unwrap();
 
-        ::utils::devsetup::cleanup_dev_env(wallet_name);
+        ::utils::devsetup::tests::cleanup_dev_env(wallet_name);
         assert_eq!(&id, CRED_DEF_ID);
         let def1: serde_json::Value = serde_json::from_str(&cred_def_json).unwrap();
         let def2: serde_json::Value = serde_json::from_str(CRED_DEF_JSON).unwrap();
         assert_eq!(def1, def2);
+    }
+
+    #[cfg(feature = "nullpay")]
+    #[cfg(feature = "pool_tests")]
+    #[test]
+    fn test_create_credential_def_real() {
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
+        let wallet_name = "test_create_credential_def_real";
+        ::utils::devsetup::tests::setup_dev_env(wallet_name);
+        ::utils::libindy::payments::tests::token_setup();
+
+        let data = r#"["address1","address2","zip","city","state"]"#.to_string();
+        let schema_name: String = rand::thread_rng().gen_ascii_chars().take(25).collect::<String>();
+        let schema_version: String = format!("{}.{}",rand::thread_rng().gen::<u32>().to_string(),
+                                             rand::thread_rng().gen::<u32>().to_string());
+        let did = r#"2hoqvcwupRTUNkXn6ArYzs"#.to_string();
+        let handle = ::schema::create_new_schema("id", did.clone(), schema_name.clone(), schema_version, data).unwrap();
+        let schema_id = ::schema::get_schema_id(handle).unwrap();
+
+        let rc = create_new_credentialdef("1".to_string(),
+                                          schema_name,
+                                          did,
+                                          schema_id,
+                                          "tag_1".to_string(),
+                                          r#"{"support_revocation":false}"#.to_string());
+
+        ::utils::devsetup::tests::cleanup_dev_env(wallet_name);
+        assert!(rc.is_ok());
     }
 
     #[test]
@@ -255,9 +283,9 @@ pub mod tests {
 
     #[cfg(feature = "pool_tests")]
     #[test]
-    fn test_create_credential_def_fails_with_already_created_credential_def() {
+    fn test_create_credential_def_fails_when_already_created() {
         let wallet_name = "a_test_wallet";
-        ::utils::devsetup::setup_dev_env(wallet_name);
+        ::utils::devsetup::tests::setup_dev_env(wallet_name);
         let wallet_handle = get_wallet_handle();
 
         let my_did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
@@ -268,7 +296,7 @@ pub mod tests {
                                           "tag_1".to_string(),
                                           r#"{"support_revocation":false}"#.to_string());
 
-        ::utils::devsetup::cleanup_dev_env(wallet_name);
+        ::utils::devsetup::tests::cleanup_dev_env(wallet_name);
         assert_eq!(rc.err(), Some(CredDefError::CredDefAlreadyCreatedError()));
     }
 
