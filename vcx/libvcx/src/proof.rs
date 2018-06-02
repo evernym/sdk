@@ -489,7 +489,7 @@ mod tests {
     extern "C" fn create_cb(command_handle: u32, err: u32, connection_handle: u32) {
         assert_eq!(err, 0);
         assert!(connection_handle > 0);
-        info!("successfully called create_cb")
+        println!("successfully called create_cb")
     }
 
     fn set_default_and_enable_test_mode() {

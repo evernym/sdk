@@ -393,7 +393,7 @@ mod tests {
     extern "C" fn create_cb(command_handle: u32, err: u32, credential_handle: u32) {
         assert_eq!(err, 0);
         assert!(credential_handle > 0);
-        info!("successfully called create_cb")
+        println!("successfully called create_cb")
     }
 
     extern "C" fn serialize_cb(handle: u32, err: u32, credential_string: *const c_char) {
@@ -402,7 +402,7 @@ mod tests {
             panic!("credential_string is null");
         }
         check_useful_c_str!(credential_string, ());
-        info!("successfully called serialize_cb: {}", credential_string);
+        println!("successfully called serialize_cb: {}", credential_string);
     }
 
     #[test]
@@ -439,7 +439,7 @@ mod tests {
     extern "C" fn create_and_serialize_cb(command_handle: u32, err: u32, credential_handle: u32) {
         assert_eq!(err, 0);
         assert!(credential_handle > 0);
-        info!("successfully called create_and_serialize_cb");
+        println!("successfully called create_and_serialize_cb");
         assert_eq!(vcx_issuer_credential_serialize(0,credential_handle,Some(serialize_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
@@ -534,7 +534,7 @@ mod tests {
 
     extern "C" fn get_state_cb(command_handle: u32, err: u32, state: u32) {
         assert!(state > 0);
-        info!("successfully called get_state_cb");
+        println!("successfully called get_state_cb");
     }
 
     #[test]

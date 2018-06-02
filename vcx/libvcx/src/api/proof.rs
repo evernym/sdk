@@ -354,7 +354,7 @@ mod tests {
     extern "C" fn create_cb(command_handle: u32, err: u32, proof_handle: u32) {
         assert_eq!(err, 0);
         assert!(proof_handle > 0);
-        info!("successfully called create_cb")
+        println!("successfully called create_cb")
     }
 
     extern "C" fn serialize_cb(handle: u32, err: u32, proof_string: *const c_char) {
@@ -363,7 +363,7 @@ mod tests {
             panic!("proof_string is null");
         }
         check_useful_c_str!(proof_string, ());
-        info!("successfully called serialize_cb: {}", proof_string);
+        println!("successfully called serialize_cb: {}", proof_string);
     }
 
     extern "C" fn get_proof_cb(handle: u32, err: u32, proof_state: u32, proof_string: *const c_char) {
@@ -373,14 +373,14 @@ mod tests {
         }
         check_useful_c_str!(proof_string, ());
         assert!(proof_state > 1);
-        info!("successfully called get_proof_cb: {}", proof_string);
+        println!("successfully called get_proof_cb: {}", proof_string);
     }
 
     extern "C" fn no_proof_cb(handle: u32, err: u32, proof_state: u32, proof_string: *const c_char) {
         assert_eq!(err, error::INVALID_PROOF_HANDLE.code_num);
         assert!(proof_string.is_null());
         assert_eq!(proof_state, ProofStateType::ProofUndefined as u32);
-        info!("successfully called no_proof_cb: null");
+        println!("successfully called no_proof_cb: null");
     }
 
     extern "C" fn verify_invalid_proof_cb(handle: u32, err: u32, proof_state: u32, proof_string: *const c_char) {
@@ -389,13 +389,13 @@ mod tests {
         }
         check_useful_c_str!(proof_string, ());
         assert_eq!(proof_state, ProofStateType::ProofInvalid as u32);
-        info!("successfully called verify_invalid_proof_cb");
+        println!("successfully called verify_invalid_proof_cb");
     }
 
     extern "C" fn create_and_serialize_cb(command_handle: u32, err: u32, proof_handle: u32) {
         assert_eq!(err, 0);
         assert!(proof_handle > 0);
-        info!("successfully called create_and_serialize_cb");
+        println!("successfully called create_and_serialize_cb");
         assert_eq!(vcx_proof_serialize(0, proof_handle, Some(serialize_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
@@ -403,7 +403,7 @@ mod tests {
     extern "C" fn deserialize_cb(command_handle: u32, err: u32, proof_handle: u32) {
         assert_eq!(err, 0);
         assert!(proof_handle > 0);
-        info!("successfully called deserialize_cb");
+        println!("successfully called deserialize_cb");
         let expected = r#"{"source_id":"source id","requested_attrs":"{\"attrs\":[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"ISSUER_DID2\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]}","requested_predicates":"{\"attr_name\":\"age\",\"p_type\":\"GE\",\"value\":18,\"schema_seq_no\":1,\"issuer_did\":\"DID1\"}","msg_uid":"","ref_msg_id":"","prover_did":"8XFh8yBzrpJQmNyZzgoTqB","prover_vk":"","state":2,"proof_state":0,"name":"Name Data","version":"1.0","nonce":"123456","proof":null,"proof_request":null,"remote_did":"","remote_vk":"","agent_did":"","agent_vk":""}"#;
         let new = proof::to_string(proof_handle).unwrap();
         assert_eq!(expected,new);
@@ -411,7 +411,7 @@ mod tests {
 
     extern "C" fn update_state_cb(command_handle: u32, err: u32, state: u32) {
         assert_eq!(err, 0);
-        info!("successfully called update_state_cb");
+        println!("successfully called update_state_cb");
         assert_eq!(state, VcxStateType::VcxStateInitialized as u32);
     }
 
@@ -543,7 +543,7 @@ mod tests {
 
     extern "C" fn get_state_cb(command_handle: u32, err: u32, state: u32) {
         assert!(state > 0);
-        info!("successfully called get_state_cb");
+        println!("successfully called get_state_cb");
     }
 
     #[test]

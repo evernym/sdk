@@ -178,11 +178,8 @@ pub fn extract_json_payload(data: &Vec<u8>) -> Result<String, u32> {
 
 pub fn bundle_for_agency(message: Vec<u8>, did: &str) -> Result<Vec<u8>, u32> {
     let agency_vk = settings::get_config_value(settings::CONFIG_AGENCY_VERKEY).unwrap();
-    info!("{}", agency_vk);
     let agent_vk = settings::get_config_value(settings::CONFIG_REMOTE_TO_SDK_VERKEY).unwrap();
-    info!("{}", agent_vk);
     let my_vk = settings::get_config_value(settings::CONFIG_SDK_TO_REMOTE_VERKEY).unwrap();
-    info!("{}", my_vk);
 
     debug!("pre encryption msg: {:?}", message);
     let msg = crypto::prep_msg(wallet::get_wallet_handle(), &my_vk, &agent_vk, &message[..])?;
@@ -330,13 +327,13 @@ pub mod tests {
         let vec: Vec<i8> = vec![-127, -89, 98, 117, 110, 100, 108, 101, 100, -111, -36, 5, -74];
 
         let buf = to_u8(&vec);
-        info!("new bundle: {:?}", buf);
+        println!("new bundle: {:?}", buf);
     }
 
     #[test]
     fn test_to_i8() {
         let vec: Vec<u8> = vec![129, 167, 98, 117, 110, 100, 108, 101, 100, 145, 220, 19, 13];
         let buf = to_i8(&vec);
-        info!("new bundle: {:?}", buf);
+        println!("new bundle: {:?}", buf);
     }
 }

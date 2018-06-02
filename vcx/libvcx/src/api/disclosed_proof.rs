@@ -501,50 +501,7 @@ mod tests {
     extern "C" fn create_cb(command_handle: u32, err: u32, proof_handle: u32) {
         assert_eq!(err, 0);
         assert!(proof_handle > 0);
-        info!("successfully called create_cb")
-    }
-
-    extern "C" fn create_with_id_cb(command_handle: u32, err: u32, proof_handle: u32, req: *const c_char) {
-        assert_eq!(err, 0);
-        assert!(proof_handle > 0);
-        check_useful_c_str!(req, ());
-        info!("successfully called create_cb")
-    }
-
-    extern "C" fn create_and_retrieve_cb(command_handle: u32, err: u32, proof_handle: u32) {
-        assert_eq!(err, 0);
-        assert!(proof_handle > 0);
-        assert_eq!(vcx_disclosed_proof_retrieve_credentials(0, proof_handle, Some(retrieve_cb)),
-                   error::SUCCESS.code_num);
-        thread::sleep(Duration::from_millis(200));
-    }
-
-    extern "C" fn retrieve_cb(handle: u32, err: u32, credentials: *const c_char) {
-        assert_eq!(err, 0);
-        if credentials.is_null() {
-            panic!("credentials is null");
-        }
-        check_useful_c_str!(credentials, ());
-        info!("successfully called retrieve_cb: {}", credentials);
-    }
-
-    extern "C" fn create_and_generate_cb(command_handle: u32, err: u32, proof_handle: u32) {
-        assert_eq!(err, 0);
-        assert!(proof_handle > 0);
-
-        assert_eq!(vcx_disclosed_proof_generate_proof(0,
-                                                      proof_handle,
-                                                      CString::new("{}").unwrap().into_raw(),
-                                                      CString::new("{}").unwrap().into_raw(),
-                                                      Some(generate_cb)),
-                   error::SUCCESS.code_num);
-        thread::sleep(Duration::from_millis(200));
-    }
-
-    extern "C" fn generate_cb(command_handle: u32, err: u32) {
-        assert_eq!(err, 0);
-        info!("successfully called generate_cb");
-
+        println!("successfully called create_cb")
     }
 
     extern "C" fn create_with_id_cb(command_handle: u32, err: u32, proof_handle: u32, req: *const c_char) {
@@ -593,7 +550,7 @@ mod tests {
     extern "C" fn bad_create_cb(command_handle: u32, err: u32, proof_handle: u32) {
         assert!(err > 0);
         assert_eq!(proof_handle, 0);
-        info!("successfully called bad_create_cb")
+        println!("successfully called bad_create_cb")
     }
 
     extern "C" fn serialize_cb(handle: u32, err: u32, proof_string: *const c_char) {
@@ -602,7 +559,7 @@ mod tests {
             panic!("proof_string is null");
         }
         check_useful_c_str!(proof_string, ());
-        info!("successfully called serialize_cb: {}", proof_string);
+        println!("successfully called serialize_cb: {}", proof_string);
     }
 
     #[test]
@@ -673,7 +630,7 @@ mod tests {
 
     extern "C" fn init_cb(command_handle: u32, err: u32) {
         if err != 0 {panic!("create_cb failed: {}", err)}
-        info!("successfully called init_cb")
+        println!("successfully called init_cb")
     }
 
     extern "C" fn deserialize_cb(command_handle: u32, err: u32, proof_handle: u32) {
@@ -683,7 +640,7 @@ mod tests {
         }
         assert_eq!(err, 0);
         assert!(proof_handle > 0);
-        info!("successfully called deserialize_cb");
+        println!("successfully called deserialize_cb");
         let original = formatter(DEFAULT_SERIALIZED_PROOF);
         let new = formatter(&disclosed_proof::to_string(proof_handle).unwrap());
         assert_eq!(original, new);
@@ -718,7 +675,7 @@ mod tests {
 
     extern "C" fn get_state_cb(command_handle: u32, err: u32, state: u32) {
         assert!(state > 0);
-        info!("successfully called get_state_cb: {}", state);
+        println!("successfully called get_state_cb: {}", state);
     }
 
     #[test]

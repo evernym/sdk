@@ -284,7 +284,7 @@ mod tests {
 
     extern "C" fn update_cb(command_handle: u32, err: u32) {
         if err != 0 {panic!("update_cb failed")}
-        info!("successfully called update_cb")
+        println!("successfully called update_cb")
     }
 
     #[test]

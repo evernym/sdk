@@ -445,7 +445,7 @@ mod tests {
     extern "C" fn create_cb(command_handle: u32, err: u32, connection_handle: u32) {
         if err != 0 {panic!("create_cb failed")}
         if connection_handle == 0 {panic!("invalid handle")}
-        info!("successfully called create_cb")
+        println!("successfully called create_cb")
     }
 
     extern "C" fn delete_cb(command_handle: u32, err: u32) {
@@ -480,7 +480,7 @@ mod tests {
     }
 
     extern "C" fn connect_cb(command_handle: u32, err: u32, details: *const c_char) {        if err != 0 {panic!("connect failed: {}", err);}
-        info!("successfully called connect_cb");
+        println!("successfully called connect_cb");
     }
 
     #[test]
@@ -498,7 +498,7 @@ mod tests {
 
     extern "C" fn update_state_cb(command_handle: u32, err: u32, state: u32) {
         assert_eq!(err, 0);
-        info!("successfully called update_state_cb");
+        println!("successfully called update_state_cb");
         assert_eq!(state,VcxStateType::VcxStateAccepted as u32);
     }
 
@@ -528,7 +528,7 @@ mod tests {
             panic!("credential_string is empty");
         }
         check_useful_c_str!(credential_string, ());
-        info!("successfully called serialize_cb: {}", credential_string);
+        println!("successfully called serialize_cb: {}", credential_string);
     }
 
     #[test]
@@ -564,8 +564,8 @@ mod tests {
         let string = r#"{"source_id":"test_vcx_connection_deserialialize_succeeds","pw_did":"8XFh8yBzrpJQmNyZzgoTqB","pw_verkey":"EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A","state":1,"uuid":"","endpoint":"","invite_detail":{"statusCode":"","connReqId":"","senderDetail":{"name":"","agentKeyDlgProof":{"agentDID":"","agentDelegatedKey":"","signature":""},"DID":"","logoUrl":"","verKey":""},"senderAgencyDetail":{"DID":"","verKey":"","endpoint":""},"targetName":"","statusMsg":""},"agent_did":"U5LXs4U7P9msh647kToezy","agent_vk":"FktSZg8idAVzyQZrdUppK6FTrfAzW3wWVzAjJAfdUvJq","their_pw_did":"","their_pw_verkey":""}"#;
 
         let new = to_string(connection_handle).unwrap();
-        info!("original: {}",string);
-        info!("     new: {}",new);
+        println!("original: {}",string);
+        println!("     new: {}",new);
         assert_eq!(string,new);
     }
 
@@ -581,7 +581,7 @@ mod tests {
 
     extern "C" fn get_state_cb(command_handle: u32, err: u32, state: u32) {
         assert!(state > 0);
-        info!("successfully called get_state_cb");
+        println!("successfully called get_state_cb");
     }
 
     #[test]
