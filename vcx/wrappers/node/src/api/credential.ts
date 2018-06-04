@@ -112,52 +112,6 @@ export class Credential extends VCXBaseWithState<ICredentialStructData> {
     return offers
   }
 
-  async getState (): Promise<StateType> {
-    try {
-      return await this._getState()
-    } catch (err) {
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), `vcx_credential_get_state`)
-    }
-  }
-
-  async updateState (): Promise<void> {
-    try {
-      await this._updateState()
-    } catch (err) {
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), `vcx_credential_update_state`)
-    }
-  }
-
-  async getPaymentInfo (): Promise<string> {
-    try {
-      return await createFFICallbackPromise<string> (
-          (resolve, reject, cb) => {
-            const rc = rustAPI().vcx_credential_get_payment_info(0, this.handle, cb)
-            if (rc) {
-              reject(rc)
-            }
-          },
-          (resolve, reject) => Callback('void', ['uint32', 'uint32', 'string'], (xcommandHandle, err, info) => {
-            if (err) {
-              reject(err)
-            } else {
-              resolve(info)
-            }
-          })
-        )
-    } catch (err) {
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), `vcx_credential_get_payment_info`)
-    }
-  }
-
-  async serialize (): Promise<ICredentialStructData> {
-    try {
-      return JSON.parse(await super._serialize())
-    } catch (err) {
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), `vcx_credential_serialize`)
-    }
-  }
-
   async sendRequest ({ connection, payment }: ICredentialSendData): Promise<void> {
     try {
       await createFFICallbackPromise<void>(
