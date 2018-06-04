@@ -1,4 +1,4 @@
-package com.evernym.sdk.vcx.api.vcx;
+package com.evernym.sdk.vcx.api;
 
 import android.util.Log;
 

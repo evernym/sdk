@@ -1,4 +1,4 @@
-package com.evernym.sdk.vcx.api.vcx;
+package com.evernym.sdk.vcx.api;
 
 import com.evernym.sdk.vcx.LibVcx;
 import com.evernym.sdk.vcx.ParamGuard;
