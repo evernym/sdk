@@ -20,6 +20,7 @@ use messages::extract_json_payload;
 use utils::libindy::anoncreds::{libindy_prover_create_credential_req, libindy_prover_store_credential};
 use utils::libindy::wallet;
 use utils::libindy::crypto;
+use utils::libindy::payments::pay_a_payee;
 
 use credential_def::retrieve_credential_def;
 use connection;
@@ -30,6 +31,7 @@ use utils::constants::{ SEND_MESSAGE_RESPONSE };
 
 use error::{ToErrorCode, credential::CredentialError};
 use serde_json::Value;
+
 
 lazy_static! {
     static ref HANDLE_MAP: ObjectCache<Credential>  = Default::default();
@@ -146,7 +148,7 @@ impl Credential {
         let offer_msg_id = self.credential_offer.as_ref().unwrap().msg_ref_id.as_ref().ok_or(CredentialError::CommonError(error::CREATE_CREDENTIAL_REQUEST_ERROR.code_num))?;
 
         if settings::test_agency_mode_enabled() { httpclient::set_next_u8_response(SEND_MESSAGE_RESPONSE.to_vec()); }
-
+        let _receipt = self.submit_payment()?;
         match messages::send_message().to(local_my_did)
             .to_vk(local_my_vk)
             .msg_type("claimReq")
@@ -295,7 +297,7 @@ impl Credential {
     }
 
     fn submit_payment(&self) -> Result<String, CredentialError> {
-        use utils::libindy::payments::pay_a_payee;
+        debug!("submitting payment for premium credential");
         if settings::test_indy_mode_enabled() { return Ok("RECEIPT OF SUBMISSION".to_string())};
         match &self.payment_info {
             &Some(ref pi) => {
@@ -641,6 +643,8 @@ mod tests {
         wallet::delete_wallet("full_credential_test").unwrap();
     }
 
+
+
     #[test]
     fn test_get_credential_offer() {
         settings::set_defaults();
@@ -721,5 +725,24 @@ mod tests {
         let handle = from_string(r#"{"source_id":"test_credential_serialize_deserialize","state":4,"credential_name":null,"credential_request":null,"credential_offer":null,"link_secret_alias":"main","msg_uid":null,"agent_did":null,"agent_vk":null,"my_did":null,"my_vk":null,"their_did":null,"their_vk":null,"cred_id":null,"credential":"something","payment_info":null}"#).unwrap();
         let cred_string = get_credential(handle).unwrap();
         println!("{}", cred_string);
+    }
+
+    #[cfg(feature = "nullpay")]
+    #[test]
+    fn test_submit_payment_through_credential_request() {
+        let test_name = "test_submit_payment_through_credential_request";
+        tests::setup_dev_env(test_name);
+        use utils::libindy::payments::get_wallet_token_info;
+        init_payments().unwrap();
+        mint_tokens().unwrap();
+        let balance = get_wallet_token_info().unwrap().get_balance();
+        assert!(balance > 0);
+        let mut cred = create_credential_with_price(5);
+        assert!(cred.send_request(1234).is_err());
+        let new_balance = get_wallet_token_info().unwrap().get_balance();
+        assert_eq!(new_balance, balance);
+
+        tests::cleanup_dev_env(test_name);
+
     }
 }

@@ -107,17 +107,6 @@ class Credential(VcxStateful):
                       c_payment,
                       Credential.send_request.cb)
 
-
-    async def submit_payment(self):
-        if not hasattr(Credential.submit_payment, "cb"):
-            self.logger.debug("vcx_credential_submit_payment: Creating callback")
-            Credential.submit_payment.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32))
-
-        c_credential_handle = c_uint32(self.handle)
-        await do_call('vcx_credential_submit_payment',
-                      c_credential_handle,
-                      Credential.submit_payment.cb)
-
     async def get_payment_info(self):
         if not hasattr(Credential.get_payment_info, "cb"):
             self.logger.debug("vcx_credential_get_payment_info: Creating callback")

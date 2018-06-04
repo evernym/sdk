@@ -234,11 +234,3 @@ async def test_send_request_with_bad_connection():
         await credential.send_request(connection, 0)
     assert ErrorCode.InvalidConnectionHandle == e.value.error_code
 
-@pytest.mark.asyncio
-@pytest.mark.usefixtures('vcx_init_test_mode')
-async def test_credential_payments():
-    credential = await Credential.deserialize(credential_json)
-    payment_info = await credential.get_payment_info()
-    assert(payment_info['payment_addr'] == credential_json['payment_info']['payment_addr'])
-    await credential.submit_payment()
-

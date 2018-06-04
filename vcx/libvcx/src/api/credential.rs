@@ -11,28 +11,6 @@ use std::ptr;
 use error::credential::CredentialError;
 use error::ToErrorCode;
 
-#[no_mangle]
-#[allow(unused_assignments)]
-pub extern fn vcx_credential_submit_payment(command_handle: u32, credential_handle: u32,
-                                            cb:Option<extern fn(xcommand_handle: u32, err:u32)>) -> u32 {
-    check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
-    thread::spawn(move|| {
-        match credential::submit_payment(credential_handle) {
-            Ok(_) => {
-                info!("vcx_credential_submit_payment(command_handle: {}, rc: {})", command_handle, error::SUCCESS.code_num);
-                cb(command_handle, error::SUCCESS.code_num);
-            },
-            Err(e) => {
-                warn!("vcx_credential_submit_payment(command_handle: {}, rc: {})", command_handle, e.to_error_code());
-                cb(command_handle, e.to_error_code())
-            }
-        }
-    });
-
-    error::SUCCESS.code_num
-
-}
-
 /// Retrieves Payment Info from a Credential
 ///
 /// #Params

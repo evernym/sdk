@@ -29,6 +29,11 @@ pub struct WalletInfo {
     addresses: Vec<AddressInfo>,
 }
 
+impl WalletInfo {
+    pub fn get_balance(&self) -> u64 {
+        self.balance
+    }
+}
 #[derive(Serialize, Deserialize, Debug)]
 pub struct AddressInfo {
     pub address: String,

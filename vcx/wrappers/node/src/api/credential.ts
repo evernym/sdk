@@ -158,29 +158,6 @@ export class Credential extends VCXBaseWithState {
     }
   }
 
-  async submitPayment (): Promise<void> {
-    try {
-      await createFFICallbackPromise<void>(
-          (resolve, reject, cb) => {
-            const rc = rustAPI().vcx_credential_submit_payment(0, this.handle, cb)
-            if (rc) {
-              reject(rc)
-            }
-          },
-          (resolve, reject) => Callback('void', ['uint32', 'uint32'], (xcommandHandle, err) => {
-            if (err) {
-              reject(err)
-            } else {
-              resolve()
-            }
-          })
-        )
-    } catch (err) {
-      // TODO handle error
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), `vcx_credential_submit_payment`)
-    }
-  }
-
   async sendRequest ({ connection, payment }: ICredentialSendData): Promise<void> {
     try {
       await createFFICallbackPromise<void>(

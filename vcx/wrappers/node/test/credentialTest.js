@@ -169,7 +169,6 @@ describe('A Credential', function () {
     const obj3 = await Credential.deserialize(SERIALIZED_CREDENTIAL)
     const paymentInfo = JSON.parse(await obj3.getPaymentInfo())
     assert(paymentInfo['payment_addr'] === SERIALIZED_CREDENTIAL['payment_info']['payment_addr'])
-    obj3.submitPayment()
   })
 
   const credentialCreateCheckAndDelete = async () => {
