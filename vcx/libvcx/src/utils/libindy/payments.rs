@@ -215,7 +215,6 @@ pub fn inputs(cost: u64) -> Result<(u64, String), PaymentError> {
     let mut inputs: Vec<String> = Vec::new();
     let mut balance = 0;
     let wallet_info: WalletInfo = get_wallet_token_info().map_err(|ec| PaymentError::CommonError(ec))?;
-//        .or(Err(PaymentError::InvalidWalletJson()))?;
 
     if wallet_info.balance < cost {
         warn!("not enough tokens in wallet to pay");

@@ -300,9 +300,7 @@ impl Credential {
         match &self.payment_info {
             &Some(ref pi) => {
                 let address = &pi.get_address()?;
-                println!("address: {}", address);
                 let price = pi.get_price()?;
-                println!("price: {}", price);
                 let receipt = pay_a_payee(price, address)?;
                 Ok(receipt)
             },

@@ -18,15 +18,6 @@ use utils::{error,
             openssl::encode
 };
 use error::{ issuer_cred::IssuerCredError, ToErrorCode, payment::PaymentError};
-//=======
-//use utils::{error, error::INVALID_JSON};
-//use utils::httpclient;
-//use utils::libindy::anoncreds::{ libindy_issuer_create_credential, libindy_issuer_create_credential_offer };
-//use utils::libindy::payments;
-//use utils::constants::{SEND_MESSAGE_RESPONSE, CRED_MSG};
-//use utils::openssl::encode;
-//use error::{ issuer_cred::IssuerCredError, ToErrorCode };
-//>>>>>>> upstream/master
 
 lazy_static! {
     static ref ISSUER_CREDENTIAL_MAP: Mutex<HashMap<u32, Box<IssuerCredential>>> = Default::default();
