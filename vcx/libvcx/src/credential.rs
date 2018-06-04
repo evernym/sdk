@@ -30,7 +30,6 @@ use utils::constants::{ SEND_MESSAGE_RESPONSE };
 
 use error::ToErrorCode;
 use error::credential::CredentialError;
-use error::payment::PaymentError;
 
 use serde_json::Value;
 
@@ -571,6 +570,16 @@ mod tests {
     use utils::constants::{DEFAULT_SERIALIZED_CREDENTIAL,
                            DEFAULT_SERIALIZED_CREDENTIAL_PAYMENT_REQUIRED};
 
+    fn create_credential_with_price(price:u64) -> Credential{
+        let mut cred: Credential = serde_json::from_str(DEFAULT_SERIALIZED_CREDENTIAL).unwrap();
+        cred.payment_info = Some(PaymentInfo {
+            payment_required: "one-time".to_string(),
+            payment_addr: "pov:null:OsdjtGKavZDBuG2xFw2QunVwwGs5IB3j".to_string(),
+            price,
+        });
+        cred
+    }
+
     #[test]
     fn test_credential_defaults() {
         let credential = Credential::default();
@@ -608,21 +617,7 @@ mod tests {
         assert!(payment_required_credential.is_payment_required())
     }
 
-    #[test]
-    fn test_pay_for_credential_using_handles() {
-        let test_name = "test_pay_for_credential";
-        tests::setup_dev_env(test_name);
-        let handle2 = from_string(DEFAULT_SERIALIZED_CREDENTIAL).unwrap();
-        assert!(!is_payment_required(handle2).unwrap());
-        let handle = from_string(DEFAULT_SERIALIZED_CREDENTIAL_PAYMENT_REQUIRED).unwrap();
-        assert!(is_payment_required(handle).unwrap());
-        let invalid_handle = 12345;
-        assert_eq!(is_payment_required(invalid_handle).err(), Some(CredentialError::InvalidHandle()));
-//        pay_for_credential(handle).unwrap();
-//        assert!(get_payment_request(handle).unwrap());
-        tests::cleanup_dev_env(test_name);
 
-    }
 
     #[test]
     fn full_credential_test(){
@@ -671,14 +666,22 @@ mod tests {
         tests::setup_dev_env(test_name);
         init_payments().unwrap();
         mint_tokens().unwrap();
-        let mut cred: Credential = serde_json::from_str(DEFAULT_SERIALIZED_CREDENTIAL).unwrap();
-        cred.payment_info = Some(PaymentInfo {
-            payment_required: "one-time".to_string(),
-            payment_addr: "pov:null:OsdjtGKavZDBuG2xFw2QunVwwGs5IB3j".to_string(),
-            price: 25,
-        });
+        let cred = create_credential_with_price(25);
         assert!(cred.is_payment_required());
         cred.submit_payment().unwrap();
+        tests::cleanup_dev_env(test_name);
+    }
+
+    #[cfg(feature = "nullpay")]
+    #[test]
+    fn test_pay_for_non_premium_credential() {
+        let test_name = "test_pay_for_non_premium_credential";
+        tests::setup_dev_env(test_name);
+        init_payments().unwrap();
+        mint_tokens().unwrap();
+        let cred: Credential = serde_json::from_str(DEFAULT_SERIALIZED_CREDENTIAL).unwrap();
+        assert!(cred.payment_info.is_none());
+        assert_eq!(cred.submit_payment().err(), Some(CredentialError::NoPaymentInformation()));
         tests::cleanup_dev_env(test_name);
     }
 
@@ -689,13 +692,7 @@ mod tests {
         tests::setup_dev_env(test_name);
         init_payments().unwrap();
         mint_tokens().unwrap();
-        let mut cred: Credential = serde_json::from_str(DEFAULT_SERIALIZED_CREDENTIAL).unwrap();
-        cred.payment_info = Some(PaymentInfo {
-            payment_required: "one-time".to_string(),
-            payment_addr: "pov:null:OsdjtGKavZDBuG2xFw2QunVwwGs5IB3j".to_string(),
-            price: 10000,
-        });
-        assert!(cred.is_payment_required());
+        let cred = create_credential_with_price(1000);
         assert_eq!(cred.submit_payment().err(), Some(CredentialError::PaymentError(PaymentError::InsufficientFunds())));
         tests::cleanup_dev_env(test_name);
     }
@@ -710,7 +707,11 @@ mod tests {
         let handle = from_string(DEFAULT_SERIALIZED_CREDENTIAL_PAYMENT_REQUIRED).unwrap();
         submit_payment(handle).unwrap();
         get_payment_information(handle).unwrap();
+        let handle2 = from_string(DEFAULT_SERIALIZED_CREDENTIAL).unwrap();
+        assert!(!is_payment_required(handle2).unwrap());
         tests::cleanup_dev_env(test_name);
+        let invalid_handle = 12345;
+        assert_eq!(is_payment_required(invalid_handle).err(), Some(CredentialError::InvalidHandle()));
     }
 
     #[test]

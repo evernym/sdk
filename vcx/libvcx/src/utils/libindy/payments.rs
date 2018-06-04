@@ -348,7 +348,6 @@ pub mod tests {
         create_address().unwrap();
         create_address().unwrap();
         create_address().unwrap();
-        println!("{}", create_address().unwrap());
         let balance = get_wallet_token_info().unwrap();
         assert!(balance.contains(r#""balance":0"#));
         ::utils::devsetup::tests::cleanup_dev_env(name);

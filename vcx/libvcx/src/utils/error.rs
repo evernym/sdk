@@ -76,6 +76,8 @@ pub static COMMON_ERROR: Error = Error{ code_num: 1063, message: "Common Error"}
 pub static INSUFFICIENT_TOKEN_AMOUNT: Error = Error{code_num: 1064, message: "Insufficient amount of tokens to process request"};
 pub static UNKNOWN_TXN_TYPE: Error = Error{code_num: 1065, message: "Unknown ledger transaction type"};
 pub static INVALID_PAYMENT: Error = Error{code_num: 1066, message: "Invalid Payment Details"};
+
+
 lazy_static! {
     static ref ERROR_C_MESSAGES: HashMap<u32, CString> = {
        let mut m = HashMap::new();
@@ -158,7 +160,6 @@ fn insert_c_message(map: &mut HashMap<u32, CString>, error: &Error) {
     map.insert(error.code_num, CString::new(error.message).unwrap());
 
 }
-
 
 // Helper function for static defining of error messages. Does limited checking that it can.
 fn insert_message(map: &mut HashMap<u32, &'static str>, error: &Error) {
