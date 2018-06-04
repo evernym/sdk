@@ -508,14 +508,14 @@ pub mod tests {
         let name = "test_build_payment_request";
         tests::setup_dev_env(name);
         init_payments().unwrap();
-        mint_tokens().unwrap();
+        mint_tokens(None, None).unwrap();
 
         let price = get_my_balance();
         let address = "pay:null:4jtvRvSl6OTDEMqrUBsqAfCFWeTOF86H";
         let result_from_paying = pay_a_payee(price, address);
         assert!(result_from_paying.is_ok());
         assert_eq!(get_my_balance(), 0);
-        mint_tokens().unwrap();
+        mint_tokens(None, None).unwrap();
         assert_eq!(get_my_balance(), 45);
 
         let price = get_my_balance() - 5;

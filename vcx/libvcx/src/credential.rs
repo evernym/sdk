@@ -562,7 +562,7 @@ mod tests {
     use serde_json::Value;
     use utils::devsetup::tests;
     use utils::libindy::payments::init_payments;
-    use utils::libindy::payments::tests::mint_tokens;
+    use utils::libindy::payments::mint_tokens;
     use error::payment::PaymentError;
     pub const BAD_CREDENTIAL_OFFER: &str = r#"{"version": "0.1","to_did": "LtMgSjtFcyPwenK9SHCyb8","from_did": "LtMgSjtFcyPwenK9SHCyb8","claim": {"account_num": ["8BEaoLf8TBmK4BUyX8WWnA"],"name_on_account": ["Alice"]},"schema_seq_no": 48,"issuer_did": "Pd4fnFtRBcMKRVC2go5w3j","claim_name": "Account Certificate","claim_id": "3675417066","msg_ref_id": "ymy5nth"}"#;
     use utils::constants::{DEFAULT_SERIALIZED_CREDENTIAL,
@@ -665,7 +665,7 @@ mod tests {
         let test_name = "test_pay_for_credential_with_sufficient_funds";
         tests::setup_dev_env(test_name);
         init_payments().unwrap();
-        mint_tokens().unwrap();
+        mint_tokens(None, None).unwrap();
         let cred = create_credential_with_price(25);
         assert!(cred.is_payment_required());
         cred.submit_payment().unwrap();
@@ -678,7 +678,7 @@ mod tests {
         let test_name = "test_pay_for_non_premium_credential";
         tests::setup_dev_env(test_name);
         init_payments().unwrap();
-        mint_tokens().unwrap();
+        mint_tokens(None, None).unwrap();
         let cred: Credential = serde_json::from_str(DEFAULT_SERIALIZED_CREDENTIAL).unwrap();
         assert!(cred.payment_info.is_none());
         assert_eq!(cred.submit_payment().err(), Some(CredentialError::NoPaymentInformation()));
@@ -691,7 +691,7 @@ mod tests {
         let test_name = "test_pay_for_credential_with_insufficient_funds";
         tests::setup_dev_env(test_name);
         init_payments().unwrap();
-        mint_tokens().unwrap();
+        mint_tokens(None, None).unwrap();
         let cred = create_credential_with_price(1000);
         assert_eq!(cred.submit_payment().err(), Some(CredentialError::PaymentError(PaymentError::InsufficientFunds())));
         tests::cleanup_dev_env(test_name);
@@ -703,7 +703,7 @@ mod tests {
         let test_name = "test_pay_for_credential_with_handle";
         tests::setup_dev_env(test_name);
         init_payments().unwrap();
-        mint_tokens().unwrap();
+        mint_tokens(None, None).unwrap();
         let handle = from_string(DEFAULT_SERIALIZED_CREDENTIAL_PAYMENT_REQUIRED).unwrap();
         submit_payment(handle).unwrap();
         get_payment_information(handle).unwrap();
@@ -734,7 +734,7 @@ mod tests {
         tests::setup_dev_env(test_name);
         use utils::libindy::payments::get_wallet_token_info;
         init_payments().unwrap();
-        mint_tokens().unwrap();
+        mint_tokens(None, None).unwrap();
         let balance = get_wallet_token_info().unwrap().get_balance();
         assert!(balance > 0);
         let mut cred = create_credential_with_price(5);
