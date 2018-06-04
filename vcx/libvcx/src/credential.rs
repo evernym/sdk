@@ -28,9 +28,7 @@ use settings;
 use utils::httpclient;
 use utils::constants::{ SEND_MESSAGE_RESPONSE };
 
-use error::ToErrorCode;
-use error::credential::CredentialError;
-
+use error::{ToErrorCode, credential::CredentialError};
 use serde_json::Value;
 
 lazy_static! {
@@ -565,7 +563,7 @@ mod tests {
     use utils::devsetup::tests;
     use utils::libindy::payments::init_payments;
     use utils::libindy::payments::tests::mint_tokens;
-
+    use error::payment::PaymentError;
     pub const BAD_CREDENTIAL_OFFER: &str = r#"{"version": "0.1","to_did": "LtMgSjtFcyPwenK9SHCyb8","from_did": "LtMgSjtFcyPwenK9SHCyb8","claim": {"account_num": ["8BEaoLf8TBmK4BUyX8WWnA"],"name_on_account": ["Alice"]},"schema_seq_no": 48,"issuer_did": "Pd4fnFtRBcMKRVC2go5w3j","claim_name": "Account Certificate","claim_id": "3675417066","msg_ref_id": "ymy5nth"}"#;
     use utils::constants::{DEFAULT_SERIALIZED_CREDENTIAL,
                            DEFAULT_SERIALIZED_CREDENTIAL_PAYMENT_REQUIRED};
