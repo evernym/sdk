@@ -58,7 +58,8 @@ fn set_ssl_cert_location(){
     env::set_var(ssl_cert_file,env::var("EXTERNAL_STORAGE").unwrap() + "/cacert.pem"); //TODO: CHANGE ME, HARDCODING FOR TESTING ONLY
     match env::var(ssl_cert_file) {
         Ok(val) => info!("{}:: {:?}", ssl_cert_file, val),
-        Err(e) => error!("couldn't find var in env {}:: {}", ssl_cert_file, e),
+        Err(e) => error!("couldn't find var in env {}:: {}. This needs to be set on Android to make https calls.\n See https://github.com/seanmonstar/reqwest/issues/70 for more info",
+                         ssl_cert_file, e),
     }
     info!("::SSL_CERT_FILE has been set");
 }

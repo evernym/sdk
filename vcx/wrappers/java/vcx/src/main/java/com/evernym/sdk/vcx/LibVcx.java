@@ -61,7 +61,7 @@ public abstract class LibVcx {
         public int vcx_schema_create(int command_handle, String source_id, String schema_name, String schema_data, Callback cb);
 
         /**
-         * Populates status with the current state of this claim.
+         * Populates status with the current State of this claim.
          */
         public int vcx_schema_serialize(int command_handle, int schema_handle, Callback cb);
 
@@ -98,7 +98,7 @@ public abstract class LibVcx {
         public int vcx_claimdef_create(int command_handle, String source_id, String claimdef_name, int schema_seq_no, int revocation, Callback cb);
 
         /**
-         * Populates status with the current state of this claim.
+         * Populates status with the current State of this claim.
          */
         public int vcx_claimdef_serialize(int command_handle, int claimdef_handle, Callback cb);
 
@@ -151,12 +151,12 @@ public abstract class LibVcx {
         public int vcx_connection_deserialize(int command_handle, String serialized_claim, Callback cb);
 
         /**
-         * Request a state update from the agent for the given connection.
+         * Request a State update from the agent for the given connection.
          */
         public int vcx_connection_update_state(int command_handle, int connection_handle, Callback cb);
 
         /**
-         * Retrieves the state of the connection
+         * Retrieves the State of the connection
          */
         public int vcx_connection_get_state(int command_handle, int connection_handle, Callback cb);
 
@@ -193,12 +193,12 @@ public abstract class LibVcx {
         public int vcx_issuer_send_claim_offer(int command_handle, int claim_handle, int connection_handle, Callback cb);
 
         /**
-         * Updates the state of the claim from the agency.
+         * Updates the State of the claim from the agency.
          */
         public int vcx_issuer_claim_update_state(int command_handle, int claim_handle, Callback cb);
 
         /**
-         * Retrieves the state of the issuer_claim.
+         * Retrieves the State of the issuer_claim.
          */
         public int vcx_issuer_claim_get_state(int command_handle, int claim_handle, Callback cb);
 
@@ -208,7 +208,7 @@ public abstract class LibVcx {
         public int vcx_issuer_send_claim(int command_handle, int claim_handle, int connection_handle, Callback cb);
 
         /**
-         * Populates status with the current state of this claim.
+         * Populates status with the current State of this claim.
          */
         public int vcx_issuer_claim_serialize(int command_handle, int claim_handle, Callback cb);
 
@@ -233,7 +233,7 @@ public abstract class LibVcx {
         public int vcx_issuer_get_claim_request(int claim_handle, String claim_request);
 
         /**
-         * Sets the claim request in an accepted state. (not in MVP)
+         * Sets the claim request in an accepted State. (not in MVP)
          */
         public int vcx_issuer_accept_claim(int claim_handle);
 
@@ -264,17 +264,17 @@ public abstract class LibVcx {
         public int vcx_proof_accepted(int proof_handle);
 
         /**
-         * Populates status with the current state of this proof request.
+         * Populates status with the current State of this proof request.
          */
         public int vcx_proof_update_state(int command_handle, int proof_handle, Callback cb);
 
         /**
-         * Retrieves the state of the proof.
+         * Retrieves the State of the proof.
          */
         public int vcx_proof_get_state(int command_handle, int proof_handle, Callback cb);
 
         /**
-         * Populates status with the current state of this proof.
+         * Populates status with the current State of this proof.
          */
         public int vcx_proof_serialize(int command_handle, int proof_handle, Callback cb);
 
@@ -305,7 +305,7 @@ public abstract class LibVcx {
         public int vcx_disclosed_proof_send_proof(int command_handle, int proof_handle, int connection_handle, Callback cb);
 
         /**
-         * Populates status with the current state of this disclosed_proof request.
+         * Populates status with the current State of this disclosed_proof request.
          */
         public int vcx_disclosed_proof_update_state(int command_handle, int proof_handle, Callback cb);
 
@@ -315,12 +315,12 @@ public abstract class LibVcx {
         public int vcx_disclosed_proof_get_requests(int command_handle, int connection_handle, Callback cb);
 
         /**
-         * Retrieves the state of the disclosed_proof.
+         * Retrieves the State of the disclosed_proof.
          */
         public int vcx_disclosed_proof_get_state(int command_handle, int proof_handle, Callback cb);
 
         /**
-         * Populates status with the current state of this disclosed_proof.
+         * Populates status with the current State of this disclosed_proof.
          */
         public int vcx_disclosed_proof_serialize(int command_handle, int proof_handle, Callback cb);
 
@@ -356,17 +356,17 @@ public abstract class LibVcx {
         public int vcx_claim_get_offers(int command_handle, int connection_handle, Callback cb);
 
         /**
-         * Updates the state of the claim from the agency.
+         * Updates the State of the claim from the agency.
          */
         public int vcx_claim_update_state(int command_handle, int claim_handle, Callback cb);
 
         /**
-         * Retrieves the state of the claim - including storing the claim if it has been sent.
+         * Retrieves the State of the claim - including storing the claim if it has been sent.
          */
         public int vcx_claim_get_state(int command_handle, int claim_handle, Callback cb);
 
         /**
-         * Populates status with the current state of this claim.
+         * Populates status with the current State of this claim.
          */
         public int vcx_claim_serialize(int command_handle, int claim_handle, Callback cb);
 
@@ -393,6 +393,39 @@ public abstract class LibVcx {
         public int vcx_ledger_get_fees(int command_handle, Callback cb);
 
         public void vcx_set_next_agency_response(int message_index);
+
+        /**
+         * credential object
+         *
+         * Used for accepting and requesting a credential with an identity owner.
+         */
+
+        /** Creates a credential object from the specified credentialdef handle. Populates a handle the new credential. */
+        public int vcx_credential_create_with_offer(int command_handle, String source_id, String credential_offer,Callback cb);
+
+        /** Creates a credential object from the connection and msg id. Populates a handle the new credential. */
+        public int vcx_credential_create_with_msgid(int command_handle, String source_id, int connection, String msg_id,Callback cb);
+
+        /** Asynchronously sends the credential request to the connection. */
+        public int vcx_credential_send_request(int command_handle, int credential_handle, int connection_handle,int payment_handle, Callback cb);
+
+        /** Check for any credential offers from the connection. */
+        public int vcx_credential_get_offers(int command_handle, int connection_handle,Callback cb);
+
+        /** Updates the State of the credential from the agency. */
+        public int vcx_credential_update_state(int command_handle, int credential_handle,Callback cb);
+
+        /** Retrieves the State of the credential - including storing the credential if it has been sent. */
+        public int vcx_credential_get_state(int command_handle, int credential_handle, Callback cb);
+
+        /** Populates status with the current State of this credential. */
+        public int vcx_credential_serialize(int command_handle, int credential_handle, Callback cb);
+
+        /** Re-creates a credential from the specified serialization. */
+        public int vcx_credential_deserialize(int command_handle, String serialized_credential, Callback cb);
+
+        /** Releases the credential from memory. */
+        public int vcx_credential_release(int credential_handle);
 
     }
 

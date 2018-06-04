@@ -57,13 +57,6 @@ impl LoggerUtils {
         });
     }
 
-    pub fn init_test_logging() {
-        // logger for testing purposes, sends to stdout (set env RUST_LOG to configure log level
-        env::set_var("RUST_LOG", "trace");
-        LOGGER_INIT.call_once(|| {
-            env_logger::init().unwrap();
-        });
-    }
 }
 
 #[cfg(test)]
