@@ -122,10 +122,10 @@ public class Credential extends VcxJava.API {
     }
 
     private static Callback vcxGetCredentialCB = new Callback() {
-        public void callback(int command_handle, int err, int credentialHandle){
-            CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
+        public void callback(int command_handle, int err, String credential){
+            CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(command_handle);
             if(!checkCallback(future,err)) return;
-            Integer result = credentialHandle;
+            String result = credential;
             future.complete(result);
         }
     };
@@ -200,10 +200,10 @@ public class Credential extends VcxJava.API {
     }
 
     private static Callback vcxCredentialGetOffersCB = new Callback() {
-        public void callback(int command_handle, int err, int credential_offers){
-            CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
+        public void callback(int command_handle, int err, String credential_offers){
+            CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(command_handle);
             if(!checkCallback(future,err)) return;
-            Integer result = credential_offers;
+            String result = credential_offers;
             future.complete(result);
         }
     };
