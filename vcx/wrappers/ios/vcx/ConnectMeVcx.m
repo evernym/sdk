@@ -440,6 +440,23 @@ completion:(void (^)(NSError *error))completion
    }
 }
 
+- (void)credentialUpdateState:(NSInteger *)credentailHandle
+                completion:(void (^)(NSError *error,NSInteger *state))completion{
+   vcx_error_t ret;
+   vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
+
+    ret = vcx_credential_update_state(handle, credentailHandle, VcxWrapperCommonNumberCallback);
+
+   if( ret != 0 )
+   {
+       [[VcxCallbacks sharedInstance] deleteCommandHandleFor: handle];
+       
+       dispatch_async(dispatch_get_main_queue(), ^{
+           completion([NSError errorFromVcxError: ret],nil);
+       });
+   }
+}
+
 - (void)credentialGetOffers:(VcxHandle *)connectionHandle
                    completion:(void (^)(NSError *error, NSString *offers))completion{
    vcx_error_t ret;
