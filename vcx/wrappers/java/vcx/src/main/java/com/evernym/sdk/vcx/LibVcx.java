@@ -261,7 +261,7 @@ public abstract class LibVcx {
         /**
          * Set proof offer as accepted.
          */
-        public int vcx_proof_accepted(int proof_handle);
+        public int vcx_proof_accepted(int proof_handle, String response_data);
 
         /**
          * Populates status with the current State of this proof request.
@@ -426,6 +426,9 @@ public abstract class LibVcx {
 
         /** Releases the credential from memory. */
         public int vcx_credential_release(int credential_handle);
+
+        /** Retrieve information about a stored credential in user's wallet, including credential id and the credential itself. */
+        public int vcx_get_credential(int command_handle, int credential_handle, Callback cb);
 
     }
 

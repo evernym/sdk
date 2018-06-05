@@ -121,4 +121,129 @@ public class Credential extends VcxJava.API {
 
     }
 
+    private static Callback vcxGetCredentialCB = new Callback() {
+        public void callback(int command_handle, int err, int credentialHandle){
+            CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
+            if(!checkCallback(future,err)) return;
+            Integer result = credentialHandle;
+            future.complete(result);
+        }
+    };
+
+    public static CompletableFuture<Integer> getCredential(
+            int credentialHandle
+    ) throws VcxException {
+        ParamGuard.notNull(credentialHandle, "credentialHandle");
+        CompletableFuture<Integer> future = new CompletableFuture<Integer>();
+        int commandHandle = addFuture(future);
+
+        int result = LibVcx.api.vcx_get_credential(commandHandle, credentialHandle, vcxGetCredentialCB);
+        checkResult(result);
+
+        return future;
+    }
+
+    private static Callback vcxCredentialUpdateStateCB = new Callback() {
+        public void callback(int command_handle, int err, int state){
+            CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
+            if(!checkCallback(future,err)) return;
+            Integer result = state;
+            future.complete(result);
+        }
+    };
+
+    public static CompletableFuture<Integer> credentialUpdateState(
+            int credentialHandle
+    ) throws VcxException {
+        ParamGuard.notNull(credentialHandle, "credentialHandle");
+        CompletableFuture<Integer> future = new CompletableFuture<Integer>();
+        int commandHandle = addFuture(future);
+
+        int result = LibVcx.api.vcx_credential_update_state(commandHandle, credentialHandle, vcxCredentialUpdateStateCB);
+        checkResult(result);
+
+        return future;
+    }
+
+    private static Callback vcxCredentialGetStateCB = new Callback() {
+        public void callback(int command_handle, int err, int state){
+            CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
+            if(!checkCallback(future,err)) return;
+            Integer result = state;
+            future.complete(result);
+        }
+    };
+
+    public static CompletableFuture<Integer> credentialGetState(
+            int credentialHandle
+    ) throws VcxException {
+        ParamGuard.notNull(credentialHandle, "credentialHandle");
+        CompletableFuture<Integer> future = new CompletableFuture<Integer>();
+        int commandHandle = addFuture(future);
+
+        int result = LibVcx.api.vcx_credential_get_state(commandHandle, credentialHandle, vcxCredentialGetStateCB);
+        checkResult(result);
+
+        return future;
+    }
+
+    public static CompletableFuture<Integer> credentialRelease(
+            int credentialHandle
+    ) throws VcxException {
+        ParamGuard.notNull(credentialHandle, "credentialHandle");
+        CompletableFuture<Integer> future = new CompletableFuture<Integer>();
+
+        int result = LibVcx.api.vcx_credential_release(credentialHandle);
+        checkResult(result);
+
+        return future;
+    }
+
+    private static Callback vcxCredentialGetOffersCB = new Callback() {
+        public void callback(int command_handle, int err, int credential_offers){
+            CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
+            if(!checkCallback(future,err)) return;
+            Integer result = credential_offers;
+            future.complete(result);
+        }
+    };
+
+    public static CompletableFuture<Integer> credentialGetOffers(
+            int connectionHandle
+    ) throws VcxException {
+        ParamGuard.notNull(connectionHandle, "connectionHandle");
+        CompletableFuture<Integer> future = new CompletableFuture<Integer>();
+        int commandHandle = addFuture(future);
+
+        int result = LibVcx.api.vcx_credential_get_offers(commandHandle, connectionHandle, vcxCredentialGetOffersCB);
+        checkResult(result);
+
+        return future;
+    }
+
+    private static Callback vcxCredentialCreateWithOfferCB = new Callback() {
+        public void callback(int command_handle, int err, int credential_handle){
+            CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
+            if(!checkCallback(future,err)) return;
+            Integer result = credential_handle;
+            future.complete(result);
+        }
+    };
+
+    public static CompletableFuture<Integer> credentialCreateWithOffer(
+            String sourceId,
+            String credentialOffer
+    ) throws VcxException {
+        ParamGuard.notNull(sourceId, "sourceId");
+        ParamGuard.notNull(credentialOffer, "credentialOffer");
+        CompletableFuture<Integer> future = new CompletableFuture<Integer>();
+        int commandHandle = addFuture(future);
+
+        int result = LibVcx.api.vcx_credential_create_with_offer(commandHandle, sourceId, credentialOffer, vcxCredentialCreateWithOfferCB);
+        checkResult(result);
+
+        return future;
+    }
+
+
 }
