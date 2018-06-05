@@ -101,7 +101,3 @@ export function updateInstitutionConfigs (name: string, logoUrl: string): number
   }
   return rc
 }
-
-export function mintTokens (numberOfAddresses: number, tokensPerAddress: number): void {
-  rustAPI().vcx_mint_tokens(numberOfAddresses, tokensPerAddress)
-}
