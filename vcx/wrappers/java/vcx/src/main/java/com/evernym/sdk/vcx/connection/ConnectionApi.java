@@ -1,4 +1,9 @@
-package com.evernym.sdk.vcx.api;
+package com.evernym.sdk.vcx.connection;
+
+/**
+ * Created by abdussami on 05/06/18.
+ */
+
 
 import android.util.Log;
 
@@ -14,17 +19,17 @@ import java9.util.concurrent.CompletableFuture;
  * Created by abdussami on 03/06/18.
  */
 
-public class Connection extends VcxJava.API{
+public class ConnectionApi extends VcxJava.API{
     public enum State
     {
-                None,
-                initialized,
-                offer_sent,
-                request_received,
-                accepted,
-                unfulfilled,
-                expired,
-                revoked,
+        None,
+        initialized,
+        offer_sent,
+        request_received,
+        accepted,
+        unfulfilled,
+        expired,
+        revoked,
     }
     private static String TAG = "JAVA_WRAPPER::API_CONNECTION";
 

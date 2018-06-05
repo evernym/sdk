@@ -1,16 +1,15 @@
-package com.evernym.sdk.vcx.api;
+package com.evernym.sdk.vcx.proof;
 
 import com.evernym.sdk.vcx.LibVcx;
 import com.evernym.sdk.vcx.ParamGuard;
 import com.evernym.sdk.vcx.VcxException;
-import com.evernym.sdk.vcx.results.GetProofResult;
-import com.sun.jna.Callback;
 import com.evernym.sdk.vcx.VcxJava;
+import com.sun.jna.Callback;
 
 import java9.util.concurrent.CompletableFuture;
 
-public class Proof extends VcxJava.API {
-    private Proof(){}
+public class ProofApi extends VcxJava.API {
+    private ProofApi(){}
 
     private static Callback vcxProofCreateCB = new Callback() {
         public void callback(int command_handle, int err, int proof_handle){
