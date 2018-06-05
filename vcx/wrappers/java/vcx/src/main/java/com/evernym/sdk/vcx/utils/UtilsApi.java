@@ -1,4 +1,4 @@
-package com.evernym.sdk.vcx.api;
+package com.evernym.sdk.vcx.utils;
 
 import android.util.Log;
 
@@ -8,8 +8,6 @@ import com.evernym.sdk.vcx.VcxException;
 import com.evernym.sdk.vcx.VcxJava;
 import com.sun.jna.Callback;
 
-import java.util.concurrent.ExecutionException;
-
 import java9.util.concurrent.CompletableFuture;
 
 
@@ -17,7 +15,7 @@ import java9.util.concurrent.CompletableFuture;
  * Created by abdussami on 17/05/18.
  */
 
-public class Utils extends VcxJava.API {
+public class UtilsApi extends VcxJava.API {
     static String TAG = "JAVA_WRAPPER:API_UTILS ";
     public static Callback provAsyncCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})

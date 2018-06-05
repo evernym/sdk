@@ -1,19 +1,19 @@
-package com.evernym.sdk.vcx.api;
+package com.evernym.sdk.vcx.vcx;
 
 import android.util.Log;
 
 import com.evernym.sdk.vcx.LibVcx;
 import com.evernym.sdk.vcx.ParamGuard;
 import com.evernym.sdk.vcx.VcxException;
-import com.sun.jna.Callback;
 import com.evernym.sdk.vcx.VcxJava;
+import com.sun.jna.Callback;
 
 import java9.util.concurrent.CompletableFuture;
 
-public class Vcx extends VcxJava.API {
+public class VcxApi extends VcxJava.API {
     private static String TAG = "JAVA_WRAPPER::API_VCX";
 
-    private Vcx(){}
+    private VcxApi(){}
 
     private static Callback vcxIniWithConfigCB = new Callback() {
         public void callback(int command_handle,int err){
