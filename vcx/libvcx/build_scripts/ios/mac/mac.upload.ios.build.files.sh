@@ -24,6 +24,7 @@ tar vzcf libvcx.a_${DATETIME}_universal.tar.gz libvcx.a
 mv libvcx.a.original libvcx.a
 curl --insecure -u normjarvis -X POST -F file=@$VCX_SDK/vcx/wrappers/ios/vcx/lib/libvcx.a_${DATETIME}_universal.tar.gz https://kraken.corp.evernym.com/repo/ios/upload
 # Download the file at https://repo.corp.evernym.com/filely/ios/libvcx.a_${DATETIME}_universal.tar.gz
+cp $VCX_SDK/vcx/wrappers/ios/vcx/lib/libvcx.a_${DATETIME}_universal.tar.gz  /usr/local/var/www/download/ios
 
 cd $VCX_SDK/vcx/wrappers/ios/vcx
 mkdir -p vcx.framework/lib
@@ -52,3 +53,4 @@ zip -r vcx.framework_${DATETIME}_universal.zip vcx
 #            |----Info.plist
 curl --insecure -u normjarvis -X POST -F file=@./vcx.framework_${DATETIME}_universal.zip https://kraken.corp.evernym.com/repo/ios/upload
 # Download the file at https://repo.corp.evernym.com/filely/ios/vcx.framework_${DATETIME}_universal.zip
+cp $VCX_SDK/vcx/wrappers/ios/vcx/tmp/vcx.framework_${DATETIME}_universal.zip  /usr/local/var/www/download/ios
