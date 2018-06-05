@@ -111,6 +111,9 @@ void VcxWrapperCommonStringStringLongCallback(vcx_command_handle_t xcommand_hand
 - (void)credentialGetState:(NSInteger *)credentailHandle
                 completion:(void (^)(NSError *error, NSInteger *state))completion;
 
+- (void)credentialUpdateState:(NSInteger *)credentailHandle
+                completion:(void (^)(NSError *error, NSInteger *state))completion;
+
 - (void)credentialGetOffers:(VcxHandle *)connectionHandle
                  completion:(void (^)(NSError *error, NSString *offers))completion;
 
