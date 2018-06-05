@@ -3,6 +3,7 @@ package com.evernym.sdk.vcx.api;
 import com.evernym.sdk.vcx.LibVcx;
 import com.evernym.sdk.vcx.ParamGuard;
 import com.evernym.sdk.vcx.VcxException;
+import com.evernym.sdk.vcx.results.GetProofResult;
 import com.sun.jna.Callback;
 import com.evernym.sdk.vcx.VcxJava;
 
@@ -62,30 +63,30 @@ public class Proof extends VcxJava.API {
 
         return future;
     }
-// TODO: Sami take a look at this.
-//    private static Callback vcxGetProofCB = new Callback() {
-//        public void callback(int command_handle, int err, int proof_state, String response_data){
-//            CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
-//            if(!checkCallback(future,err)) return;
-//            Integer result = proof_state;
-//            future.complete(result);
-//        }
-//    };
-//
-//    public static CompletableFuture<Integer> getProof(
-//            int proofHandle,
-//            int connectionHandle
-//    ) throws VcxException {
-//        ParamGuard.notNull(proofHandle, "proofHandle");
-//        ParamGuard.notNull(connectionHandle, "connectionHandle");
-//        CompletableFuture<Integer> future = new CompletableFuture<Integer>();
-//        int commandHandle = addFuture(future);
-//
-//        int result = LibVcx.api.vcx_get_proof(commandHandle, proofHandle, connectionHandle, vcxGetProofCB);
-//        checkResult(result);
-//
-//        return future;
-//    }
+
+    private static Callback vcxGetProofCB = new Callback() {
+        public void callback(int command_handle, int err, int proof_state, String response_data){
+            CompletableFuture<GetProofResult> future = (CompletableFuture<GetProofResult>) removeFuture(command_handle);
+            if(!checkCallback(future,err)) return;
+            GetProofResult result = new GetProofResult(proof_state,response_data);
+            future.complete(result);
+        }
+    };
+
+    public static CompletableFuture<GetProofResult> getProof(
+            int proofHandle,
+            int connectionHandle
+    ) throws VcxException {
+        ParamGuard.notNull(proofHandle, "proofHandle");
+        ParamGuard.notNull(connectionHandle, "connectionHandle");
+        CompletableFuture<GetProofResult> future = new CompletableFuture<GetProofResult>();
+        int commandHandle = addFuture(future);
+
+        int result = LibVcx.api.vcx_get_proof(commandHandle, proofHandle, connectionHandle, vcxGetProofCB);
+        checkResult(result);
+
+        return future;
+    }
 
     // vcx_proof_accepted
     public static CompletableFuture<Integer> proofAccepted(
