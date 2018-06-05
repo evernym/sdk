@@ -21,5 +21,5 @@ mv libvcx.a libvcx.a.original
 cp libvcxall.a libvcx.a
 tar zcf libvcx.a_${DATETIME}_universal.tar.gz libvcx.a
 mv libvcx.a.original libvcx.a
-curl --insecure -u normjarvis -X POST -F file=@/Users/norm/forge/work/code/evernym/sdk-evernym/vcx/wrappers/ios/vcx/lib/libvcx.a_${DATETIME}_universal.tar.gz https://kraken.corp.evernym.com/repo/ios/upload
+curl --insecure -u normjarvis -X POST -F file=@$VCX_SDK/vcx/wrappers/ios/vcx/lib/libvcx.a_${DATETIME}_universal.tar.gz https://kraken.corp.evernym.com/repo/ios/upload
 #Download the file at https://repo.corp.evernym.com/filely/ios/libvcx.a_${DATETIME}_universal.tar.gz
