@@ -3,12 +3,12 @@ package com.evernym.sdk.vcx;
 
 import android.util.Log;
 
-import java.io.File;
-
 import com.sun.jna.Callback;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.NativeLibrary;
+
+import java.io.File;
 
 public abstract class LibVcx {
 
@@ -381,7 +381,7 @@ public abstract class LibVcx {
         public int vcx_claim_release(int claim_handle);
 
 /**
- * Utils object
+ * UtilsApi object
  *
  */
         public String vcx_provision_agent(String json);

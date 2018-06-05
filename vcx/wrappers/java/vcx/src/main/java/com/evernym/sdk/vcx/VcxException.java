@@ -7,7 +7,7 @@ package com.evernym.sdk.vcx;
  */
 public class VcxException extends Exception {
 
-	private static final long serialVersionUID = 2650355290834266477L;
+	private static final long serialVersionUID = 2650355290834266234L;
 	private int sdkErrorCode;
 
 	/**

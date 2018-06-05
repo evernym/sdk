@@ -1,16 +1,16 @@
-package com.evernym.sdk.vcx.api;
+package com.evernym.sdk.vcx.credential;
 
 import com.evernym.sdk.vcx.LibVcx;
 import com.evernym.sdk.vcx.ParamGuard;
 import com.evernym.sdk.vcx.VcxException;
-import com.sun.jna.Callback;
 import com.evernym.sdk.vcx.VcxJava;
+import com.sun.jna.Callback;
 
 import java9.util.concurrent.CompletableFuture;
 
-public class Credential extends VcxJava.API {
+public class CredentialApi extends VcxJava.API {
 
-    private Credential(){}
+    private CredentialApi(){}
 
     private static Callback vcxCredentialCreateWithMsgidCB = new Callback() {
         public void callback(int command_handle,int err,int credentailHandle){
@@ -122,19 +122,19 @@ public class Credential extends VcxJava.API {
     }
 
     private static Callback vcxGetCredentialCB = new Callback() {
-        public void callback(int command_handle, int err, int credentialHandle){
-            CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
+        public void callback(int command_handle, int err,  String credential){
+            CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(command_handle);
             if(!checkCallback(future,err)) return;
-            Integer result = credentialHandle;
+            String result = credential;
             future.complete(result);
         }
     };
 
-    public static CompletableFuture<Integer> getCredential(
+    public static CompletableFuture<String> getCredential(
             int credentialHandle
     ) throws VcxException {
         ParamGuard.notNull(credentialHandle, "credentialHandle");
-        CompletableFuture<Integer> future = new CompletableFuture<Integer>();
+        CompletableFuture<String> future = new CompletableFuture<String>();
         int commandHandle = addFuture(future);
 
         int result = LibVcx.api.vcx_get_credential(commandHandle, credentialHandle, vcxGetCredentialCB);
@@ -200,19 +200,19 @@ public class Credential extends VcxJava.API {
     }
 
     private static Callback vcxCredentialGetOffersCB = new Callback() {
-        public void callback(int command_handle, int err, int credential_offers){
-            CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
+        public void callback(int command_handle, int err, String credential_offers){
+            CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(command_handle);
             if(!checkCallback(future,err)) return;
-            Integer result = credential_offers;
+            String result = credential_offers;
             future.complete(result);
         }
     };
 
-    public static CompletableFuture<Integer> credentialGetOffers(
+    public static CompletableFuture<String> credentialGetOffers(
             int connectionHandle
     ) throws VcxException {
         ParamGuard.notNull(connectionHandle, "connectionHandle");
-        CompletableFuture<Integer> future = new CompletableFuture<Integer>();
+        CompletableFuture<String> future = new CompletableFuture<String>();
         int commandHandle = addFuture(future);
 
         int result = LibVcx.api.vcx_credential_get_offers(commandHandle, connectionHandle, vcxCredentialGetOffersCB);

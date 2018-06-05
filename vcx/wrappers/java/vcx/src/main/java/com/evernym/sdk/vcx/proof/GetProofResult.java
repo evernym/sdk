@@ -1,4 +1,4 @@
-package com.evernym.sdk.vcx.results;
+package com.evernym.sdk.vcx.proof;
 
 /**
  * Created by abdussami on 05/06/18.
