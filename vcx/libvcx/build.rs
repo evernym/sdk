@@ -88,6 +88,9 @@ fn main() {
         println!("cargo:rustc-link-lib=indy");
         //OSX does not allow 3rd party libs to be installed in /usr/lib. Instead install it in /usr/local/lib
         println!("cargo:rustc-link-search=native=/usr/local/lib");
+        if cfg!(feature = "nullpay") {
+          println!("cargo:rustc-link-lib=nullpay");
+        }
     }else if target.contains("-linux-"){
         //Linux specific logic
         println!("cargo:rustc-link-lib=indy");

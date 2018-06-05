@@ -54,13 +54,17 @@ export LIBINDY_DIR=$WORK_DIR/vcx-indy-sdk/libindy/target/x86_64-linux-android/re
 cargo build --target x86_64-linux-android --release --verbose
 
 # This builds the library for code that runs in OSX
-ln -s $WORK_DIR/vcx-indy-sdk/libindy/target/x86_64-apple-darwin/release/libindy.dylib /usr/local/lib/libindy.dylib
+ln -sf $WORK_DIR/vcx-indy-sdk/libindy/target/x86_64-apple-darwin/release/libindy.dylib /usr/local/lib/libindy.dylib
+ln -sf $WORK_DIR/vcx-indy-sdk/libnullpay/target/x86_64-apple-darwin/release/libnullpay.dylib /usr/local/lib/libnullpay.dylib
+export PATH=$ORIGINAL_PATH
 export OPENSSL_DIR=$OPENSSL_DIR_DARWIN
+unset ANDROID_SODIUM_LIB
+unset ANDROID_ZMQ_LIB
+unset LIBINDY_DIR
 cargo build --target x86_64-apple-darwin --release --verbose
 
 #cargo test
 
-export PATH=$ORIGINAL_PATH
 #export PKG_CONFIG_PATH=$ORIGINAL_PKG_CONFIG_PATH
 
 

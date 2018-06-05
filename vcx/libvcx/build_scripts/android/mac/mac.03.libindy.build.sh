@@ -118,6 +118,8 @@ cargo build --target x86_64-linux-android --release --verbose
 # This builds the library for code that runs in OSX
 export OPENSSL_DIR=$OPENSSL_DIR_DARWIN
 cargo build --target x86_64-apple-darwin --release --verbose
+cd $WORK_DIR/vcx-indy-sdk/libnullpay
+cargo build --target x86_64-apple-darwin --release --verbose
 
 export PATH=$ORIGINAL_PATH
 #export PKG_CONFIG_PATH=$ORIGINAL_PKG_CONFIG_PATH
