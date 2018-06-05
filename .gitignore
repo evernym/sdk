@@ -31,3 +31,8 @@ __pycache__/
 
 # png file for demo of python wrapper
 *.png
+
+
+.linux.libindy
+.macosbuild
+*.zip
