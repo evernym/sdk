@@ -15,6 +15,7 @@ else
     git clone https://github.com/hyperledger/indy-sdk.git $WORK_DIR/vcx-indy-sdk
     cd $WORK_DIR/vcx-indy-sdk
 fi
+git checkout .
 git checkout master
 git clean -f
 git clean -fd
