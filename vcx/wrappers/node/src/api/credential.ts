@@ -147,7 +147,8 @@ export class Credential extends VCXBaseWithState<ICredentialStructData> {
               reject(rc)
             }
           },
-          (resolve, reject) => Callback('void', ['uint32', 'uint32', 'string'], (xcommandHandle:number, err: number, info: any) => {
+          (resolve, reject) => Callback('void', ['uint32', 'uint32', 'string'],
+          (xcommandHandle: number, err: number, info: any) => {
             if (err) {
               reject(err)
             } else {
