@@ -6,6 +6,8 @@ START_DIR=$PWD
 WORK_DIR=$START_DIR/../../../../../.macosbuild
 mkdir -p $WORK_DIR
 WORK_DIR=$(abspath "$WORK_DIR")
+SHA_HASH_DIR=$START_DIR/../..
+SHA_HASH_DIR=$(abspath "$SHA_HASH_DIR")
 
 source ./mac.02.libindy.env.sh
 if [ -d $WORK_DIR/vcx-indy-sdk ]; then
@@ -20,7 +22,7 @@ git checkout master
 git clean -f
 git clean -fd
 git pull
-git checkout `cat $START_DIR/libindy.commit.sha1.hash.txt`
+git checkout `cat $SHA_HASH_DIR/libindy.commit.sha1.hash.txt`
 #cd $WORK_DIR/vcx-indy-sdk
 #git checkout tags/v1.3.0
 cd $WORK_DIR/vcx-indy-sdk/libindy

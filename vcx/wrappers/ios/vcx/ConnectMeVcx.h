@@ -84,6 +84,12 @@ void VcxWrapperCommonStringStringLongCallback(vcx_command_handle_t xcommand_hand
            connectionType:(NSString *)connectionType
                completion:(void (^)(NSError *error, NSString *inviteDetails))completion;
 
+- (void)connectionSerialize:(NSInteger *)connectionHandle
+                 completion:(void (^)(NSError *error, NSString *state))completion;
+
+- (void)connectionDeserialize:(NSString *)serializedConnection
+                   completion:(void (^)(NSError *error, NSInteger *credentailHandle))completion;
+
 - (void)agentUpdateInfo:(NSString *)config
              completion:(void (^)(NSError *error))completion;
 
@@ -103,6 +109,9 @@ void VcxWrapperCommonStringStringLongCallback(vcx_command_handle_t xcommand_hand
                    completion:(void (^)(NSError *error))completion;
 
 - (void)credentialGetState:(NSInteger *)credentailHandle
+                completion:(void (^)(NSError *error, NSInteger *state))completion;
+
+- (void)credentialUpdateState:(NSInteger *)credentailHandle
                 completion:(void (^)(NSError *error, NSInteger *state))completion;
 
 - (void)credentialGetOffers:(VcxHandle *)connectionHandle

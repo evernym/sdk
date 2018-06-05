@@ -332,7 +332,38 @@ completion:(void (^)(NSError *error))completion
        });
    }
 }
+- (void)connectionSerialize:(NSInteger *)connectionHandle
+                  completion:(void (^)(NSError *error, NSString *state))completion{
+    vcx_error_t ret;
+   vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
+   
+    ret = vcx_connection_serialize(handle, connectionHandle, VcxWrapperCommonStringCallback);
 
+   if( ret != 0 )
+   {
+       [[VcxCallbacks sharedInstance] deleteCommandHandleFor: handle];
+       
+       dispatch_async(dispatch_get_main_queue(), ^{
+           completion([NSError errorFromVcxError: ret],nil);
+       });
+   }
+}
+- (void)connectionDeserialize:(NSString *)serializedConnection
+                    completion:(void (^)(NSError *error, NSInteger *credentailHandle))completion{
+   vcx_error_t ret;
+   vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
+    const char *serialized_connection=[serializedConnection cString];
+    ret = vcx_connection_deserialize(handle, serialized_connection, VcxWrapperCommonNumberCallback);
+
+   if( ret != 0 )
+   {
+       [[VcxCallbacks sharedInstance] deleteCommandHandleFor: handle];
+       
+       dispatch_async(dispatch_get_main_queue(), ^{
+           completion([NSError errorFromVcxError: ret],nil);
+       });
+   }
+}
 - (void)agentUpdateInfo: (NSString *) config
             completion: (void (^)(NSError *error)) completion
 {
@@ -429,6 +460,23 @@ completion:(void (^)(NSError *error))completion
    vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
 
     ret = vcx_credential_get_state(handle, credentailHandle, VcxWrapperCommonNumberCallback);
+
+   if( ret != 0 )
+   {
+       [[VcxCallbacks sharedInstance] deleteCommandHandleFor: handle];
+       
+       dispatch_async(dispatch_get_main_queue(), ^{
+           completion([NSError errorFromVcxError: ret],nil);
+       });
+   }
+}
+
+- (void)credentialUpdateState:(NSInteger *)credentailHandle
+                completion:(void (^)(NSError *error,NSInteger *state))completion{
+   vcx_error_t ret;
+   vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
+
+    ret = vcx_credential_update_state(handle, credentailHandle, VcxWrapperCommonNumberCallback);
 
    if( ret != 0 )
    {

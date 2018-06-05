@@ -101,10 +101,10 @@ fn _finish_init(command_handle: u32, cb: extern fn(xcommand_handle: u32, err: u3
 
     settings::log_settings();
 
-    if wallet::get_wallet_handle() > 0 {
-        error!("Library was already initialized");
-        return error::ALREADY_INITIALIZED.code_num;
-    }
+//    if wallet::get_wallet_handle() > 0 {
+//        error!("Library was already initialized");
+//        return error::ALREADY_INITIALIZED.code_num;
+//    }
 
     info!("libvcx version: {}{}", version_constants::VERSION, version_constants::REVISION);
 
@@ -202,6 +202,12 @@ pub extern fn vcx_update_institution_info(name: *const c_char, logo_url: *const 
     settings::set_config_value(::settings::CONFIG_INSTITUTION_LOGO_URL, &logo_url);
 
     error::SUCCESS.code_num
+}
+
+#[no_mangle]
+pub extern fn vcx_mint_tokens(number_of_addresses: u32, tokens_per_address: u32) {
+    info!("vcx_mint_tokens(number_of_addresses: {}, tokens_per_address: {})", number_of_addresses, tokens_per_address);
+    ::utils::libindy::payments::mint_tokens(Some(number_of_addresses), Some(tokens_per_address)).unwrap_or_default();
 }
 
 #[cfg(test)]

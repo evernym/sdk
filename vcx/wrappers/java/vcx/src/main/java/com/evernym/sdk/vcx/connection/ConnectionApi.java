@@ -1,4 +1,9 @@
-package com.evernym.sdk.vcx.api;
+package com.evernym.sdk.vcx.connection;
+
+/**
+ * Created by abdussami on 05/06/18.
+ */
+
 
 import android.util.Log;
 
@@ -14,17 +19,17 @@ import java9.util.concurrent.CompletableFuture;
  * Created by abdussami on 03/06/18.
  */
 
-public class Connection extends VcxJava.API{
+public class ConnectionApi extends VcxJava.API{
     public enum State
     {
-                None,
-                initialized,
-                offer_sent,
-                request_received,
-                accepted,
-                unfulfilled,
-                expired,
-                revoked,
+        None,
+        initialized,
+        offer_sent,
+        request_received,
+        accepted,
+        unfulfilled,
+        expired,
+        revoked,
     }
     private static String TAG = "JAVA_WRAPPER::API_CONNECTION";
 
@@ -142,4 +147,49 @@ public class Connection extends VcxJava.API{
         }
     };
 
+    private static Callback vcxConnectionSerializeCB = new Callback() {
+        public void callback(int command_handle, int err, String serialized_data){
+            CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(command_handle);
+            if (!checkCallback(future,err)) return;
+            String result = serialized_data;
+            future.complete(result);
+        }
+    };
+
+    public static CompletableFuture<String> connectionSerialize(int connectionHandle) throws VcxException {
+        ParamGuard.notNull(connectionHandle, "connectionHandle");
+        CompletableFuture<String> future = new CompletableFuture<String>();
+        int commandHandle = addFuture(future);
+
+        int result = LibVcx.api.vcx_connection_serialize(
+                commandHandle,
+                connectionHandle,
+                vcxConnectionSerializeCB
+        );
+        checkResult(result);
+        return future;
+    }
+
+    private static Callback vcxConnectionDeserializeCB = new Callback() {
+        public void callback(int command_handle, int err, int connection_handle){
+            CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
+            if (!checkCallback(future,err)) return;
+            Integer result = connection_handle;
+            future.complete(result);
+        }
+    };
+
+    public static CompletableFuture<Integer> connectionDeserialize(String connectionData) throws VcxException {
+        ParamGuard.notNull(connectionData, "connectionData");
+        CompletableFuture<Integer> future = new CompletableFuture<Integer>();
+        int commandHandle = addFuture(future);
+
+        int result = LibVcx.api.vcx_connection_deserialize(
+                commandHandle,
+                connectionData,
+                vcxConnectionDeserializeCB
+        );
+        checkResult(result);
+        return future;
+    }
 }
