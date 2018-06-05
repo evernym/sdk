@@ -112,3 +112,6 @@ mv /sdcard/Download/libz.so /data/vcxlib/
 cd /data/vcxlib
 chmod a+x debugvcx
 RUST_BACKTRACE=full ./debugvcx
+
+------------------------------------------------------------------------------------------------------------------------------------------------
+

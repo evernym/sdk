@@ -463,7 +463,7 @@ mod tests {
 
         cleanup_non_pool_tests(wallet_name);
         assert!(result.is_ok());
-        println!("{}", result.unwrap());
+        //println!("{}", result.unwrap());
     }
 
     #[test]

@@ -560,7 +560,7 @@ mod tests {
     extern "C" fn deserialize_cb(command_handle: u32, err: u32, connection_handle: u32) {
         assert_eq!(err, 0);
         assert!(connection_handle > 0);
-        info!("successfully called deserialize_cb");
+        println!("successfully called deserialize_cb");
         let string = r#"{"source_id":"test_vcx_connection_deserialialize_succeeds","pw_did":"8XFh8yBzrpJQmNyZzgoTqB","pw_verkey":"EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A","state":1,"uuid":"","endpoint":"","invite_detail":{"statusCode":"","connReqId":"","senderDetail":{"name":"","agentKeyDlgProof":{"agentDID":"","agentDelegatedKey":"","signature":""},"DID":"","logoUrl":"","verKey":""},"senderAgencyDetail":{"DID":"","verKey":"","endpoint":""},"targetName":"","statusMsg":""},"agent_did":"U5LXs4U7P9msh647kToezy","agent_vk":"FktSZg8idAVzyQZrdUppK6FTrfAzW3wWVzAjJAfdUvJq","their_pw_did":"","their_pw_verkey":""}"#;
 
         let new = to_string(connection_handle).unwrap();
