@@ -201,6 +201,8 @@ pub fn connect_register_provision(endpoint: &str,
         agent_did,
         agent_vk);
 
+    wallet::close_wallet()?;
+
     Ok(final_config.to_owned())
 }
 
