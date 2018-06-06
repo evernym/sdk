@@ -42,12 +42,12 @@ node('ubuntu') {
         vcx_nodejs = build('vcx-nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs-wrapper', 'vcx', '--no-cache')
         testNodeWrapper(vcx_nodejs)
 
-        createDeb(rust)
+        
         
         if (env.BRANCH_NAME == "master") {
             // create the debian of the library (just the libvcx.so file)
+            createDeb(rust)
             
-
             // create the npm deb 
             createNpmDeb(rust)
 
