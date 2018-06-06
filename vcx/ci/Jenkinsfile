@@ -5,7 +5,7 @@ def getUserUid() {
     return sh(returnStdout: true, script: 'id -u').trim()
 }
 
-def build(name, file, context='.', customParams = '--no-cache') {
+def build(name, file, context='.', customParams = '') {
     return docker.build("$name", "${customParams} --build-arg uid=${getUserUid()} -f $file $context")
 }
 
@@ -15,7 +15,9 @@ node('ubuntu') {
             checkout scm
         }
         
-        rust = build('rust', 'vcx/ci/ubuntu.dockerfile', 'vcx')
+        stage ('Build Rust Image') {
+            rust = build('rust', 'vcx/ci/ubuntu.dockerfile', 'vcx')
+        }
        
         // update the versions in the toml file and package.json
         updateVersions(rust)     
