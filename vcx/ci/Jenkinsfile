@@ -221,6 +221,7 @@ def createNpmDeb(app){
                         // upload npm module
                         sh "find wrappers/node/ -type f -name 'vcx-*.tgz' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/agency_dev/upload -F file=@{} \\;"
                         sh "find wrappers/node/ -type f -name 'vcx-*.tgz' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/portal_dev/upload -F file=@{} \\;"
+                        sh "find wrappers/node/ -type f -name 'vcx-*.tgz' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/npm/upload -F file = @{} \\;"
 
                         // upload debian
                         sh "find . -type f -name 'vcx_*_amd64.deb' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/agency_dev/upload -F file=@{} \\;"
