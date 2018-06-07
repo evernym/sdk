@@ -31,7 +31,7 @@ node('ubuntu') {
 
         // test rust
         stage ('Testing Rust'){
-	        testRust(rust)
+	        // testRust(rust)
         }
         
         // update the so file to have version
@@ -46,11 +46,11 @@ node('ubuntu') {
         }
         // test python wrapper, the image must be built after the libindy image build, and must be --no-cache
         stage ('Build Python Image') {
-            vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', 'vcx', '--no-cache')
+            // vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', 'vcx', '--no-cache')
         }
 
         stage ("Testing Python Wrapper"){
-            testPythonWrapper(vcx_python)
+            // testPythonWrapper(vcx_python)
         }
 
         // test nodejs wrapper, the image must be built after  the libindy image build, and must be --no-cache
@@ -61,6 +61,10 @@ node('ubuntu') {
 
         stage ('Test Node Wrapper'){
             testNodeWrapper(vcx_nodejs)
+        }
+
+        stage ('Upload Npm To Private Repo') {
+            uploadPrivateNpm(vcx_nodejs)
         }
         
         if (env.BRANCH_NAME == "master") {
@@ -88,7 +92,14 @@ node('ubuntu') {
         step([$class: 'WsCleanup'])
     }
 }
-
+def uploadPrivateNpm(envn) {
+    envn.inside {
+        withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
+            // upload npm module
+            sh "find wrappers/node/ -type f -name 'vcx-*.tgz' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/npm/upload -F file = @{} \\;"                      
+        }
+    }
+}
 // This runs a python script that extracts version information out of the Cargo.toml file.
 def getVcxVersion(envn){
     envn.inside {
@@ -221,7 +232,6 @@ def createNpmDeb(app){
                         // upload npm module
                         sh "find wrappers/node/ -type f -name 'vcx-*.tgz' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/agency_dev/upload -F file=@{} \\;"
                         sh "find wrappers/node/ -type f -name 'vcx-*.tgz' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/portal_dev/upload -F file=@{} \\;"
-                        sh "find wrappers/node/ -type f -name 'vcx-*.tgz' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/npm/upload -F file = @{} \\;"
 
                         // upload debian
                         sh "find . -type f -name 'vcx_*_amd64.deb' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/agency_dev/upload -F file=@{} \\;"
