@@ -86,6 +86,27 @@ allprojects {
         jcenter()
     }
 }
+//task uploadToKraken {
+////    curl -u <username> -X POST -F file=@./<PATH_TO_FILE> https://kraken.corp.evernym.com/repo/android/upload
+//    project(':shared').aar.outputs.files.getFiles()
+//    ['curl', '-u', '"abdus.sami"', "-F" , "\"file=@./<PATH_TO_FILE> \"" ,  "\"https://kraken.corp.evernym.com/repo/android/upload\""].execute()
+//
+//}
+
+//task copyFiles(type: Copy) {
+//    from 'build/outputs/aar/vcx-release.aar'
+//    into "$buildDir/target/aar"
+//    rename 'vcx-release.aar', 'vcx-${fullVersionName()}.aar'
+//
+//}
+//
+//task uploadToKraken(type:Exec) {
+//    executable "/bin/sh"
+//    args "-c", "curl --insecure -u abdus.sami -X POST -F file=@$buildDir/outputs/aar/vcx-release.aar https://kraken.corp.evernym.com/repo/android/upload"
+//}
+//copyFiles.dependsOn(assemble)
+//uploadToKraken.dependsOn(assemble)
+
 dependencies {
 
     implementation 'net.java.dev.jna:jna:4.5.0@aar'
@@ -97,25 +118,25 @@ dependencies {
     testImplementation group: 'org.json', name: 'json', version:'20160810'
 
 }
-publishing {
-    publications {
-        mavenAar(MavenPublication) {
-            groupId 'com.evernym.sdk'
-            artifactId 'vcx'
-            version "${fullVersionName()}"
-
-            from components.android
-        }
-    }
-    repositories {
-        maven {
-            credentials {
-                username 'admin'
-                password 'password'
-            }
-            // change to point to your repo, e.g. http://my.org/repo
-
-            url "http://localhost:8085/artifactory/gradle-dev-local/"
-        }
-    }
-}
+//publishing {
+//    publications {
+//        mavenAar(MavenPublication) {
+//            groupId 'com.evernym.sdk'
+//            artifactId 'vcx'
+//            version "${fullVersionName()}"
+//
+//            from components.android
+//        }
+//    }
+//    repositories {
+//        maven {
+//            credentials {
+//                username 'admin'
+//                password 'password'
+//            }
+//            // change to point to your repo, e.g. http://my.org/repo
+//
+//            url "http://localhost:8085/artifactory/gradle-dev-local/"
+//        }
+//    }
+//}
