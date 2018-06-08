@@ -4,8 +4,11 @@ fn main() {
     let target = env::var("TARGET").unwrap();
     println!("target={}", target);
 
-    //println!("cargo:rustc-link-search=native=/Users/androidbuild1/forge/work/code/evernym/sdk/.macosbuild/NDK/x86/i686-linux-android/lib");
+    //println!("cargo:rustc-link-search=native=/Users/androidbuild1/forge/work/code/evernym/sdk/.macosbuild/NDK/x86/sysroot/usr/lib");
     //println!("cargo:rustc-link-lib=static=stdc++");
+
+    println!("cargo:rustc-link-search=native=/Users/androidbuild1/forge/work/code/evernym/sdk/.macosbuild/NDK/x86/i686-linux-android/lib");
+    println!("cargo:rustc-link-lib=static=stdc++");
     //println!("cargo:rustc-link-lib=dylib=c++_shared");
     // println!("cargo:rustc-link-lib=static=c++_static");
     // println!("cargo:rustc-link-lib=static=c++abi");
@@ -19,7 +22,7 @@ fn main() {
     // Including libraries as static .a files -- this does not work quiet yet
     println!("cargo:rustc-link-search=native=/Users/androidbuild1/forge/work/code/evernym/sdk/vcx/libvcx/target/{}/release", target);
     println!("cargo:rustc-link-lib=static=vcx");
-    println!("cargo:rustc-link-search=native=/Users/norm/Library/Android/sdk/ndk-bundle/platforms/android-23/arch-x86/usr/lib");
+    println!("cargo:rustc-link-search=native=/Users/norm/Library/Android/sdk/ndk-bundle/platforms/android-24/arch-x86/usr/lib");
     println!("cargo:rustc-link-lib=static=c");
     //println!("cargo:rustc-link-lib=static=m");
     //println!("cargo:rustc-link-lib=dylib=c++_shared");
