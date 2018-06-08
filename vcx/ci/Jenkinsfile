@@ -1,12 +1,12 @@
 #!groovy
 
-pipeline()
+buildArchs()
 
 //'Android' : { androidBuild() },
 //'IOS' : { iosBuild() }
 
-def pipeline() {
-    stage('Architecture') {
+def buildArchs() {
+    stage('Architectures') {
         parallel([
             'Main' : { mainBuild() }
         ])
