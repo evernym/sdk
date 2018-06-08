@@ -69,7 +69,6 @@ do
 done
 
 
-
 cd $WORK_DIR/libzmq-android/zmq
 
 if [ ! -f "zeromq-4.2.5.tar.gz" ] ; then
@@ -108,7 +107,7 @@ do
     RANLIB=${TOOLCHAIN_DIR}/bin/${CROSS_COMPILE}-ranlib CFLAGS="-I/home/sodium_user/libzmq_${TARGET_ARCH}/include -D__ANDROID_API__=${TARGET_API} -fPIC" \
     CXXFLAGS="-I/home/sodium_user/libzmq_${TARGET_ARCH}/include -D__ANDROID_API__=${TARGET_API} -fPIC" \
     LDFLAGS="-L/home/sodium_user/libzmq_${TARGET_ARCH}/lib -D__ANDROID_API__=${TARGET_API}" LIBS="-lc -lgcc -ldl" \
-    --host=${CROSS_COMPILE} --prefix=/home/sodium_user/libzmq_${TARGET_ARCH} --with-libsodium=${SODIUM_LIB_DIR} \
+    --host=${CROSS_COMPILE} --prefix=$WORK_DIR/libzmq-android/zmq/libzmq_${TARGET_ARCH} --with-libsodium=${SODIUM_LIB_DIR} \
     --without-docs --enable-static --with-sysroot=${TOOLCHAIN_DIR}/sysroot
     make
     make install
@@ -118,8 +117,6 @@ do
     #cp libzmq_${TARGET_ARCH}.zip /data/zmq
     echo "libzmq android build for ${target_arch} successful"
 done
-
-
 
 #chmod a+x build.sh
 #./build.sh arm 16 arm-linux-androideabi
