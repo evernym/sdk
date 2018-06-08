@@ -8,7 +8,8 @@ buildArchs()
 def buildArchs() {
     stage('Architectures') {
         parallel([
-            'Main' : { mainBuild() }
+            'Main' : { mainBuild() },
+            'Android': { androidBuild() },
         ])
     }
 }
@@ -21,6 +22,20 @@ def build(name, file, context='.', customParams = '') {
     return docker.build("$name", "${customParams} --build-arg uid=${getUserUid()} -f $file $context")
 }
 
+def androidBuild() {
+    node('ubuntu') {
+        try {
+            stage ('Build Rust Image For Android') {
+                rust = build('rust', 'vcx/ci/ubuntu.dockerfile', 'vcx')
+            }
+
+            stage('Updating Versions for Android') {
+                updateVersions(rust)
+            }
+        }
+
+    }
+}
 def mainBuild() {
     node('ubuntu') {
         try {
