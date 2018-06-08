@@ -49,3 +49,4 @@ cp $VCX_SDK/vcx/wrappers/java/android/vcxtest/app/jni/arm64/*.so ./jni/arm64
 cp $VCX_SDK/vcx/wrappers/java/android/vcxtest/app/jni/x86_64/*.so ./jni/x86_64
 zip -r vcx_1.0.0-${DATETIME}_all.aar *
 curl --insecure -u normjarvis -X POST -F file=@./vcx_1.0.0-${DATETIME}_all.aar https://kraken.corp.evernym.com/repo/android/upload
+sudo cp ./vcx_1.0.0-${DATETIME}_all.aar  /usr/local/var/www/download/android
