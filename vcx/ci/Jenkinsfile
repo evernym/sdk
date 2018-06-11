@@ -31,7 +31,7 @@ node('ubuntu') {
 
         // test rust
         stage ('Testing Rust'){
-	        // testRust(rust)
+            testRust(rust)
         }
         
         // update the so file to have version
@@ -50,7 +50,7 @@ node('ubuntu') {
         }
 
         stage ("Testing Python Wrapper"){
-            // testPythonWrapper(vcx_python)
+            testPythonWrapper(vcx_python)
         }
 
         // test nodejs wrapper, the image must be built after  the libindy image build, and must be --no-cache
