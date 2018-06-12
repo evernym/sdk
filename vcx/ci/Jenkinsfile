@@ -102,7 +102,7 @@ node('ubuntu') {
 }
 
 def getRevisionFromGit() {
-    return sh "git log --pretty=format:'%h' -n 1"
+    return sh 'git log --pretty=format:\'%h\' -n 1'
 }
 
 def addCert(envn) {
