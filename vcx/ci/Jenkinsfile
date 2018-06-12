@@ -65,7 +65,14 @@ node('ubuntu') {
 
         // create the npm deb
         stage('Create/Rename Npm Tgz File') {
-            npmFilename = createNpmTgz(rust, getVcxVersion(vcx_python).replaceAll("//s",""), "amd64", "vcx")
+            npmFilename = createNpmTgz(rust, getVcxVersion(vcx_python).replaceAll("//s","") + "+" + getRevision(), "amd64", "vcx")
+            sh "++++++++++++++++"
+            sh "++++++++++++++++"
+            sh "++++++++++++++++"
+            sh "echo npmFilename"
+            sh "++++++++++++++++"
+            sh "++++++++++++++++"
+            sh "++++++++++++++++"
         }
         
         if (env.BRANCH_NAME == "master") {
@@ -92,6 +99,10 @@ node('ubuntu') {
     } finally {
         step([$class: 'WsCleanup'])
     }
+}
+
+def getRevisionFromGit() {
+    return sh "git log --pretty=format:'%h' -n 1"
 }
 
 def addCert(envn) {
