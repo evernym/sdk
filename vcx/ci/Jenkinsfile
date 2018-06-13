@@ -11,11 +11,9 @@ pipeline()
 //'IOS' : { ios() }
 
 def pipeline() {
-    stage('Architectures') {
-        parallel([
-            'Main' : { ubuntuTest() }
-        ])
-    }
+    parallel([
+        'Main' : { ubuntuTest() }
+    ])
 }
 
 def getUserUid() {
