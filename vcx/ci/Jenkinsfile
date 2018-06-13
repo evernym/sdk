@@ -37,7 +37,7 @@ node('ubuntu') {
 
         // test rust
         stage ('Testing Rust'){
-            // testRust(rust)
+            testRust(rust)
         }
         
         // update the so file to have version
