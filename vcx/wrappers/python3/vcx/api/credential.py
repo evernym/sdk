@@ -118,7 +118,6 @@ class Credential(VcxStateful):
                       Credential.get_payment_info.cb)
         return json.loads(data.decode())
 
-
     async def get_payment_txn(self):
         if not hasattr(Credential.get_payment_txn, "cb"):
             self.logger.debug("vcx_credential_get_payment_txn: Creating callback")
