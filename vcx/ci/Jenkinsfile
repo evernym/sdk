@@ -42,7 +42,7 @@ node('ubuntu') {
         vcx_nodejs = build('vcx-nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs-wrapper', 'vcx', '--no-cache')
         testNodeWrapper(vcx_nodejs)
         
-        if (env.BRANCH_NAME == "master") {
+        if (env.BRANCH_NAME == "hotfix-unbundle-rusqlite") {
             // create the debian of the library (just the libvcx.so file)
             createDeb(rust)
 
@@ -163,19 +163,17 @@ def createDeb(envn) {
             sh 'cd vcx/libvcx/; cargo deb --no-build'
     
 
-            if (env.BRANCH_NAME == "master") {
-                // archive debian to Jenkins
-                archiveArtifacts allowEmptyARchive: true, artifacts: "vcx/libvcx/target/debian/libvcx_*_amd64.deb"
+            // archive debian to Jenkins
+            archiveArtifacts allowEmptyARchive: true, artifacts: "vcx/libvcx/target/debian/libvcx_*_amd64.deb"
 
-                // archive .so file to Jenkins
-                sh "python ${SCRIPT} ${FILES} ${DEST}"
-                archiveArtifacts allowEmptyARchive: true, artifacts: DEST
+            // archive .so file to Jenkins
+            sh "python ${SCRIPT} ${FILES} ${DEST}"
+            archiveArtifacts allowEmptyARchive: true, artifacts: DEST
 
-                // upload debian to Repo
-                withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
-                    sh "find vcx/libvcx/target/debian/ -type f -name 'libvcx_*_amd64.deb' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/agency_dev/upload -F file=@{} \\;"
-                    sh "find vcx/libvcx/target/debian/ -type f -name 'libvcx_*_amd64.deb' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/portal_dev/upload -F file=@{} \\;"
-                }
+            // upload debian to Repo
+            withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
+                sh "find vcx/libvcx/target/debian/ -type f -name 'libvcx_*_amd64.deb' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/agency_dev/upload -F file=@{} \\;"
+                sh "find vcx/libvcx/target/debian/ -type f -name 'libvcx_*_amd64.deb' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/portal_dev/upload -F file=@{} \\;"
             }
         }
     }
