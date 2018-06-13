@@ -5,15 +5,17 @@ def vcx_python
 def libindy
 def vcx_nodejs
 
-pipeline()
+testing()
 
 //'Android' : { androidBuild() }
 //'IOS' : { ios() }
 
-def pipeline() {
-    parallel([
-        'Main' : { ubuntuTest() }
-    ])
+def testing() {
+    stage('Testing') {
+        parallel([
+            'Main' : { ubuntuTest() }
+        ])
+    }
 }
 
 def getUserUid() {
