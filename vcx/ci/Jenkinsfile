@@ -7,14 +7,13 @@ def vcx_nodejs
 
 pipeline()
 
-//'Android' : { android() },
+//'Android' : { androidBuild() }
 //'IOS' : { ios() }
 
 def pipeline() {
     stage('Architectures') {
         parallel([
             'Main' : { ubuntuTest() }
-            'Android' : { androidBuild() }
         ])
     }
 }
@@ -46,7 +45,8 @@ def ubuntuTest() {
                 createDeb(rust)
                 createNpmDeb(rust, "*_amd64.tgz")
                 renameAndUploadNpmTgz(rust, "vcx")
-                createPythonArtifact(vcx_python, getVcxVersion(vcx_python))
+                createPtyhonArtifact(vcx_python, getVcxVersion(vcx_python))
+
             } catch (Exception ex) {
                 currentBuild.result = "FAILED"
                 if (env.BRANCH_NAME == "master") {
@@ -59,7 +59,28 @@ def ubuntuTest() {
         }
     }
 }
-def vcxSDK() {
+
+def androidBuild() {
+    node('ubuntu') {
+        stage('Android Build') {
+            try {
+                rust = build('rust', 'vcx/ci/ubuntu.dockerfile', 'vcx')
+                buildAndroidArtifacts(rust)
+            } catch (Exception ex) {
+                currentBuild.result = "FAILED"
+                if (env.BRANCH_NAME == "master") {
+                    fail()
+                }
+                echo "$ex error"
+            } finally {
+                step([$class: 'WsCleanup'])
+            }
+
+        }
+    }
+}
+
+def vcxSdk() {
     node('ubuntu') {
         try {
             stage ('Checkout'){
@@ -127,7 +148,7 @@ def vcxSDK() {
 
                 // create pip installable artifact
                 stage ('Building Python Artifact') {
-                    createPythonArtifact(vcx_python, getVcxVersion(vcx_python))
+                    createPtyhonArtifact(vcx_python, getVcxVersion(vcx_python))
                 }
             }
 
@@ -142,16 +163,7 @@ def vcxSDK() {
         }
     }
 }
-node('ubuntu') {
 
-}
-
-def buildAndroidArtifacts(envn) {
-    envn.inside {
-        ANDROID_SCRIPT = 'vcx/ci/scripts/androidBuild.sh'
-        sh "${ANDROID_SCRIPT}"
-    }
-}
 
 def getRevisionFromGit() {
     revision = sh 'git log --pretty=format:\'%h\' -n 1'
@@ -209,7 +221,7 @@ def testRust(envn) {
 }
 
 // Creates a tar.gz file that is installable from pip.
-def createPythonArtifact(envn, version) {
+def createPtyhonArtifact(envn, version) {
     dir('vcx/wrappers/python3'){
         sh 'echo Building Python Artifact'
         withEnv(["VCX_VERSION=${version}"]) {
@@ -342,5 +354,10 @@ def fail() {
     slackSend message
 }
 
-
+def buildAndroidArtifacts(envn) {
+    envn.inside {
+        ANDROID_SCRIPT = 'vcx/ci/scripts/androidBuild.sh'
+        sh "${ANDROID_SCRIPT}"
+    }
+}
 
