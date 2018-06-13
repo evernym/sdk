@@ -65,6 +65,7 @@ def androidBuild() {
     node('ubuntu') {
         stage('Android Build') {
             try {
+                checkout scm
                 rust = build('rust', 'vcx/ci/ubuntu.dockerfile', 'vcx')
                 buildAndroidArtifacts(rust)
             } catch (Exception ex) {
