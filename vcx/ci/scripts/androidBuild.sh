@@ -9,7 +9,7 @@ setup() {
     echo "Working Directory: ${WORKDIR}"
     echo "echo RM-------------RM" 
     pwd 
-    echo $(ls -al )
+    echo $(ls -al vcx)
     sh "echo RM-------------RM"
 
 	#curl https://sh.rustup.rs -sSf | sh -s -- -y
