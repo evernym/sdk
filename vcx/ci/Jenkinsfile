@@ -13,7 +13,7 @@ testing()
 def testing() {
     stage('Testing') {
         parallel([
-            'Main' : { ubuntuTest() },
+            //'Main' : { ubuntuTest() },
             'android': { androidBuild() }
         ])
     }
