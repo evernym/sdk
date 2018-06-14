@@ -358,7 +358,7 @@ def fail() {
 
 def buildAndroidArtifacts(envn) {
     envn.inside {
-        ANDROID_SCRIPT = 'vcx/ci/scripts/androidBuild.sh'
+        ANDROID_SCRIPT = 'vcx/ci/scripts/androidBuild.sh arm'
         sh "${ANDROID_SCRIPT}"
     }
 }
