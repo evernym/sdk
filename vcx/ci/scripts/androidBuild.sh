@@ -7,16 +7,6 @@ WORKDIR=${PWD}
 
 setup() {
     echo "Working Directory: ${WORKDIR}"
-    #echo "echo RM-------------RM" 
-    #echo $(ls ~/.cargo)
-    #echo $(ls ~/.cargo/bin)
-    #echo ${PATH}
-    #pwd 
-    #echo $(ls vcx/libvcx)
-    #echo $(ls vcx/libvcx/build_scripts)
-    #echo $(ls vcx/libvcx/build_scripts/android)
-    #echo $(ls vcx/libvcx/build_scripts/android/vcx)
-    #echo RM-------------RM
 
     export PATH=${HOME}/.cargo/bin:${PATH}
     echo ${PATH}
@@ -129,13 +119,6 @@ build_libnullpay() {
 }
 
 build_vcx() {
-    echo "VCX-------------VCX" 
-    pwd 
-    echo $(ls ../vcx/libvcx)
-    echo $(ls ../vcx/libvcx/build_scripts)
-    echo $(ls ../vcx/libvcx/build_scripts/android)
-    echo $(ls ../vcx/libvcx/build_scripts/android/vcx)
-    echo "VCX-------------VCX" 
     # Path to vcx if script is run locally
     #LIBVCX_PATH=../../../libvcx/build_scripts/android/vcx/
     # This is the path to vcx in the Jenkins pipeline
@@ -156,10 +139,6 @@ build_vcx() {
     ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} openssl_${ARCH} libsodium_${ARCH} libzmq_${ARCH} libindy_${ARCH} libnullpay_${ARCH}
     popd
     cp -rf ${LIBVCX_PATH}libvcx_${ARCH} .
-    echo "LIBVCX-------------LIBVCX" 
-    echo $(ls ./libvcx_${ARCH})
-    echo $(ls ${LIBVCX_PATH}/libvcx_${ARCH})
-    echo "LIBVCX-------------LIBVCX" 
 }
 
 package_vcx() {
@@ -169,6 +148,6 @@ package_vcx() {
 
 setup $1
 
-#build_libindy $1
-#build_libnullpay $1
+build_libindy $1
+build_libnullpay $1
 build_vcx $1
