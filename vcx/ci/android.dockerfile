@@ -31,7 +31,8 @@ RUN apt-get update -y && apt-get install -y \
     unzip \
     git \
     libtool \
-    libzmq3-dev
+    libzmq3-dev \
+    python3
 
 # Install Rust
 ENV RUST_ARCHIVE=rust-1.25.0-x86_64-unknown-linux-gnu.tar.gz
