@@ -7,6 +7,7 @@ WORKDIR=${PWD}
 
 setup() {
     echo "Working Directory: ${WORKDIR}"
+    echo $(whoami)
 	#sudo apt-get update
 	#sudo apt-get install -qq -y zip unzip git libtool libzmq3-dev
 
@@ -138,6 +139,11 @@ build_vcx() {
     ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} openssl_${ARCH} libsodium_${ARCH} libzmq_${ARCH} libindy_${ARCH} libnullpay_${ARCH}
     popd
     cp -rf ${LIBVCX_PATH}libvcx_${ARCH} .
+}
+
+package_vcx() {
+    ANDROID_JNI_LIB=../../../wrappers/java/vcx/src/main/jniLibs/
+    mkdir -p ${ANDROID_JNI_LIB}
 }
 
 setup $1

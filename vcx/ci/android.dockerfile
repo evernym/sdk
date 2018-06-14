@@ -46,6 +46,10 @@ RUN apt-get update -y && apt-get install -y \
 #    && tar -C /rust -xzf $RUST_ARCHIVE --strip-components=1 \
 #    && rm $RUST_ARCHIVE \
 #    && ./install.sh
-
+RUN echo "**********************"
+RUN whoami
+RUN echo "**********************"
+#USER name_of_user 
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 RUN export PATH=${HOME}/.cargo/bin:${PATH}
+#RUN vcx/ci/scripts/androidBuild.sh arm
