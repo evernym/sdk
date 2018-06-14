@@ -120,7 +120,8 @@ build_libnullpay() {
 }
 
 build_vcx() {
-    LIBVCX_PATH=../../../libvcx/build_scripts/android/vcx/
+    #LIBVCX_PATH=../../../libvcx/build_scripts/android/vcx/
+    LIBVCX_PATH=vcx/libvcx/build_scripts/android/vcx/
     cp -rf libindy_${ARCH} ${LIBVCX_PATH}
     cp -rf libnullpay_${ARCH} ${LIBVCX_PATH}
     if [ ! -d libindy_${ARCH} ]; then
