@@ -11,8 +11,6 @@ setup() {
     #echo $(ls ~/.cargo)
     #echo $(ls ~/.cargo/bin)
     #echo ${PATH}
-    #export PATH=${HOME}/.cargo/bin:${PATH}
-    #echo ${PATH}
     #pwd 
     #echo $(ls vcx/libvcx)
     #echo $(ls vcx/libvcx/build_scripts)
@@ -20,6 +18,8 @@ setup() {
     #echo $(ls vcx/libvcx/build_scripts/android/vcx)
     #echo RM-------------RM
 
+    export PATH=${HOME}/.cargo/bin:${PATH}
+    echo ${PATH}
 	if [ ! -d runtime_android_build ]; then
         mkdir runtime_android_build
     fi
@@ -129,10 +129,11 @@ build_libnullpay() {
     pushd ${LIBNULLPAY_PATH}
     ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} ${LIBINDY_BIN}
     popd
-    echo "build_libnullpay-------------build_libnullpay" 
-    echo $(ls ${LIBNULLPAY_PATH}/libnullpay_${ARCH})
-    echo "build_libnullpay-------------build_libnullpay" 
     cp -rf ${LIBNULLPAY_PATH}/libnullpay_${ARCH} .
+    echo "LIBNULLPAY-------------LIBNULLPAY" 
+    echo $(ls ./libnullpay_${ARCH})
+    echo $(ls ${LIBNULLPAY_PATH}/libnullpay_${ARCH})
+    echo "LIBNULLPAY-------------LIBNULLPAY" 
 }
 
 build_vcx() {
@@ -161,6 +162,10 @@ build_vcx() {
     ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} openssl_${ARCH} libsodium_${ARCH} libzmq_${ARCH} libindy_${ARCH} libnullpay_${ARCH}
     popd
     cp -rf ${LIBVCX_PATH}libvcx_${ARCH} .
+    echo "LIBVCX-------------LIBVCX" 
+    echo $(ls ./libvcx_${ARCH})
+    echo $(ls ${LIBVCX_PATH}/libvcx_${ARCH})
+    echo "LIBVCX-------------LIBVCX" 
 }
 
 package_vcx() {
@@ -171,5 +176,5 @@ package_vcx() {
 setup $1
 
 build_libindy $1
-#build_libnullpay $1
-#build_vcx $1
+build_libnullpay $1
+build_vcx $1
