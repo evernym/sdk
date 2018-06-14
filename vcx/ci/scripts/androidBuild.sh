@@ -10,6 +10,9 @@ setup() {
     echo "echo RM-------------RM" 
     echo $(ls ~/.cargo)
     echo $(ls ~/.cargo/bin)
+    echo ${PATH}
+    export PATH=${HOME}/.cargo/bin:${PATH}
+    echo ${PATH}
     pwd 
     echo $(ls vcx/libvcx)
     echo $(ls vcx/libvcx/build_scripts)
