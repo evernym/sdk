@@ -35,17 +35,17 @@ RUN apt-get update -y && apt-get install -y \
     python3
 
 # Install Rust
-ENV RUST_ARCHIVE=rust-1.25.0-x86_64-unknown-linux-gnu.tar.gz
-ENV RUST_DOWNLOAD_URL=https://static.rust-lang.org/dist/$RUST_ARCHIVE
+#ENV RUST_ARCHIVE=rust-1.25.0-x86_64-unknown-linux-gnu.tar.gz
+#ENV RUST_DOWNLOAD_URL=https://static.rust-lang.org/dist/$RUST_ARCHIVE
 
-RUN mkdir -p /rust
-WORKDIR /rust
+#RUN mkdir -p /rust
+#WORKDIR /rust
 
-RUN curl -fsOSL $RUST_DOWNLOAD_URL \
-    && curl -s $RUST_DOWNLOAD_URL.sha256 | sha256sum -c - \
-    && tar -C /rust -xzf $RUST_ARCHIVE --strip-components=1 \
-    && rm $RUST_ARCHIVE \
-    && ./install.sh
+#RUN curl -fsOSL $RUST_DOWNLOAD_URL \
+#    && curl -s $RUST_DOWNLOAD_URL.sha256 | sha256sum -c - \
+#    && tar -C /rust -xzf $RUST_ARCHIVE --strip-components=1 \
+#    && rm $RUST_ARCHIVE \
+#    && ./install.sh
 
-#RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
-#RUN export PATH=${HOME}/.cargo/bin:${PATH}
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+RUN export PATH=${HOME}/.cargo/bin:${PATH}
