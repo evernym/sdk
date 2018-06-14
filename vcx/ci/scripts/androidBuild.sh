@@ -136,6 +136,7 @@ build_vcx() {
     echo $(ls ../vcx/libvcx/build_scripts/android)
     echo $(ls ../vcx/libvcx/build_scripts/android/vcx)
     echo "VCX-------------VCX" 
+    # Path to vcx if script is run locally
     #LIBVCX_PATH=../../../libvcx/build_scripts/android/vcx/
     # This is the path to vcx in the Jenkins pipeline
     LIBVCX_PATH=../vcx/libvcx/build_scripts/android/vcx/
@@ -168,6 +169,6 @@ package_vcx() {
 
 setup $1
 
-build_libindy $1
-build_libnullpay $1
+#build_libindy $1
+#build_libnullpay $1
 build_vcx $1
