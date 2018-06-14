@@ -7,6 +7,10 @@ WORKDIR=${PWD}
 
 setup() {
     echo "Working Directory: ${WORKDIR}"
+    echo "echo RM-------------RM" 
+    pwd 
+    echo $(ls -al )
+    sh "echo RM-------------RM"
 
 	#curl https://sh.rustup.rs -sSf | sh -s -- -y
 	#export PATH=${HOME}/.cargo/bin:${PATH}
