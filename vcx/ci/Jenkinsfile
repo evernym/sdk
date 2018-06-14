@@ -66,7 +66,7 @@ def androidBuild() {
         stage('Android Build') {
             try {
                 checkout scm
-                rust = build('rust', 'vcx/ci/ubuntu.dockerfile', 'vcx')
+                rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
                 buildAndroidArtifacts(rust)
             } catch (Exception ex) {
                 currentBuild.result = "FAILED"
