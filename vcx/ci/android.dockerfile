@@ -4,14 +4,7 @@ FROM ubuntu:16.04
 ARG uid=1000
 
 
-# Update environment
-# JRE installation and gcc
 RUN apt-get update -y && apt-get install -y \
-    zip \
-    unzip \
-    git \
-    libtool \
-    libzmq3-dev \
     gcc \
     pkg-config \
     build-essential \
@@ -24,8 +17,9 @@ RUN apt-get update -y && apt-get install -y \
     cmake \
     apt-transport-https \
     ca-certificates \
-    #debhelper \
+    debhelper \
     wget \
+    git \
     curl \
 	libffi-dev \
     ruby \
@@ -33,6 +27,11 @@ RUN apt-get update -y && apt-get install -y \
 	sudo \
     rubygems \
     libzmq5 \
+    zip \
+    unzip \
+    git \
+    libtool \
+    libzmq3-dev
 
 # Install Rust
 ENV RUST_ARCHIVE=rust-1.25.0-x86_64-unknown-linux-gnu.tar.gz
