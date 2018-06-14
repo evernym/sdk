@@ -7,15 +7,10 @@ WORKDIR=${PWD}
 
 setup() {
     echo "Working Directory: ${WORKDIR}"
-    echo $(whoami)
-    echo ${HOME}
-    echo $(ls ${HOME}/.cargo/bin)
-	#sudo apt-get update
-	#sudo apt-get install -qq -y zip unzip git libtool libzmq3-dev
 
-	curl https://sh.rustup.rs -sSf | sh -s -- -y
-	export PATH=${HOME}/.cargo/bin:${PATH}
-    echo $(ls ${HOME}/.cargo/bin)
+	#curl https://sh.rustup.rs -sSf | sh -s -- -y
+	#export PATH=${HOME}/.cargo/bin:${PATH}
+
 	if [ ! -d runtime_android_build ]; then
         mkdir runtime_android_build
     fi
