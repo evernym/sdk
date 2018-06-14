@@ -8,6 +8,7 @@ WORKDIR=${PWD}
 setup() {
     echo "Working Directory: ${WORKDIR}"
     echo $(whoami)
+    echo ${HOME}
     echo $(ls ${HOME}/.cargo/bin)
 	#sudo apt-get update
 	#sudo apt-get install -qq -y zip unzip git libtool libzmq3-dev
