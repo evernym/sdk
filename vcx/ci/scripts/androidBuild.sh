@@ -7,18 +7,18 @@ WORKDIR=${PWD}
 
 setup() {
     echo "Working Directory: ${WORKDIR}"
-    echo "echo RM-------------RM" 
-    echo $(ls ~/.cargo)
-    echo $(ls ~/.cargo/bin)
-    echo ${PATH}
-    export PATH=${HOME}/.cargo/bin:${PATH}
-    echo ${PATH}
-    pwd 
-    echo $(ls vcx/libvcx)
-    echo $(ls vcx/libvcx/build_scripts)
-    echo $(ls vcx/libvcx/build_scripts/android)
-    echo $(ls vcx/libvcx/build_scripts/android/vcx)
-    echo RM-------------RM
+    #echo "echo RM-------------RM" 
+    #echo $(ls ~/.cargo)
+    #echo $(ls ~/.cargo/bin)
+    #echo ${PATH}
+    #export PATH=${HOME}/.cargo/bin:${PATH}
+    #echo ${PATH}
+    #pwd 
+    #echo $(ls vcx/libvcx)
+    #echo $(ls vcx/libvcx/build_scripts)
+    #echo $(ls vcx/libvcx/build_scripts/android)
+    #echo $(ls vcx/libvcx/build_scripts/android/vcx)
+    #echo RM-------------RM
 
 	if [ ! -d runtime_android_build ]; then
         mkdir runtime_android_build
@@ -106,10 +106,11 @@ build_libindy() {
     pushd ${LIBINDY_PATH}
     ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} openssl_${ARCH} libsodium_${ARCH} libzmq_${ARCH}
     popd
-    echo "build_libindy-------------build_libindy" 
-    echo $(ls ${LIBINDY_PATH}/libnullpay_${ARCH})
-    echo "build_libindy-------------build_libindy" 
     cp -rf ${LIBINDY_PATH}/libindy_${ARCH} .
+    echo "LIBINDY-------------LIBINDY" 
+    echo $(ls ${LIBINDY_PATH}/libindy_${ARCH})
+    echo $(ls ./libindy_${ARCH})
+    echo "LIBINDY-------------LIBINDY" 
     if [ ! -d toolchains/linux ]; then
         echo "Using toolchains for other builds"
         cp -rf ${LIBINDY_PATH}/toolchains .
