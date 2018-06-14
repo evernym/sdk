@@ -37,36 +37,40 @@ node('ubuntu') {
 
         // test rust
         stage ('Testing Rust'){
-            testRust(rust)
+            // testRust(rust)
+        }
+
+        stage ('Building libvcx Debian in Docker') {
+            sh "docker run -it --rm -v data:/data -v `pwd`:/vcx rust sh -c \"/vcx/ci/scripts/create-debian.sh\""
         }
         
         // update the so file to have version
         stage('Updating .so file version') {
-            updateSo(rust)
+            // updateSo(rust)
         }
         
         // image used as an intermediary, where the libvcx.so is placed into /usr/lib.  
         // This image must be built after the rust build and tests have been run.
         stage ('Build Libindy Image') {
-            libindy = build('libindy', 'vcx/ci/Dockerfile-libindy', 'vcx')
+            // libindy = build('libindy', 'vcx/ci/Dockerfile-libindy', 'vcx')
         }
         // test python wrapper, the image must be built after the libindy image build, and must be --no-cache
         stage ('Build Python Image') {
-            vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', 'vcx', '--no-cache')
+            // vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', 'vcx', '--no-cache')
         }
 
         stage ("Testing Python Wrapper"){
-            testPythonWrapper(vcx_python)
+            // testPythonWrapper(vcx_python)
         }
 
         // test nodejs wrapper, the image must be built after  the libindy image build, and must be --no-cache
         stage ('Build NodeJs Images') {
-            nodejs = build('nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs', 'vcx')
-            vcx_nodejs = build('vcx-nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs-wrapper', 'vcx', '--no-cache')
+            // nodejs = build('nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs', 'vcx')
+            // vcx_nodejs = build('vcx-nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs-wrapper', 'vcx', '--no-cache')
         }
 
         stage ('Test Node Wrapper'){
-            testNodeWrapper(vcx_nodejs)
+            // testNodeWrapper(vcx_nodejs)
         }       
 
         if (env.BRANCH_NAME == "master") {
