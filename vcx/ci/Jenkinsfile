@@ -14,7 +14,7 @@ def build(name, file, context='.', customParams = '') {
     return docker.build("$name", "${customParams} --build-arg uid=${getUserUid()} -f $file $context")
 }
 
-node('ubuntu') {
+node('ubuntu-04') {
     try {
         stage ('Checkout'){
             checkout scm
@@ -22,17 +22,17 @@ node('ubuntu') {
 
         
         stage ('Build Rust Image') {
-            rust = build('rust', 'vcx/ci/ubuntu.dockerfile', 'vcx')
+            // rust = build('rust', 'vcx/ci/ubuntu.dockerfile', 'vcx')
         }
        
         // update the versions in the toml file and package.json
         stage('Updating Versions') {
-            updateVersions(rust)     
+            // updateVersions(rust)     
         }
 
         // build and test the so file
         stage ('Building Libvcx.so'){
-            buildRust(rust)
+            // buildRust(rust)
         }
 
         // test rust
@@ -41,7 +41,11 @@ node('ubuntu') {
         }
 
         stage ('Building libvcx Debian in Docker') {
-            sh "docker run -it --rm -v data:/data -v `pwd`:/vcx rust sh -c \"/vcx/ci/scripts/create-debian.sh\""
+            def workspace = pwd()
+            sh "docker run --rm -v data:/data -v ${workspace}/vcx:/vcx --user=\"0\" rust sh -c \"/vcx/ci/scripts/create-debian.sh\""
+            sh "mkdir -p ${workspace}/backup"
+            sh "docker run --rm -v data:/data -v ${workspace}/backup:/backup --user=\"0\" rust sh -c \"cp -r /data/* /backup\""
+            sh "ls ${workspace}/backup"
         }
         
         // update the so file to have version
