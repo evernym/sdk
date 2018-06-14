@@ -50,6 +50,6 @@ RUN echo "**********************"
 RUN whoami
 RUN echo "**********************"
 USER 1001 
-RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
-RUN export PATH=${HOME}/.cargo/bin:${PATH}
+RUN sudo curl https://sh.rustup.rs -sSf | sh -s -- -y
+RUN sudo export PATH=${HOME}/.cargo/bin:${PATH}
 #RUN vcx/ci/scripts/androidBuild.sh arm
