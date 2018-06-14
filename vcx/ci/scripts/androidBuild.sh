@@ -8,6 +8,8 @@ WORKDIR=${PWD}
 setup() {
     echo "Working Directory: ${WORKDIR}"
     echo "echo RM-------------RM" 
+    echo $(ls ~/.cargo)
+    echo $(ls ~/.cargo/bin)
     pwd 
     echo $(ls vcx/libvcx)
     echo $(ls vcx/libvcx/build_scripts)
@@ -165,5 +167,5 @@ package_vcx() {
 setup $1
 
 build_libindy $1
-build_libnullpay $1
-build_vcx $1
+#build_libnullpay $1
+#build_vcx $1
