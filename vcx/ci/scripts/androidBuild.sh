@@ -9,7 +9,10 @@ setup() {
     echo "Working Directory: ${WORKDIR}"
     echo "echo RM-------------RM" 
     pwd 
-    echo $(ls vcx)
+    echo $(ls vcx/libvcx)
+    echo $(ls vcx/libvcx/build_scripts)
+    echo $(ls vcx/libvcx/build_scripts/android)
+    echo $(ls vcx/libvcx/build_scripts/android/vcx)
     echo RM-------------RM
 
 	#curl https://sh.rustup.rs -sSf | sh -s -- -y
