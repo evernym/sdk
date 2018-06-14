@@ -49,7 +49,7 @@ RUN apt-get update -y && apt-get install -y \
 RUN echo "**********************"
 RUN whoami
 RUN echo "**********************"
-#USER name_of_user 
+USER 1001 
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 RUN export PATH=${HOME}/.cargo/bin:${PATH}
 #RUN vcx/ci/scripts/androidBuild.sh arm
