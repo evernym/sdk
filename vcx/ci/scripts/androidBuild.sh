@@ -107,10 +107,6 @@ build_libindy() {
     ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} openssl_${ARCH} libsodium_${ARCH} libzmq_${ARCH}
     popd
     cp -rf ${LIBINDY_PATH}/libindy_${ARCH} .
-    echo "LIBINDY-------------LIBINDY" 
-    echo $(ls ${LIBINDY_PATH}/libindy_${ARCH})
-    echo $(ls ./libindy_${ARCH})
-    echo "LIBINDY-------------LIBINDY" 
     if [ ! -d toolchains/linux ]; then
         echo "Using toolchains for other builds"
         cp -rf ${LIBINDY_PATH}/toolchains .
@@ -130,22 +126,19 @@ build_libnullpay() {
     ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} ${LIBINDY_BIN}
     popd
     cp -rf ${LIBNULLPAY_PATH}/libnullpay_${ARCH} .
-    echo "LIBNULLPAY-------------LIBNULLPAY" 
-    echo $(ls ./libnullpay_${ARCH})
-    echo $(ls ${LIBNULLPAY_PATH}/libnullpay_${ARCH})
-    echo "LIBNULLPAY-------------LIBNULLPAY" 
 }
 
 build_vcx() {
-    echo "build_vcx-------------build_vcx" 
+    echo "VCX-------------VCX" 
     pwd 
-    echo $(ls vcx/libvcx)
-    echo $(ls vcx/libvcx/build_scripts)
-    echo $(ls vcx/libvcx/build_scripts/android)
-    echo $(ls vcx/libvcx/build_scripts/android/vcx)
-    echo "build_vcx-------------build_vcx" 
+    echo $(ls ../vcx/libvcx)
+    echo $(ls ../vcx/libvcx/build_scripts)
+    echo $(ls ../vcx/libvcx/build_scripts/android)
+    echo $(ls ../vcx/libvcx/build_scripts/android/vcx)
+    echo "VCX-------------VCX" 
     #LIBVCX_PATH=../../../libvcx/build_scripts/android/vcx/
-    LIBVCX_PATH=vcx/libvcx/build_scripts/android/vcx/
+    # This is the path to vcx in the Jenkins pipeline
+    LIBVCX_PATH=../vcx/libvcx/build_scripts/android/vcx/
     cp -rf libindy_${ARCH} ${LIBVCX_PATH}
     cp -rf libnullpay_${ARCH} ${LIBVCX_PATH}
     if [ ! -d libindy_${ARCH} ]; then
