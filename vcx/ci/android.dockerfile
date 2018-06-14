@@ -41,3 +41,5 @@ USER vcx
 # cargo deb for debian packaging of libvcx
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 RUN export PATH=${HOME}/.cargo/bin:${PATH}
+#RUN mkdir -p /sdk
+#COPY /home/rmarsh/dev/sdk /sdk

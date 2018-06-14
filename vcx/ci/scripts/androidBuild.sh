@@ -15,9 +15,6 @@ setup() {
     echo $(ls vcx/libvcx/build_scripts/android/vcx)
     echo RM-------------RM
 
-	#curl https://sh.rustup.rs -sSf | sh -s -- -y
-	#export PATH=${HOME}/.cargo/bin:${PATH}
-
 	if [ ! -d runtime_android_build ]; then
         mkdir runtime_android_build
     fi
@@ -104,6 +101,9 @@ build_libindy() {
     pushd ${LIBINDY_PATH}
     ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} openssl_${ARCH} libsodium_${ARCH} libzmq_${ARCH}
     popd
+    echo "build_libindy-------------build_libindy" 
+    echo $(ls ${LIBINDY_PATH}/libnullpay_${ARCH})
+    echo "build_libindy-------------build_libindy" 
     cp -rf ${LIBINDY_PATH}/libindy_${ARCH} .
     if [ ! -d toolchains/linux ]; then
         echo "Using toolchains for other builds"
@@ -123,10 +123,20 @@ build_libnullpay() {
     pushd ${LIBNULLPAY_PATH}
     ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} ${LIBINDY_BIN}
     popd
+    echo "build_libnullpay-------------build_libnullpay" 
+    echo $(ls ${LIBNULLPAY_PATH}/libnullpay_${ARCH})
+    echo "build_libnullpay-------------build_libnullpay" 
     cp -rf ${LIBNULLPAY_PATH}/libnullpay_${ARCH} .
 }
 
 build_vcx() {
+    echo "build_vcx-------------build_vcx" 
+    pwd 
+    echo $(ls vcx/libvcx)
+    echo $(ls vcx/libvcx/build_scripts)
+    echo $(ls vcx/libvcx/build_scripts/android)
+    echo $(ls vcx/libvcx/build_scripts/android/vcx)
+    echo "build_vcx-------------build_vcx" 
     #LIBVCX_PATH=../../../libvcx/build_scripts/android/vcx/
     LIBVCX_PATH=vcx/libvcx/build_scripts/android/vcx/
     cp -rf libindy_${ARCH} ${LIBVCX_PATH}
