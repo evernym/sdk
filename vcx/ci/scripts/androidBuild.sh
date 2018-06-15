@@ -142,12 +142,28 @@ build_vcx() {
 }
 
 package_vcx() {
-    ANDROID_JNI_LIB=../../../wrappers/java/vcx/src/main/jniLibs/
-    mkdir -p ${ANDROID_JNI_LIB}
+    ANDROID_JNI_LIB=../vcx/wrappers/java/vcx/src/main/jniLibs
+    mkdir -p ${ANDROID_JNI_LIB}/arm
+    mkdir -p ${ANDROID_JNI_LIB}/x86
+    mkdir -p ${ANDROID_JNI_LIB}/arm_64
+
+    cp -v libvcx_arm/libvcx.so ${ANDROID_JNI_LIB}/armeabi-v7a
+    cp -v libvcx_x86/libvcx.so ${ANDROID_JNI_LIB}/x86
+
+    pushd ../vcx/wrappers/java/vcx
+    ../gradlew clean assemble
+    popd
 }
 
 setup $1
-
 build_libindy $1
 build_libnullpay $1
 build_vcx $1
+
+# for arch in arm arm_64 x86
+#     do
+#         setup $arch 
+#         build_libindy $arch
+#         build_libnullpay $arch
+#         build_vcx $arch
+#     done

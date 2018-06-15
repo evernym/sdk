@@ -4,29 +4,29 @@ FROM ubuntu:16.04
 ARG uid=1000
 
 
+    #gcc \
+    #pkg-config \
+    #build-essential \
+    #libsodium-dev \
+    #libssl-dev \
+    #libgmp3-dev \
+    #build-essential \
+    #libsqlite3-dev \
+    #libsqlite0 \
+    #cmake \
+    #apt-transport-https \
+    #ca-certificates \
+    #debhelper \
+    #wget \
+    #git \
+    #curl \
+	#libffi-dev \
+    #ruby \
+    #ruby-dev \ 
+	#sudo \
+    #rubygems \
+    #libzmq5 \
 RUN apt-get update -y && apt-get install -y \
-    gcc \
-    pkg-config \
-    build-essential \
-    libsodium-dev \
-    libssl-dev \
-    libgmp3-dev \
-    build-essential \
-    libsqlite3-dev \
-    libsqlite0 \
-    cmake \
-    apt-transport-https \
-    ca-certificates \
-    debhelper \
-    wget \
-    git \
-    curl \
-	libffi-dev \
-    ruby \
-    ruby-dev \ 
-	sudo \
-    rubygems \
-    libzmq5 \
     zip \
     unzip \
     git \
