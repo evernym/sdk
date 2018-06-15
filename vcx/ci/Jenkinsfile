@@ -357,12 +357,14 @@ def fail() {
 }
 
 def buildAndroidArtifacts(envn) {
+    ANDROID_SCRIPT = 'vcx/ci/scripts/androidBuild.sh'
+    sh "source ${ANDROID_SCRIPT}"
     parallel([
-        'arm': { sh "${ANDROID_SCRIPT} arm"},
-        'x86': { sh "${ANDROID_SCRIPT} x86"},
-        'arm_64': { sh "${ANDROID_SCRIPT} arm_64"}
+        'arm': { sh "buld_arch arm"},
+        'x86': { sh "build_arch x86"},
+        'arm_64': { sh "build_arch arm_64"}
     ])
-    // ANDROID_SCRIPT = 'vcx/ci/scripts/androidBuild.sh arm'
+    // ANDROID_SCRIPT = 'vcx/ci/scripts/androidBuild.sh'
     // sh "${ANDROID_SCRIPT}"
 }
 

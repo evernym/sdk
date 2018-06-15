@@ -17,7 +17,6 @@ ARG uid=1000
     #apt-transport-https \
     #ca-certificates \
     #debhelper \
-    #wget \
     #git \
     #curl \
 	#libffi-dev \
@@ -27,12 +26,23 @@ ARG uid=1000
     #rubygems \
     #libzmq5 \
 RUN apt-get update -y && apt-get install -y \
+    wget \
+    sudo \
+    curl \
+    vim \
     zip \
     unzip \
     git \
     libtool \
     libzmq3-dev \
-    python3
+    python3 \
+    openjdk-8-jdk 
+
+# Install Gradle
+RUN wget https://services.gradle.org/distributions/gradle-3.4.1-bin.zip
+RUN mkdir /opt/gradle
+RUN unzip -d /opt/gradle gradle-3.4.1-bin.zip
+
 
 # Install Rust
 RUN useradd -ms /bin/bash -u $uid vcx
@@ -40,6 +50,3 @@ USER vcx
 
 # cargo deb for debian packaging of libvcx
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
-RUN export PATH=${HOME}/.cargo/bin:${PATH}
-#RUN mkdir -p /sdk
-#COPY /home/rmarsh/dev/sdk /sdk

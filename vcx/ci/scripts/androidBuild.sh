@@ -1,15 +1,15 @@
 #!/bin/bash
 
-ARCH=$1
-PLATFORM=$2
-TRIPLET=$3
-WORKDIR=${PWD}
-
 setup() {
-    echo "Working Directory: ${WORKDIR}"
+    echo "Working Directory: ${PWD}"
+    echo "param: $1"
+    export ARCH=$1
 
     export PATH=${HOME}/.cargo/bin:${PATH}
+    export PATH=$PATH:/opt/gradle/gradle-3.4.1/bin
     echo ${PATH}
+    echo $(ls ~/.cargo)
+    echo $(ls ~/.cargo/bin)
 	if [ ! -d runtime_android_build ]; then
         mkdir runtime_android_build
     fi
@@ -23,6 +23,7 @@ setup() {
 }
 
 copy_dependencies() {
+    # Todo: Figure out way to not copy over the folders. Provide paths
     PATH_TO_CP=$1
     if [ ! -d ${PATH_TO_CP}/toolchains/linux ]; then
         cp -rf toolchains ${PATH_TO_CP}
@@ -123,6 +124,8 @@ build_vcx() {
     #LIBVCX_PATH=../../../libvcx/build_scripts/android/vcx/
     # This is the path to vcx in the Jenkins pipeline
     LIBVCX_PATH=../vcx/libvcx/build_scripts/android/vcx/
+    #This is the path for docker Testing - Remove
+    #LIBVCX_PATH=/tmp/vcx/libvcx/build_scripts/android/vcx/
     cp -rf libindy_${ARCH} ${LIBVCX_PATH}
     cp -rf libnullpay_${ARCH} ${LIBVCX_PATH}
     if [ ! -d libindy_${ARCH} ]; then
@@ -142,23 +145,40 @@ build_vcx() {
 }
 
 package_vcx() {
-    ANDROID_JNI_LIB=../vcx/wrappers/java/vcx/src/main/jniLibs
+    #ANDROID_JNI_LIB=../vcx/wrappers/java/vcx/src/main/jniLibs
+    # Used for docker testing - Remove
+    ANDROID_JNI_LIB=~/vcx/wrappers/java/vcx/src/main/jniLibs
     mkdir -p ${ANDROID_JNI_LIB}/arm
     mkdir -p ${ANDROID_JNI_LIB}/x86
     mkdir -p ${ANDROID_JNI_LIB}/arm_64
 
-    cp -v libvcx_arm/libvcx.so ${ANDROID_JNI_LIB}/armeabi-v7a
-    cp -v libvcx_x86/libvcx.so ${ANDROID_JNI_LIB}/x86
+    cp -v runtime_android_build/libvcx_arm/libvcx.so ${ANDROID_JNI_LIB}/armeabi-v7a
+    cp -v runtime_android_build/libvcx_x86/libvcx.so ${ANDROID_JNI_LIB}/x86
 
-    pushd ../vcx/wrappers/java/vcx
-    ../gradlew clean assemble
+    pushd ~/vcx/wrappers/java/vcx
+        gradlew clean assemble
     popd
 }
 
-setup $1
-build_libindy $1
-build_libnullpay $1
-build_vcx $1
+publish_vcx() {
+    # set krakenUser
+    # set krakenPass
+    # set buildDir
+    # set archivesBaseName
+    pushd ~/vcx/wrappers/java/vcx
+        gradlew clean assemble
+    popd
+    ./gradlew clean uploadToKraken
+}
+
+
+build_arch() {
+    setup $1
+    #build_libindy $1
+    #build_libnullpay $1
+    build_vcx $1
+}
+
 
 # for arch in arm arm_64 x86
 #     do
