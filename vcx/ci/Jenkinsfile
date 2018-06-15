@@ -357,17 +357,12 @@ def fail() {
 }
 
 def buildAndroidArtifacts(envn) {
-    // List<String> archs = new ArrayList<String>();
-    // archs.add("arm");
-    // archs.add("arm_64");
-    // archs.add("x86");
-    // envn.inside {
-    //     ANDROID_SCRIPT = 'vcx/ci/scripts/androidBuild.sh'
-    //     for (String arch: archs) {
-    //         sh "${ANDROID_SCRIPT} ${arch}"
-    //     }
-    // }
-    ANDROID_SCRIPT = 'vcx/ci/scripts/androidBuild.sh arm'
-    sh "${ANDROID_SCRIPT}"
+    parallel([
+        'arm': { sh "${ANDROID_SCRIPT} arm"},
+        'x86': { sh "${ANDROID_SCRIPT} x86"},
+        'arm_64': { sh "${ANDROID_SCRIPT} arm_64"}
+    ])
+    // ANDROID_SCRIPT = 'vcx/ci/scripts/androidBuild.sh arm'
+    // sh "${ANDROID_SCRIPT}"
 }
 
