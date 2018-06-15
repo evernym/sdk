@@ -42,10 +42,13 @@ node('ubuntu-04') {
 
         stage ('Building libvcx Debian in Docker') {
             def workspace = pwd()
-            sh "docker run --rm -v data:/data -v ${workspace}/vcx:/vcx --user=\"0\" rust sh -c \"/vcx/ci/scripts/create-debian.sh\""
-            sh "mkdir -p ${workspace}/backup"
-            sh "docker run --rm -v data:/data -v ${workspace}/backup:/backup --user=\"0\" rust sh -c \"cp -r /data/* /backup\""
-            sh "ls ${workspace}/backup"
+            sh "mkdir -p data"
+            sh "docker run -it --rm --user=\"1000\" -v ${workspace}/data:/data -v ${workspace}/vcx:/vcx rust sh -c \"/vcx/ci/scripts/create-so-file.sh\""
+            // sh "docker run --rm -v data:/data -v ${workspace}/vcx:/vcx --user=\"0\" rust sh -c \"/vcx/ci/scripts/create-debian.sh\""
+            sh "test -f data/libvcx.so"
+            // sh "mkdir -p ${workspace}/backup"
+            // sh "docker run --rm -v data:/data -v ${workspace}/backup:/backup --user=\"0\" rust sh -c \"cp -r /data/* /backup\""
+            // sh "ls ${workspace}/backup"
         }
         
         // update the so file to have version
