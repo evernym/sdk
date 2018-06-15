@@ -72,8 +72,8 @@ RUN curl -fsOSL $RUST_DOWNLOAD_URL \
 RUN gem install fpm
 RUN apt-get install rpm -y
 
-RUN useradd -ms /bin/bash -u $uid vcx
-USER vcx
+#RUN useradd -ms /bin/bash -u $uid vcx
+#USER vcx
 
 # cargo deb for debian packaging of libvcx
 RUN cargo install cargo-deb --color=never
