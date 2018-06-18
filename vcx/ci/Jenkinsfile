@@ -63,7 +63,10 @@ node('ubuntu-22') {
         }
 
         stage ("Testing Python Wrapper"){
-            testPythonWrapper(vcx_python)
+            def workspace = pwd()
+            def userId = sh(returnStdout: true, script: 'id -u').trim()
+            sh "docker run --rm --user=\"${userId}\" -v ${workspace}:/sdk rust sh -c \"/sdk/vcx/wrappers/python3/ci/test-python.sh\""
+            // testPythonWrapper(vcx_python)
         }
 
         // test nodejs wrapper, the image must be built after  the libindy image build, and must be --no-cache
