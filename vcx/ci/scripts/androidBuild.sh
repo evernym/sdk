@@ -140,7 +140,7 @@ build_vcx() {
         exit 1
     fi
 
-    pushd ${LIBNULLPAY_PATH}
+    pushd ${LIBVCX_PATH}
     mkdir -p toolchains/
     ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} ${PREBUILT_BIN}/openssl_${ARCH} ${PREBUILT_BIN}/libsodium_${ARCH} ${PREBUILT_BIN}/libzmq_${ARCH} libindy_${ARCH} libnullpay_${ARCH}
     popd
