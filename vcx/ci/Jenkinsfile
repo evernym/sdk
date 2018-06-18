@@ -363,8 +363,8 @@ def buildAndroid(envn) {
         ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
         parallel([
             'arm': { sh "./${ANDROID_SCRIPT_PATH} arm"},
-            'x86': { sh "./${ANDROID_SCRIPT_PATH} x86"},
-            'arm_64': { sh "./${ANDROID_SCRIPT_PATH} arm_64"}
+            //'x86': { sh "./${ANDROID_SCRIPT_PATH} x86"},
+            //'arm64': { sh "./${ANDROID_SCRIPT_PATH} arm64"}
         ])
     }
 }

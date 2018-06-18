@@ -25,7 +25,6 @@ setup() {
 }
 
 copy_dependencies() {
-    # Todo: Figure out way to not copy over the folders. Provide paths
     PATH_TO_CP=$1
     if [ ! -d ${PATH_TO_CP}/toolchains/linux ]; then
         cp -rf toolchains ${PATH_TO_CP}
@@ -95,15 +94,12 @@ build_libindy() {
     set -xv
 
     LIBINDY_PATH=indy-sdk/libindy/build_scripts/android
-    copy_dependencies ${LIBINDY_PATH}
+    PREBUILT_BIN=../../../..
     pushd ${LIBINDY_PATH}
-    ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} openssl_${ARCH} libsodium_${ARCH} libzmq_${ARCH}
+    mkdir -p toolchains/
+    ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} ${PREBUILT_BIN}/openssl_${ARCH} ${PREBUILT_BIN}/libsodium_${ARCH} ${PREBUILT_BIN}/libzmq_${ARCH}
     popd
-    cp -rf ${LIBINDY_PATH}/libindy_${ARCH} .
-    if [ ! -d toolchains/linux ]; then
-        echo "Using toolchains for other builds"
-        cp -rf ${LIBINDY_PATH}/toolchains .
-    fi
+    mv ${LIBINDY_PATH}/libindy_${ARCH} .
 }
 
 build_libnullpay() {
@@ -114,11 +110,11 @@ build_libnullpay() {
         exit 1
     fi
 
-    copy_dependencies ${LIBNULLPAY_PATH}
+    #copy_dependencies ${LIBNULLPAY_PATH}
     pushd ${LIBNULLPAY_PATH}
     ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} ${LIBINDY_BIN}
     popd
-    cp -rf ${LIBNULLPAY_PATH}/libnullpay_${ARCH} .
+    mv ${LIBNULLPAY_PATH}/libnullpay_${ARCH} .
 }
 
 build_vcx() {
@@ -128,8 +124,9 @@ build_vcx() {
     LIBVCX_PATH=../vcx/libvcx/build_scripts/android/vcx/
     #This is the path for docker Testing - Remove
     #LIBVCX_PATH=~/vcx/libvcx/build_scripts/android/vcx/
-    cp -rf libindy_${ARCH} ${LIBVCX_PATH}
-    cp -rf libnullpay_${ARCH} ${LIBVCX_PATH}
+    #PREBUILT_BIN=${PWD}
+    PREBUILT_BIN=../../../..
+
     if [ ! -d libindy_${ARCH} ]; then
         echo "missing libindy_${ARCH}. Cannot proceed without it."
         exit 1
@@ -139,11 +136,11 @@ build_vcx() {
         exit 1
     fi
 
-    copy_dependencies ${LIBVCX_PATH}
-    pushd ${LIBVCX_PATH}
-    ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} openssl_${ARCH} libsodium_${ARCH} libzmq_${ARCH} libindy_${ARCH} libnullpay_${ARCH}
+    pushd ${LIBNULLPAY_PATH}
+    mkdir -p toolchains/
+    ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} ${PREBUILT_BIN}/openssl_${ARCH} ${PREBUILT_BIN}/libsodium_${ARCH} ${PREBUILT_BIN}/libzmq_${ARCH} libindy_${ARCH} libnullpay_${ARCH}
     popd
-    cp -rf ${LIBVCX_PATH}libvcx_${ARCH} .
+    mv ${LIBVCX_PATH}libvcx_${ARCH} .
 }
 
 package_vcx() {
