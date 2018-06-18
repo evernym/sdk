@@ -16,5 +16,5 @@ COPY vcx/ci/scripts/ /scripts
 
 WORKDIR /python3/tests
 
-CMD [ "/usr/bin/python3", "-m", "pytest", "-v"]
+CMD [ "/sdk/vcx/wrappers/python3/ci/test-python.sh" ]
 

@@ -14,7 +14,7 @@ def build(name, file, context='.', customParams = '') {
     return docker.build("$name", "${customParams} --build-arg uid=${getUserUid()} -f $file $context")
 }
 
-node('ubuntu') {
+node('ubuntu-22') {
     try {
         stage ('Checkout'){
             checkout scm
@@ -59,7 +59,7 @@ node('ubuntu') {
         }
         // test python wrapper, the image must be built after the libindy image build, and must be --no-cache
         stage ('Build Python Image') {
-            vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', 'vcx')
+            vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', '.')
         }
 
         stage ("Testing Python Wrapper"){
