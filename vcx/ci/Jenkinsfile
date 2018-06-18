@@ -63,7 +63,7 @@ node('ubuntu-22') {
         }
 
         stage ("Testing Python Wrapper"){
-            // testPythonWrapper(vcx_python)
+            testPythonWrapper(vcx_python)
         }
 
         // test nodejs wrapper, the image must be built after  the libindy image build, and must be --no-cache
@@ -139,7 +139,7 @@ def getVcxVersion(envn){
 
 def testPythonWrapper(envn){
     envn.inside {
-        sh "python3 -m pytest"
+        sh "vcx/wrappers/python3/ci/test-python.sh"
     }
     
 }
