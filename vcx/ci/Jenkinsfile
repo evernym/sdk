@@ -67,7 +67,7 @@ def androidBuild() {
             try {
                 checkout scm
                 rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
-                buildAndroidArtifacts(rust)
+                buildAndPackageAndroidArtifcats(rust)
             } catch (Exception ex) {
                 currentBuild.result = "FAILED"
                 if (env.BRANCH_NAME == "master") {
@@ -356,15 +356,20 @@ def fail() {
     slackSend message
 }
 
-def buildAndroidArtifacts(envn) {
-    ANDROID_SCRIPT = 'vcx/ci/scripts/androidBuild.sh'
-    sh "source ${ANDROID_SCRIPT}"
+def buildAndPackageAndroidArtifcats(envn) {
+    ANDROID_SCRIPT_PATH = 'vcx/ci/scripts'
+    sh "pushd ${ANDROID_SCRIPT_PATH}"
+    sh "source androidBuild.sh"
     parallel([
         'arm': { sh "buld_arch arm"},
         'x86': { sh "build_arch x86"},
         'arm_64': { sh "build_arch arm_64"}
     ])
-    // ANDROID_SCRIPT = 'vcx/ci/scripts/androidBuild.sh'
-    // sh "${ANDROID_SCRIPT}"
+    sh "package_vcx"
+
+    sh "popd"
+    withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
+        "curl --insecure -u \"${KRAKEN_CREDENTIALS}\" -X POST -F file=@./vcx/wrappers/java/vcx/build/outputs/aar/*-release.aar https://kraken.corp.evernym.com/repo/android/upload"
+    }
 }
 
