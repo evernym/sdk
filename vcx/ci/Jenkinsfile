@@ -65,7 +65,7 @@ node('ubuntu-22') {
         stage ("Testing Python Wrapper"){
             def workspace = pwd()
             def userId = sh(returnStdout: true, script: 'id -u').trim()
-            sh "docker run --rm --user=\"${userId}\" -v ${workspace}:/sdk rust sh -c \"/sdk/vcx/wrappers/python3/ci/test-python.sh\""
+            sh "docker run --rm -v ${workspace}:/sdk vcx-python sh -c \"/sdk/vcx/wrappers/python3/ci/test-python.sh\""
             // testPythonWrapper(vcx_python)
         }
 
