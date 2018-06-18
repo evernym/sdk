@@ -14,7 +14,7 @@ def build(name, file, context='.', customParams = '') {
     return docker.build("$name", "${customParams} --build-arg uid=${getUserUid()} -f $file $context")
 }
 
-node('ubuntu-04') {
+node('ubuntu-02') {
     try {
         stage ('Checkout'){
             checkout scm
@@ -27,39 +27,39 @@ node('ubuntu-04') {
        
         // update the versions in the toml file and package.json
         stage('Updating Versions') {
-            updateVersions(rust)     
+            // updateVersions(rust)     
         }
 
         // build and test the so file
         stage ('Building Libvcx.so'){
-            buildLibvcx(rust)
-        }
-
-        // test rust
-        stage ('Testing Rust'){
-            testLibvcx(rust)
+            // buildLibvcx(rust)
         }
 
         // update the so file to have version
         stage('Updating .so file version') {
-            updateSo(rust)
+            // updateSo(rust)
         }
 
         stage ('Create Libvcx Debian for Testing Only') {
             def workspace = pwd()
-            sh "docker run --rm --user=\"1000\" -v ${workspace}:/sdk rust sh -c \"/vcx/ci/scripts/create-debian.sh\""
+            def userId = sh(returnStdout: true, script: 'id -u').trim()
+            sh "docker run --rm --user=\"${userId}\" -v ${workspace}:/sdk rust sh -c \"/sdk/vcx/ci/scripts/create-debian.sh\""
             // sh "docker run --rm -v data:/data -v ${workspace}/vcx:/vcx --user=\"0\" rust sh -c \"/vcx/ci/scripts/create-debian.sh\""
-            sh "ls ${workspace}/vcx/libvcx/target/debian"
         }
-        
+
+        // test rust
+        stage ('Testing libvcx'){
+            // testLibvcx(rust)
+        }
+
         // image used as an intermediary, where the libvcx.so is placed into /usr/lib.  
         // This image must be built after the rust build and tests have been run.
         stage ('Build Libindy Image') {
-            // libindy = build('libindy', 'vcx/ci/Dockerfile-libindy', 'vcx')
+            libindy = build('libindy', 'vcx/ci/Dockerfile-libindy', 'vcx')
         }
         // test python wrapper, the image must be built after the libindy image build, and must be --no-cache
         stage ('Build Python Image') {
-            // vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', 'vcx', '--no-cache')
+            vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', 'vcx')
         }
 
         stage ("Testing Python Wrapper"){
