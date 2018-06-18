@@ -67,7 +67,9 @@ def androidBuild() {
             try {
                 checkout scm
                 rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
-                buildAndPackageAndroidArtifcats(rust)
+                buildAndroid(rust)
+                packageAndroid(rust)
+                publishAndroid(rust)
             } catch (Exception ex) {
                 currentBuild.result = "FAILED"
                 if (env.BRANCH_NAME == "master") {
@@ -356,20 +358,37 @@ def fail() {
     slackSend message
 }
 
-def buildAndPackageAndroidArtifcats(envn) {
-    ANDROID_SCRIPT_PATH = 'vcx/ci/scripts'
-    sh "pushd ${ANDROID_SCRIPT_PATH}"
-    sh "source androidBuild.sh"
-    parallel([
-        'arm': { sh "buld_arch arm"},
-        'x86': { sh "build_arch x86"},
-        'arm_64': { sh "build_arch arm_64"}
-    ])
-    sh "package_vcx"
-
-    sh "popd"
-    withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
-        "curl --insecure -u \"${KRAKEN_CREDENTIALS}\" -X POST -F file=@./vcx/wrappers/java/vcx/build/outputs/aar/*-release.aar https://kraken.corp.evernym.com/repo/android/upload"
+def buildAndroid(envn) {
+    envn.inside {
+        ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
+        parallel([
+            'arm': { sh "./${ANDROID_SCRIPT_PATH} arm"},
+            'x86': { sh "./${ANDROID_SCRIPT_PATH} x86"},
+            'arm_64': { sh "./${ANDROID_SCRIPT_PATH} arm_64"}
+        ])
     }
 }
+
+def packageAndroid(envn) {
+    envn.inside {
+        ANDROID_JNI_LIB='../vcx/wrappers/java/vcx/src/main/jniLibs'
+        sh "mkdir -p ${ANDROID_JNI_LIB}/arm"
+        sh "mkdir -p ${ANDROID_JNI_LIB}/x86"
+        sh "mkdir -p ${ANDROID_JNI_LIB}/arm_64"
+
+        sh "cp -v runtime_android_build/libvcx_arm/libvcx.so ${ANDROID_JNI_LIB}/arm/libvcx.so"
+        //cp -v runtime_android_build/libvcx_x86/libvcx.so ${ANDROID_JNI_LIB}/x86
+
+        sh './~/vcx/wrappers/java/vcx/gradlew clean assemble'
+    }
+}
+
+def publishAndroid(envn) {
+    envn.inside {
+        withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
+                    "curl --insecure -u \"${KRAKEN_CREDENTIALS}\" -X POST -F file=@./vcx/wrappers/java/vcx/build/outputs/aar/*-release.aar https://kraken.corp.evernym.com/repo/android/upload"
+        }
+    }
+}
+
 

@@ -173,9 +173,7 @@ publish_vcx() {
 }
 
 
-build_arch() {
-    setup $1
-    build_libindy $1
-    build_libnullpay $1
-    build_vcx $1
-}
+setup $1
+build_libindy $1
+build_libnullpay $1
+build_vcx $1
