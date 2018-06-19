@@ -91,7 +91,7 @@ def androidBuild() {
             try {
                 checkout scm
                 rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
-                //buildAndroid(rust)
+                buildAndroid(rust)
                 packageAndroid(rust)
                 publishAndroid(rust)
             } catch (Exception ex) {
