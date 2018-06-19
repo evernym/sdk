@@ -10,7 +10,7 @@ WORK_DIR=$(abspath "$WORK_DIR")
 VCX_SDK=$START_DIR/../../../../..
 VCX_SDK=$(abspath "$VCX_SDK")
 
-BUILD_UNDERWAY=$(sudo launchctl list|grep local.build_libvcx|awk '{print $1}')
+BUILD_UNDERWAY=$(sudo launchctl list|grep local.build_android_libvcx|awk '{print $1}')
 
 if [ "$BUILD_UNDERWAY" = "-" ]; then
     # Verify that libindy, libnullpay, and libvcx built correctly for iOS...
