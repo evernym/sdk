@@ -328,7 +328,7 @@ def packageAndroid(envn) {
 def publishAndroid(envn) {
     envn.inside {
         withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
-                    "curl --insecure -u \"${KRAKEN_CREDENTIALS}\" -X POST -F file=@./vcx/wrappers/java/vcx/build/outputs/aar/*-release.aar https://kraken.corp.evernym.com/repo/android/upload"
+            "curl --insecure -u \"${KRAKEN_CREDENTIALS}\" -X POST -F file=@./vcx/wrappers/java/vcx/build/outputs/aar/*-release.aar https://kraken.corp.evernym.com/repo/android/upload"
         }
     }
 }

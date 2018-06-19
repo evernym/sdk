@@ -14,4 +14,8 @@ cp -v runtime_android_build/libvcx_arm/libvcx.so ${ANDROID_JNI_LIB}/arm/libvcx.s
 
 pushd ~/vcx/wrappers/java/vcx
     ./gradlew clean assemble
+    echo $(ls)
+    echo $(ls build/)
+    echo $(ls build/outputs/)
+    echo $(ls build/outputs/aar)
 popd
