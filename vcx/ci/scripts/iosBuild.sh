@@ -21,6 +21,9 @@ setup() {
 
 install_dependency() {
     DEP=$1
+    echo $DEP
+    echo $(ls /usr/local/bin)
+    echo $(ls /usr/local/bin/${DEP})
     if [ ! -d /usr/local/bin/${DEP} ]; then
         echo "Intalling ${DEP}"
         brew install ${DEP}
