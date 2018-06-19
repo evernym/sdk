@@ -22,6 +22,13 @@ setup() {
     if [ ! -d "toolchains" ]; then
         mkdir toolchains
     fi
+
+    ANDROID_JNI_LIB=../vcx/wrappers/java/vcx/src/main/jniLibs
+    # Used for docker testing - Remove
+    #ANDROID_JNI_LIB=~/vcx/wrappers/java/vcx/src/main/jniLibs
+    mkdir -p ${ANDROID_JNI_LIB}/arm
+    mkdir -p ${ANDROID_JNI_LIB}/x86
+    mkdir -p ${ANDROID_JNI_LIB}/arm_64
 }
 
 copy_dependencies() {
