@@ -120,6 +120,8 @@ def ios() {
     node('macos') {
         stage('iOS Build') {
             try {
+                checkout scm
+                sh 'chmod +x vcx/ci/scripts/iosBuild.sh'
                 sh './vcx/ci/scripts/iosBuild.sh'
                 /*
             // 1) Login to a new account on a macOS High Sierra (10.13.4) computer.

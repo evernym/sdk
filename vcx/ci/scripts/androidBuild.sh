@@ -19,7 +19,12 @@ setup() {
         mkdir toolchains
     fi
 
+    # For Jenkins (MAIN)
     ANDROID_JNI_LIB=../vcx/wrappers/java/vcx/src/main/jniLibs
+
+    # For docker 
+    #ANDROID_JNI_LIB=~/vcx/wrappers/java/vcx/src/main/jniLibs
+
     mkdir -p ${ANDROID_JNI_LIB}/arm
     mkdir -p ${ANDROID_JNI_LIB}/x86
     mkdir -p ${ANDROID_JNI_LIB}/arm64
@@ -127,8 +132,13 @@ build_libnullpay() {
 }
 
 build_vcx() {
+    # For Jenkins
     LIBVCX_PATH=../vcx/libvcx/build_scripts/android/vcx/
     PREBUILT_BIN=../../../../../runtime_android_build
+
+    # For Docker when vcx is in home dir
+    #LIBVCX_PATH=~/vcx/libvcx/build_scripts/android/vcx/
+    #PREBUILT_BIN=../../../../ci/scripts/runtime_android_build
 
     if [ ! -d libindy_${ARCH} ]; then
         echo "missing libindy_${ARCH}. Cannot proceed without it."
