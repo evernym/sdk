@@ -126,10 +126,10 @@ build_vcx() {
     #LIBVCX_PATH=../../../libvcx/build_scripts/android/vcx/
     # This is the path to vcx in the Jenkins pipeline
     LIBVCX_PATH=../vcx/libvcx/build_scripts/android/vcx/
+    PREBUILT_BIN=../../../../../runtime_android_build
     #This is the path for docker Testing - Remove
     #LIBVCX_PATH=~/vcx/libvcx/build_scripts/android/vcx/
-    #PREBUILT_BIN=${PWD}
-    PREBUILT_BIN=../../../../../runtime_android_build
+    #PREBUILT_BIN=../../../../ci/scripts/runtime_android_vcx
 
     if [ ! -d libindy_${ARCH} ]; then
         echo "missing libindy_${ARCH}. Cannot proceed without it."
@@ -142,7 +142,12 @@ build_vcx() {
 
     pushd ${LIBVCX_PATH}
     mkdir -p toolchains/
-    ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} ${PREBUILT_BIN}/openssl_${ARCH} ${PREBUILT_BIN}/libsodium_${ARCH} ${PREBUILT_BIN}/libzmq_${ARCH} libindy_${ARCH} libnullpay_${ARCH}
+    ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} \
+     ${PREBUILT_BIN}/openssl_${ARCH} \ 
+     ${PREBUILT_BIN}/libsodium_${ARCH} \
+     ${PREBUILT_BIN}/libzmq_${ARCH} \
+     ${PREBUILT_BIN}/libindy_${ARCH} \
+     ${PREBUILT_BIN}/libnullpay_${ARCH}
     popd
     mv ${LIBVCX_PATH}libvcx_${ARCH} .
 }
