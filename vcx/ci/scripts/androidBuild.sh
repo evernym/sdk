@@ -2,16 +2,12 @@
 
 setup() {
     echo "Working Directory: ${PWD}"
-    echo "param: $1"
     export ARCH=$1
 
     export PATH=${HOME}/.cargo/bin:${PATH}
     export PATH=$PATH:/opt/gradle/gradle-3.4.1/bin
     export PATH=${PATH}:$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/build-tools/25.0.2/
     source /etc/profile
-    echo ${PATH}
-    echo $(ls ~/.cargo)
-    echo $(ls ~/.cargo/bin)
 	if [ ! -d runtime_android_build ]; then
         mkdir runtime_android_build
     fi
@@ -157,35 +153,8 @@ build_vcx() {
 
 }
 
-package_vcx() {
-    ANDROID_JNI_LIB=../vcx/wrappers/java/vcx/src/main/jniLibs
-    # Used for docker testing - Remove
-    #ANDROID_JNI_LIB=~/vcx/wrappers/java/vcx/src/main/jniLibs
-    mkdir -p ${ANDROID_JNI_LIB}/arm
-    mkdir -p ${ANDROID_JNI_LIB}/x86
-    mkdir -p ${ANDROID_JNI_LIB}/arm64
-
-    cp -v runtime_android_build/libvcx_arm/libvcx.so ${ANDROID_JNI_LIB}/arm/libvcx.so
-    #cp -v runtime_android_build/libvcx_x86/libvcx.so ${ANDROID_JNI_LIB}/x86
-
-    pushd ../vcx/wrappers/java/vcx
-        ./gradlew clean assemble
-    popd
-}
-
-publish_vcx() {
-    # set krakenUser
-    # set krakenPass
-    # set buildDir
-    # set archivesBaseName
-    pushd ../vcx/wrappers/java/vcx
-        ./gradlew clean uploadToKraken
-    popd
-}
-
-
 setup $1
 build_libindy $1
 build_libnullpay $1
-#build_vcx $1
+build_vcx $1
 #package_vcx
