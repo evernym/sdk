@@ -155,12 +155,7 @@ build_vcx() {
     echo $(ls ../../../../../runtime_android_build/libindy_${ARCH})
     echo $(ls ../../../../../runtime_android_build/libnullpay_${ARCH})
     mkdir -p toolchains/
-    ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} \
-     ${PREBUILT_BIN}/openssl_${ARCH} \ 
-     ${PREBUILT_BIN}/libsodium_${ARCH} \
-     ${PREBUILT_BIN}/libzmq_${ARCH} \
-     ${PREBUILT_BIN}/libindy_${ARCH} \
-     ${PREBUILT_BIN}/libnullpay_${ARCH}
+    ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} ${PREBUILT_BIN}/openssl_${ARCH} ${PREBUILT_BIN}/libsodium_${ARCH} ${PREBUILT_BIN}/libzmq_${ARCH} ${PREBUILT_BIN}/libindy_${ARCH} ${PREBUILT_BIN}/libnullpay_${ARCH} 
     popd
     mv ${LIBVCX_PATH}libvcx_${ARCH} .
 }
