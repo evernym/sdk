@@ -14,7 +14,7 @@ def build(name, file, context='.', customParams = '') {
     return docker.build("$name", "${customParams} --build-arg uid=${getUserUid()} -f $file $context")
 }
 
-node('ubuntu-22') {
+node('ubuntu') {
     try {
         stage ('Checkout'){
             checkout scm
