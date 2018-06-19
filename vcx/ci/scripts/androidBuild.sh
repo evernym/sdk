@@ -29,6 +29,8 @@ setup() {
     mkdir -p ${ANDROID_JNI_LIB}/arm
     mkdir -p ${ANDROID_JNI_LIB}/x86
     mkdir -p ${ANDROID_JNI_LIB}/arm_64
+    echo "just made dirs in setup"
+    echo $(ls ${ANDROID_JNI_LIB})
 }
 
 copy_dependencies() {
