@@ -20,8 +20,6 @@ setup() {
     fi
 
     ANDROID_JNI_LIB=../vcx/wrappers/java/vcx/src/main/jniLibs
-    # Used for docker testing - Remove
-    #ANDROID_JNI_LIB=~/vcx/wrappers/java/vcx/src/main/jniLibs
     mkdir -p ${ANDROID_JNI_LIB}/arm
     mkdir -p ${ANDROID_JNI_LIB}/x86
     mkdir -p ${ANDROID_JNI_LIB}/arm64
@@ -115,26 +113,22 @@ build_libnullpay() {
         exit 1
     fi
 
-    #copy_dependencies ${LIBNULLPAY_PATH}
     pushd ${LIBNULLPAY_PATH}
     if [ ! -d toolchains ]; then
         mkdir toolchains/linux
     fi
     ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} ${LIBINDY_BIN}
     popd
+
     mv ${LIBNULLPAY_PATH}/libnullpay_${ARCH} .
+
+    # This is to prevent side effect in other builds
+    rm -rf ${LIBNULLPAY_PATH}/toolchains/linux
 }
 
 build_vcx() {
-    # Path to vcx if script is run locally
-    #LIBVCX_PATH=../../../libvcx/build_scripts/android/vcx/
-    # This is the path to vcx in the Jenkins pipeline
-    # ../../../../../runtime_android_build/libsodium_arm
     LIBVCX_PATH=../vcx/libvcx/build_scripts/android/vcx/
     PREBUILT_BIN=../../../../../runtime_android_build
-    #This is the path for docker Testing - Remove
-    #LIBVCX_PATH=~/vcx/libvcx/build_scripts/android/vcx/
-    #PREBUILT_BIN=../../../../ci/scripts/runtime_android_vcx
 
     if [ ! -d libindy_${ARCH} ]; then
         echo "missing libindy_${ARCH}. Cannot proceed without it."
