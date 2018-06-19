@@ -28,9 +28,7 @@ setup() {
     #ANDROID_JNI_LIB=~/vcx/wrappers/java/vcx/src/main/jniLibs
     mkdir -p ${ANDROID_JNI_LIB}/arm
     mkdir -p ${ANDROID_JNI_LIB}/x86
-    mkdir -p ${ANDROID_JNI_LIB}/arm_64
-    echo "just made dirs in setup"
-    echo $(ls ${ANDROID_JNI_LIB})
+    mkdir -p ${ANDROID_JNI_LIB}/arm64
 }
 
 copy_dependencies() {
@@ -165,7 +163,7 @@ package_vcx() {
     #ANDROID_JNI_LIB=~/vcx/wrappers/java/vcx/src/main/jniLibs
     mkdir -p ${ANDROID_JNI_LIB}/arm
     mkdir -p ${ANDROID_JNI_LIB}/x86
-    mkdir -p ${ANDROID_JNI_LIB}/arm_64
+    mkdir -p ${ANDROID_JNI_LIB}/arm64
 
     cp -v runtime_android_build/libvcx_arm/libvcx.so ${ANDROID_JNI_LIB}/arm/libvcx.so
     #cp -v runtime_android_build/libvcx_x86/libvcx.so ${ANDROID_JNI_LIB}/x86
@@ -187,7 +185,7 @@ publish_vcx() {
 
 
 setup $1
-#build_libindy $1
-#build_libnullpay $1
+build_libindy $1
+build_libnullpay $1
 #build_vcx $1
 #package_vcx
