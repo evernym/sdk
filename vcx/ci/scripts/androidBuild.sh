@@ -142,22 +142,11 @@ build_vcx() {
     fi
 
     pushd ${LIBVCX_PATH}
-    echo ${PWD}
-    echo $(ls ../../..)
-    echo $(ls ../../../..)
-    echo "this should be where the folder is"
-    echo $(ls ../../../../..)
-    echo "this should be where the files shoudl be"
-    echo $(ls ../../../../../runtime_android_build)
-    echo $(ls ../../../../../runtime_android_build/openssl_${ARCH})
-    echo $(ls ../../../../../runtime_android_build/libsodium_${ARCH})
-    echo $(ls ../../../../../runtime_android_build/libzmq_${ARCH})
-    echo $(ls ../../../../../runtime_android_build/libindy_${ARCH})
-    echo $(ls ../../../../../runtime_android_build/libnullpay_${ARCH})
     mkdir -p toolchains/
     ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} ${PREBUILT_BIN}/openssl_${ARCH} ${PREBUILT_BIN}/libsodium_${ARCH} ${PREBUILT_BIN}/libzmq_${ARCH} ${PREBUILT_BIN}/libindy_${ARCH} ${PREBUILT_BIN}/libnullpay_${ARCH} 
     popd
     mv ${LIBVCX_PATH}libvcx_${ARCH} .
+
 }
 
 package_vcx() {

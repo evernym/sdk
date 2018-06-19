@@ -310,15 +310,18 @@ def buildAndroid(envn) {
 
 def packageAndroid(envn) {
     envn.inside {
-        ANDROID_JNI_LIB='../vcx/wrappers/java/vcx/src/main/jniLibs'
-        sh "mkdir -p ${ANDROID_JNI_LIB}/arm"
-        sh "mkdir -p ${ANDROID_JNI_LIB}/x86"
-        sh "mkdir -p ${ANDROID_JNI_LIB}/arm_64"
+        sh "echo ${PWD}"
+        ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidPackage.sh'
+        sh "./${ANDROID_SCRIPT_PATH}"
+     //   ANDROID_JNI_LIB='../vcx/wrappers/java/vcx/src/main/jniLibs'
+     //   sh "mkdir -p ${ANDROID_JNI_LIB}/arm"
+     //   sh "mkdir -p ${ANDROID_JNI_LIB}/x86"
+     //   sh "mkdir -p ${ANDROID_JNI_LIB}/arm64"
 
-        sh "cp -v runtime_android_build/libvcx_arm/libvcx.so ${ANDROID_JNI_LIB}/arm/libvcx.so"
-        //cp -v runtime_android_build/libvcx_x86/libvcx.so ${ANDROID_JNI_LIB}/x86
+     //   sh "cp -v runtime_android_build/libvcx_arm/libvcx.so ${ANDROID_JNI_LIB}/arm/libvcx.so"
+     //   //cp -v runtime_android_build/libvcx_x86/libvcx.so ${ANDROID_JNI_LIB}/x86
 
-        sh './~/vcx/wrappers/java/vcx/gradlew clean assemble'
+     //   sh './~/vcx/wrappers/java/vcx/gradlew clean assemble'
     }
 }
 
