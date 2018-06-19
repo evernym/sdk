@@ -160,7 +160,7 @@ package_vcx() {
     cp -v runtime_android_build/libvcx_arm/libvcx.so ${ANDROID_JNI_LIB}/arm/libvcx.so
     #cp -v runtime_android_build/libvcx_x86/libvcx.so ${ANDROID_JNI_LIB}/x86
 
-    pushd ~/vcx/wrappers/java/vcx
+    pushd ../vcx/wrappers/java/vcx
         ./gradlew clean assemble
     popd
 }
@@ -170,7 +170,7 @@ publish_vcx() {
     # set krakenPass
     # set buildDir
     # set archivesBaseName
-    pushd ~/vcx/wrappers/java/vcx
+    pushd ../vcx/wrappers/java/vcx
         ./gradlew clean uploadToKraken
     popd
 }
