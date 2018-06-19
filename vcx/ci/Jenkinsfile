@@ -318,9 +318,11 @@ def packageAndroid(envn) {
 }
 
 def publishAndroid(envn) {
+    sh "echo in publish fn"
     envn.inside {
         addCert(envn)
         withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
+            sh "echo before publishing"
             sh "find vcx/wrappers/java/vcx/build/outputs/aar -type f -name 'com.evernym-vcx_*-release.aar' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST  https://kraken.corp.evernym.com/repo/android/upload -F 'file=@{}' \\;"
         }
     }
