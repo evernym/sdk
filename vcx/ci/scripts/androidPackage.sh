@@ -14,8 +14,9 @@ cp -v runtime_android_build/libvcx_arm/libvcx.so ${ANDROID_JNI_LIB}/arm/libvcx.s
 
 echo "before pushd"
 echo $(ls)
-echo $(ls ..)
-pushd ../vcx/wrappers/java/vcx
+echo $(ls vcx)
+echo $(ls vcx/wrappers/java/vcx/src/main/jniLibs/arm)
+pushd vcx/wrappers/java/vcx
     ./gradlew clean assemble
     echo $(ls)
     echo $(ls build/)
