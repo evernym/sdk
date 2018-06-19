@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo ${PWD}
-NDROID_JNI_LIB=../vcx/wrappers/java/vcx/src/main/jniLibs
+NDROID_JNI_LIB=vcx/wrappers/java/vcx/src/main/jniLibs
 # Used for docker testing - Remove
 #ANDROID_JNI_LIB=~/vcx/wrappers/java/vcx/src/main/jniLibs
 mkdir -p ${ANDROID_JNI_LIB}/arm
