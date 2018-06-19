@@ -148,7 +148,12 @@ build_vcx() {
     echo "this should be where the folder is"
     echo $(ls ../../../../..)
     echo "this should be where the files shoudl be"
-    echo $(ls ../../../../../runtime_android_buile)
+    echo $(ls ../../../../../runtime_android_build)
+    echo $(ls ../../../../../runtime_android_build/openssl_${ARCH})
+    echo $(ls ../../../../../runtime_android_build/libsodium_${ARCH})
+    echo $(ls ../../../../../runtime_android_build/libzmq_${ARCH})
+    echo $(ls ../../../../../runtime_android_build/libindy_${ARCH})
+    echo $(ls ../../../../../runtime_android_build/libnullpay_${ARCH})
     mkdir -p toolchains/
     ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} \
      ${PREBUILT_BIN}/openssl_${ARCH} \ 
