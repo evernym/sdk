@@ -126,10 +126,6 @@ build_vcx() {
     #LIBVCX_PATH=../../../libvcx/build_scripts/android/vcx/
     # This is the path to vcx in the Jenkins pipeline
     # ../../../../../runtime_android_build/libsodium_arm
-    echo ${PWD}
-    echo ls ../../../${PWD}
-    echo ls ../../../../${PWD}
-    echo ls ../../../../../${PWD}
     LIBVCX_PATH=../vcx/libvcx/build_scripts/android/vcx/
     PREBUILT_BIN=../../../../../runtime_android_build
     #This is the path for docker Testing - Remove
@@ -146,6 +142,11 @@ build_vcx() {
     fi
 
     pushd ${LIBVCX_PATH}
+    echo ${PWD}
+    echo $(ls ../../../${PWD})
+    echo $(ls ../../../../${PWD})
+    echo "this should be where the folder is"
+    echo $(ls ../../../../../${PWD})
     mkdir -p toolchains/
     ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} \
      ${PREBUILT_BIN}/openssl_${ARCH} \ 
