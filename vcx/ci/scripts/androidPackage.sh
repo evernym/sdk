@@ -12,6 +12,9 @@ cp -v runtime_android_build/libvcx_arm/libvcx.so ${ANDROID_JNI_LIB}/arm/libvcx.s
 #cp -v runtime_android_build/libvcx_x86/libvcx.so ${ANDROID_JNI_LIB}/x86
 #cp -v runtime_android_build/libvcx_arm64/libvcx.so ${ANDROID_JNI_LIB}/arm64
 
+echo "before pushd"
+echo $(ls)
+echo $(ls ..)
 pushd ../vcx/wrappers/java/vcx
     ./gradlew clean assemble
     echo $(ls)
