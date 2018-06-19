@@ -92,9 +92,7 @@ def androidBuild() {
                 checkout scm
                 rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
                 buildAndroid(rust)
-                // KS: Uncomment this back and fix .sh file permission
-                // commenting it for now, because we are packing file in buildAndroid step
-                // packageAndroid(rust)
+                packageAndroid(rust)
                 publishAndroid(rust)
             } catch (Exception ex) {
                 currentBuild.result = "FAILED"
@@ -314,6 +312,7 @@ def packageAndroid(envn) {
     envn.inside {
         sh "echo ${PWD}"
         ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidPackage.sh'
+        sh "chmod +x ${ANDROID_SCRIPT_PATH}"
         sh "./${ANDROID_SCRIPT_PATH}"
      //   ANDROID_JNI_LIB='../vcx/wrappers/java/vcx/src/main/jniLibs'
      //   sh "mkdir -p ${ANDROID_JNI_LIB}/arm"
@@ -329,8 +328,9 @@ def packageAndroid(envn) {
 
 def publishAndroid(envn) {
     envn.inside {
+        addCert(envn)
         withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
-            "curl --insecure -u \"${KRAKEN_CREDENTIALS}\" -X POST -F file=@./vcx/wrappers/java/vcx/build/outputs/aar/*-release.aar https://kraken.corp.evernym.com/repo/android/upload"
+            sh "find vcx/wrappers/java/vcx/build/outputs/aar -type f -name 'com.evernym-vcx_*-release.aar' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST  https://kraken.corp.evernym.com/repo/android/upload -F 'file=@{}' \\;"
         }
     }
 }

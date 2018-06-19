@@ -86,7 +86,8 @@ generate_flags(){
 clone_indy_sdk() {
     if [ ! -d "indy-sdk" ]; then
         echo "cloning indy-sdk"
-        git clone -b android_builds --single-branch https://github.com/faisal00813/indy-sdk.git
+        git clone https://github.com/evernym/indy-sdk.git
+        #git clone -b android_builds --single-branch https://github.com/faisal00813/indy-sdk.git
     fi
 }
 
