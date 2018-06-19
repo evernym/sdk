@@ -311,11 +311,9 @@ def buildAndroid(envn) {
 def packageAndroid(envn) {
     envn.inside {
         sh "echo ${PWD}"
-        USER root
         ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidPackage.sh'
         sh "chmod +x ${ANDROID_SCRIPT_PATH}"
         sh "./${ANDROID_SCRIPT_PATH}"
-        USER vcx
     }
 }
 
