@@ -27,46 +27,59 @@ node('ubuntu') {
        
         // update the versions in the toml file and package.json
         stage('Updating Versions') {
-            updateVersions(rust)     
+            // updateVersions(rust)     
         }
 
         // build and test the so file
         stage ('Building Libvcx.so'){
-            buildRust(rust)
+            // buildLibvcx(rust)
+        }
+
+        // update the so file to have version
+        stage('Updating .so file version') {
+            // updateSo(rust)
+        }
+
+        stage ('Create Libvcx Debian for Wrapper Testing') {
+            // def workspace = pwd()
+            // def userId = sh(returnStdout: true, script: 'id -u').trim()
+            // // build the debian and output to /sdk/vcx/libvcx/target/debian
+            // sh "docker run --rm --user=\"${userId}\" -v ${workspace}:/sdk rust sh -c \"/sdk/vcx/ci/scripts/create-debian.sh\""
+            // install debian onto rust container
+            // sh "docker run --rm -v ${workspace}:/sdk rust sh -c \"/sdk/vcx/ci/scripts/install-debian.sh\""
+            sh "vcx/ci/scripts/test-pipeline.sh"
+            // sh "docker run --rm -v data:/data -v ${workspace}/vcx:/vcx --user=\"0\" rust sh -c \"/vcx/ci/scripts/create-debian.sh\""
         }
 
         // test rust
-        stage ('Testing Rust'){
-            testRust(rust)
+        stage ('Testing libvcx'){
+            // testLibvcx(rust)
         }
-        
-        // update the so file to have version
-        stage('Updating .so file version') {
-            updateSo(rust)
-        }
-        
+
         // image used as an intermediary, where the libvcx.so is placed into /usr/lib.  
         // This image must be built after the rust build and tests have been run.
         stage ('Build Libindy Image') {
-            libindy = build('libindy', 'vcx/ci/Dockerfile-libindy', 'vcx')
+            // libindy = build('libindy', 'vcx/ci/Dockerfile-libindy', 'vcx')
         }
         // test python wrapper, the image must be built after the libindy image build, and must be --no-cache
         stage ('Build Python Image') {
-            vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', 'vcx', '--no-cache')
+            // vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', '.')
         }
 
         stage ("Testing Python Wrapper"){
-            testPythonWrapper(vcx_python)
+            def workspace = pwd()
+            def userId = sh(returnStdout: true, script: 'id -u').trim()
+            // sh "docker run --rm -v ${workspace}:/sdk vcx-python sh -c \"/sdk/vcx/wrappers/python3/ci/test-python.sh\""
         }
 
         // test nodejs wrapper, the image must be built after  the libindy image build, and must be --no-cache
         stage ('Build NodeJs Images') {
-            nodejs = build('nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs', 'vcx')
-            vcx_nodejs = build('vcx-nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs-wrapper', 'vcx', '--no-cache')
+            // nodejs = build('nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs', 'vcx')
+            // vcx_nodejs = build('vcx-nodejs', 'vcx/wrappers/node/ci/Dockerfile-nodejs-wrapper', 'vcx', '--no-cache')
         }
 
         stage ('Test Node Wrapper'){
-            testNodeWrapper(vcx_nodejs)
+            // testNodeWrapper(vcx_nodejs)
         }       
 
         if (env.BRANCH_NAME == "master") {
@@ -132,12 +145,12 @@ def getVcxVersion(envn){
 
 def testPythonWrapper(envn){
     envn.inside {
-        sh "python3 -m pytest"
+        sh "vcx/wrappers/python3/ci/test-python.sh"
     }
     
 }
 
-def buildRust(envn){ 
+def buildLibvcx(envn){ 
     envn.inside {
         sh "rustc --version"
         sh "gcc --version"
@@ -145,7 +158,7 @@ def buildRust(envn){
     }
 }
 
-def testRust(envn) {
+def testLibvcx(envn) {
     envn.inside {
         sh "cd vcx/libvcx; cargo test --color=never -- --test-threads=1"
     }
