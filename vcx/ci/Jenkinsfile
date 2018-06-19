@@ -92,7 +92,9 @@ def androidBuild() {
                 checkout scm
                 rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
                 buildAndroid(rust)
-                packageAndroid(rust)
+                // KS: Uncomment this back and fix .sh file permission
+                // commenting it for now, because we are packing file in buildAndroid step
+                // packageAndroid(rust)
                 publishAndroid(rust)
             } catch (Exception ex) {
                 currentBuild.result = "FAILED"
