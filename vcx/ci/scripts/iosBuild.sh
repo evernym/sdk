@@ -11,7 +11,7 @@ setup() {
     install_dependency java
 
     echo $(ls /Users)
-    if [ ! -d /Users/jenkins/Library/Android/sdk ]; then
+    if [ ! -f /Users/jenkins/Library/Android/sdk ]; then
         echo "Installing Android Sdk"
         brew doctor
         brew install android-sdk
@@ -24,7 +24,7 @@ install_dependency() {
     echo $DEP
     echo $(ls /usr/local/bin)
     echo $(ls /usr/local/bin/${DEP})
-    if [ ! -d /usr/local/bin/${DEP} ]; then
+    if [ ! -f /usr/local/bin/${DEP} ]; then
         echo "Intalling ${DEP}"
         brew install ${DEP}
     fi
