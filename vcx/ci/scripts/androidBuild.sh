@@ -143,10 +143,12 @@ build_vcx() {
 
     pushd ${LIBVCX_PATH}
     echo ${PWD}
-    echo $(ls ../../../${PWD})
-    echo $(ls ../../../../${PWD})
+    echo $(ls ../../..)
+    echo $(ls ../../../..)
     echo "this should be where the folder is"
-    echo $(ls ../../../../../${PWD})
+    echo $(ls ../../../../..)
+    echo "this should be where the files shoudl be"
+    echo $(ls ../../../../../runtime_android_buile)
     mkdir -p toolchains/
     ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} \
      ${PREBUILT_BIN}/openssl_${ARCH} \ 
