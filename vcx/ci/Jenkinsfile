@@ -43,7 +43,11 @@ node('ubuntu-22') {
         stage ('Create Libvcx Debian for Wrapper Testing') {
             def workspace = pwd()
             def userId = sh(returnStdout: true, script: 'id -u').trim()
+            // build the debian and output to /sdk/vcx/libvcx/target/debian
             sh "docker run --rm --user=\"${userId}\" -v ${workspace}:/sdk rust sh -c \"/sdk/vcx/ci/scripts/create-debian.sh\""
+            // install debian onto rust container
+            sh "docker run --rm -v ${workspace}:/sdk rust sh -c \"/sdk/vcx/ci/scripts/install-debian.sh\""
+
             // sh "docker run --rm -v data:/data -v ${workspace}/vcx:/vcx --user=\"0\" rust sh -c \"/vcx/ci/scripts/create-debian.sh\""
         }
 
