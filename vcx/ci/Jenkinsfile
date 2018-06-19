@@ -93,7 +93,7 @@ def androidBuild() {
                 rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
                 buildAndroid(rust)
                 packageAndroid(rust)
-                publishAndroid(rust)
+                //publishAndroid(rust)
             } catch (Exception ex) {
                 currentBuild.result = "FAILED"
                 if (env.BRANCH_NAME == "master") {
@@ -304,8 +304,8 @@ def buildAndroid(envn) {
         ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
         parallel([
             'arm': { sh "./${ANDROID_SCRIPT_PATH} arm"},
-            //'x86': { sh "./${ANDROID_SCRIPT_PATH} x86"},
-            //'arm64': { sh "./${ANDROID_SCRIPT_PATH} arm64"}
+            'x86': { sh "./${ANDROID_SCRIPT_PATH} x86"},
+            'arm64': { sh "./${ANDROID_SCRIPT_PATH} arm64"}
         ])
     }
 }
