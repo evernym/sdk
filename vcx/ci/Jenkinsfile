@@ -90,9 +90,17 @@ def androidBuild() {
         stage('Android Build') {
             try {
                 checkout scm
+
+                //Build android docker image
                 rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
+                
+                //Build .so files for arm64, x86, and arm
                 buildAndroid(rust)
+
+                //Package .so files into .aar 
                 packageAndroid(rust)
+
+                //Publish package on aptly
                 publishAndroid(rust)
             } catch (Exception ex) {
                 currentBuild.result = "FAILED"
@@ -114,13 +122,11 @@ def getRevisionFromGit() {
 }
 
 def addCert(envn) {
-    echo "in add cert"
     envn.inside {
         CERT_SCRIPT = 'vcx/ci/scripts/getCert.sh'
         // get Evernym Certificate onto machine
         sh "${CERT_SCRIPT}"
     }
-    echo "out add cert"
 }
 
 def uploadPrivateNpm(envn) {
@@ -325,7 +331,7 @@ def packageAndroid(envn) {
 def publishAndroid(envn) {
     sh "echo in publish fn"
     envn.inside {
-        CERT_SCRIPT = 'ci/scripts/getCert.sh'
+        CERT_SCRIPT = 'vcx/ci/scripts/getCert.sh'
         sh "${CERT_SCRIPT}"
         sh "echo after getCert"
         withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
