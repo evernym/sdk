@@ -114,11 +114,13 @@ def getRevisionFromGit() {
 }
 
 def addCert(envn) {
+    echo "in add cert"
     envn.inside {
         CERT_SCRIPT = 'vcx/ci/scripts/getCert.sh'
         // get Evernym Certificate onto machine
         sh "${CERT_SCRIPT}"
     }
+    echo "out add cert"
 }
 
 def uploadPrivateNpm(envn) {
@@ -319,7 +321,9 @@ def packageAndroid(envn) {
 def publishAndroid(envn) {
     sh "echo in publish fn"
     envn.inside {
-        addCert(envn)
+        CERT_SCRIPT = 'ci/scripts/getCert.sh'
+        sh "${CERT_SCRIPT}"
+        sh "echo after getCert"
         withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
             sh "echo before publishing"
             sh "find vcx/wrappers/java/vcx/build/outputs/aar/ -type f -name 'com.evernym-vcx_*-release.aar' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST  https://kraken.corp.evernym.com/repo/android/upload -F 'file=@{}' \\;"

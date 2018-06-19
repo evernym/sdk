@@ -154,7 +154,6 @@ build_vcx() {
 }
 
 setup $1
-#build_libindy $1
-#build_libnullpay $1
-#build_vcx $1
-#package_vcx
+build_libindy $1
+build_libnullpay $1
+build_vcx $1
