@@ -5,10 +5,10 @@ setup() {
     echo "Working Directory: ${PWD}"
     brew update
 
-    install_dep ruby
-    install_dep curl
-    install_dep git
-    install_dep java
+    install_dependency ruby
+    install_dependency curl
+    install_dependency git
+    install_dependency java
 
     echo $(ls /Users)
     if [ ! -d /Users/jenkins/Library/Android/sdk ]; then
@@ -17,10 +17,9 @@ setup() {
         brew install android-sdk
     fi
 
-    brew 
 }
 
-install_dep() {
+install_dependency() {
     DEP=$1
     if [ ! -d /usr/local/bin/${DEP} ]; then
         echo "Intalling ${DEP}"
