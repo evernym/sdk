@@ -25,7 +25,7 @@ install_dep() {
     if [ ! -d /usr/local/bin/${DEP} ]; then
         echo "Intalling ${DEP}"
         brew install ${DEP}
-    f
+    fi
 }
 
 setup
