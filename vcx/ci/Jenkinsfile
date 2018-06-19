@@ -116,6 +116,7 @@ def androidBuild() {
     }
 }
 
+/*
 def ios() {
     node('macos') {
         stage('iOS Build') {
@@ -148,6 +149,7 @@ def ios() {
         }
     }
 }
+*/
 
 def getRevisionFromGit() {
     revision = sh 'git log --pretty=format:\'%h\' -n 1'
