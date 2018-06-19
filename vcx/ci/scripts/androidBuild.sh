@@ -129,7 +129,7 @@ build_vcx() {
     #This is the path for docker Testing - Remove
     #LIBVCX_PATH=~/vcx/libvcx/build_scripts/android/vcx/
     #PREBUILT_BIN=${PWD}
-    PREBUILT_BIN=../../../..
+    PREBUILT_BIN=../../../../../runtime_android_build
 
     if [ ! -d libindy_${ARCH} ]; then
         echo "missing libindy_${ARCH}. Cannot proceed without it."
