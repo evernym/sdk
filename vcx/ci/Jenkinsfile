@@ -93,7 +93,7 @@ def androidBuild() {
                 rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
                 buildAndroid(rust)
                 packageAndroid(rust)
-                //publishAndroid(rust)
+                publishAndroid(rust)
             } catch (Exception ex) {
                 currentBuild.result = "FAILED"
                 if (env.BRANCH_NAME == "master") {
