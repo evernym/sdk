@@ -127,9 +127,9 @@ build_vcx() {
     # This is the path to vcx in the Jenkins pipeline
     # ../../../../../runtime_android_build/libsodium_arm
     echo ${PWD}
-    echo ../../../${PWD}
-    echo ../../../../${PWD}
-    echo ../../../../../${PWD}
+    echo ls ../../../${PWD}
+    echo ls ../../../../${PWD}
+    echo ls ../../../../../${PWD}
     LIBVCX_PATH=../vcx/libvcx/build_scripts/android/vcx/
     PREBUILT_BIN=../../../../../runtime_android_build
     #This is the path for docker Testing - Remove
