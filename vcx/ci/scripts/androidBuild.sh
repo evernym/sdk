@@ -28,6 +28,17 @@ setup() {
     mkdir -p ${ANDROID_JNI_LIB}/arm
     mkdir -p ${ANDROID_JNI_LIB}/x86
     mkdir -p ${ANDROID_JNI_LIB}/arm64
+     if [ $1 == "arm64" ]; then
+        overwrite_cargo_files
+    fi
+
+}
+
+overwrite_cargo_files() {
+    SOCKET=/home/vcx/.cargo/registry/src/github.com-1ecc6299db9ec823/net2-0.2.32/src/socket.rs
+    UDS=/home/vcx/.cargo/registry/src/github.com-1ecc6299db9ec823/mio-0.6.14/src/sys/unix/uds.rs
+    sed -i 's/len as len_t/len as u32/g' ${SOCKET}
+    sed -i 's/let len_i32 = len as i32;/let len_i32 = len as u32;/g' ${UDS}
 }
 
 copy_dependencies() {
