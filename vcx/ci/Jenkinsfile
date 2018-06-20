@@ -12,7 +12,7 @@ testing()
 def testing() {
     stage('Testing') {
         parallel([
-            //'Main' : { mainUbuntu() },
+            'Main' : { mainUbuntu() },
             'Android': { android() },
             //'iOS' : { ios() }
         ])
