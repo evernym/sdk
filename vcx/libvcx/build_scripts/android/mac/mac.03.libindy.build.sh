@@ -94,6 +94,7 @@ export OPENSSL_DIR=$WORK_DIR/openssl_for_ios_and_android/output/android/openssl-
 export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_arm/lib
 export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_arm/lib
 export ANDROID_SQLITE_LIB=$WORK_DIR/libsqlite3-android/armeabi-v7a
+sed -i .bak 's/\"\"\.as_ptr() as \*const i8/\"\"\.as_ptr() as \*const u8/' src/services/wallet/storage/plugged/mod.rs
 cargo build --target arm-linux-androideabi --release --verbose
 
 export PATH=$WORK_DIR/NDK/arm/bin:$ORIGINAL_PATH
@@ -101,6 +102,7 @@ export OPENSSL_DIR=$WORK_DIR/openssl_for_ios_and_android/output/android/openssl-
 export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_armv7/lib
 export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_armv7/lib
 export ANDROID_SQLITE_LIB=$WORK_DIR/libsqlite3-android/armeabi-v7a
+sed -i .bak 's/\"\"\.as_ptr() as \*const i8/\"\"\.as_ptr() as \*const u8/' src/services/wallet/storage/plugged/mod.rs
 cargo build --target armv7-linux-androideabi --release --verbose
 
 export PATH=$WORK_DIR/NDK/arm64/bin:$ORIGINAL_PATH
@@ -108,6 +110,7 @@ export OPENSSL_DIR=$WORK_DIR/openssl_for_ios_and_android/output/android/openssl-
 export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_arm64/lib
 export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_arm64/lib
 export ANDROID_SQLITE_LIB=$WORK_DIR/libsqlite3-android/arm64-v8a
+sed -i .bak 's/\"\"\.as_ptr() as \*const i8/\"\"\.as_ptr() as \*const u8/' src/services/wallet/storage/plugged/mod.rs
 cargo build --target aarch64-linux-android --release --verbose
 
 export PATH=$WORK_DIR/NDK/x86/bin:$ORIGINAL_PATH
@@ -115,6 +118,7 @@ export OPENSSL_DIR=$WORK_DIR/openssl_for_ios_and_android/output/android/openssl-
 export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_x86/lib
 export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_x86/lib
 export ANDROID_SQLITE_LIB=$WORK_DIR/libsqlite3-android/x86
+sed -i .bak 's/\"\"\.as_ptr() as \*const u8/\"\"\.as_ptr() as \*const i8/' src/services/wallet/storage/plugged/mod.rs
 cargo build --target i686-linux-android --release --verbose
 
 export PATH=$WORK_DIR/NDK/x86_64/bin:$ORIGINAL_PATH
@@ -122,10 +126,12 @@ export OPENSSL_DIR=$WORK_DIR/openssl_for_ios_and_android/output/android/openssl-
 export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_x86_64/lib
 export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_x86_64/lib
 export ANDROID_SQLITE_LIB=$WORK_DIR/libsqlite3-android/x86_64
+sed -i .bak 's/\"\"\.as_ptr() as \*const u8/\"\"\.as_ptr() as \*const i8/' src/services/wallet/storage/plugged/mod.rs
 cargo build --target x86_64-linux-android --release --verbose
 
 # This builds the library for code that runs in OSX
 export OPENSSL_DIR=$OPENSSL_DIR_DARWIN
+sed -i .bak 's/\"\"\.as_ptr() as \*const u8/\"\"\.as_ptr() as \*const i8/' src/services/wallet/storage/plugged/mod.rs
 cargo build --target x86_64-apple-darwin --release --verbose
 
 #########################################################################################################################
@@ -145,6 +151,7 @@ export PATH=$WORK_DIR/NDK/arm/bin:$ORIGINAL_PATH
 export OPENSSL_DIR=$WORK_DIR/openssl_for_ios_and_android/output/android/openssl-armeabi
 export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_arm/lib
 export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_arm/lib
+export ANDROID_SQLITE_LIB=$WORK_DIR/libsqlite3-android/armeabi-v7a
 export LIBINDY_DIR=$WORK_DIR/vcx-indy-sdk/libindy/target/arm-linux-androideabi/release
 cargo build --target arm-linux-androideabi --release --verbose
 
@@ -152,6 +159,7 @@ export PATH=$WORK_DIR/NDK/arm/bin:$ORIGINAL_PATH
 export OPENSSL_DIR=$WORK_DIR/openssl_for_ios_and_android/output/android/openssl-armeabi-v7a
 export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_armv7/lib
 export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_armv7/lib
+export ANDROID_SQLITE_LIB=$WORK_DIR/libsqlite3-android/armeabi-v7a
 export LIBINDY_DIR=$WORK_DIR/vcx-indy-sdk/libindy/target/armv7-linux-androideabi/release
 cargo build --target armv7-linux-androideabi --release --verbose
 
@@ -159,6 +167,7 @@ export PATH=$WORK_DIR/NDK/arm64/bin:$ORIGINAL_PATH
 export OPENSSL_DIR=$WORK_DIR/openssl_for_ios_and_android/output/android/openssl-arm64-v8a
 export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_arm64/lib
 export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_arm64/lib
+export ANDROID_SQLITE_LIB=$WORK_DIR/libsqlite3-android/arm64-v8a
 export LIBINDY_DIR=$WORK_DIR/vcx-indy-sdk/libindy/target/aarch64-linux-android/release
 cargo build --target aarch64-linux-android --release --verbose
 
@@ -166,6 +175,7 @@ export PATH=$WORK_DIR/NDK/x86/bin:$ORIGINAL_PATH
 export OPENSSL_DIR=$WORK_DIR/openssl_for_ios_and_android/output/android/openssl-x86
 export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_x86/lib
 export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_x86/lib
+export ANDROID_SQLITE_LIB=$WORK_DIR/libsqlite3-android/x86
 export LIBINDY_DIR=$WORK_DIR/vcx-indy-sdk/libindy/target/i686-linux-android/release
 cargo build --target i686-linux-android --release --verbose
 
@@ -173,6 +183,7 @@ export PATH=$WORK_DIR/NDK/x86_64/bin:$ORIGINAL_PATH
 export OPENSSL_DIR=$WORK_DIR/openssl_for_ios_and_android/output/android/openssl-x86_64
 export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_x86_64/lib
 export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_x86_64/lib
+export ANDROID_SQLITE_LIB=$WORK_DIR/libsqlite3-android/x86_64
 export LIBINDY_DIR=$WORK_DIR/vcx-indy-sdk/libindy/target/x86_64-linux-android/release
 cargo build --target x86_64-linux-android --release --verbose
 
