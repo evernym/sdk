@@ -100,12 +100,10 @@ def android() {
                 //Package .so files into .aar 
                 packageAndroid(rust)
 
-                //if (env.BRANCH_NAME == "master") {
+                if (env.BRANCH_NAME == "master") {
                     //Publish package on aptly
-                    //publishAndroid(rust)
-                //}
-                // TODO:KS Remove this after testing
-                publishAndroid(rust)
+                    publishAndroid(rust)
+                }
             } catch (Exception ex) {
                 currentBuild.result = "FAILED"
                 if (env.BRANCH_NAME == "master") {
