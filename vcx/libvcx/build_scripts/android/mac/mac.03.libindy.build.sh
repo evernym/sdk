@@ -128,7 +128,7 @@ cargo build --target x86_64-apple-darwin --release --verbose
 #########################################################################################################################
 cd $WORK_DIR/vcx-indy-sdk/libnullpay
 
-# Replace '\"dylib\"' with '\"staticlib\", \"dylib\"' in Cargo.toml
+# Replace '\"cdylib\"' with '\"staticlib\", \"cdylib\"' in Cargo.toml
 sed -i .bak 's/\"cdylib\"/\"staticlib\", \"cdylib\"/' Cargo.toml
 
 # !IMPORTANT STEPS NEXT -- Modify the build.rs of libnullpay to handle android shared libraries
