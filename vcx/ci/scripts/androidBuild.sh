@@ -29,6 +29,7 @@ setup() {
     mkdir -p ${ANDROID_JNI_LIB}/x86
     mkdir -p ${ANDROID_JNI_LIB}/arm64
      if [ $1 == "arm64" ]; then
+        echo "overwriting .cargo files for arm64"
         overwrite_cargo_files
     fi
 
