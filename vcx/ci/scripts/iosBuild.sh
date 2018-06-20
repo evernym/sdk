@@ -8,7 +8,11 @@ setup() {
     install_dependency ruby
     install_dependency curl
     install_dependency git
-    install_dependency java
+
+    if [ ! -f /usr/local/bin/java8 } ]; then
+        echo "Intalling java8"
+        brew cask install java8
+    fi
 
     echo $(ls /Users)
     if [ ! -f /Users/jenkins/Library/Android/sdk ]; then
@@ -21,9 +25,7 @@ setup() {
 
 install_dependency() {
     DEP=$1
-    echo $DEP
     echo $(ls /usr/local/bin)
-    echo $(ls /usr/local/bin/${DEP})
     if [ ! -f /usr/local/bin/${DEP} ]; then
         echo "Intalling ${DEP}"
         brew install ${DEP}
