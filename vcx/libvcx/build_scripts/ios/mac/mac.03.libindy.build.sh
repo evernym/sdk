@@ -45,7 +45,7 @@ cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios,armv
 cd $WORK_DIR/vcx-indy-sdk/libnullpay
 
 # Replace '\"dylib\"' with '\"staticlib\", \"dylib\"' in Cargo.toml
-sed -i .bak 's/\"dylib\"/\"staticlib\", \"dylib\"/' Cargo.toml
+sed -i .bak 's/\"cdylib\"/\"staticlib\", \"cdylib\"/' Cargo.toml
 
 # To build for macos
 #cargo build
