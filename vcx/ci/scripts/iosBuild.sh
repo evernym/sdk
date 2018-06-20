@@ -9,7 +9,7 @@ setup() {
     install_dependency curl
     install_dependency git
 
-    if [ ! -f /usr/local/bin/java8 } ]; then
+    if [ ! -f /usr/local/bin/java8 ]; then
         echo "Intalling java8"
         brew cask install java8
     fi
