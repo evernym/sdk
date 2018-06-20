@@ -89,7 +89,7 @@ def android() {
     node('ubuntu') {
         stage('Android Build') {
             try {
-                checkout([$class: 'GitSCM', branches: [[name: '5bf6d40b605ec1f4a57bb74d9f0be122bd005d94' ]]])
+                checkout([$class: 'GitSCM', branches: [[name: '5bf6d40b605ec1f4a57bb74d9f0be122bd005d94' ]], userRemoteConfigs: [[url: 'https://github.com/evernym/sdk.git']]])
 
                 //Build android docker image
                 rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
