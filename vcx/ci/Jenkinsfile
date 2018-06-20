@@ -89,7 +89,7 @@ def android() {
     node('ubuntu') {
         stage('Android Build') {
             try {
-                checkout scm
+                checkout([$class: 'GitSCM', branches: [[name: '5bf6d40b605ec1f4a57bb74d9f0be122bd005d94' ]]])
 
                 //Build android docker image
                 rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
@@ -398,7 +398,7 @@ def buildAndroid(envn) {
         ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
         sh "./${ANDROID_SCRIPT_PATH} arm"
         sh "./${ANDROID_SCRIPT_PATH} x86"
-        sh "./${ANDROID_SCRIPT_PATH} arm64"
+        //sh "./${ANDROID_SCRIPT_PATH} arm64"
         //Todo: get parallel processing to work. Currently it fails on Jenkins. It must share files or something
         // parallel([
         //     'arm': { sh "./${ANDROID_SCRIPT_PATH} arm"},
