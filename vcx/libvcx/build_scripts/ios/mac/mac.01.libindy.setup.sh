@@ -52,7 +52,7 @@ if [[ $RUSTUP_VERSION =~ ^'rustup ' ]]; then
     if [ "RUST_TARGETS" = "" ]; then
         sudo xcodebuild -license
         echo "If you have successfully accepted the xcode build license then just re-run this script."
-        echo "If you were not able to successfully accept the xcode build license then run this command in a terminal 'sudo xcodebuild -license' before you attempt to re-run this script"
+        echo "If you were not able to successfully accept the xcode build license then run this command in a terminal 'sudo xcodebuild -license' until it is successful before you attempt to re-run this script"
         exit 1
     fi
 
