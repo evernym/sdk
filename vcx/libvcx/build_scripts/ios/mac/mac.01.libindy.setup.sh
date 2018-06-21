@@ -1,6 +1,8 @@
 #!/bin/sh
 
 #1) Install Rust and rustup (https://www.rust-lang.org/install.html).
+#To get into the if statement below execute the following command...
+# mv /Users/norm/.cargo/bin/rustup /Users/norm/.cargo/bin/rustup.bak
 RUSTUP_VERSION=`rustup --version`
 if [ "$?" != "0" ]; then
     if [ -f $HOME/.cargo/bin/rustup ]; then

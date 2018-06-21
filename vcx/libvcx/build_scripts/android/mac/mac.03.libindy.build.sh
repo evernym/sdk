@@ -156,6 +156,10 @@ echo "--------------------------------------------------------------------------
 export OPENSSL_DIR=$OPENSSL_DIR_DARWIN
 #unset LIBZMQ_LIB_DIR
 #unset LIBZMQ_INCLUDE_DIR
+unset ANDROID_SODIUM_LIB
+SODIUM_LIB_DIR=/usr/local/lib
+ANDROID_ZMQ_LIB=/usr/local/lib
+unset ANDROID_SQLITE_LIB
 sed -i .bak 's/\"\"\.as_ptr() as \*const u8/\"\"\.as_ptr() as \*const i8/' src/services/wallet/storage/plugged/mod.rs
 cargo build --target x86_64-apple-darwin --release --verbose
 echo "-----------------------------------------------------------------------------------------------"
@@ -237,6 +241,10 @@ echo "--------------------------------------------------------------------------
 export OPENSSL_DIR=$OPENSSL_DIR_DARWIN
 #unset LIBZMQ_LIB_DIR
 #unset LIBZMQ_INCLUDE_DIR
+unset ANDROID_SODIUM_LIB
+SODIUM_LIB_DIR=/usr/local/lib
+ANDROID_ZMQ_LIB=/usr/local/lib
+unset ANDROID_SQLITE_LIB
 cargo build --target x86_64-apple-darwin --release --verbose
 
 export PATH=$ORIGINAL_PATH
