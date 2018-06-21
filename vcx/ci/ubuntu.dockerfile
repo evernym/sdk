@@ -1,9 +1,6 @@
 # Development
 FROM ubuntu:16.04
 
-ARG uid=1000
-
-
 # Update environment
 # JRE installation and gcc
 RUN apt-get update -y && apt-get install -y \
@@ -72,11 +69,6 @@ RUN curl -fsOSL $RUST_DOWNLOAD_URL \
 RUN gem install fpm
 RUN apt-get install rpm -y
 
-RUN useradd -ms /bin/bash -u $uid vcx
-USER vcx
-
 # cargo deb for debian packaging of libvcx
 RUN cargo install cargo-deb --color=never
-
-
 
