@@ -1,4 +1,5 @@
 extern crate libc;
+extern crate serde_json;
 
 use self::libc::c_char;
 use std::ffi::CString;
@@ -9,6 +10,9 @@ use utils::libindy::return_types::{ Return_I32, Return_I32_I32, receive};
 use utils::libindy::error_codes::{map_indy_error_code, map_string_error};
 use utils::timeout::TimeoutUtils;
 use utils::error;
+use error::wallet::WalletError;
+use std::fs::File;
+use std::path::Path;
 
 pub static mut WALLET_HANDLE: i32 = 0;
 
@@ -48,6 +52,32 @@ extern {
                             wallet_handle: i32,
                             identity_json: *const c_char,
                             cb: Option<extern fn(xcommand_handle: i32, err: i32)>) -> i32;
+
+    fn indy_export_wallet(command_handle: i32,
+                          wallet_handle: i32,
+                          export_config_json: *const c_char,
+                          cb: Option<extern fn(xcommand_handle: i32, err: i32)>) -> i32;
+}
+
+
+#[derive(Serialize)]
+struct Config {
+    path: String,
+    key: String,
+}
+
+impl Config {
+    pub fn new(path: &Path, key: &str) -> Result< Config, WalletError> {
+        let p = path.to_str().ok_or(WalletError::IoError())?;
+        Ok(Config {
+            path: p.to_string(),
+            key: key.to_string(),
+        })
+    }
+
+    pub fn to_string(c: Config) -> Result< String, WalletError > {
+        serde_json::to_string(&c).or(Err(WalletError::InvalidJson()))
+    }
 }
 
 pub fn get_wallet_handle() -> i32 { unsafe { WALLET_HANDLE } }
@@ -213,6 +243,22 @@ pub fn store_their_did(identity_json: &str) -> Result<(), u32> {
     rtn_obj.receive(TimeoutUtils::some_long())
 }
 
+pub fn export(wallet_handle: i32, path: &Path, key: &str) -> Result<(), WalletError> {
+    let config = Config::new(path, key).and_then(Config::to_string)?;
+    let wallet_export_config = CString::new(config).or(Err(WalletError::InvalidJson()))?;
+    let rtn_obj = Return_I32::new().map_err(|e| WalletError::CommonError(e))?;
+    unsafe {
+        indy_function_eval(indy_export_wallet(rtn_obj.command_handle,
+                                              wallet_handle,
+                                              wallet_export_config.as_ptr(),
+                                              Some(rtn_obj.get_callback()))).map_err(|ec| WalletError::CommonError(ec as u32))?;
+    }
+
+    println!("Waiting for cb from libindy...");
+    rtn_obj.receive(TimeoutUtils::some_long()).map_err(|ec| WalletError::CommonError(ec as u32))
+
+}
+
 #[cfg(test)]
 pub mod tests {
     use super::*;
@@ -244,13 +290,45 @@ pub mod tests {
 
     #[test]
     fn test_wallet_with_credentials() {
+        use std::env;
+        use std::fs;
+
+        let KEY = "pass";
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
-        settings::set_config_value(settings::CONFIG_WALLET_KEY,"pass");
+        settings::set_config_value(settings::CONFIG_WALLET_KEY, KEY);
 
         let handle = init_wallet("password_wallet").unwrap();
 
         SignusUtils::create_and_store_my_did(handle,None).unwrap();
+        let mut dir = env::temp_dir();
+        let filename_str = &settings::get_config_value(settings::CONFIG_WALLET_NAME).unwrap();
+        dir.push(filename_str);
+        if Path::new(&dir).exists() {
+            fs::remove_file(Path::new(&dir));
+        }
+        export(handle, &dir, KEY).is_ok();
+        assert!(Path::new(&dir).exists());
+//        match fs::remove_file(Path::new(&dir)) {
+//            Ok(_) => println!("file removed"),
+//            Err(_) => println!("File NOT removed"),
+//        };
+//        assert!(!Path::new(&dir).exists());
         delete_wallet("password_wallet").unwrap();
     }
+
+    #[test]
+    fn  test_config () {
+        let p: &Path = Path::new("/foobar");
+        println!("{:?}", p.to_str());
+        let path = "one/direction";
+        let key = "key";
+        let config: Config = Config {
+            path: path.to_string(),
+            key: key.to_string(),
+        };
+
+        assert_eq!(r#"{"path":"one/direction","key":"key"}"#, serde_json::to_string(&config).unwrap());
+    }
+
 }
