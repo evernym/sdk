@@ -2,8 +2,8 @@
 export class ConnectionTimeoutError extends Error {}
 
 export class VCXInternalError extends Error {
-  readonly vcxCode: number
-  readonly vcxFunction: string
+  public readonly vcxCode: number
+  public readonly vcxFunction: string
 
   constructor (code: number, message: string, fn: string) {
     super(message)

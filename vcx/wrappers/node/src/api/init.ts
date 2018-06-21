@@ -4,7 +4,7 @@ import { VCXInternalError } from '../errors'
 import { initRustAPI, rustAPI } from '../rustlib'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
 import { IInitVCXOptions } from './common'
-import { VCXBase } from './VCXBase'
+import { VCXBase } from './vcx-base'
 
 export async function initVcx (configPath: string, options: IInitVCXOptions = {}): Promise<void> {
   initRustAPI(options.libVCXPath)

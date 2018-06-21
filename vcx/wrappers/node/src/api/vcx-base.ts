@@ -16,11 +16,11 @@ export abstract class VCXBase<SerializedData> extends GCWatcher {
     this._sourceId = sourceId
   }
 
-  static errorMessage (errorCode: number): string {
+  public static errorMessage (errorCode: number): string {
     return rustAPI().vcx_error_c_message(errorCode)
   }
 
-  static async _deserialize<T extends VCXBase<any> = any, P = object> (
+  public static async _deserialize<T extends VCXBase<any> = any, P = object> (
     VCXClass: new(sourceId: string, ...args: any[]) => T,
     objData: { source_id: string },
     constructorParams?: P
@@ -43,7 +43,7 @@ export abstract class VCXBase<SerializedData> extends GCWatcher {
    * @returns {Promise<SerializedData>} - Json object with all of the underlying Rust attributes.
    * Same json object structure that is passed to the deserialize function.
    */
-  async serialize (): Promise<SerializedData> {
+  public async serialize (): Promise<SerializedData> {
     try {
       const dataStr = await createFFICallbackPromise<string>(
         (resolve, reject, cb) => {

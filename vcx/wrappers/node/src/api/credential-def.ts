@@ -2,7 +2,7 @@ import * as ffi from 'ffi'
 import { VCXInternalError } from '../errors'
 import { rustAPI } from '../rustlib'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
-import { VCXBase } from './VCXBase'
+import { VCXBase } from './vcx-base'
 
 /**
  * @interface
@@ -43,20 +43,6 @@ export interface ICredentialDefParams {
  * @class Class representing a credential Definition
  */
 export class CredentialDef extends VCXBase<ICredentialDefData> {
-  protected _releaseFn = rustAPI().vcx_credentialdef_release
-  protected _serializeFn = rustAPI().vcx_credentialdef_serialize
-  protected _deserializeFn = rustAPI().vcx_credentialdef_deserialize
-  private _name: string
-  private _schemaId: string
-  private _credDefId: string | null
-
-  constructor (sourceId: string, { name, schemaId }: ICredentialDefParams) {
-    super(sourceId)
-    this._name = name
-    this._schemaId = schemaId
-    this._credDefId = null
-  }
-
   /**
    * @memberof CredentialDef
    * @description creates a credential definition on the ledger and returns an associated object.
@@ -74,7 +60,7 @@ export class CredentialDef extends VCXBase<ICredentialDefData> {
    * }
    * @returns {Promise<credentialDef>} A credentialDef Object
    */
-  static async create ({
+  public static async create ({
     name,
     paymentHandle,
     schemaId,
@@ -112,13 +98,27 @@ export class CredentialDef extends VCXBase<ICredentialDefData> {
    * @param {ICredentialDefObj} data - data obtained by serialize api. Used to build a credentialdef object.
    * @returns {Promise<credentialDef>} A credentialDef Object
    */
-  static async deserialize (data: ICredentialDefObj) {
+  public static async deserialize (data: ICredentialDefObj) {
     // Todo: update the ICredentialDefObj
     const credentialDefParams = {
       name: data.name,
       schemaId: null
     }
-    return await super._deserialize(CredentialDef, data, credentialDefParams)
+    return super._deserialize(CredentialDef, data, credentialDefParams)
+  }
+
+  protected _releaseFn = rustAPI().vcx_credentialdef_release
+  protected _serializeFn = rustAPI().vcx_credentialdef_serialize
+  protected _deserializeFn = rustAPI().vcx_credentialdef_deserialize
+  private _name: string
+  private _schemaId: string
+  private _credDefId: string | null
+
+  constructor (sourceId: string, { name, schemaId }: ICredentialDefParams) {
+    super(sourceId)
+    this._name = name
+    this._schemaId = schemaId
+    this._credDefId = null
   }
 
   /**
@@ -128,7 +128,7 @@ export class CredentialDef extends VCXBase<ICredentialDefData> {
    * @function getCredDefId
    * @returns {Promise<string>} - CredDef's Identifier
    */
-  async getCredDefId (): Promise<string> {
+  public async getCredDefId (): Promise<string> {
     try {
       const credDefId = await createFFICallbackPromise<string>(
           (resolve, reject, cb) => {
@@ -152,6 +152,29 @@ export class CredentialDef extends VCXBase<ICredentialDefData> {
       return credDefId
     } catch (err) {
       throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_credentialdef_get_cred_def_id')
+    }
+  }
+
+  public async getPaymentTxn (): Promise<string> {
+    try {
+      return await createFFICallbackPromise<string>(
+          (resolve, reject, cb) => {
+            const rc = rustAPI().vcx_credentialdef_get_payment_txn(0, this.handle, cb)
+            if (rc) {
+              reject(rc)
+            }
+          },
+          (resolve, reject) => ffi.Callback('void', ['uint32', 'uint32', 'string'],
+          (xcommandHandle: number, err: number, info: any) => {
+            if (err) {
+              reject(err)
+              return
+            }
+            resolve(info)
+          })
+        )
+    } catch (err) {
+      throw new VCXInternalError(err, VCXBase.errorMessage(err), `vcx_credential_get_payment_info`)
     }
   }
 

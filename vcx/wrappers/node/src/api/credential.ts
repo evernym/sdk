@@ -4,8 +4,8 @@ import { VCXInternalError } from '../errors'
 import { rustAPI } from '../rustlib'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
 import { Connection } from './connection'
-import { VCXBase } from './VCXBase'
-import { VCXBaseWithState } from './VCXBaseWithState'
+import { VCXBase } from './vcx-base'
+import { VCXBaseWithState } from './vcx-base-with-state'
 
 export interface ICredentialStructData {
   source_id: string,
@@ -32,14 +32,7 @@ export interface ICredentialSendData {
 }
 
 export class Credential extends VCXBaseWithState<ICredentialStructData> {
-  protected _releaseFn = rustAPI().vcx_credential_release
-  protected _updateStFn = rustAPI().vcx_credential_update_state
-  protected _getStFn = rustAPI().vcx_credential_get_state
-  protected _serializeFn = rustAPI().vcx_credential_serialize
-  protected _deserializeFn = rustAPI().vcx_credential_deserialize
-  private _credOffer: string = ''
-
-  static async create ({ sourceId, offer }: ICredentialCreateWithOffer): Promise<Credential> {
+  public static async create ({ sourceId, offer }: ICredentialCreateWithOffer): Promise<Credential> {
     const credential = new Credential(sourceId)
     try {
       await credential._create((cb) => rustAPI().vcx_credential_create_with_offer(
@@ -55,7 +48,9 @@ export class Credential extends VCXBaseWithState<ICredentialStructData> {
     }
   }
 
-  static async createWithMsgId ({ connection, sourceId, msgId }: ICredentialCreateWithMsgId): Promise<Credential> {
+  public static async createWithMsgId (
+    { connection, sourceId, msgId }: ICredentialCreateWithMsgId
+  ): Promise<Credential> {
     try {
       return await createFFICallbackPromise<Credential>(
           (resolve, reject, cb) => {
@@ -76,7 +71,7 @@ export class Credential extends VCXBaseWithState<ICredentialStructData> {
               const handleStr = handleNum.toString()
               newObj._setHandle(handleStr)
               newObj._credOffer = credOffer
-              resolve( newObj )
+              resolve(newObj)
             })
       )
     } catch (err) {
@@ -84,12 +79,12 @@ export class Credential extends VCXBaseWithState<ICredentialStructData> {
     }
   }
 
-  static async deserialize (credentialData: ICredentialStructData) {
+  public static async deserialize (credentialData: ICredentialStructData) {
     const credential = await super._deserialize<Credential, {}>(Credential, credentialData)
     return credential
   }
 
-  static async getOffers (connection: Connection): Promise<ICredentialOffer[]> {
+  public static async getOffers (connection: Connection): Promise<ICredentialOffer[]> {
     const offersStr = await createFFICallbackPromise<string>(
       (resolve, reject, cb) => {
         const rc = rustAPI().vcx_credential_get_offers(0, connection.handle, cb)
@@ -112,7 +107,14 @@ export class Credential extends VCXBaseWithState<ICredentialStructData> {
     return offers
   }
 
-  async sendRequest ({ connection, payment }: ICredentialSendData): Promise<void> {
+  protected _releaseFn = rustAPI().vcx_credential_release
+  protected _updateStFn = rustAPI().vcx_credential_update_state
+  protected _getStFn = rustAPI().vcx_credential_get_state
+  protected _serializeFn = rustAPI().vcx_credential_serialize
+  protected _deserializeFn = rustAPI().vcx_credential_deserialize
+  private _credOffer: string = ''
+
+  public async sendRequest ({ connection, payment }: ICredentialSendData): Promise<void> {
     try {
       await createFFICallbackPromise<void>(
           (resolve, reject, cb) => {
@@ -138,9 +140,9 @@ export class Credential extends VCXBaseWithState<ICredentialStructData> {
     return this._credOffer
   }
 
-  async getPaymentInfo (): Promise<string> {
+  public async getPaymentInfo (): Promise<string> {
     try {
-      return await createFFICallbackPromise<string> (
+      return await createFFICallbackPromise<string>(
           (resolve, reject, cb) => {
             const rc = rustAPI().vcx_credential_get_payment_info(0, this.handle, cb)
             if (rc) {
@@ -154,6 +156,29 @@ export class Credential extends VCXBaseWithState<ICredentialStructData> {
             } else {
               resolve(info)
             }
+          })
+        )
+    } catch (err) {
+      throw new VCXInternalError(err, VCXBase.errorMessage(err), `vcx_credential_get_payment_info`)
+    }
+  }
+
+  public async getPaymentTxn (): Promise<string> {
+    try {
+      return await createFFICallbackPromise<string>(
+          (resolve, reject, cb) => {
+            const rc = rustAPI().vcx_credential_get_payment_txn(0, this.handle, cb)
+            if (rc) {
+              reject(rc)
+            }
+          },
+          (resolve, reject) => Callback('void', ['uint32', 'uint32', 'string'],
+          (xcommandHandle: number, err: number, info: any) => {
+            if (err) {
+              reject(err)
+              return
+            }
+            resolve(info)
           })
         )
     } catch (err) {

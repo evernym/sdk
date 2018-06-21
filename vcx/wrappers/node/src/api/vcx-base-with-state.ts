@@ -2,7 +2,7 @@ import * as ffi from 'ffi'
 import { VCXInternalError } from '../errors'
 import { createFFICallbackPromise, ICbRef } from '../utils/ffi-helpers'
 import { StateType } from './common'
-import { VCXBase } from './VCXBase'
+import { VCXBase } from './vcx-base'
 
 export abstract class VCXBaseWithState<SerializedData> extends VCXBase<SerializedData> {
   protected abstract _updateStFn: (commandHandle: number, handle: string, cb: ICbRef) => number
@@ -20,7 +20,7 @@ export abstract class VCXBaseWithState<SerializedData> extends VCXBase<Serialize
     try {
       await createFFICallbackPromise<number>(
         (resolve, reject, cb) => {
-          const rc = this._updateStFn(commandHandle, this.handle as string, cb)
+          const rc = this._updateStFn(commandHandle, this.handle, cb)
           if (rc) {
             resolve(StateType.None)
           }

@@ -1,0 +1,1 @@
+export const VCX_CONFIG_TEST_MODE = 'ENABLE_TEST_MODE'

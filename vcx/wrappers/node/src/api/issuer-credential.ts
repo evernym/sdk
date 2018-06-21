@@ -5,8 +5,8 @@ import { rustAPI } from '../rustlib'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
 import { StateType } from './common'
 import { Connection } from './connection'
-import { VCXBase } from './VCXBase'
-import { VCXBaseWithState } from './VCXBaseWithState'
+import { VCXBase } from './vcx-base'
+import { VCXBaseWithState } from './vcx-base-with-state'
 
 /**
  * @interface
@@ -58,24 +58,6 @@ export interface IIssuerCredentialData {
  * @class Class representing an Issuer credential
  */
 export class IssuerCredential extends VCXBaseWithState<IIssuerCredentialData> {
-  protected _releaseFn = rustAPI().vcx_issuer_credential_release
-  protected _updateStFn = rustAPI().vcx_issuer_credential_update_state
-  protected _getStFn = rustAPI().vcx_issuer_credential_get_state
-  protected _serializeFn = rustAPI().vcx_issuer_credential_serialize
-  protected _deserializeFn = rustAPI().vcx_issuer_credential_deserialize
-  private _credDefId: string
-  private _credentialName: string
-  private _attr: IIssuerCredentialVCXAttributes
-  private _price: number
-
-  constructor (sourceId: string, { credDefId, credentialName, attr, price }: IIssuerCredentialParams) {
-    super(sourceId)
-    this._credDefId = credDefId
-    this._credentialName = credentialName
-    this._attr = attr
-    this._price = price
-  }
-
   /**
    * @memberof IssuerCredential
    * @description Builds a generic Issuer credential object
@@ -87,7 +69,7 @@ export class IssuerCredential extends VCXBaseWithState<IIssuerCredentialData> {
    * { sourceId: "12", credDefId: "credDefId", attr: {key: "value"}, credentialName: "name", price: 0}
    * @returns {Promise<IssuerCredential>} An Issuer credential Object
    */
-  static async create ({ attr, sourceId, credDefId,
+  public static async create ({ attr, sourceId, credDefId,
                          credentialName, price }: IIssuerCredentialCreateData): Promise<IssuerCredential> {
     const attrsVCX: IIssuerCredentialVCXAttributes = Object.keys(attr)
       .reduce((accum, attrKey) => ({ ...accum, [attrKey]: [attr[attrKey]] }), {})
@@ -123,7 +105,7 @@ export class IssuerCredential extends VCXBaseWithState<IIssuerCredentialData> {
  * @param {IIssuerCredentialData} credentialData - Data from the serialize api. Used to create IssuerCredential Object
  * @returns {Promise<IssuerCredential>} An Issuer credential Object
  */
-  static async deserialize (credentialData: IIssuerCredentialData) {
+  public static async deserialize (credentialData: IIssuerCredentialData) {
     const attr = JSON.parse(credentialData.credential_attributes)
     const params: IIssuerCredentialParams = {
       attr,
@@ -137,6 +119,24 @@ export class IssuerCredential extends VCXBaseWithState<IIssuerCredentialData> {
     return credential
   }
 
+  protected _releaseFn = rustAPI().vcx_issuer_credential_release
+  protected _updateStFn = rustAPI().vcx_issuer_credential_update_state
+  protected _getStFn = rustAPI().vcx_issuer_credential_get_state
+  protected _serializeFn = rustAPI().vcx_issuer_credential_serialize
+  protected _deserializeFn = rustAPI().vcx_issuer_credential_deserialize
+  private _credDefId: string
+  private _credentialName: string
+  private _attr: IIssuerCredentialVCXAttributes
+  private _price: number
+
+  constructor (sourceId: string, { credDefId, credentialName, attr, price }: IIssuerCredentialParams) {
+    super(sourceId)
+    this._credDefId = credDefId
+    this._credentialName = credentialName
+    this._attr = attr
+    this._price = price
+  }
+
   /**
    * @memberof IssuerCredential
    * @description Sends a credential Offer to the end user.
@@ -147,7 +147,7 @@ export class IssuerCredential extends VCXBaseWithState<IIssuerCredentialData> {
    * Connection is the object that was created to set up the pairwise relationship.
    * @returns {Promise<void>}
    */
-  async sendOffer (connection: Connection): Promise<void> {
+  public async sendOffer (connection: Connection): Promise<void> {
     try {
       await createFFICallbackPromise<void>(
           (resolve, reject, cb) => {
@@ -183,7 +183,7 @@ export class IssuerCredential extends VCXBaseWithState<IIssuerCredentialData> {
  * Connection is the object that was created to set up the pairwise relationship.
  * @returns {Promise<void>}
  */
-  async sendCredential (connection: Connection): Promise<void> {
+  public async sendCredential (connection: Connection): Promise<void> {
     try {
       await createFFICallbackPromise<void>(
         (resolve, reject, cb) => {
@@ -205,6 +205,29 @@ export class IssuerCredential extends VCXBaseWithState<IIssuerCredentialData> {
       )
     } catch (err) {
       throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_issuer_send_credential')
+    }
+  }
+
+  public async getPaymentTxn (): Promise<string> {
+    try {
+      return await createFFICallbackPromise<string>(
+          (resolve, reject, cb) => {
+            const rc = rustAPI().vcx_issuer_credential_get_payment_txn(0, this.handle, cb)
+            if (rc) {
+              reject(rc)
+            }
+          },
+          (resolve, reject) => Callback('void', ['uint32', 'uint32', 'string'],
+          (xcommandHandle: number, err: number, info: any) => {
+            if (err) {
+              reject(err)
+              return
+            }
+            resolve(info)
+          })
+        )
+    } catch (err) {
+      throw new VCXInternalError(err, VCXBase.errorMessage(err), `vcx_credential_get_payment_info`)
     }
   }
 

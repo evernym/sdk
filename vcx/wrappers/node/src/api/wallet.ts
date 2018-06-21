@@ -3,7 +3,7 @@ import { Callback } from 'ffi'
 import { VCXInternalError } from '../errors'
 import { rustAPI } from '../rustlib'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
-import { VCXBase } from './VCXBase'
+import { VCXBase } from './vcx-base'
 
 export type PaymentAddress = string
 export type PaymentAmount = number
@@ -58,7 +58,7 @@ export class Wallet {
    * @param {paymentAddress} address
    * @returns {Promise<string>} Wallet info, balance, addresses, etc
    */
-  static async getTokenInfo (handle?: PaymentHandle): Promise<string> {
+  public static async getTokenInfo (handle?: PaymentHandle): Promise<string> {
     try {
       return await createFFICallbackPromise<string>(
         (resolve, reject, cb) => {
@@ -91,7 +91,7 @@ export class Wallet {
    * @param
    * @returns {Promise<string>} New address
    */
-  static async createPaymentAddress ( ): Promise<string> {
+  public static async createPaymentAddress (): Promise<string> {
     try {
       return await createFFICallbackPromise<string>(
         (resolve, reject, cb) => {
@@ -124,7 +124,7 @@ export class Wallet {
    * @param {ISendTokens} sendTokensData
    * @returns {Promise<string>} The receipt
    */
-  static async sendTokens ({ payment, tokens, recipient }: ISendTokens): Promise<string> {
+  public static async sendTokens ({ payment, tokens, recipient }: ISendTokens): Promise<string> {
     try {
       return await createFFICallbackPromise<string>(
         (resolve, reject, cb) => {
@@ -157,7 +157,7 @@ export class Wallet {
    * @param {Record} record
    * @returns {Promise<void>}
    */
-  static async addRecord ( record: IRecord): Promise<void> {
+  public static async addRecord (record: IRecord): Promise<void> {
     const commandHandle = 0
     try {
       await createFFICallbackPromise<string>(
@@ -195,7 +195,7 @@ export class Wallet {
    * @param {Record} record
    * @returns {Promise<void>}
    */
-  static async updateRecordValue ( record: IRecord): Promise<void> {
+  public static async updateRecordValue (record: IRecord): Promise<void> {
     const commandHandle = 0
     try {
       await createFFICallbackPromise<string>(
@@ -232,7 +232,7 @@ export class Wallet {
    * @param {Record} record
    * @returns {Promise<void>}
    */
-  static async updateRecordTags ( record: IRecord): Promise<void> {
+  public static async updateRecordTags (record: IRecord): Promise<void> {
     const commandHandle = 0
     try {
       await createFFICallbackPromise<string>(
@@ -270,7 +270,7 @@ export class Wallet {
    * @param {Record} record
    * @returns {Promise<void>}
    */
-  static async addRecordTags ( record: IRecord): Promise<void> {
+  public static async addRecordTags (record: IRecord): Promise<void> {
     const commandHandle = 0
     try {
       await createFFICallbackPromise<string>(
@@ -309,7 +309,7 @@ export class Wallet {
    * @param {IDeleteRecordTagsOptions} options
    * @returns {Promise<void>}
    */
-  static async deleteRecordTags ( record: IRecord, { tagList }: IDeleteRecordTagsOptions): Promise<void> {
+  public static async deleteRecordTags (record: IRecord, { tagList }: IDeleteRecordTagsOptions): Promise<void> {
     const commandHandle = 0
     try {
       await createFFICallbackPromise<string>(
@@ -348,7 +348,7 @@ export class Wallet {
    * @param {List} tagList
    * @returns {Promise<void>}
    */
-  static async deleteRecord ({ type, id }: IDeleteRecordData): Promise<void> {
+  public static async deleteRecord ({ type, id }: IDeleteRecordData): Promise<void> {
     const commandHandle = 0
     try {
       await createFFICallbackPromise<string>(
@@ -386,7 +386,7 @@ export class Wallet {
    * @param {String} id
    * @returns {Promise<string>}
    */
-  static async getRecord ({ type, id }: IGerRecordData): Promise<string> {
+  public static async getRecord ({ type, id }: IGerRecordData): Promise<string> {
     const commandHandle = 0
     try {
       return await createFFICallbackPromise<string>(
@@ -423,7 +423,7 @@ export class Wallet {
     * @param {IOpenSearchData} searchData
     * @returns {Promise<string>}
     */
-  static async openSearch ({ type, queryJson, options }: IOpenSearchData): Promise<number> {
+  public static async openSearch ({ type, queryJson, options }: IOpenSearchData): Promise<number> {
     const commandHandle = 0
     try {
       return await createFFICallbackPromise<number>(
@@ -462,7 +462,7 @@ export class Wallet {
    * @param {String} id
    * @returns {Promise<string>}
    */
-  static async closeSearch (handle: number): Promise<void> {
+  public static async closeSearch (handle: number): Promise<void> {
     const commandHandle = 0
     try {
       await createFFICallbackPromise<number>(
@@ -499,7 +499,7 @@ export class Wallet {
    * @param {number} count
    * @returns {Promise<string>}
    */
-  static async searchNextRecords (handle: number, { count }: ISearchNextRecordsOptions): Promise<string> {
+  public static async searchNextRecords (handle: number, { count }: ISearchNextRecordsOptions): Promise<string> {
     const commandHandle = 0
     try {
       return await createFFICallbackPromise<string>(

@@ -4,7 +4,7 @@ export abstract class GCWatcher {
   protected abstract _releaseFn: any
   private _handleRef: string | null = null
 
-  async release (): Promise<number> {
+  public async release (): Promise<number> {
     return this._releaseFn(this._handleRef)
   }
 

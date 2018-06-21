@@ -5,8 +5,8 @@ import { collectionRenameItemKeys } from '../utils/collection-helpers'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
 import { StateType } from './common'
 import { Connection } from './connection'
-import { VCXBase } from './VCXBase'
-import { VCXBaseWithState } from './VCXBaseWithState'
+import { VCXBase } from './vcx-base'
+import { VCXBaseWithState } from './vcx-base-with-state'
 
 export interface IProofConfig {
   sourceId: string,
@@ -89,21 +89,6 @@ export interface IProofPredicate {
  * @class Class representing a Connection
  */
 export class Proof extends VCXBaseWithState<IProofData> {
-  protected _releaseFn = rustAPI().vcx_proof_release
-  protected _updateStFn = rustAPI().vcx_proof_update_state
-  protected _getStFn = rustAPI().vcx_proof_get_state
-  protected _serializeFn = rustAPI().vcx_proof_serialize
-  protected _deserializeFn = rustAPI().vcx_proof_deserialize
-  private _requestedAttributes: IProofAttr[]
-  private _name: string
-  private _proofState: ProofState | null = null
-
-  constructor (sourceId: string, { attrs, name }: IProofConstructorData) {
-    super(sourceId)
-    this._requestedAttributes = attrs
-    this._name = name
-  }
-
   /**
    * @memberof Proof
    * @description Builds a generic Proof object
@@ -115,7 +100,7 @@ export class Proof extends VCXBaseWithState<IProofData> {
    * {sourceId: string,attrs: [{restrictions: [IFilter ...], name: "attrName"}], name: "name of proof"}
    * @returns {Promise<Proof>} A Proof Object
    */
-  static async create ({ sourceId, ...createDataRest }: IProofConfig): Promise<Proof> {
+  public static async create ({ sourceId, ...createDataRest }: IProofConfig): Promise<Proof> {
     const proof = new Proof(sourceId, createDataRest)
     const commandHandle = 0
 
@@ -144,7 +129,7 @@ export class Proof extends VCXBaseWithState<IProofData> {
    * @param {IProofData} proofData - Data obtained by serialize api. Used to create proof object.
    * @returns {Promise<Proof>} A Proof Object
    */
-  static async deserialize (proofData: IProofData) {
+  public static async deserialize (proofData: IProofData) {
     const attrs = JSON.parse(proofData.requested_attrs)
     const constructorParams: IProofConstructorData = {
       attrs,
@@ -152,6 +137,21 @@ export class Proof extends VCXBaseWithState<IProofData> {
     }
     const proof = await super._deserialize(Proof, proofData, constructorParams)
     return proof
+  }
+
+  protected _releaseFn = rustAPI().vcx_proof_release
+  protected _updateStFn = rustAPI().vcx_proof_update_state
+  protected _getStFn = rustAPI().vcx_proof_get_state
+  protected _serializeFn = rustAPI().vcx_proof_serialize
+  protected _deserializeFn = rustAPI().vcx_proof_deserialize
+  private _requestedAttributes: IProofAttr[]
+  private _name: string
+  private _proofState: ProofState | null = null
+
+  constructor (sourceId: string, { attrs, name }: IProofConstructorData) {
+    super(sourceId)
+    this._requestedAttributes = attrs
+    this._name = name
   }
 
   /**
@@ -164,7 +164,7 @@ export class Proof extends VCXBaseWithState<IProofData> {
    * @function requestProof
    * @returns {Promise<void>}
    */
-  async requestProof (connection: Connection): Promise<void> {
+  public async requestProof (connection: Connection): Promise<void> {
     try {
       await createFFICallbackPromise<void>(
           (resolve, reject, cb) => {
@@ -197,7 +197,7 @@ export class Proof extends VCXBaseWithState<IProofData> {
    * @param {Connection} connection
    * @returns {Promise<IProofResponses>} The proof and the state of the proof (valid | invalid | undefined)
    */
-  async getProof (connection: Connection): Promise<IProofResponses> {
+  public async getProof (connection: Connection): Promise<IProofResponses> {
     try {
       const proofRes = await createFFICallbackPromise<{ proofState: ProofState, proofData: string}>(
           (resolve, reject, cb) => {

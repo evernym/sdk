@@ -95,6 +95,13 @@ describe('A Schema', function () {
     assert.equal(schema.sourceId, deserializedSchema.sourceId)
   })
 
+  it.only('has a payment txn', async () => {
+    const schema = await Schema.create(SCHEMA, 0)
+    assert(schema)
+    const paymentTxn = await schema.getPaymentTxn()
+    console.log(paymentTxn)
+  })
+
   const schemaCreateCheckAndDelete = async () => {
     let schema = await Schema.create(SCHEMA)
     const data = await schema.serialize()
