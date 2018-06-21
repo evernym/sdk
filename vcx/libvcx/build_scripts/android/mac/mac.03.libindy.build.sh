@@ -95,6 +95,7 @@ export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_arm/lib
 export SODIUM_LIB_DIR=$ANDROID_SODIUM_LIB
 export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_arm/lib
 export LIBZMQ_LIB_DIR=$ANDROID_ZMQ_LIB
+export LIBZMQ_INCLUDE_DIR=$WORK_DIR/libzmq-android/zmq/libzmq_arm/include
 export ANDROID_SQLITE_LIB=$WORK_DIR/libsqlite3-android/sqlite3-android/obj/local/armeabi-v7a
 sed -i .bak 's/\"\"\.as_ptr() as \*const i8/\"\"\.as_ptr() as \*const u8/' src/services/wallet/storage/plugged/mod.rs
 cargo build --target arm-linux-androideabi --release --verbose
@@ -105,6 +106,7 @@ export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_armv7/lib
 export SODIUM_LIB_DIR=$ANDROID_SODIUM_LIB
 export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_armv7/lib
 export LIBZMQ_LIB_DIR=$ANDROID_ZMQ_LIB
+export LIBZMQ_INCLUDE_DIR=$WORK_DIR/libzmq-android/zmq/libzmq_armv7/include
 export ANDROID_SQLITE_LIB=$WORK_DIR/libsqlite3-android/sqlite3-android/obj/local/armeabi-v7a
 sed -i .bak 's/\"\"\.as_ptr() as \*const i8/\"\"\.as_ptr() as \*const u8/' src/services/wallet/storage/plugged/mod.rs
 cargo build --target armv7-linux-androideabi --release --verbose
@@ -115,6 +117,7 @@ export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_arm64/lib
 export SODIUM_LIB_DIR=$ANDROID_SODIUM_LIB
 export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_arm64/lib
 export LIBZMQ_LIB_DIR=$ANDROID_ZMQ_LIB
+export LIBZMQ_INCLUDE_DIR=$WORK_DIR/libzmq-android/zmq/libzmq_arm64/include
 export ANDROID_SQLITE_LIB=$WORK_DIR/libsqlite3-android/sqlite3-android/obj/local/arm64-v8a
 sed -i .bak 's/\"\"\.as_ptr() as \*const i8/\"\"\.as_ptr() as \*const u8/' src/services/wallet/storage/plugged/mod.rs
 cargo build --target aarch64-linux-android --release --verbose
@@ -125,6 +128,7 @@ export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_x86/lib
 export SODIUM_LIB_DIR=$ANDROID_SODIUM_LIB
 export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_x86/lib
 export LIBZMQ_LIB_DIR=$ANDROID_ZMQ_LIB
+export LIBZMQ_INCLUDE_DIR=$WORK_DIR/libzmq-android/zmq/libzmq_x86/include
 export ANDROID_SQLITE_LIB=$WORK_DIR/libsqlite3-android/sqlite3-android/obj/local/x86
 sed -i .bak 's/\"\"\.as_ptr() as \*const u8/\"\"\.as_ptr() as \*const i8/' src/services/wallet/storage/plugged/mod.rs
 cargo build --target i686-linux-android --release --verbose
@@ -135,6 +139,7 @@ export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_x86_64/li
 export SODIUM_LIB_DIR=$ANDROID_SODIUM_LIB
 export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_x86_64/lib
 export LIBZMQ_LIB_DIR=$ANDROID_ZMQ_LIB
+export LIBZMQ_INCLUDE_DIR=$WORK_DIR/libzmq-android/zmq/libzmq_x86_64/include
 export ANDROID_SQLITE_LIB=$WORK_DIR/libsqlite3-android/sqlite3-android/obj/local/x86_64
 sed -i .bak 's/\"\"\.as_ptr() as \*const u8/\"\"\.as_ptr() as \*const i8/' src/services/wallet/storage/plugged/mod.rs
 cargo build --target x86_64-linux-android --release --verbose
@@ -163,6 +168,7 @@ export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_arm/lib
 export SODIUM_LIB_DIR=$ANDROID_SODIUM_LIB
 export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_arm/lib
 export LIBZMQ_LIB_DIR=$ANDROID_ZMQ_LIB
+export LIBZMQ_INCLUDE_DIR=$WORK_DIR/libzmq-android/zmq/libzmq_arm/include
 export ANDROID_SQLITE_LIB=$WORK_DIR/libsqlite3-android/armeabi-v7a
 export LIBINDY_DIR=$WORK_DIR/vcx-indy-sdk/libindy/target/arm-linux-androideabi/release
 cargo build --target arm-linux-androideabi --release --verbose
@@ -173,6 +179,7 @@ export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_armv7/lib
 export SODIUM_LIB_DIR=$ANDROID_SODIUM_LIB
 export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_armv7/lib
 export LIBZMQ_LIB_DIR=$ANDROID_ZMQ_LIB
+export LIBZMQ_INCLUDE_DIR=$WORK_DIR/libzmq-android/zmq/libzmq_armv7/include
 export ANDROID_SQLITE_LIB=$WORK_DIR/libsqlite3-android/armeabi-v7a
 export LIBINDY_DIR=$WORK_DIR/vcx-indy-sdk/libindy/target/armv7-linux-androideabi/release
 cargo build --target armv7-linux-androideabi --release --verbose
@@ -183,6 +190,7 @@ export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_arm64/lib
 export SODIUM_LIB_DIR=$ANDROID_SODIUM_LIB
 export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_arm64/lib
 export LIBZMQ_LIB_DIR=$ANDROID_ZMQ_LIB
+export LIBZMQ_INCLUDE_DIR=$WORK_DIR/libzmq-android/zmq/libzmq_arm64/include
 export ANDROID_SQLITE_LIB=$WORK_DIR/libsqlite3-android/arm64-v8a
 export LIBINDY_DIR=$WORK_DIR/vcx-indy-sdk/libindy/target/aarch64-linux-android/release
 cargo build --target aarch64-linux-android --release --verbose
@@ -193,6 +201,7 @@ export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_x86/lib
 export SODIUM_LIB_DIR=$ANDROID_SODIUM_LIB
 export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_x86/lib
 export LIBZMQ_LIB_DIR=$ANDROID_ZMQ_LIB
+export LIBZMQ_INCLUDE_DIR=$WORK_DIR/libzmq-android/zmq/libzmq_x86/include
 export ANDROID_SQLITE_LIB=$WORK_DIR/libsqlite3-android/x86
 export LIBINDY_DIR=$WORK_DIR/vcx-indy-sdk/libindy/target/i686-linux-android/release
 cargo build --target i686-linux-android --release --verbose
@@ -203,6 +212,7 @@ export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_x86_64/li
 export SODIUM_LIB_DIR=$ANDROID_SODIUM_LIB
 export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_x86_64/lib
 export LIBZMQ_LIB_DIR=$ANDROID_ZMQ_LIB
+export LIBZMQ_INCLUDE_DIR=$WORK_DIR/libzmq-android/zmq/libzmq_x86_64/include
 export ANDROID_SQLITE_LIB=$WORK_DIR/libsqlite3-android/x86_64
 export LIBINDY_DIR=$WORK_DIR/vcx-indy-sdk/libindy/target/x86_64-linux-android/release
 cargo build --target x86_64-linux-android --release --verbose
