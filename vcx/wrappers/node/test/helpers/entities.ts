@@ -5,13 +5,15 @@ import {
   Connection,
   Credential,
   CredentialDef,
+  DisclosedProof,
   IConnectionCreateData,
   ICredentialCreateWithMsgId,
   ICredentialCreateWithOffer,
   ICredentialDefCreateData,
   IDisclosedProofCreateData,
   IDisclosedProofCreateWithMsgIdData,
-  DisclosedProof
+  IIssuerCredentialCreateData,
+  IssuerCredential
 } from 'src'
 
 export const dataConnectionCreate = (): IConnectionCreateData => ({
@@ -169,4 +171,25 @@ export const disclosedProofCreateWithMsgId = async (data?: IDisclosedProofCreate
   assert.equal(disclousedProof.sourceId, data.sourceId)
   assert.ok(disclousedProof.proofRequest)
   return disclousedProof
+}
+
+export const dataIssuerCredentialCreate = (): IIssuerCredentialCreateData => ({
+  attr: {
+    key1: 'value1',
+    key2: 'value2',
+    key3: 'value3'
+  },
+  credDefId: 'testCredentialCredDefId',
+  credentialName: 'Credential Name',
+  price: 1,
+  sourceId: 'testCredentialSourceId'
+})
+
+export const issuerCredentialCreate = async (data = dataIssuerCredentialCreate()) => {
+  const issuerCredential = await IssuerCredential.create(data)
+  assert.equal(issuerCredential.sourceId, data.sourceId)
+  assert.equal(issuerCredential.credDefId, data.credDefId)
+  assert.equal(issuerCredential.credentialName, data.credentialName)
+  assert.equal(issuerCredential.price, data.price)
+  return issuerCredential
 }

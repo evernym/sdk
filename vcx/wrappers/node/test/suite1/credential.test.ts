@@ -178,7 +178,7 @@ describe('Credential:', () => {
       assert.equal(await credential.getState(), StateType.None)
     })
 
-    it(`returns ${StateType.RequestReceived}: connected`, async () => {
+    it(`returns ${StateType.RequestReceived}: created`, async () => {
       const credential = await credentialCreateWithOffer()
       await credential.updateState()
       assert.equal(await credential.getState(), StateType.RequestReceived)

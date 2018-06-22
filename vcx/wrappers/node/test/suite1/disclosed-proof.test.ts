@@ -140,7 +140,7 @@ describe('DisclosedProof', () => {
       assert.equal(await disclosedProof.getState(), StateType.None)
     })
 
-    it(`returns ${StateType.RequestReceived}: connected`, async () => {
+    it(`returns ${StateType.RequestReceived}: created`, async () => {
       const disclosedProof = await disclosedProofCreateWithRequest()
       await disclosedProof.updateState()
       assert.equal(await disclosedProof.getState(), StateType.RequestReceived)

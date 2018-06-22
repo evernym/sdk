@@ -1,284 +1,218 @@
-const assert = require('chai').assert
-const expect = require('chai').expect
-const ffi = require('ffi')
-const vcx = require('../dist')
-const { stubInitVCX, shouldThrow } = require('./helpers')
+import { assert } from 'chai'
+import {
+  connectionCreateConnect,
+  dataIssuerCredentialCreate,
+  issuerCredentialCreate
+} from 'helpers/entities'
+import { gcTest } from 'helpers/gc'
+import { TIMEOUT_GC } from 'helpers/test-constants'
+import { initVcxTestMode, shouldThrow } from 'helpers/utils'
+import { Connection, IssuerCredential, rustAPI, StateType, VCXCode, VCXMock, VCXMockMessage } from 'src'
 
-const { IssuerCredential, Connection, StateType, Error, rustAPI, VCXMock, VCXMockMessage } = vcx
+describe('IssuerCredential:', () => {
+  before(() => initVcxTestMode())
 
-const credentialConfigDefault = {
-  sourceId: 'jsonCreation',
-  credDefId: '1234',
-  issuerDid: 'arandomdidfoobar',
-  attr: {
-    key: 'value',
-    key2: 'value2',
-    key3: 'value3'
-  },
-  price: 1,
-  credentialName: 'Credential Name'
-}
-const connectionConfigDefault = {
-  id: '123'
-}
-const formattedAttrs = {
-  key: ['value'],
-  key2: ['value2'],
-  key3: ['value3']
-}
-const credentialDummyArgs = [
-  'Dummy credential',
-  {
-    schemaNum: 1,
-    issuerDid: 'arandomdidfoobar',
-    credentialName: 'Credential Name'
-  }
-]
-describe('An IssuerCredential', async function () {
-  this.timeout(30000)
+  describe('create:', () => {
+    it('success', async () => {
+      await issuerCredentialCreate()
+    })
 
-  before(async () => {
-    stubInitVCX()
-    await vcx.initVcx('ENABLE_TEST_MODE')
+    it('throws: missing sourceId', async () => {
+      const { sourceId, ...data } = await dataIssuerCredentialCreate()
+      const error = await shouldThrow(() => IssuerCredential.create(data as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
+
+    it('throws: missing credDefId', async () => {
+      const { credDefId, ...data } = await dataIssuerCredentialCreate()
+      const error = await shouldThrow(() => IssuerCredential.create(data as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
+
+    it('throws: missing credDefId', async () => {
+      const { credDefId, ...data } = await dataIssuerCredentialCreate()
+      const error = await shouldThrow(() => IssuerCredential.create(data as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
+
+    it('throws: missing attr', async () => {
+      const { attr, ...data } = await dataIssuerCredentialCreate()
+      const error = await shouldThrow(() => IssuerCredential.create(data as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
+
+    it('throws: missing credentialName', async () => {
+      const { credentialName, ...data } = await dataIssuerCredentialCreate()
+      const error = await shouldThrow(() => IssuerCredential.create(data as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
+
+    it('throws: missing price', async () => {
+      const { price, ...data } = await dataIssuerCredentialCreate()
+      const error = await shouldThrow(() => IssuerCredential.create(data as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
+
+    it('throws: invalid attr', async () => {
+      const { attr, ...data } = await dataIssuerCredentialCreate()
+      const error = await shouldThrow(() => IssuerCredential.create({ attr: 'invalid' as any, ...data }))
+      assert.equal(error.vcxCode, VCXCode.INVALID_JSON)
+    })
   })
 
-  it('can be created.', async function () {
-    const credential = new IssuerCredential(...credentialDummyArgs)
-    assert(credential)
+  describe('serialize:', () => {
+    it('success', async () => {
+      const issuerCredential = await issuerCredentialCreate()
+      const data = await issuerCredential.serialize()
+      assert.ok(data)
+      assert.equal(data.source_id, issuerCredential.sourceId)
+    })
+
+    it('throws: not initialized', async () => {
+      const issuerCredential = new (IssuerCredential as any)()
+      const error = await shouldThrow(() => issuerCredential.serialize())
+      assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
+      assert.equal(error.vcxFunction, 'IssuerCredential:serialize')
+      assert.equal(error.message, 'Invalid Issuer Credential Handle')
+    })
+
+    it('throws: issuerCredential released', async () => {
+      const issuerCredential = await issuerCredentialCreate()
+      const data = await issuerCredential.serialize()
+      assert.ok(data)
+      assert.equal(data.source_id, issuerCredential.sourceId)
+      assert.equal(await issuerCredential.release(), VCXCode.SUCCESS)
+      const error = await shouldThrow(() => issuerCredential.serialize())
+      assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
+      assert.equal(error.vcxFunction, 'IssuerCredential:serialize')
+      assert.equal(error.message, 'Invalid Issuer Credential Handle')
+    })
   })
 
-  it('can have a source Id.', async function () {
-    const credential = await new IssuerCredential(...credentialDummyArgs)
-    assert.equal(credential.sourceId, credentialDummyArgs[0])
+  describe('deserialize:', () => {
+    it('success', async () => {
+      const issuerCredential1 = await issuerCredentialCreate()
+      const data1 = await issuerCredential1.serialize()
+      const issuerCredential2 = await IssuerCredential.deserialize(data1)
+      assert.equal(issuerCredential2.sourceId, issuerCredential1.sourceId)
+      const data2 = await issuerCredential2.serialize()
+      assert.deepEqual(data1, data2)
+    })
+
+    it('throws: incorrect data', async () => {
+      const error = await shouldThrow(async () => IssuerCredential.deserialize({ source_id: 'Invalid' } as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_JSON)
+      assert.equal(error.vcxFunction, 'IssuerCredential:_deserialize')
+      assert.equal(error.message, 'Invalid JSON string')
+    })
   })
 
-  it('has a state of 0 after instanstiated', async function () {
-    const credential = await new IssuerCredential(...credentialDummyArgs)
-    const state = await credential.getState()
-    assert.equal(state, 0)
+  describe('release:', () => {
+    it('success', async () => {
+      const issuerCredential = await issuerCredentialCreate()
+      assert.equal(await issuerCredential.release(), VCXCode.SUCCESS)
+      const errorSerialize = await shouldThrow(() => issuerCredential.serialize())
+      assert.equal(errorSerialize.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
+      assert.equal(errorSerialize.vcxFunction, 'IssuerCredential:serialize')
+      assert.equal(errorSerialize.message, 'Invalid Issuer Credential Handle')
+    })
+
+    it('throws: not initialized', async () => {
+      const issuerCredential = new (IssuerCredential as any)()
+      const error = await shouldThrow(() => issuerCredential.release())
+      assert.equal(error.vcxCode, VCXCode.UNKNOWN_ERROR)
+    })
   })
 
-  it('has a credentialHandle and a sourceId after it is created', async function () {
-    const sourceId = 'credential'
-    const credential = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
-    assert(credential.handle > 0)
-    assert.equal(credential.sourceId, sourceId)
+  describe('updateState:', () => {
+    it(`returns ${StateType.None}: not initialized`, async () => {
+      const issuerCredential = new (IssuerCredential as any)()
+      await issuerCredential.updateState()
+      assert.equal(await issuerCredential.getState(), StateType.None)
+    })
+
+    it(`returns ${StateType.Initialized}: created`, async () => {
+      const issuerCredential = await issuerCredentialCreate()
+      await issuerCredential.updateState()
+      assert.equal(await issuerCredential.getState(), StateType.Initialized)
+    })
   })
 
-  it('has state that can be found', async function () {
-    const sourceId = 'TestState'
-    const credential = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
-    await credential.updateState()
-    assert.equal(await credential.getState(), 1)
+  describe('sendOffer:', () => {
+    it('success', async () => {
+      const connection = await connectionCreateConnect()
+      const issuerCredential = await issuerCredentialCreate()
+      await issuerCredential.sendOffer(connection)
+      assert.equal(await issuerCredential.getState(), StateType.OfferSent)
+    })
+
+    it('throws: not initialized', async () => {
+      const connection = await connectionCreateConnect()
+      const issuerCredential = new (IssuerCredential as any)()
+      const error = await shouldThrow(() => issuerCredential.sendOffer(connection))
+      assert.equal(error.vcxCode, VCXCode.INVALID_ISSUER_CREDENTIAL_HANDLE)
+    })
+
+    it('throws: connection not initialized', async () => {
+      const connection = new (Connection as any)()
+      const issuerCredential = await issuerCredentialCreate()
+      const error = await shouldThrow(() => issuerCredential.sendOffer(connection))
+      assert.equal(error.vcxCode, VCXCode.INVALID_CONNECTION_HANDLE)
+    })
   })
 
-  const sendCredentialOffer = async ({
-    credentialConfig = credentialConfigDefault,
-    connectionConfig = connectionConfigDefault
-  } = {}) => {
-    const connection = await Connection.create(connectionConfig)
-    await connection.connect({ sms: true })
-    const credential = await IssuerCredential.create(credentialConfig)
-    await credential.sendOffer(connection)
-    assert.equal(await credential.getState(), StateType.OfferSent)
-    return {
-      credential,
-      connection
+  describe('sendCredential:', () => {
+    it('success', async () => {
+      const connection = await connectionCreateConnect()
+      const issuerCredential = await issuerCredentialCreate()
+      await issuerCredential.sendOffer(connection)
+      VCXMock.setVcxMock(VCXMockMessage.CredentialReq)
+      VCXMock.setVcxMock(VCXMockMessage.UpdateCredential)
+      await issuerCredential.updateState()
+      assert.equal(await issuerCredential.getState(), StateType.RequestReceived)
+      await issuerCredential.sendCredential(connection)
+      assert.equal(await issuerCredential.getState(), StateType.Accepted)
+    })
+
+    it('throws: not initialized', async () => {
+      const connection = await connectionCreateConnect()
+      const issuerCredential = new (IssuerCredential as any)()
+      const error = await shouldThrow(() => issuerCredential.sendCredential(connection))
+      assert.equal(error.vcxCode, VCXCode.INVALID_ISSUER_CREDENTIAL_HANDLE)
+    })
+
+    it('throws: no offer', async () => {
+      const connection = await connectionCreateConnect()
+      const issuerCredential = await issuerCredentialCreate()
+      const error = await shouldThrow(() => issuerCredential.sendCredential(connection))
+      assert.equal(error.vcxCode, VCXCode.NOT_READY)
+    })
+
+    it('throws: no request', async () => {
+      const connection = await connectionCreateConnect()
+      const issuerCredential = await issuerCredentialCreate()
+      await issuerCredential.sendOffer(connection)
+      const error = await shouldThrow(() => issuerCredential.sendCredential(connection))
+      assert.equal(error.vcxCode, VCXCode.NOT_READY)
+    })
+  })
+
+  describe('GC:', function () {
+    this.timeout(TIMEOUT_GC)
+
+    const issuerCredentialCreateAndDelete = async () => {
+      let issuerCredential: IssuerCredential | null = await issuerCredentialCreate()
+      const handle = issuerCredential.handle
+      issuerCredential = null
+      return handle
     }
-  }
-  it('can be sent with a valid connection', async function () {
-    await sendCredentialOffer()
-  })
-
-  it('can be created, then serialized, then deserialized and have the same sourceId and state', async function () {
-    const sourceId = 'SerializeDeserialize'
-    const credential = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
-    const jsonCredential = await credential.serialize()
-    assert.equal(jsonCredential.state, StateType.Initialized)
-    const credential2 = await IssuerCredential.deserialize(jsonCredential)
-    assert.equal(await credential.getState(), await credential2.getState())
-  })
-
-  it('can be sent, then serialized, then deserialized', async function () {
-    // create a connection, send the credential, serialize and then deserialize
-    // and compare
-    const connection = await Connection.create({ id: '234' })
-    await connection.connect()
-
-    const sourceId = 'SendSerializeDeserialize'
-    const credential = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
-
-    await credential.sendOffer(connection)
-    const credentialData = await credential.serialize()
-
-    const credential2 = await IssuerCredential.deserialize(credentialData)
-    await credential.updateState()
-    await credential2.updateState()
-    assert.equal(await credential.getState(), StateType.OfferSent)
-    assert.equal(await credential.getState(), await credential2.getState())
-    assert.equal(credential.sourceId, credential2.sourceId)
-  })
-
-  it('serialize without correct handle throws error', async function () {
-    const credential = new IssuerCredential(null, {})
-    const error = await shouldThrow(() => credential.serialize())
-    assert.equal(error.vcxCode, Error.INVALID_ISSUER_CREDENTIAL_HANDLE)
-    assert.equal(error.message, 'Invalid Credential Issuer Handle')
-  })
-
-  it('is created from a static method', async function () {
-    const sourceId = 'staticMethodCreation'
-    const credential = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
-    assert(credential.sourceId, sourceId)
-  })
-
-  it('will have different credential handles even with the same sourceIds', async function () {
-    const sourceId = 'sameSourceIds'
-    const credential = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
-    const credential2 = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
-    assert.notEqual(credential.handle, credential2.handle)
-  })
-
-  it('deserialize is a static method', async function () {
-    const sourceId = 'deserializeStatic'
-    const credential = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
-    const serializedJson = await credential.serialize()
-
-    const credentialDeserialized = await IssuerCredential.deserialize(serializedJson)
-    assert.equal(await credentialDeserialized.getState(), StateType.Initialized)
-  })
-
-  it('accepts credential attributes and schema sequence number', async function () {
-    const sourceId = 'attributesAndSequenceNumber'
-    const credential = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
-    assert.equal(credential.sourceId, sourceId)
-    assert.equal(credential.schemaNum, credentialConfigDefault.schemaNum)
-    assert.deepEqual(credential.attr, formattedAttrs)
-  })
-
-  it('throws exception for sending credential with invalid credential handle', async function () {
-    let connection = await Connection.create(connectionConfigDefault)
-    const credential = new IssuerCredential(null, {})
-    const error = await shouldThrow(() => credential.sendCredential(connection))
-    assert.equal(error.vcxCode, Error.INVALID_ISSUER_CREDENTIAL_HANDLE)
-    assert.equal(error.message, 'Invalid Credential Issuer Handle')
-  })
-
-  it('throws exception for sending credential with invalid connection handle', async function () {
-    let releasedConnection = await Connection.create({id: '123'})
-    await releasedConnection.release()
-    const sourceId = 'Credential'
-    const credential = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
-    const error = await shouldThrow(() => credential.sendCredential(releasedConnection))
-    assert.equal(error.vcxCode, Error.INVALID_CONNECTION_HANDLE)
-    assert.equal(error.message, 'Invalid Connection Handle')
-  })
-
-  it('sending credential with no credential offer should throw exception', async function () {
-    let connection = await Connection.create({id: '123'})
-    const sourceId = 'credential'
-    const credential = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
-    const error = await shouldThrow(() => credential.sendCredential(connection))
-    assert.equal(error.vcxCode, Error.NOT_READY)
-    assert.equal(error.vcxFunction, 'vcx_issuer_send_credential')
-    assert.equal(error.message, 'Object not ready for specified action')
-  })
-
-  it('will throw error on serialize when issuer_credential has been released', async () => {
-    const sourceId = 'SendSerializeDeserialize'
-    const connection = await Connection.create({id: '123'})
-    const credential = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
-    await credential.sendOffer(connection)
-    await credential.release()
-    const error = await shouldThrow(() => credential.serialize())
-    assert.equal(error.vcxCode, 1015)
-    assert.equal(error.vcxFunction, 'IssuerCredential:serialize')
-    assert.equal(error.message, 'Invalid Credential Issuer Handle')
-  })
-
-  const acceptCredentialOffer = async ({ credential }) => {
-    VCXMock.setVcxMock(VCXMockMessage.CredentialReq)
-    VCXMock.setVcxMock(VCXMockMessage.UpdateCredential)
-    await credential.updateState()
-    const newState = await credential.getState()
-    assert.equal(newState, StateType.RequestReceived)
-  }
-  it(`updating credential's state with mocked agent reply should return ${StateType.RequestReceived}`, async function () {
-    const { credential } = await sendCredentialOffer()
-    await acceptCredentialOffer({ credential })
-  })
-
-  const sendCredential = async ({ credential, connection }) => {
-    await credential.sendCredential(connection)
-    assert.equal(await credential.getState(), StateType.Accepted)
-  }
-
-  it('sending credential with valid credential offer should have state VcxStateAccepted', async function () {
-    const { credential, connection } = await sendCredentialOffer()
-    await acceptCredentialOffer({ credential })
-    await sendCredential({ credential, connection })
-  })
-
-  it('can be created from a json', async function () {
-    const credential = await IssuerCredential.create(credentialConfigDefault)
-    expect(credential.sourceId).to.equal(credentialConfigDefault.sourceId)
-  })
-
-  const issuerCredentialOfferCheckAndDelete = async () => {
-    let connection = await Connection.create({id: '123'})
-    await connection.connect({ sms: true })
-    const sourceId = 'credential'
-    let credential = await IssuerCredential.create({ ...credentialConfigDefault, sourceId })
-    await credential.sendOffer(connection)
-    const serialize = rustAPI().vcx_issuer_credential_serialize
-    const handle = credential._handle
-    connection = null
-    credential = null
-    return {
-      handle,
-      serialize
-    }
-  }
-
-  // Fix the GC issue
-  it('issuer_credential and GC deletes object should return null when serialize is called ', async function () {
-    this.timeout(30000)
-
-    const { handle, serialize } = await issuerCredentialOfferCheckAndDelete()
-
-    global.gc()
-
-    let isComplete = false
-    //  hold on to callbacks so it doesn't become garbage collected
-    const callbacks = []
-    while (!isComplete) {
-      const data = await new Promise(function (resolve, reject) {
-        const callback = ffi.Callback('void', ['uint32', 'uint32', 'string'],
-            function (handle, err, data) {
-              if (err) {
-                reject(err)
-                return
-              }
-              resolve(data)
-            })
-        callbacks.push(callback)
-        const rc = serialize(
-            0,
-            handle,
-            callback
-        )
-
-        if (rc === Error.INVALID_ISSUER_CREDENTIAL_HANDLE) {
-          resolve(null)
-        }
+    it('calls release', async () => {
+      const handle = await issuerCredentialCreateAndDelete()
+      await gcTest({
+        handle,
+        serialize: rustAPI().vcx_issuer_credential_serialize,
+        stopCode: VCXCode.INVALID_ISSUER_CREDENTIAL_HANDLE
       })
-      if (!data) {
-        isComplete = true
-      }
-    }
-
-    // this will timeout if condition is never met
-    // get_data will return "" because the connection object was released
-    return isComplete
+    })
   })
 })
