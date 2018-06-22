@@ -1,3 +1,5 @@
+import '../module-resolver-helper'
+
 import { assert } from 'chai'
 import { credentialDefCreate } from 'helpers/entities'
 import { gcTest } from 'helpers/gc'

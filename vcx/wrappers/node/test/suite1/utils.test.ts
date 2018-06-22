@@ -1,51 +1,81 @@
-const assert = require('chai').assert
-const vcx = require('../dist')
-const { stubInitVCX, shouldThrow } = require('./helpers')
+import '../module-resolver-helper'
 
-describe('provisioning and updating agents and updating configs', function () {
-  this.timeout(10000)
+import { assert } from 'chai'
+import { initVcxTestMode, shouldThrow } from 'helpers/utils'
+import {
+  getLedgerFees,
+  getVersion,
+  provisionAgent,
+  updateAgentInfo,
+  updateInstitutionConfigs,
+  VCXCode
+} from 'src'
 
+describe('utils:', () => {
+  before(() => initVcxTestMode())
+
+  // tslint:disable-next-line max-line-length
   const provisionString = '{"agency_url":"https://enym-eagency.pdev.evernym.com","agency_did":"Ab8TvZa3Q19VNkQVzAWVL7","agency_verkey":"5LXaR43B1aQyeh94VBP8LG1Sgvjk7aNfqiksBCSjwqbf","wallet_name":"test_provision_agent","agent_seed":null,"enterprise_seed":null,"wallet_key":"123"}'
-
   const agentUpdateString = '{"id":"123","value":"value"}'
+  const updateInstitutionConfigsData = {
+    logoUrl: 'https://google.com',
+    name: 'New Name'
+  }
 
-  before(async () => {
-    stubInitVCX()
-    await vcx.initVcx('ENABLE_TEST_MODE')
+  describe('provisionAgent:', () => {
+    it('success', async () => {
+      const res = await provisionAgent(provisionString)
+      assert.ok(res)
+    })
+
+    it('throws: invalid input', async () => {
+      const error = await shouldThrow(() => vcx.provisionAgent(''))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
   })
 
-  it('a call to provisionAgent fails', async () => {
-    const error = await shouldThrow(() => vcx.provisionAgent(''))
-    assert.equal(error.vcxCode, 1007)
+  describe('updateAgentInfo:', () => {
+    it('success', async () => {
+      const res = await updateAgentInfo(agentUpdateString)
+      assert.ok(res)
+    })
+
+    it('throws: invalid input', async () => {
+      const error = await shouldThrow(() => vcx.updateAgentInfo(''))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
   })
 
-  it('a call to provisionAgent succeeds', async () => {
-    let obj = await vcx.provisionAgent(provisionString)
-    assert(obj)
+  describe('getVersion:', () => {
+    it('success', async () => {
+      const version = getVersion()
+      assert.ok(version)
+    })
   })
 
-  it('a call to updateAgentInfo fails', async() => {
-    const error = await shouldThrow(() => vcx.updateAgentInfo(''))
-    assert.equal(error.vcxCode, 1007)
+  describe('updateInstitutionConfigs:', () => {
+    it('success', async () => {
+      const res = await updateInstitutionConfigs(updateInstitutionConfigsData)
+      assert.ok(res)
+    })
+
+    it('throws: missing name', async () => {
+      const { name, ...data } = updateInstitutionConfigsData
+      const error = await shouldThrow(() => updateAgentInfo(data as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
+
+    it('throws: missing logoUrl', async () => {
+      const { logoUrl, ...data } = updateInstitutionConfigsData
+      const error = await shouldThrow(() => updateAgentInfo(data as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
   })
 
-  it('a call to updateAgentInfo succeeds', async () => {
-    let obj = await vcx.updateAgentInfo(agentUpdateString)
-    assert(obj)
-  })
-
-  it('can get the version', () => {
-    let version = vcx.getVersion()
-    assert(version)
-  })
-
-  it('can update the name and logo for the config', () => {
-    let rc = vcx.updateInstitutionConfigs('new name', 'http://www.google.com')
-    assert.equal(rc, 0)
-  })
-
-  it('can retrieve ledger fees', async () => {
-    let fees = await vcx.getLedgerFees()
-    assert.equal(JSON.stringify(fees), '{"0":1,"103":1999998889,"104":0,"105":0,"106":0,"107":0,"108":0,"109":0,"110":0,"111":0,"112":0,"113":0,"114":0,"115":0,"116":0,"117":0,"118":0,"119":0,"NYM":1,"SCHEMA":2,"CRED_DEF":42}')
+  describe('getLedgerFees:', () => {
+    it('success', async () => {
+      const fees = await getLedgerFees()
+      assert.ok(fees)
+    })
   })
 })

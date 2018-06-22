@@ -1,3 +1,5 @@
+import '../module-resolver-helper'
+
 import { assert } from 'chai'
 import {
   connectionCreateConnect,
