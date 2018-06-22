@@ -81,8 +81,6 @@ describe('DisclosedProof', () => {
       const disclosedProof = new (DisclosedProof as any)()
       const error = await shouldThrow(() => disclosedProof.serialize())
       assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
-      assert.equal(error.vcxFunction, 'DisclosedProof:serialize')
-      assert.equal(error.message, 'Invalid DisclosedProof Handle')
     })
 
     it('throws: disclosedProof released', async () => {
@@ -93,8 +91,6 @@ describe('DisclosedProof', () => {
       assert.equal(await disclosedProof.release(), VCXCode.SUCCESS)
       const error = await shouldThrow(() => disclosedProof.serialize())
       assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
-      assert.equal(error.vcxFunction, 'DisclosedProof:serialize')
-      assert.equal(error.message, 'Invalid DisclosedProof Handle')
     })
   })
 
@@ -111,8 +107,6 @@ describe('DisclosedProof', () => {
     it('throws: incorrect data', async () => {
       const error = await shouldThrow(async () => DisclosedProof.deserialize({ source_id: 'Invalid' } as any))
       assert.equal(error.vcxCode, VCXCode.INVALID_JSON)
-      assert.equal(error.vcxFunction, 'DisclosedProof:_deserialize')
-      assert.equal(error.message, 'Invalid JSON string')
     })
   })
 
@@ -122,8 +116,6 @@ describe('DisclosedProof', () => {
       assert.equal(await disclosedProof.release(), VCXCode.SUCCESS)
       const errorSerialize = await shouldThrow(() => disclosedProof.serialize())
       assert.equal(errorSerialize.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
-      assert.equal(errorSerialize.vcxFunction, 'DisclosedProof:serialize')
-      assert.equal(errorSerialize.message, 'Invalid DisclosedProof Handle')
     })
 
     it('throws: not initialized', async () => {

@@ -26,8 +26,6 @@ describe('CredentialDef:', () => {
       const credentialDef = new (CredentialDef as any)()
       const error = await shouldThrow(() => credentialDef.serialize())
       assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_DEF_HANDLE)
-      assert.equal(error.vcxFunction, 'CredentialDef:serialize')
-      assert.equal(error.message, 'Invalid Credential Definition Handle')
     })
 
     it('throws: credential def released', async () => {
@@ -38,8 +36,6 @@ describe('CredentialDef:', () => {
       assert.equal(await credentialDef.release(), VCXCode.SUCCESS)
       const error = await shouldThrow(() => credentialDef.serialize())
       assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_DEF_HANDLE)
-      assert.equal(error.vcxFunction, 'Credential Def:serialize')
-      assert.equal(error.message, 'Invalid Credential Definition Handle')
     })
   })
 
@@ -56,8 +52,6 @@ describe('CredentialDef:', () => {
     it('throws: incorrect data', async () => {
       const error = await shouldThrow(async () => CredentialDef.deserialize({ source_id: 'Invalid' } as any))
       assert.equal(error.vcxCode, VCXCode.INVALID_JSON)
-      assert.equal(error.vcxFunction, 'Credential Definition:_deserialize')
-      assert.equal(error.message, 'Invalid JSON string')
     })
   })
 
@@ -67,8 +61,6 @@ describe('CredentialDef:', () => {
       assert.equal(await credentialDef.release(), VCXCode.SUCCESS)
       const errorSerialize = await shouldThrow(() => credentialDef.serialize())
       assert.equal(errorSerialize.vcxCode, VCXCode.INVALID_CREDENTIAL_DEF_HANDLE)
-      assert.equal(errorSerialize.vcxFunction, 'Credential Definition:serialize')
-      assert.equal(errorSerialize.message, 'Invalid Credential Definition Handle')
     })
 
     it('throws: not initialized', async () => {
@@ -88,8 +80,6 @@ describe('CredentialDef:', () => {
       const credentialDef = new (CredentialDef as any)()
       const error = await shouldThrow(() => credentialDef.getCredDefId())
       assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_DEF_HANDLE)
-      assert.equal(error.vcxFunction, 'CredentialDef:getCredDefId')
-      assert.equal(error.message, 'Invalid Credential Definition Handle')
     })
   })
 

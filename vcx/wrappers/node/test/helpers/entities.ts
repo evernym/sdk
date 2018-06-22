@@ -13,7 +13,9 @@ import {
   IDisclosedProofCreateData,
   IDisclosedProofCreateWithMsgIdData,
   IIssuerCredentialCreateData,
-  IssuerCredential
+  IProofCreateData,
+  IssuerCredential,
+  Proof
 } from 'src'
 
 export const dataConnectionCreate = (): IConnectionCreateData => ({
@@ -30,7 +32,7 @@ export const connectionCreate = async (data = dataConnectionCreate()) => {
 export const connectionCreateConnect = async (data = dataConnectionCreate()) => {
   const connection = await connectionCreate(data)
   const inviteDetails = await connection.connect()
-  assert.notEqual(inviteDetails, '')
+  assert.ok(inviteDetails)
   return connection
 }
 
@@ -44,6 +46,7 @@ export const dataCredentialDefCreate = (): ICredentialDefCreateData => ({
 
 export const credentialDefCreate = async (data = dataCredentialDefCreate()) => {
   const credentialDef = await CredentialDef.create(data)
+  assert.notEqual(credentialDef.handle, undefined)
   assert.equal(credentialDef.sourceId, data.sourceId)
   assert.equal(credentialDef.schemaId, data.schemaId)
   assert.equal(credentialDef.name, data.name)
@@ -84,6 +87,7 @@ export const credentialCreateWithOffer = async (data?: ICredentialCreateWithOffe
     data = await dataCredentialCreateWithOffer()
   }
   const credential = await Credential.create(data)
+  assert.notEqual(credential.handle, undefined)
   assert.equal(credential.sourceId, data.sourceId)
   return credential
 }
@@ -102,6 +106,7 @@ export const credentialCreateWithMsgId = async (data?: ICredentialCreateWithMsgI
     data = await dataCredentialCreateWithMsgId()
   }
   const credential = await Credential.createWithMsgId(data)
+  assert.notEqual(credential.handle, undefined)
   assert.equal(credential.sourceId, data.sourceId)
   assert.ok(credential.credOffer)
   return credential
@@ -150,6 +155,7 @@ export const disclosedProofCreateWithRequest = async (data?: IDisclosedProofCrea
     data = await dataDisclosedProofCreateWithRequest()
   }
   const disclousedProof = await DisclosedProof.create(data)
+  assert.notEqual(disclousedProof.handle, undefined)
   assert.equal(disclousedProof.sourceId, data.sourceId)
   return disclousedProof
 }
@@ -168,6 +174,7 @@ export const disclosedProofCreateWithMsgId = async (data?: IDisclosedProofCreate
     data = await dataDisclosedProofCreateWithMsgId()
   }
   const disclousedProof = await DisclosedProof.createWithMsgId(data)
+  assert.notEqual(disclousedProof.handle, undefined)
   assert.equal(disclousedProof.sourceId, data.sourceId)
   assert.ok(disclousedProof.proofRequest)
   return disclousedProof
@@ -187,9 +194,29 @@ export const dataIssuerCredentialCreate = (): IIssuerCredentialCreateData => ({
 
 export const issuerCredentialCreate = async (data = dataIssuerCredentialCreate()) => {
   const issuerCredential = await IssuerCredential.create(data)
+  assert.notEqual(issuerCredential.handle, undefined)
   assert.equal(issuerCredential.sourceId, data.sourceId)
   assert.equal(issuerCredential.credDefId, data.credDefId)
   assert.equal(issuerCredential.credentialName, data.credentialName)
   assert.equal(issuerCredential.price, data.price)
   return issuerCredential
+}
+
+export const dataProofCreate = (): IProofCreateData => ({
+  attrs: [
+    { name: 'attr1' },
+    { name: 'attr2' }
+  ],
+  name: 'Proof',
+  sourceId: 'testProofSourceId'
+})
+
+export const proofCreate = async (data = dataProofCreate()) => {
+  const proof = await Proof.create(data)
+  assert.notEqual(proof.handle, undefined)
+  assert.equal(proof.sourceId, data.sourceId)
+  assert.equal(proof.name, data.name)
+  assert.equal(proof.proofState, null)
+  assert.deepEqual(proof.requestedAttributes, data.attrs)
+  return proof
 }

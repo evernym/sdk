@@ -8,7 +8,7 @@ import { Connection } from './connection'
 import { VCXBase } from './vcx-base'
 import { VCXBaseWithState } from './vcx-base-with-state'
 
-export interface IProofConfig {
+export interface IProofCreateData {
   sourceId: string,
   attrs: IProofAttr[],
   name: string,
@@ -95,12 +95,12 @@ export class Proof extends VCXBaseWithState<IProofData> {
    * @static
    * @async
    * @function create
-   * @param {IProofConfig} data
+   * @param {IProofCreateData} data
    * @example <caption>Example of IProofConfig</caption>
    * {sourceId: string,attrs: [{restrictions: [IFilter ...], name: "attrName"}], name: "name of proof"}
    * @returns {Promise<Proof>} A Proof Object
    */
-  public static async create ({ sourceId, ...createDataRest }: IProofConfig): Promise<Proof> {
+  public static async create ({ sourceId, ...createDataRest }: IProofCreateData): Promise<Proof> {
     const proof = new Proof(sourceId, createDataRest)
     const commandHandle = 0
 

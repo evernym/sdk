@@ -59,26 +59,26 @@ describe('Credential:', () => {
     })
 
     it('throws: missing sourceId', async () => {
-      const { connection, offer } = await dataCredentialCreateWithOffer()
-      const error = await shouldThrow(() => Credential.create({ connection, offer } as any))
+      const { sourceId, ...data } = await dataCredentialCreateWithOffer()
+      const error = await shouldThrow(() => Credential.create(data as any))
       assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
     })
 
     it('throws: missing offer', async () => {
-      const { connection, sourceId } = await dataCredentialCreateWithOffer()
-      const error = await shouldThrow(() => Credential.create({ connection, sourceId } as any))
+      const { offer, ...data } = await dataCredentialCreateWithOffer()
+      const error = await shouldThrow(() => Credential.create(data as any))
       assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
     })
 
     it('throws: missing connection', async () => {
-      const { offer, sourceId } = await dataCredentialCreateWithOffer()
-      const error = await shouldThrow(() => Credential.create({ offer, sourceId } as any))
+      const { connection, ...data } = await dataCredentialCreateWithOffer()
+      const error = await shouldThrow(() => Credential.create(data as any))
       assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
     })
 
     it('throws: invalid offer', async () => {
-      const { connection, sourceId } = await dataCredentialCreateWithOffer()
-      const error = await shouldThrow(() => Credential.create({ connection, offer: 'invalid', sourceId }))
+      const { offer, ...data } = await dataCredentialCreateWithOffer()
+      const error = await shouldThrow(() => Credential.create({ offer: 'invalid', ...data }))
       assert.equal(error.vcxCode, VCXCode.INVALID_JSON)
     })
   })
@@ -119,8 +119,6 @@ describe('Credential:', () => {
       const credential = new (Credential as any)()
       const error = await shouldThrow(() => credential.serialize())
       assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
-      assert.equal(error.vcxFunction, 'Credential:serialize')
-      assert.equal(error.message, 'Invalid Credential Handle')
     })
 
     it('throws: credential released', async () => {
@@ -131,8 +129,6 @@ describe('Credential:', () => {
       assert.equal(await credential.release(), VCXCode.SUCCESS)
       const error = await shouldThrow(() => credential.serialize())
       assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
-      assert.equal(error.vcxFunction, 'Credential:serialize')
-      assert.equal(error.message, 'Invalid Credential Handle')
     })
   })
 
@@ -149,8 +145,6 @@ describe('Credential:', () => {
     it('throws: incorrect data', async () => {
       const error = await shouldThrow(async () => Credential.deserialize({ source_id: 'Invalid' } as any))
       assert.equal(error.vcxCode, VCXCode.INVALID_JSON)
-      assert.equal(error.vcxFunction, 'Credential:_deserialize')
-      assert.equal(error.message, 'Invalid JSON string')
     })
   })
 
@@ -160,8 +154,6 @@ describe('Credential:', () => {
       assert.equal(await credential.release(), VCXCode.SUCCESS)
       const errorSerialize = await shouldThrow(() => credential.serialize())
       assert.equal(errorSerialize.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
-      assert.equal(errorSerialize.vcxFunction, 'Credential:serialize')
-      assert.equal(errorSerialize.message, 'Invalid Credential Handle')
     })
 
     it('throws: not initialized', async () => {

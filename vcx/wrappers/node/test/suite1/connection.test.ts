@@ -49,8 +49,6 @@ describe('Connection:', () => {
       const connection = new (Connection as any)()
       const error = await shouldThrow(() => connection.serialize())
       assert.equal(error.vcxCode, VCXCode.INVALID_CONNECTION_HANDLE)
-      assert.equal(error.vcxFunction, 'Connection:serialize')
-      assert.equal(error.message, 'Invalid Connection Handle')
     })
 
     it('throws: connection released', async () => {
@@ -61,8 +59,6 @@ describe('Connection:', () => {
       assert.equal(await connection.release(), VCXCode.SUCCESS)
       const error = await shouldThrow(() => connection.serialize())
       assert.equal(error.vcxCode, VCXCode.INVALID_CONNECTION_HANDLE)
-      assert.equal(error.vcxFunction, 'Connection:serialize')
-      assert.equal(error.message, 'Invalid Connection Handle')
     })
 
     it('throws: connection deleted', async () => {
@@ -70,8 +66,6 @@ describe('Connection:', () => {
       await connection.delete()
       const error = await shouldThrow(() => connection.serialize())
       assert.equal(error.vcxCode, VCXCode.INVALID_CONNECTION_HANDLE)
-      assert.equal(error.vcxFunction, 'Connection:serialize')
-      assert.equal(error.message, 'Invalid Connection Handle')
     })
   })
 
@@ -88,8 +82,6 @@ describe('Connection:', () => {
     it('throws: incorrect data', async () => {
       const error = await shouldThrow(async () => Connection.deserialize({ source_id: 'Invalid' } as any))
       assert.equal(error.vcxCode, VCXCode.INVALID_JSON)
-      assert.equal(error.vcxFunction, 'Connection:_deserialize')
-      assert.equal(error.message, 'Invalid JSON string')
     })
   })
 
@@ -99,8 +91,6 @@ describe('Connection:', () => {
       assert.equal(await connection.release(), VCXCode.SUCCESS)
       const errorSerialize = await shouldThrow(() => connection.serialize())
       assert.equal(errorSerialize.vcxCode, VCXCode.INVALID_CONNECTION_HANDLE)
-      assert.equal(errorSerialize.vcxFunction, 'Connection:serialize')
-      assert.equal(errorSerialize.message, 'Invalid Connection Handle')
     })
 
     it('throws: not initialized', async () => {

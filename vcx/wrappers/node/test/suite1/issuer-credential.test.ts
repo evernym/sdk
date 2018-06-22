@@ -72,8 +72,6 @@ describe('IssuerCredential:', () => {
       const issuerCredential = new (IssuerCredential as any)()
       const error = await shouldThrow(() => issuerCredential.serialize())
       assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
-      assert.equal(error.vcxFunction, 'IssuerCredential:serialize')
-      assert.equal(error.message, 'Invalid Issuer Credential Handle')
     })
 
     it('throws: issuerCredential released', async () => {
@@ -84,8 +82,6 @@ describe('IssuerCredential:', () => {
       assert.equal(await issuerCredential.release(), VCXCode.SUCCESS)
       const error = await shouldThrow(() => issuerCredential.serialize())
       assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
-      assert.equal(error.vcxFunction, 'IssuerCredential:serialize')
-      assert.equal(error.message, 'Invalid Issuer Credential Handle')
     })
   })
 
@@ -102,8 +98,6 @@ describe('IssuerCredential:', () => {
     it('throws: incorrect data', async () => {
       const error = await shouldThrow(async () => IssuerCredential.deserialize({ source_id: 'Invalid' } as any))
       assert.equal(error.vcxCode, VCXCode.INVALID_JSON)
-      assert.equal(error.vcxFunction, 'IssuerCredential:_deserialize')
-      assert.equal(error.message, 'Invalid JSON string')
     })
   })
 
@@ -113,8 +107,6 @@ describe('IssuerCredential:', () => {
       assert.equal(await issuerCredential.release(), VCXCode.SUCCESS)
       const errorSerialize = await shouldThrow(() => issuerCredential.serialize())
       assert.equal(errorSerialize.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
-      assert.equal(errorSerialize.vcxFunction, 'IssuerCredential:serialize')
-      assert.equal(errorSerialize.message, 'Invalid Issuer Credential Handle')
     })
 
     it('throws: not initialized', async () => {
