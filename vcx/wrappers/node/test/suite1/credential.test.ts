@@ -1,222 +1,241 @@
-const assert = require('chai').assert
-const ffi = require('ffi')
-const vcx = require('../dist/index')
-const { stubInitVCX, connectionCreateAndConnect, shouldThrow } = require('./helpers')
-const { Credential, rustAPI } = vcx
+import { assert } from 'chai'
+import {
+  connectionCreateConnect,
+  credentialCreateWithMsgId,
+  credentialCreateWithOffer,
+  dataCredentialCreateWithMsgId,
+  dataCredentialCreateWithOffer
+} from 'helpers/entities'
+import { gcTest } from 'helpers/gc'
+import { TIMEOUT_GC } from 'helpers/test-constants'
+import { initVcxTestMode, shouldThrow } from 'helpers/utils'
+import { Credential, rustAPI, StateType, VCXCode } from 'src'
 
-describe('A Credential', function () {
+describe('Credential:', function () {
   this.timeout(30000)
 
-  const OFFER = [{
-    msg_type: 'CLAIM_OFFER',
-    version: '0.1',
-    to_did: '8XFh8yBzrpJQmNyZzgoTqB',
-    from_did: '8XFh8yBzrpJQmNyZzgoTqB',
-    libindy_offer: '{}',
-    cred_def_id: 'id',
-    credential_attrs: {
-      address1: ['101 Tela Lane'],
-      address2: ['101 Wilson Lane'],
-      city: ['SLC'],
-      state: ['UT'],
-      zip: ['87121']
-    },
-    schema_seq_no: 1487,
-    claim_name: 'Credential',
-    claim_id: 'defaultCredentialId',
-    msg_ref_id: null
-  }]
+  // const SERIALIZED_CREDENTIAL = {
+  //   source_id: 'wrapper_tests',
+  //   state: 3,
+  //   credential_name: null,
+  //   credential_request: null,
+  //   credential_offer: {
+  //     msg_type: 'CLAIM_OFFER',
+  //     version: '0.1',
+  //     to_did: '8XFh8yBzrpJQmNyZzgoTqB',
+  //     from_did: '8XFh8yBzrpJQmNyZzgoTqB',
+  //     libindy_offer: '{}',
+  //     cred_def_id: 'id',
+  //     credential_attrs: {
+  //       address1: ['101 Tela Lane'],
+  //       address2: ['101 Wilson Lane'],
+  //       city: ['SLC'],
+  //       state: ['UT'],
+  //       zip: ['87121']
+  //     },
+  //     schema_seq_no: 1487,
+  //     claim_name: 'Credential',
+  //     claim_id: 'defaultCredentialId',
+  //     msg_ref_id: '123'
+  //   },
+  //   link_secret_alias: 'main',
+  //   msg_uid: null,
+  //   agent_did: null,
+  //   agent_vk: null,
+  //   my_did: null,
+  //   my_vk: null,
+  //   their_did: null,
+  //   their_vk: null,
+  //   payment_info: {
+  //     payment_required: 'one-time',
+  //     payment_addr: 'pov:null:OsdjtGKavZDBuG2xFw2QunVwwGs5IB3j',
+  //     price: 25
+  //   }
+  // }
 
-  const SERIALIZED_CREDENTIAL = {
-    source_id: 'wrapper_tests',
-    state: 3,
-    credential_name: null,
-    credential_request: null,
-    credential_offer: {
-      msg_type: 'CLAIM_OFFER',
-      version: '0.1',
-      to_did: '8XFh8yBzrpJQmNyZzgoTqB',
-      from_did: '8XFh8yBzrpJQmNyZzgoTqB',
-      libindy_offer: '{}',
-      cred_def_id: 'id',
-      credential_attrs: {
-        address1: ['101 Tela Lane'],
-        address2: ['101 Wilson Lane'],
-        city: ['SLC'],
-        state: ['UT'],
-        zip: ['87121']
-      },
-      schema_seq_no: 1487,
-      claim_name: 'Credential',
-      claim_id: 'defaultCredentialId',
-      msg_ref_id: '123'
-    },
-    link_secret_alias: 'main',
-    msg_uid: null,
-    agent_did: null,
-    agent_vk: null,
-    my_did: null,
-    my_vk: null,
-    their_did: null,
-    their_vk: null,
-    payment_info: {
-      payment_required: 'one-time',
-      payment_addr: 'pov:null:OsdjtGKavZDBuG2xFw2QunVwwGs5IB3j',
-      price: 25
-    }
-  }
+  before(() => initVcxTestMode())
 
-  before(async () => {
-    stubInitVCX()
-    await vcx.initVcx('ENABLE_TEST_MODE')
+  describe('create:', () => {
+    it('success', async () => {
+      await credentialCreateWithOffer()
+    })
+
+    it('throws: missing sourceId', async () => {
+      const { connection, offer } = await dataCredentialCreateWithOffer()
+      const error = await shouldThrow(() => Credential.create({ connection, offer } as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
+
+    it('throws: missing offer', async () => {
+      const { connection, sourceId } = await dataCredentialCreateWithOffer()
+      const error = await shouldThrow(() => Credential.create({ connection, sourceId } as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
+
+    it('throws: missing connection', async () => {
+      const { offer, sourceId } = await dataCredentialCreateWithOffer()
+      const error = await shouldThrow(() => Credential.create({ offer, sourceId } as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
+
+    it('throws: invalid offer', async () => {
+      const { connection, sourceId } = await dataCredentialCreateWithOffer()
+      const error = await shouldThrow(() => Credential.create({ connection, offer: 'invalid', sourceId }))
+      assert.equal(error.vcxCode, VCXCode.INVALID_JSON)
+    })
   })
 
-  it('can be created.', async () => {
-    const connection = await connectionCreateAndConnect()
-    const obj = await Credential.create({ sourceId: 'Test', offer: JSON.stringify(OFFER), connection })
-    assert(obj)
+  describe('createWithMsgId:', () => {
+    it('success', async () => {
+      await credentialCreateWithMsgId()
+    })
+
+    it('throws: missing sourceId', async () => {
+      const { connection, msgId } = await dataCredentialCreateWithMsgId()
+      const error = await shouldThrow(() => Credential.createWithMsgId({ connection, msgId } as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
+
+    it('throws: missing offer', async () => {
+      const { connection, sourceId } = await dataCredentialCreateWithMsgId()
+      const error = await shouldThrow(() => Credential.createWithMsgId({ connection, sourceId } as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
+
+    it('throws: missing connection', async () => {
+      const { msgId, sourceId } = await dataCredentialCreateWithMsgId()
+      const error = await shouldThrow(() => Credential.createWithMsgId({ msgId, sourceId } as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
   })
 
-  it(' can be created with a msgid.', async () => {
-    const connection = await connectionCreateAndConnect()
-    const obj = await Credential.createWithMsgId({ connection, sourceId: 'Test', msgId: 'id' })
-    assert(obj)
-    assert(obj.credOffer)
+  describe('serialize:', () => {
+    it('success', async () => {
+      const credential = await credentialCreateWithOffer()
+      const data = await credential.serialize()
+      assert.ok(data)
+      assert.equal(data.source_id, credential.sourceId)
+    })
+
+    it('throws: not initialized', async () => {
+      const credential = new (Credential as any)()
+      const error = await shouldThrow(() => credential.serialize())
+      assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
+      assert.equal(error.vcxFunction, 'Credential:serialize')
+      assert.equal(error.message, 'Invalid Credential Handle')
+    })
+
+    it('throws: credential released', async () => {
+      const credential = await credentialCreateWithOffer()
+      const data = await credential.serialize()
+      assert.ok(data)
+      assert.equal(data.source_id, credential.sourceId)
+      assert.equal(await credential.release(), VCXCode.SUCCESS)
+      const error = await shouldThrow(() => credential.serialize())
+      assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
+      assert.equal(error.vcxFunction, 'Credential:serialize')
+      assert.equal(error.message, 'Invalid Credential Handle')
+    })
   })
 
-  // create tests
+  describe('deserialize:', () => {
+    it('success', async () => {
+      const credential1 = await credentialCreateWithOffer()
+      const data1 = await credential1.serialize()
+      const credential2 = await Credential.deserialize(data1)
+      assert.equal(credential2.sourceId, credential1.sourceId)
+      const data2 = await credential2.serialize()
+      assert.deepEqual(data1, data2)
+    })
 
-  it(' a call to create with no sourceId returns an error', async () => {
-    const connection = await connectionCreateAndConnect()
-    const error = await shouldThrow(() => Credential.create({ offer: JSON.stringify(OFFER), connection }))
-    assert.equal(error.vcxCode, 1007)
+    it('throws: incorrect data', async () => {
+      const error = await shouldThrow(async () => Credential.deserialize({ source_id: 'Invalid' } as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_JSON)
+      assert.equal(error.vcxFunction, 'Credential:_deserialize')
+      assert.equal(error.message, 'Invalid JSON string')
+    })
   })
 
-  it(' a call to create with no offer returns an error', async () => {
-    const connection = await connectionCreateAndConnect()
-    const error = await shouldThrow(() => Credential.create({ connection, sourceId: 'Test' }))
-    assert.equal(error.vcxCode, 1007)
+  describe('release:', () => {
+    it('success', async () => {
+      const credential = await credentialCreateWithOffer()
+      assert.equal(await credential.release(), VCXCode.SUCCESS)
+      const errorConnect = await shouldThrow(() => credential.getPaymentInfo())
+      assert.equal(errorConnect.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
+      const errorSerialize = await shouldThrow(() => credential.serialize())
+      assert.equal(errorSerialize.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
+      assert.equal(errorSerialize.vcxFunction, 'Credential:serialize')
+      assert.equal(errorSerialize.message, 'Invalid Credential Handle')
+    })
+
+    it('throws: not initialized', async () => {
+      const credential = new (Credential as any)()
+      const error = await shouldThrow(() => credential.release())
+      assert.equal(error.vcxCode, VCXCode.UNKNOWN_ERROR)
+    })
   })
 
-  it(' a call to create with a bad offer returns an error', async () => {
-    const connection = await connectionCreateAndConnect()
-    const error = await shouldThrow(() => Credential.create({ connection, sourceId: 'Test', offer: '{}' }))
-    assert.equal(error.vcxCode, 1016)
+  describe('updateState:', () => {
+    it(`returns ${StateType.None}: not initialized`, async () => {
+      const credential = new (Credential as any)()
+      await credential.updateState()
+      assert.equal(await credential.getState(), StateType.None)
+    })
+
+    it(`returns ${StateType.OfferSent}: connected`, async () => {
+      const credential = await credentialCreateWithOffer()
+      await credential.updateState()
+      assert.equal(await credential.getState(), StateType.RequestReceived)
+    })
   })
 
-  // serialize/deserialize tests
-
-  it('can be serialized.', async () => {
-    const connection = await connectionCreateAndConnect()
-    const obj = await Credential.create({ connection, sourceId: 'Test', offer: JSON.stringify(OFFER) })
-    assert(obj)
-    const val = await obj.serialize()
-    assert(val)
+  describe('sendRequest:', () => {
+    it('success', async () => {
+      const data = await dataCredentialCreateWithOffer()
+      const credential = await credentialCreateWithOffer(data)
+      await credential.sendRequest({ connection: data.connection, payment: 0 })
+      assert.equal(await credential.getState(), StateType.OfferSent)
+    })
   })
 
-  it('can be deserialized.', async () => {
-    const connection = await connectionCreateAndConnect()
-    const obj = await Credential.create({ sourceId: 'Test', offer: JSON.stringify(OFFER), connection })
-    assert(obj)
-    const val = await obj.serialize()
-    assert(val)
-    const obj2 = await Credential.deserialize(val)
-    assert(obj2)
-  })
-
-  // state tests
-
-  it('can get state.', async () => {
-    const connection = await connectionCreateAndConnect()
-    const obj = await Credential.create({ connection, sourceId: 'Test', offer: JSON.stringify(OFFER) })
-    assert(obj)
-    const state = await obj.getState()
-    assert(state === 3)
-  })
-
-  it('can update state.', async () => {
-    const connection = await connectionCreateAndConnect()
-    const obj = await Credential.create({ connection, sourceId: 'Test', offer: JSON.stringify(OFFER) })
-    assert(obj)
-    await obj.updateState()
-    const state = await obj.getState()
-    assert(state === 3)
-  })
-
-  // sendRequest tests
-
-  it('can send a credential request.', async () => {
-    const connection = await connectionCreateAndConnect()
-    const obj = await Credential.deserialize(SERIALIZED_CREDENTIAL)
-    await obj.sendRequest({ connection, payment: 0 })
-    const state = await obj.getState()
-    assert(state === 2)
-  })
-
-  it('can query for credential offers.', async () => {
-    const connection = await connectionCreateAndConnect()
-    let val = await Credential.getOffers(connection)
-    assert(val)
-    const obj3 = await Credential.deserialize(SERIALIZED_CREDENTIAL)
-    const paymentInfo = JSON.parse(await obj3.getPaymentInfo())
-    assert(paymentInfo['payment_addr'] === SERIALIZED_CREDENTIAL['payment_info']['payment_addr'])
-  })
-
-  const credentialCreateCheckAndDelete = async () => {
-    const connection = await connectionCreateAndConnect()
-    let credential = await Credential.create({ connection, sourceId: 'Test', offer: JSON.stringify(OFFER) })
-    assert(credential)
-    const val = await credential.serialize()
-    assert(val)
-    const serialize = rustAPI().vcx_credential_serialize
-    const handle = credential._handle
-    credential = null
-    return {
-      handle,
-      serialize
-    }
-  }
-
-  // Fix the GC issue
-  it('credential and GC deletes object should return null when serialize is called ', async function () {
-    this.timeout(30000)
-
-    const { handle, serialize } = await credentialCreateCheckAndDelete()
-
-    global.gc()
-
-    let isComplete = false
-    //  hold on to callbacks so it doesn't become garbage collected
-    const callbacks = []
-
-    while (!isComplete) {
-      const data = await new Promise(function (resolve, reject) {
-        const callback = ffi.Callback('void', ['uint32', 'uint32', 'string'],
-            function (handle, err, data) {
-              if (err) {
-                reject(err)
-                return
-              }
-              resolve(data)
-            })
-        callbacks.push(callback)
-        const rc = serialize(
-            0,
-            handle,
-            callback
-        )
-
-        if (rc === 1053) {
-          resolve(null)
-        }
+  describe('getOffers:', () => {
+    it('success', async () => {
+      const connection = await connectionCreateConnect()
+      const offers = await Credential.getOffers(connection)
+      assert.ok(offers)
+      assert.ok(offers.length)
+      await credentialCreateWithOffer({
+        connection,
+        offer: offers[0],
+        sourceId: 'credentialGetOffersTestSourceId'
       })
-      if (!data) {
-        isComplete = true
-      }
-    }
+    })
+  })
 
-    // this will timeout if condition is never met
-    // ill return "" because the proof object was released
-    return isComplete
+  describe('getPaymentInfo:', () => {
+    it('success', async () => {
+      const credential = await credentialCreateWithOffer()
+      const paymentInfo = await credential.getPaymentInfo()
+      assert.ok(paymentInfo)
+    })
+  })
+
+  describe('GC:', function () {
+    this.timeout(TIMEOUT_GC)
+
+    const credentialCreateAndDelete = async () => {
+      let credential: Credential | null = await credentialCreateWithOffer()
+      const handle = credential.handle
+      credential = null
+      return handle
+    }
+    it('calls release', async () => {
+      const handle = await credentialCreateAndDelete()
+      await gcTest({
+        handle,
+        serialize: rustAPI().vcx_credential_serialize,
+        stopCode: VCXCode.INVALID_CREDENTIAL_HANDLE
+      })
+    })
   })
 })

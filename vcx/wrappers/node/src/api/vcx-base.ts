@@ -7,15 +7,6 @@ import { GCWatcher } from '../utils/memory-management-helpers'
 export type IVCXBaseCreateFn = (cb: ICbRef) => number
 
 export abstract class VCXBase<SerializedData> extends GCWatcher {
-  protected abstract _serializeFn: (commandHandle: number, handle: string, cb: ICbRef) => number
-  protected abstract _deserializeFn: (commandHandle: number, handle: string, cb: ICbRef) => number
-  protected _sourceId: string
-
-  constructor (sourceId: string) {
-    super()
-    this._sourceId = sourceId
-  }
-
   public static errorMessage (errorCode: number): string {
     return rustAPI().vcx_error_c_message(errorCode)
   }
@@ -32,6 +23,15 @@ export abstract class VCXBase<SerializedData> extends GCWatcher {
     } catch (err) {
       throw new VCXInternalError(err, VCXBase.errorMessage(err), `${this.name}:_deserialize`)
     }
+  }
+
+  protected abstract _serializeFn: (commandHandle: number, handle: string, cb: ICbRef) => number
+  protected abstract _deserializeFn: (commandHandle: number, handle: string, cb: ICbRef) => number
+  protected _sourceId: string
+
+  constructor (sourceId: string) {
+    super()
+    this._sourceId = sourceId
   }
 
   /**

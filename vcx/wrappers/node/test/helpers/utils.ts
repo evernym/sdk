@@ -1,6 +1,6 @@
 import '../module-resolver-helper'
 
-import { VCX_CONFIG_TEST_MODE } from 'helpers/test-contants'
+import { VCX_CONFIG_TEST_MODE } from 'helpers/test-constants'
 import { SinonStub, stub } from 'sinon'
 import { initVcx, VCXInternalError } from 'src'
 

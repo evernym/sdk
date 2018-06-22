@@ -1,8 +1,9 @@
 import '../module-resolver-helper'
 
 import { assert } from 'chai'
-import * as ffi from 'ffi'
 import { connectionCreate, connectionCreateConnect } from 'helpers/entities'
+import { gcTest } from 'helpers/gc'
+import { TIMEOUT_GC } from 'helpers/test-constants'
 import { initVcxTestMode, shouldThrow } from 'helpers/utils'
 import { Connection, rustAPI, StateType, VCXCode, VCXMock, VCXMockMessage } from 'src'
 
@@ -35,7 +36,7 @@ describe('Connection:', () => {
     })
   })
 
-  describe('serialize', () => {
+  describe('serialize:', () => {
     it('success', async () => {
       const connection = await connectionCreate()
       const data = await connection.serialize()
@@ -74,7 +75,7 @@ describe('Connection:', () => {
     })
   })
 
-  describe('deserialize', () => {
+  describe('deserialize:', () => {
     it('success', async () => {
       const connection1 = await connectionCreate()
       const data1 = await connection1.serialize()
@@ -90,18 +91,28 @@ describe('Connection:', () => {
       assert.equal(error.vcxFunction, 'Connection:_deserialize')
       assert.equal(error.message, 'Invalid JSON string')
     })
+  })
 
-    it('success: serialize -> deserialize -> serialize', async () => {
-      const connection1 = await connectionCreateConnect()
-      const data1 = await connection1.serialize()
-      const connection2 = await Connection.deserialize(data1)
-      assert.equal(connection2.sourceId, connection1.sourceId)
-      const data2 = await connection2.serialize()
-      assert.deepEqual(data2, data1)
+  describe('release:', () => {
+    it('success', async () => {
+      const connection = await connectionCreateConnect()
+      assert.equal(await connection.release(), VCXCode.SUCCESS)
+      const errorConnect = await shouldThrow(() => connection.connect())
+      assert.equal(errorConnect.vcxCode, VCXCode.INVALID_CONNECTION_HANDLE)
+      const errorSerialize = await shouldThrow(() => connection.serialize())
+      assert.equal(errorSerialize.vcxCode, VCXCode.INVALID_CONNECTION_HANDLE)
+      assert.equal(errorSerialize.vcxFunction, 'Connection:serialize')
+      assert.equal(errorSerialize.message, 'Invalid Connection Handle')
+    })
+
+    it('throws: not initialized', async () => {
+      const connection = new (Connection as any)()
+      const error = await shouldThrow(() => connection.release())
+      assert.equal(error.vcxCode, VCXCode.UNKNOWN_ERROR)
     })
   })
 
-  describe('updateState', () => {
+  describe('updateState:', () => {
     it(`returns ${StateType.None}: not initialized`, async () => {
       const connection = new (Connection as any)()
       await connection.updateState()
@@ -128,7 +139,7 @@ describe('Connection:', () => {
     })
   })
 
-  describe('inviteDetails', () => {
+  describe('inviteDetails:', () => {
     it('success: with abbr', async () => {
       const connection = await connectionCreateConnect()
       const details = await connection.inviteDetails(true)
@@ -142,78 +153,22 @@ describe('Connection:', () => {
     })
   })
 
-  describe('release', () => {
-    it('success', async () => {
-      const connection = await connectionCreateConnect()
-      assert.equal(await connection.release(), VCXCode.SUCCESS)
-      const errorConnect = await shouldThrow(() => connection.connect())
-      assert.equal(errorConnect.vcxCode, VCXCode.INVALID_CONNECTION_HANDLE)
-      const errorSerialize = await shouldThrow(() => connection.serialize())
-      assert.equal(errorSerialize.vcxCode, VCXCode.INVALID_CONNECTION_HANDLE)
-      assert.equal(errorSerialize.vcxFunction, 'Connection:serialize')
-      assert.equal(errorSerialize.message, 'Invalid Connection Handle')
-    })
-
-    it('throws: not initialized', async () => {
-      const connection = new (Connection as any)()
-      const error = await shouldThrow(() => connection.release())
-      assert.equal(error.vcxCode, VCXCode.UNKNOWN_ERROR)
-    })
-  })
-
-  describe('GC', function () {
-    this.timeout(30000)
+  describe('GC:', function () {
+    this.timeout(TIMEOUT_GC)
 
     const connectionCreateCheckAndDelete = async () => {
       let connection: Connection | null = await connectionCreateConnect()
-      const data = await connection.serialize()
       const handle = connection.handle
-      const serialize = rustAPI().vcx_connection_serialize
-      assert.notEqual(data, null)
       connection = null
-      return {
-        handle,
-        serialize
-      }
+      return handle
     }
     it('calls release', async () => {
-      const { handle, serialize } = await connectionCreateCheckAndDelete()
-      global.gc()
-      let isComplete = false
-
-      //  hold on to callbacks so they don't become garbage collected
-      const callbacks: any[] = []
-      while (!isComplete) {
-        const data = await new Promise<string>((resolve, reject) => {
-          const callback = ffi.Callback(
-            'void',
-            ['uint32', 'uint32', 'string'],
-            (handleCb: number, errCb: number, dataCb: string) => {
-              if (errCb) {
-                reject(errCb)
-                return
-              }
-              resolve(dataCb)
-            }
-          )
-          callbacks.push(callback)
-          const rc = serialize(
-            0,
-            handle,
-            callback
-          )
-          if (rc === VCXCode.INVALID_CONNECTION_HANDLE) {
-            resolve('')
-          }
-        })
-        if (!data) {
-          isComplete = true
-        }
-      }
-
-      // this will timeout if condition is never met
-      // get_data will return "" because the connection object was released
-      return isComplete
+      const handle = await connectionCreateCheckAndDelete()
+      await gcTest({
+        handle,
+        serialize: rustAPI().vcx_connection_serialize,
+        stopCode: VCXCode.INVALID_CONNECTION_HANDLE
+      })
     })
   })
 })

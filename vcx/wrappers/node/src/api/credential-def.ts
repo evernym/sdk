@@ -12,7 +12,7 @@ import { VCXBase } from './vcx-base'
  * schemaNo: Schema Number wanted to create credentialdef off of
  * revocation:
  */
-export interface ICredentialDefinition {
+export interface ICredentialDefCreateData {
   sourceId: string,
   name: string,
   schemaId: string,
@@ -20,14 +20,14 @@ export interface ICredentialDefinition {
   paymentHandle: number
 }
 
-export interface ICredentialDefObj {
+export interface ICredentialDefData {
   source_id: string,
   handle: number
   name: string
-  credential_def: ICredentialDefData
+  credential_def: ICredentialDefDataObj
 }
 
-export interface ICredentialDefData {
+export interface ICredentialDefDataObj {
   ref: number,
   origin: string,
   signature_type: string,
@@ -49,7 +49,7 @@ export class CredentialDef extends VCXBase<ICredentialDefData> {
    * @static
    * @async
    * @function create
-   * @param {ICredentialDefinition} data
+   * @param {ICredentialDefCreateData} data
    * @example <caption>Example of ICredentialDefinition</caption>
    * {
    *    sourceId: "12",
@@ -65,7 +65,7 @@ export class CredentialDef extends VCXBase<ICredentialDefData> {
     paymentHandle,
     schemaId,
     sourceId
-  }: ICredentialDefinition): Promise<CredentialDef> {
+  }: ICredentialDefCreateData): Promise<CredentialDef> {
     // Todo: need to add params for tag and config
     const credentialDef = new CredentialDef(sourceId, { name, schemaId })
     const commandHandle = 0
@@ -95,10 +95,10 @@ export class CredentialDef extends VCXBase<ICredentialDefData> {
    * @static
    * @async
    * @function deserialize
-   * @param {ICredentialDefObj} data - data obtained by serialize api. Used to build a credentialdef object.
+   * @param {ICredentialDefData} data - data obtained by serialize api. Used to build a credentialdef object.
    * @returns {Promise<credentialDef>} A credentialDef Object
    */
-  public static async deserialize (data: ICredentialDefObj) {
+  public static async deserialize (data: ICredentialDefData) {
     // Todo: update the ICredentialDefObj
     const credentialDefParams = {
       name: data.name,

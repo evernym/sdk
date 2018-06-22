@@ -1,115 +1,116 @@
-const assert = require('chai').assert
-const ffi = require('ffi')
-const vcx = require('../dist/index')
-const { shouldThrow, stubInitVCX } = require('./helpers')
-const { CredentialDef, Error, rustAPI } = vcx
+import { assert } from 'chai'
+import { credentialDefCreate } from 'helpers/entities'
+import { gcTest } from 'helpers/gc'
+import { TIMEOUT_GC } from 'helpers/test-constants'
+import { initVcxTestMode, shouldThrow } from 'helpers/utils'
+import { CredentialDef, rustAPI, VCXCode } from 'src'
 
-const CREDENTIAL_DEF = {
-  name: 'test',
-  revocation: false,
-  schemaId: 'schema id1',
-  sourceId: 'sourceId'
-}
+describe('CredentialDef:', () => {
+  before(() => initVcxTestMode())
 
-describe('A CredentialDef', function () {
-  this.timeout(30000)
-
-  before(async () => {
-    stubInitVCX()
-    await vcx.initVcx('ENABLE_TEST_MODE')
+  describe('create:', () => {
+    it('success', async () => {
+      await credentialDefCreate()
+    })
   })
 
-  it('can be created.', async () => {
-    const credentialDef = await CredentialDef.create(CREDENTIAL_DEF)
-    assert(credentialDef)
+  describe('serialize:', () => {
+    it('success', async () => {
+      const credentialDef = await credentialDefCreate()
+      const data = await credentialDef.serialize()
+      assert.ok(data)
+      assert.equal(data.source_id, credentialDef.sourceId)
+    })
+
+    it('throws: not initialized', async () => {
+      const credentialDef = new (CredentialDef as any)()
+      const error = await shouldThrow(() => credentialDef.serialize())
+      assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_DEF_HANDLE)
+      assert.equal(error.vcxFunction, 'CredentialDef:serialize')
+      assert.equal(error.message, 'Invalid Credential Definition Handle')
+    })
+
+    it('throws: credential def released', async () => {
+      const credentialDef = await credentialDefCreate()
+      const data = await credentialDef.serialize()
+      assert.ok(data)
+      assert.equal(data.source_id, credentialDef.sourceId)
+      assert.equal(await credentialDef.release(), VCXCode.SUCCESS)
+      const error = await shouldThrow(() => credentialDef.serialize())
+      assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_DEF_HANDLE)
+      assert.equal(error.vcxFunction, 'Credential Def:serialize')
+      assert.equal(error.message, 'Invalid Credential Definition Handle')
+    })
   })
 
-  it('has a name of test after instanstiated', async () => {
-    const credentialDef = await CredentialDef.create(CREDENTIAL_DEF)
-    const name = await credentialDef._name
-    assert.equal(name, 'test')
+  describe('deserialize:', () => {
+    it('success', async () => {
+      const credentialDef1 = await credentialDefCreate()
+      const data1 = await credentialDef1.serialize()
+      const credentialDef2 = await CredentialDef.deserialize(data1)
+      assert.equal(credentialDef2.sourceId, credentialDef1.sourceId)
+      const data2 = await credentialDef2.serialize()
+      assert.deepEqual(data1, data2)
+    })
+
+    it('throws: incorrect data', async () => {
+      const error = await shouldThrow(async () => CredentialDef.deserialize({ source_id: 'Invalid' } as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_JSON)
+      assert.equal(error.vcxFunction, 'Credential Definition:_deserialize')
+      assert.equal(error.message, 'Invalid JSON string')
+    })
   })
 
-  it('can be created, then serialized, then deserialized and have the same sourceId and name', async () => {
-    const credentialDef = await CredentialDef.create(CREDENTIAL_DEF)
-    const jsonDef = await credentialDef.serialize()
-    assert.equal(jsonDef.source_id, 'sourceId')
-    const credentialDef2 = await CredentialDef.deserialize(jsonDef)
-    assert.equal(credentialDef.name, credentialDef2.name)
-    assert.equal(credentialDef.source_id, credentialDef2.source_id)
+  describe('release:', () => {
+    it('success', async () => {
+      const credentialDef = await credentialDefCreate()
+      assert.equal(await credentialDef.release(), VCXCode.SUCCESS)
+      const errorConnect = await shouldThrow(() => credentialDef.getCredDefId())
+      assert.equal(errorConnect.vcxCode, VCXCode.INVALID_CREDENTIAL_DEF_HANDLE)
+      const errorSerialize = await shouldThrow(() => credentialDef.serialize())
+      assert.equal(errorSerialize.vcxCode, VCXCode.INVALID_CREDENTIAL_DEF_HANDLE)
+      assert.equal(errorSerialize.vcxFunction, 'Credential Definition:serialize')
+      assert.equal(errorSerialize.message, 'Invalid Credential Definition Handle')
+    })
+
+    it('throws: not initialized', async () => {
+      const credentialDef = new (CredentialDef as any)()
+      const error = await shouldThrow(() => credentialDef.release())
+      assert.equal(error.vcxCode, VCXCode.UNKNOWN_ERROR)
+    })
   })
 
-  it('will throw error on serialize when credentialDef has been released', async () => {
-    const credentialDef = await CredentialDef.create(CREDENTIAL_DEF)
-    const jsonDef = await credentialDef.serialize()
-    let data = await credentialDef.serialize()
-    assert(data)
-    assert.equal(data.handle, jsonDef.handle)
-    assert.equal(await credentialDef.release(), Error.SUCCESS)
-    const error = await shouldThrow(() => credentialDef.serialize())
-    assert.equal(error.vcxCode, 1037)
-    assert.equal(error.vcxFunction, 'CredentialDef:serialize')
-    assert.equal(error.message, 'Invalid Credential Definition handle')
+  describe('getCredDefId:', () => {
+    it('success', async () => {
+      const credentialDef = await credentialDefCreate()
+      assert(await credentialDef.getCredDefId(), '2hoqvcwupRTUNkXn6ArYzs:3:CL:1766')
+    })
+
+    it('throws: not initialized', async () => {
+      const credentialDef = new (CredentialDef as any)()
+      const error = await shouldThrow(() => credentialDef.getCredDefId())
+      assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_DEF_HANDLE)
+      assert.equal(error.vcxFunction, 'CredentialDef:getCredDefId')
+      assert.equal(error.message, 'Invalid Credential Definition Handle')
+    })
   })
 
-  it('will return cred_def_id', async () => {
-    const credentialDef = await CredentialDef.create(CREDENTIAL_DEF)
-    assert(await credentialDef.getCredDefId(), '2hoqvcwupRTUNkXn6ArYzs:3:CL:1766')
-  })
+  describe('GC:', function () {
+    this.timeout(TIMEOUT_GC)
 
-  const credentialDefCreateCheckAndDelete = async () => {
-    let credentialDef = await CredentialDef.create(CREDENTIAL_DEF)
-    let data = await credentialDef.serialize()
-    assert(data)
-    const serialize = rustAPI().vcx_credentialdef_serialize
-    const handle = credentialDef._handle
-    credentialDef = null
-    return {
-      handle,
-      serialize
+    const credentialDefCreateAndDelete = async () => {
+      let credentialDef: CredentialDef | null = await credentialDefCreate()
+      const handle = credentialDef.handle
+      credentialDef = null
+      return handle
     }
-  }
-
-  // Fix the GC issue
-  it('credentialdef and GC deletes object should return null when serialize is called ', async function () {
-    this.timeout(30000)
-
-    const { handle, serialize } = await credentialDefCreateCheckAndDelete()
-
-    global.gc()
-
-    let isComplete = false
-    //  hold on to callbacks so it doesn't become garbage collected
-    const callbacks = []
-
-    while (!isComplete) {
-      const data = await new Promise(function (resolve, reject) {
-        const callback = ffi.Callback('void', ['uint32', 'uint32', 'string'],
-            function (handle, err, data) {
-              if (err) {
-                reject(err)
-                return
-              }
-              resolve(data)
-            })
-        callbacks.push(callback)
-        const rc = serialize(
-            0,
-            handle,
-            callback
-        )
-
-        if (rc === 1037) {
-          resolve(null)
-        }
+    it('calls release', async () => {
+      const handle = await credentialDefCreateAndDelete()
+      await gcTest({
+        handle,
+        serialize: rustAPI().vcx_credentialdef_serialize,
+        stopCode: VCXCode.INVALID_CREDENTIAL_DEF_HANDLE
       })
-      if (!data) {
-        isComplete = true
-      }
-    }
-
-    // this will timeout if condition is never met
-    // ill return "" because the credentialdef object was released
-    return isComplete
+    })
   })
 })
