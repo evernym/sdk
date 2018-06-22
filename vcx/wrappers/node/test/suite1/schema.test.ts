@@ -1,160 +1,172 @@
-const assert = require('chai').assert
-const ffi = require('ffi')
-const vcx = require('../dist/index')
-const { stubInitVCX, shouldThrow } = require('./helpers')
-const { Schema, Error, rustAPI } = vcx
+import { assert } from 'chai'
+import {
+  dataSchemaCreate,
+  dataSchemaLookup,
+  schemaCreate,
+  schemaLookup
+} from 'helpers/entities'
+import { gcTest } from 'helpers/gc'
+import { TIMEOUT_GC } from 'helpers/test-constants'
+import { initVcxTestMode, shouldThrow } from 'helpers/utils'
+import { rustAPI, Schema, VCXCode } from 'src'
 
-const SCHEMA = {
-  sourceId: 'sourceId',
-  data: {
-    name: 'data name',
-    version: '1.1.1',
-    attrNames: ['attr1', 'attr2', 'height', 'weight']
-  },
-  paymentHandle: 0
-}
+describe('Schema:', () => {
+  before(() => initVcxTestMode())
 
-describe('A Schema', function () {
-  this.timeout(30000)
+  describe('create:', () => {
+    it('success', async () => {
+      await schemaCreate()
+    })
 
-  before(async () => {
-    stubInitVCX()
-    await vcx.initVcx('ENABLE_TEST_MODE')
+    it('throws: missing sourceId', async () => {
+      const { sourceId, ...data } = await dataSchemaCreate()
+      const error = await shouldThrow(() => Schema.create(data as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
+
+    it('throws: missing paymentHandle', async () => {
+      const { paymentHandle, ...data } = await dataSchemaCreate()
+      const error = await shouldThrow(() => Schema.create(data as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
+
+    it('throws: missing data', async () => {
+      const { data, ...rest } = await dataSchemaCreate()
+      const error = await shouldThrow(() => Schema.create(rest as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
+
+    it('throws: missing data.name', async () => {
+      const { data: { name, ...dataRest }, ...rest } = await dataSchemaCreate()
+      const error = await shouldThrow(() => Schema.create({ data: dataRest, ...rest } as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
+
+    it('throws: missing data.version', async () => {
+      const { data: { version, ...dataRest }, ...rest } = await dataSchemaCreate()
+      const error = await shouldThrow(() => Schema.create({ data: dataRest, ...rest } as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
+
+    it('throws: missing data.attrNames', async () => {
+      const { data: { attrNames, ...dataRest }, ...rest } = await dataSchemaCreate()
+      const error = await shouldThrow(() => Schema.create({ data: dataRest, ...rest } as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
+
+    it('throws: invalid data', async () => {
+      const { data, ...rest } = await dataSchemaCreate()
+      const error = await shouldThrow(() => Schema.create({
+        data: 'invalid' as any,
+        ...rest
+      }))
+      assert.equal(error.vcxCode, VCXCode.INVALID_JSON)
+    })
   })
 
-  it('can be created.', async () => {
-    const schema = await Schema.create(SCHEMA, 0)
-    assert(schema)
+  describe('lookup:', () => {
+    it('success', async () => {
+      await schemaLookup()
+    })
+
+    it('throws: missing sourceId', async () => {
+      const { sourceId, ...data } = await dataSchemaLookup()
+      const error = await shouldThrow(() => Schema.create(data as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
+
+    it('throws: missing schemaId', async () => {
+      const { schemaId, ...data } = await dataSchemaLookup()
+      const error = await shouldThrow(() => Schema.create(data as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
   })
 
-  it('can retrieve schema attrs', async () => {
-    const schema = await Schema.create(SCHEMA, 0)
-    assert(schema)
-    assert.equal(schema.schemaAttrs, SCHEMA.data)
+  describe('serialize:', () => {
+    it('success', async () => {
+      const schema = await schemaCreate()
+      const data = await schema.serialize()
+      assert.ok(data)
+      assert.equal(data.source_id, schema.sourceId)
+    })
+
+    it('throws: not initialized', async () => {
+      const schema = new (Schema as any)()
+      const error = await shouldThrow(() => schema.serialize())
+      assert.equal(error.vcxCode, VCXCode.INVALID_SCHEMA_HANDLE)
+    })
+
+    it('throws: schema released', async () => {
+      const schema = await schemaCreate()
+      const data = await schema.serialize()
+      assert.ok(data)
+      assert.equal(data.source_id, schema.sourceId)
+      assert.equal(await schema.release(), VCXCode.SUCCESS)
+      const error = await shouldThrow(() => schema.serialize())
+      assert.equal(error.vcxCode, VCXCode.INVALID_SCHEMA_HANDLE)
+    })
   })
 
-  it('has a name of data name after instanstiated', async () => {
-    const schema = await Schema.create(SCHEMA)
-    const name = await schema._name
-    assert.equal(name, 'data name')
+  describe('deserialize:', () => {
+    it('success', async () => {
+      const schema1 = await schemaCreate()
+      const data1 = await schema1.serialize()
+      const schema2 = await Schema.deserialize(data1)
+      assert.equal(schema2.sourceId, schema1.sourceId)
+      const data2 = await schema2.serialize()
+      assert.deepEqual(data1, data2)
+    })
+
+    it('throws: incorrect data', async () => {
+      const error = await shouldThrow(async () => Schema.deserialize({ source_id: 'Invalid' } as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_JSON)
+    })
   })
 
-  it('can be created, then serialized, then deserialized and have the same sourceId, name, and handle', async () => {
-    const schema = await Schema.create(SCHEMA)
-    const jsonDef = await schema.serialize()
-    assert.equal(jsonDef.source_id, 'sourceId')
-    const schema2 = await Schema.deserialize(jsonDef)
-    assert.equal(schema.name, schema2.name)
-    assert.equal(schema.source_id, schema2.source_id)
-    assert.equal(schema.getSchemaId, schema2.getSchemaId)
-    // The attrNames are mocked values returned from sdk
-    assert.deepEqual(
-      schema2.schemaAttrs,
-      {name: 'data name', version: '1.1.1', attrNames: ['attr1', 'attr2', 'height', 'weight']}
-    )
+  describe('release:', () => {
+    it('success', async () => {
+      const schema = await schemaCreate()
+      assert.equal(await schema.release(), VCXCode.SUCCESS)
+      const errorSerialize = await shouldThrow(() => schema.serialize())
+      assert.equal(errorSerialize.vcxCode, VCXCode.INVALID_SCHEMA_HANDLE)
+    })
+
+    it('throws: not initialized', async () => {
+      const schema = new (Schema as any)()
+      const error = await shouldThrow(() => schema.release())
+      assert.equal(error.vcxCode, VCXCode.UNKNOWN_ERROR)
+    })
   })
 
-  it('will throw error on serialize when schema has been released', async () => {
-    const schema = await Schema.create(SCHEMA)
-    const jsonDef = await schema.serialize()
-    const data = await schema.serialize()
-    assert(data)
-    assert.equal(data.handle, jsonDef.handle)
-    assert.equal(await schema.release(), Error.SUCCESS)
-    const error = await shouldThrow(() => schema.serialize())
-    assert.equal(error.vcxCode, 1042)
-    assert.equal(error.vcxFunction, 'Schema:serialize')
-    assert.equal(error.message, 'Invalid Schema Handle')
+  describe('getSchemaId:', () => {
+    it('success', async () => {
+      const schema = await schemaCreate()
+      assert(await schema.getSchemaId(), schema.schemaId)
+    })
+
+    it('throws: not initialized', async () => {
+      const schema = new (Schema as any)()
+      const error = await shouldThrow(() => schema.getSchemaId())
+      assert.equal(error.vcxCode, VCXCode.INVALID_SCHEMA_HANDLE)
+    })
   })
 
-  it('will return schema_id', async () => {
-    const schema = await Schema.create(SCHEMA)
-    assert(await schema.getSchemaId())
-  })
+  describe('GC:', function () {
+    this.timeout(TIMEOUT_GC)
 
-  it('can be retrieved by calling lookup', async () => {
-    const schema = await Schema.lookup({sourceId: 'test lookup', schemaId: 'schema_id1'})
-    // The attrNames are mocked values returned from sdk
-    assert.deepEqual(
-      schema.schemaAttrs,
-      {name: 'test-licence', version: '4.4.4', attrNames: ['height', 'name', 'sex', 'age']}
-    )
-  })
-
-  it('can be retrieved by calling lookup and then serialized', async () => {
-    const schema = await Schema.lookup({sourceId: '1cda', schemaId: 'schema_id123'})
-    // The attrNames are mocked values returned from sdk
-    assert.deepEqual(
-      schema.schemaAttrs,
-      {name: 'test-licence', version: '4.4.4', attrNames: ['height', 'name', 'sex', 'age']}
-    )
-    const serializedLookup = await schema.serialize()
-    assert.equal(schema.sourceId, serializedLookup.source_id)
-    const deserializedSchema = await Schema.deserialize(serializedLookup)
-    assert(schema)
-    assert.equal(schema.sourceId, deserializedSchema.sourceId)
-  })
-
-  it.only('has a payment txn', async () => {
-    const schema = await Schema.create(SCHEMA, 0)
-    assert(schema)
-    const paymentTxn = await schema.getPaymentTxn()
-    console.log(paymentTxn)
-  })
-
-  const schemaCreateCheckAndDelete = async () => {
-    let schema = await Schema.create(SCHEMA)
-    const data = await schema.serialize()
-    assert(data)
-    const serialize = rustAPI().vcx_schema_serialize
-    const handle = schema._handle
-    schema = null
-    return {
-      handle,
-      serialize
+    const schemaCreateAndDelete = async () => {
+      let schema: Schema | null = await schemaCreate()
+      const handle = schema.handle
+      schema = null
+      return handle
     }
-  }
-
-  // Fix the GC issue
-  it('schema and GC deletes object should return null when serialize is called ', async function () {
-    this.timeout(30000)
-
-    const { handle, serialize } = await schemaCreateCheckAndDelete()
-
-    global.gc()
-
-    let isComplete = false
-    //  hold on to callbacks so it doesn't become garbage collected
-    const callbacks = []
-
-    while (!isComplete) {
-      const data = await new Promise(function (resolve, reject) {
-        const callback = ffi.Callback('void', ['uint32', 'uint32', 'string'],
-            function (handle, err, data) {
-              if (err) {
-                reject(err)
-                return
-              }
-              resolve(data)
-            })
-        callbacks.push(callback)
-        const rc = serialize(
-            0,
-            handle,
-            callback
-        )
-
-        if (rc === 1042) {
-          resolve(null)
-        }
+    it('calls release', async () => {
+      const handle = await schemaCreateAndDelete()
+      await gcTest({
+        handle,
+        serialize: rustAPI().vcx_schema_serialize,
+        stopCode: VCXCode.INVALID_SCHEMA_HANDLE
       })
-      if (!data) {
-        isComplete = true
-      }
-    }
-
-    // this will timeout if condition is never met
-    // ill return "" because the schema object was released
-    return isComplete
+    })
   })
 })

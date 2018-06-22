@@ -14,8 +14,11 @@ import {
   IDisclosedProofCreateWithMsgIdData,
   IIssuerCredentialCreateData,
   IProofCreateData,
+  ISchemaCreateData,
+  ISchemaLookupData,
   IssuerCredential,
-  Proof
+  Proof,
+  Schema
 } from 'src'
 
 export const dataConnectionCreate = (): IConnectionCreateData => ({
@@ -219,4 +222,40 @@ export const proofCreate = async (data = dataProofCreate()) => {
   assert.equal(proof.proofState, null)
   assert.deepEqual(proof.requestedAttributes, data.attrs)
   return proof
+}
+
+export const dataSchemaCreate = (): ISchemaCreateData => ({
+  data: {
+    attrNames: [
+      'attr1',
+      'attr2'
+    ],
+    name: 'Schema',
+    version: '1.0.0'
+  },
+  paymentHandle: 0,
+  sourceId: 'testSchemaSourceId'
+})
+
+export const schemaCreate = async (data = dataSchemaCreate()) => {
+  const schema = await Schema.create(data)
+  assert.notEqual(schema.handle, undefined)
+  assert.equal(schema.sourceId, data.sourceId)
+  assert.equal(schema.name, data.data.name)
+  assert.deepEqual(schema.schemaAttrs, data.data)
+  assert.ok(schema.schemaId)
+  return schema
+}
+
+export const dataSchemaLookup = (): ISchemaLookupData => ({
+  schemaId: 'testSchemaSchemaId',
+  sourceId: 'testSchemaSourceId'
+})
+
+export const schemaLookup = async (data = dataSchemaLookup()) => {
+  const schema = await Schema.lookup(data)
+  assert.notEqual(schema.handle, undefined)
+  assert.equal(schema.sourceId, data.sourceId)
+  assert.ok(schema.schemaId)
+  return schema
 }
