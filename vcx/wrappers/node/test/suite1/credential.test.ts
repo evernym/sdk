@@ -11,9 +11,7 @@ import { TIMEOUT_GC } from 'helpers/test-constants'
 import { initVcxTestMode, shouldThrow } from 'helpers/utils'
 import { Credential, rustAPI, StateType, VCXCode } from 'src'
 
-describe('Credential:', function () {
-  this.timeout(30000)
-
+describe('Credential:', () => {
   // const SERIALIZED_CREDENTIAL = {
   //   source_id: 'wrapper_tests',
   //   state: 3,
@@ -160,8 +158,6 @@ describe('Credential:', function () {
     it('success', async () => {
       const credential = await credentialCreateWithOffer()
       assert.equal(await credential.release(), VCXCode.SUCCESS)
-      const errorConnect = await shouldThrow(() => credential.getPaymentInfo())
-      assert.equal(errorConnect.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
       const errorSerialize = await shouldThrow(() => credential.serialize())
       assert.equal(errorSerialize.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
       assert.equal(errorSerialize.vcxFunction, 'Credential:serialize')
@@ -182,7 +178,7 @@ describe('Credential:', function () {
       assert.equal(await credential.getState(), StateType.None)
     })
 
-    it(`returns ${StateType.OfferSent}: connected`, async () => {
+    it(`returns ${StateType.RequestReceived}: connected`, async () => {
       const credential = await credentialCreateWithOffer()
       await credential.updateState()
       assert.equal(await credential.getState(), StateType.RequestReceived)

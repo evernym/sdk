@@ -8,7 +8,10 @@ import {
   IConnectionCreateData,
   ICredentialCreateWithMsgId,
   ICredentialCreateWithOffer,
-  ICredentialDefCreateData
+  ICredentialDefCreateData,
+  IDisclosedProofCreateData,
+  IDisclosedProofCreateWithMsgIdData,
+  DisclosedProof
 } from 'src'
 
 export const dataConnectionCreate = (): IConnectionCreateData => ({
@@ -66,7 +69,7 @@ const credentialOffer = [{
 }]
 
 export const dataCredentialCreateWithOffer = async (): Promise<ICredentialCreateWithOffer> => {
-  const connection = await connectionCreateAndConnect()
+  const connection = await connectionCreateConnect()
   return {
     connection,
     offer: JSON.stringify(credentialOffer),
@@ -84,7 +87,7 @@ export const credentialCreateWithOffer = async (data?: ICredentialCreateWithOffe
 }
 
 export const dataCredentialCreateWithMsgId = async (): Promise<ICredentialCreateWithMsgId> => {
-  const connection = await connectionCreateAndConnect()
+  const connection = await connectionCreateConnect()
   return {
     connection,
     msgId: 'testCredentialMsgId',
@@ -100,4 +103,70 @@ export const credentialCreateWithMsgId = async (data?: ICredentialCreateWithMsgI
   assert.equal(credential.sourceId, data.sourceId)
   assert.ok(credential.credOffer)
   return credential
+}
+
+const disclosedProofRequest = {
+  '@topic': {
+    mid: 9,
+    tid: 1
+  },
+  '@type': {
+    name: 'PROOF_REQUEST',
+    version: '1.0'
+  },
+  'msg_ref_id': 'abcd',
+  'proof_request_data': {
+    name: 'Account Certificate',
+    nonce: '838186471541979035208225',
+    requested_attributes: {
+      business_2: {
+        name: 'business'
+      },
+      email_1: {
+        name: 'email'
+      },
+      name_0: {
+        name: 'name'
+      }
+    },
+    requested_predicates: {},
+    version: '0.1'
+  }
+}
+
+export const dataDisclosedProofCreateWithRequest = async (): Promise<IDisclosedProofCreateData> => {
+  const connection = await connectionCreateConnect()
+  return {
+    connection,
+    request: JSON.stringify(disclosedProofRequest),
+    sourceId: 'testDisclousedProofSourceId'
+  }
+}
+
+export const disclosedProofCreateWithRequest = async (data?: IDisclosedProofCreateData) => {
+  if (!data) {
+    data = await dataDisclosedProofCreateWithRequest()
+  }
+  const disclousedProof = await DisclosedProof.create(data)
+  assert.equal(disclousedProof.sourceId, data.sourceId)
+  return disclousedProof
+}
+
+export const dataDisclosedProofCreateWithMsgId = async (): Promise<IDisclosedProofCreateWithMsgIdData> => {
+  const connection = await connectionCreateConnect()
+  return {
+    connection,
+    msgId: 'testDisclousedProofMsgId',
+    sourceId: 'testDisclousedProofSourceId'
+  }
+}
+
+export const disclosedProofCreateWithMsgId = async (data?: IDisclosedProofCreateWithMsgIdData) => {
+  if (!data) {
+    data = await dataDisclosedProofCreateWithMsgId()
+  }
+  const disclousedProof = await DisclosedProof.createWithMsgId(data)
+  assert.equal(disclousedProof.sourceId, data.sourceId)
+  assert.ok(disclousedProof.proofRequest)
+  return disclousedProof
 }

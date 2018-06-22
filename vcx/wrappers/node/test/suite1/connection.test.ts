@@ -97,8 +97,6 @@ describe('Connection:', () => {
     it('success', async () => {
       const connection = await connectionCreateConnect()
       assert.equal(await connection.release(), VCXCode.SUCCESS)
-      const errorConnect = await shouldThrow(() => connection.connect())
-      assert.equal(errorConnect.vcxCode, VCXCode.INVALID_CONNECTION_HANDLE)
       const errorSerialize = await shouldThrow(() => connection.serialize())
       assert.equal(errorSerialize.vcxCode, VCXCode.INVALID_CONNECTION_HANDLE)
       assert.equal(errorSerialize.vcxFunction, 'Connection:serialize')

@@ -65,8 +65,6 @@ describe('CredentialDef:', () => {
     it('success', async () => {
       const credentialDef = await credentialDefCreate()
       assert.equal(await credentialDef.release(), VCXCode.SUCCESS)
-      const errorConnect = await shouldThrow(() => credentialDef.getCredDefId())
-      assert.equal(errorConnect.vcxCode, VCXCode.INVALID_CREDENTIAL_DEF_HANDLE)
       const errorSerialize = await shouldThrow(() => credentialDef.serialize())
       assert.equal(errorSerialize.vcxCode, VCXCode.INVALID_CREDENTIAL_DEF_HANDLE)
       assert.equal(errorSerialize.vcxFunction, 'Credential Definition:serialize')

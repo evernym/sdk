@@ -1,150 +1,218 @@
-const assert = require('chai').assert
-const vcx = require('../dist/index')
-const { stubInitVCX, connectionCreateAndConnect, shouldThrow } = require('./helpers')
-const { DisclosedProof } = vcx
+import { assert } from 'chai'
+import {
+  connectionCreateConnect,
+  dataDisclosedProofCreateWithMsgId,
+  dataDisclosedProofCreateWithRequest,
+  disclosedProofCreateWithMsgId,
+  disclosedProofCreateWithRequest
+} from 'helpers/entities'
+import { gcTest } from 'helpers/gc'
+import { TIMEOUT_GC } from 'helpers/test-constants'
+import { initVcxTestMode, shouldThrow } from 'helpers/utils'
+import { mapValues } from 'lodash'
+import { DisclosedProof, rustAPI, StateType, VCXCode } from 'src'
 
-describe('A disclosedProof', function () {
-  this.timeout(30000)
-  const PROOF_REQ = `{
-    "@type":{
-      "name":"PROOF_REQUEST",
-      "version":"1.0"
-    },
-    "@topic":{
-      "mid":9,
-      "tid":1
-    },
-    "proof_request_data":{
-      "nonce":"838186471541979035208225",
-      "name":"Account Certificate",
-      "version":"0.1",
-      "requested_attributes":{
-        "email_1":{
-          "name":"email"
-        },
-        "business_2":{
-          "name":"business"
-        },
-        "name_0":{
-          "name":"name"
-        }
-      },
-      "requested_predicates":{
-      }
-    },
-    "msg_ref_id":"abcd"
-  }`
+describe('DisclosedProof', () => {
+  before(() => initVcxTestMode())
 
-  before(async () => {
-    stubInitVCX()
-    await vcx.initVcx('ENABLE_TEST_MODE')
+  describe('create:', () => {
+    it('success', async () => {
+      await disclosedProofCreateWithRequest()
+    })
+
+    it('throws: missing sourceId', async () => {
+      const { connection, request } = await dataDisclosedProofCreateWithRequest()
+      const error = await shouldThrow(() => DisclosedProof.create({ connection, request } as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
+
+    it('throws: missing request', async () => {
+      const { connection, sourceId } = await dataDisclosedProofCreateWithRequest()
+      const error = await shouldThrow(() => DisclosedProof.create({ connection, sourceId } as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
+
+    it('throws: missing connection', async () => {
+      const { request, sourceId } = await dataDisclosedProofCreateWithRequest()
+      const error = await shouldThrow(() => DisclosedProof.create({ request, sourceId } as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
+
+    it('throws: invalid request', async () => {
+      const { connection, sourceId } = await dataDisclosedProofCreateWithRequest()
+      const error = await shouldThrow(() => DisclosedProof.create({ connection, request: 'invalid', sourceId }))
+      assert.equal(error.vcxCode, VCXCode.INVALID_JSON)
+    })
   })
 
-  // create tests
+  describe('createWithMsgId:', () => {
+    it('success', async () => {
+      await disclosedProofCreateWithMsgId()
+    })
 
-  it('can be created.', async () => {
-    const connection = await connectionCreateAndConnect()
-    const obj = await DisclosedProof.create({ connection, sourceId: 'Test', request: PROOF_REQ })
-    assert(obj)
+    it('throws: missing sourceId', async () => {
+      const { connection, msgId } = await dataDisclosedProofCreateWithMsgId()
+      const error = await shouldThrow(() => DisclosedProof.createWithMsgId({ connection, msgId } as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
+
+    it('throws: missing request', async () => {
+      const { connection, sourceId } = await dataDisclosedProofCreateWithMsgId()
+      const error = await shouldThrow(() => DisclosedProof.createWithMsgId({ connection, sourceId } as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
+
+    it('throws: missing connection', async () => {
+      const { msgId, sourceId } = await dataDisclosedProofCreateWithMsgId()
+      const error = await shouldThrow(() => DisclosedProof.createWithMsgId({ msgId, sourceId } as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+    })
   })
 
-  it(' can be created with a msgid.', async () => {
-    const connection = await connectionCreateAndConnect()
-    const obj = await DisclosedProof.createWithMsgId({ connection, sourceId: 'Test', msgId: 'id' })
-    assert(obj.proofRequest)
-    assert(obj)
+  describe('serialize:', () => {
+    it('success', async () => {
+      const disclosedProof = await disclosedProofCreateWithRequest()
+      const data = await disclosedProof.serialize()
+      assert.ok(data)
+      assert.equal(data.source_id, disclosedProof.sourceId)
+    })
+
+    it('throws: not initialized', async () => {
+      const disclosedProof = new (DisclosedProof as any)()
+      const error = await shouldThrow(() => disclosedProof.serialize())
+      assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
+      assert.equal(error.vcxFunction, 'DisclosedProof:serialize')
+      assert.equal(error.message, 'Invalid DisclosedProof Handle')
+    })
+
+    it('throws: disclosedProof released', async () => {
+      const disclosedProof = await disclosedProofCreateWithRequest()
+      const data = await disclosedProof.serialize()
+      assert.ok(data)
+      assert.equal(data.source_id, disclosedProof.sourceId)
+      assert.equal(await disclosedProof.release(), VCXCode.SUCCESS)
+      const error = await shouldThrow(() => disclosedProof.serialize())
+      assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
+      assert.equal(error.vcxFunction, 'DisclosedProof:serialize')
+      assert.equal(error.message, 'Invalid DisclosedProof Handle')
+    })
   })
 
-  it(' a call to create with no sourceId returns an error', async () => {
-    try {
-      const connection = await connectionCreateAndConnect()
-      await DisclosedProof.create({ request: PROOF_REQ, connection })
-    } catch (error) {
-      assert.equal(error.vcxCode, 1007)
+  describe('deserialize:', () => {
+    it('success', async () => {
+      const disclosedProof1 = await disclosedProofCreateWithRequest()
+      const data1 = await disclosedProof1.serialize()
+      const disclosedProof2 = await DisclosedProof.deserialize(data1)
+      assert.equal(disclosedProof2.sourceId, disclosedProof1.sourceId)
+      const data2 = await disclosedProof2.serialize()
+      assert.deepEqual(data1, data2)
+    })
+
+    it('throws: incorrect data', async () => {
+      const error = await shouldThrow(async () => DisclosedProof.deserialize({ source_id: 'Invalid' } as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_JSON)
+      assert.equal(error.vcxFunction, 'DisclosedProof:_deserialize')
+      assert.equal(error.message, 'Invalid JSON string')
+    })
+  })
+
+  describe('release:', () => {
+    it('success', async () => {
+      const disclosedProof = await disclosedProofCreateWithRequest()
+      assert.equal(await disclosedProof.release(), VCXCode.SUCCESS)
+      const errorSerialize = await shouldThrow(() => disclosedProof.serialize())
+      assert.equal(errorSerialize.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
+      assert.equal(errorSerialize.vcxFunction, 'DisclosedProof:serialize')
+      assert.equal(errorSerialize.message, 'Invalid DisclosedProof Handle')
+    })
+
+    it('throws: not initialized', async () => {
+      const disclosedProof = new (DisclosedProof as any)()
+      const error = await shouldThrow(() => disclosedProof.release())
+      assert.equal(error.vcxCode, VCXCode.UNKNOWN_ERROR)
+    })
+  })
+
+  describe('updateState:', () => {
+    it(`returns ${StateType.None}: not initialized`, async () => {
+      const disclosedProof = new (DisclosedProof as any)()
+      await disclosedProof.updateState()
+      assert.equal(await disclosedProof.getState(), StateType.None)
+    })
+
+    it(`returns ${StateType.RequestReceived}: connected`, async () => {
+      const disclosedProof = await disclosedProofCreateWithRequest()
+      await disclosedProof.updateState()
+      assert.equal(await disclosedProof.getState(), StateType.RequestReceived)
+    })
+  })
+
+  describe('sendProof:', () => {
+    it('success', async () => {
+      const data = await dataDisclosedProofCreateWithRequest()
+      const disclosedProof = await disclosedProofCreateWithRequest(data)
+      await disclosedProof.sendProof(data.connection)
+      assert.equal(await disclosedProof.getState(), StateType.Accepted)
+    })
+  })
+
+  describe('getRequests:', async () => {
+    it('success', async () => {
+      const connection = await connectionCreateConnect()
+      const requests = await DisclosedProof.getRequests(connection)
+      assert.ok(requests)
+      assert.ok(requests.length)
+      const disclosedProof = await disclosedProofCreateWithRequest({
+        connection,
+        request: requests[0],
+        sourceId: 'disclosedProofTestSourceId'
+      })
+      await disclosedProof.updateState()
+      assert.equal(await disclosedProof.getState(), StateType.RequestReceived)
+    })
+  })
+
+  describe('getCredentials:', async () => {
+    it('success', async () => {
+      const disclosedProof = await disclosedProofCreateWithRequest()
+      const creds = await disclosedProof.getCredentials()
+      assert.ok(creds)
+      assert.property(creds, 'attrs')
+      assert.property(creds, 'predicates')
+    })
+  })
+
+  // TODO: Play around with generate proof
+  describe('generateProof:', async () => {
+    it('success', async () => {
+      const data = await dataDisclosedProofCreateWithRequest()
+      const disclosedProof = await disclosedProofCreateWithRequest(data)
+      const { attrs } = await disclosedProof.getCredentials()
+      const valSelfAttested = 'testSelfAttestedVal'
+      await disclosedProof.generateProof({
+        selectedCreds: {},
+        selfAttestedAttrs: mapValues(attrs, () => valSelfAttested)
+      })
+      await disclosedProof.sendProof(data.connection)
+    })
+  })
+
+  describe('GC:', function () {
+    this.timeout(TIMEOUT_GC)
+
+    const disclosedProofCreateAndDelete = async () => {
+      let disclosedProof: DisclosedProof | null = await disclosedProofCreateWithRequest()
+      const handle = disclosedProof.handle
+      disclosedProof = null
+      return handle
     }
-  })
-
-  it(' a call to create with no request returns an error', async () => {
-    const connection = await connectionCreateAndConnect()
-    const error = await shouldThrow(() => DisclosedProof.create({ connection, sourceId: 'Test' }))
-    assert.equal(error.vcxCode, 1007)
-  })
-
-  it(' a call to create with a bad request returns an error', async () => {
-    const connection = await connectionCreateAndConnect()
-    const error = await shouldThrow(() => DisclosedProof.create({ connection, sourceId: 'Test', request: '{}' }))
-    assert.equal(error.vcxCode, 1016)
-  })
-
-  // serialize/deserialize tests
-
-  it('can be serialized.', async () => {
-    const connection = await connectionCreateAndConnect()
-    const obj = await DisclosedProof.create({ connection, sourceId: 'Test', request: PROOF_REQ })
-    assert(obj)
-    const val = await obj.serialize()
-    assert(val)
-  })
-
-  it('can be deserialized.', async () => {
-    const connection = await connectionCreateAndConnect()
-    const obj = await DisclosedProof.create({ connection, sourceId: 'Test', request: PROOF_REQ })
-    assert(obj)
-    const val = await obj.serialize()
-    assert(val)
-    const obj2 = await DisclosedProof.deserialize(val)
-    assert(obj2)
-  })
-
-  // state tests
-
-  it('can get state.', async () => {
-    const connection = await connectionCreateAndConnect()
-    const obj = await DisclosedProof.create({ connection, sourceId: 'Test', request: PROOF_REQ })
-    assert(obj)
-    const state = await obj.getState()
-    assert(state === 3)
-  })
-
-  it('can update state.', async () => {
-    const connection = await connectionCreateAndConnect()
-    const obj = await DisclosedProof.create({ connection, sourceId: 'Test', request: PROOF_REQ })
-    assert(obj)
-    await obj.updateState()
-    const state = await obj.getState()
-    assert(state === 3)
-  })
-
-  // sendProof tests
-
-  it('can send a proof.', async () => {
-    const connection = await connectionCreateAndConnect()
-    const obj = await DisclosedProof.create({ connection, sourceId: 'Test', request: PROOF_REQ })
-    assert(obj)
-    await obj.sendProof(connection)
-    const state = await obj.getState()
-    assert(state === 4)
-  })
-
-  it('can query for proof requests.', async () => {
-    const connection = await connectionCreateAndConnect()
-    let val = await DisclosedProof.getRequests(connection)
-    assert(val)
-  })
-
-  it('retrieve credentials associated with a proof request', async () => {
-    const connection = await connectionCreateAndConnect()
-    const obj = await DisclosedProof.create({ sourceId: 'Test', request: PROOF_REQ, connection })
-    let creds = await obj.getCredentials()
-    assert(JSON.stringify(creds) === `{"attrs":{"height_1":[{"cred_info":{"referent":"92556f60-d290-4b58-9a43-05c25aac214e","attrs":{"name":"Bob","height":"4'11","sex":"male","age":"111"},"schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:test-licence:4.4.4","cred_def_id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:2471","rev_reg_id":null,"cred_rev_id":null},"interval":null}],"zip_2":[{"cred_info":{"referent":"2dea21e2-1404-4f85-966f-d03f403aac71","attrs":{"address2":"101 Wilson Lane","city":"SLC","state":"UT","zip":"87121","address1":"101 Tela Lane"},"schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:Home Address:5.5.5","cred_def_id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:2479","rev_reg_id":null,"cred_rev_id":null},"interval":null}]},"predicates":{}}`)
-  })
-
-  it('generate a proof', async () => {
-    const connection = await connectionCreateAndConnect()
-    const obj = await DisclosedProof.create({ connection, sourceId: 'Test', request: PROOF_REQ })
-    let retrievedCreds = await obj.getCredentials()
-    let selectedCreds = {'height_1': retrievedCreds['attrs']['height_1'][0]}
-    // Acception will be thrown if this doesn't work rather than undefined
-    assert(await obj.generateProof({ selectedCreds, selfAttestedAttrs: retrievedCreds }) === undefined)
+    it('calls release', async () => {
+      const handle = await disclosedProofCreateAndDelete()
+      await gcTest({
+        handle,
+        serialize: rustAPI().vcx_disclosed_proof_serialize,
+        stopCode: VCXCode.INVALID_DISCLOSED_PROOF_HANDLE
+      })
+    })
   })
 })
