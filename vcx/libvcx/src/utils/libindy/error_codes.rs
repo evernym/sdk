@@ -17,9 +17,6 @@ pub fn map_indy_error<T, C: PrimInt>(rtn: T, error_code: C) -> Result<T, u32> {
 // Todo - rename once it replaces map_indy_error
 pub fn map_rust_indy_sdk_error_code(error_code: ErrorCode) -> u32 {
     let error_code= error_code as u32;
-    if error_code >= error::UNKNOWN_ERROR.code_num {
-        return error_code;
-    }
 
     warn!("indy-sdk error code: {}", error_code);
 
@@ -27,6 +24,7 @@ pub fn map_rust_indy_sdk_error_code(error_code: ErrorCode) -> u32 {
         100 ... 112 => error::INVALID_LIBINDY_PARAM.code_num,
         203 =>  error::WALLET_ALREADY_EXISTS.code_num,
         206 =>  error::WALLET_ALREADY_OPEN.code_num,
+        212 =>  error::NO_RESULTS.code_num,
         306 =>  error::CREATE_POOL_CONFIG.code_num,
         407 =>  error::CREDENTIAL_DEF_ALREADY_CREATED.code_num,
         702 =>  error::INSUFFICIENT_TOKEN_AMOUNT.code_num,
@@ -52,6 +50,7 @@ pub fn map_indy_error_code<C: PrimInt>(error_code: C) -> u32 {
         100 ... 112 => error::INVALID_LIBINDY_PARAM.code_num,
         203 =>  error::WALLET_ALREADY_EXISTS.code_num,
         206 =>  error::WALLET_ALREADY_OPEN.code_num,
+        212 =>  error::NO_RESULTS.code_num,
         306 =>  error::CREATE_POOL_CONFIG.code_num,
         407 =>  error::CREDENTIAL_DEF_ALREADY_CREATED.code_num,
         702 =>  error::INSUFFICIENT_TOKEN_AMOUNT.code_num,

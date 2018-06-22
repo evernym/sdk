@@ -6,13 +6,13 @@ use std::ffi::CString;
 use settings;
 use std::ptr::null;
 use utils::libindy::{indy_function_eval};
-use utils::libindy::return_types::{ Return_I32, Return_I32_I32, receive};
+use utils::libindy::return_types::{ Return_I32, Return_I32_I32, Return_I32_STR, receive};
 use utils::libindy::error_codes::{map_indy_error_code, map_string_error};
 use utils::timeout::TimeoutUtils;
 use utils::error;
 use error::wallet::WalletError;
-use std::fs::File;
 use std::path::Path;
+use serde_json::to_string;
 
 pub static mut WALLET_HANDLE: i32 = 0;
 
@@ -57,6 +57,23 @@ extern {
                           wallet_handle: i32,
                           export_config_json: *const c_char,
                           cb: Option<extern fn(xcommand_handle: i32, err: i32)>) -> i32;
+
+    fn indy_add_wallet_record(command_handle: i32,
+                              wallet_handle: i32,
+                              type_: *const c_char,
+                              id: *const c_char,
+                              value: *const c_char,
+                              tags_json: *const c_char,
+                              cb: Option<extern fn(command_handle_: i32, err: i32)>) -> i32;
+
+    fn indy_get_wallet_record(command_handle: i32,
+                              wallet_handle: i32,
+                              type_: *const c_char,
+                              id: *const c_char,
+                              options_json: *const c_char,
+                              cb: Option<extern fn(command_handle_: i32,
+                                                   err: i32,
+                                                   record_json: *const c_char)>) -> i32;
 }
 
 
@@ -114,6 +131,63 @@ pub fn create_wallet(wallet_name: &str, pool_name: &str) -> Result<(), u32> {
             Err(err) => return Err(error::UNKNOWN_LIBINDY_ERROR.code_num),
         }
     }
+}
+
+pub fn add_record(wallet_handle: i32, add_record_request_str: &str) -> Result<(), WalletError> {
+    let rtn_obj = Return_I32::new().unwrap();
+    let type_ = CString::new("type1").unwrap();
+    let id = CString::new("id1").unwrap();
+    let value = CString::new("value1").unwrap();
+    let tags = CString::new(json!({}).to_string()).unwrap();
+//    let tags = CString::new(to_string(&json!({"tagName1": "tag value 1", "tagName2": 123})).unwrap()).unwrap();
+    unsafe {
+        indy_function_eval(
+            indy_add_wallet_record(rtn_obj.command_handle,
+                                   wallet_handle,
+                                   type_.as_ptr(),
+                                   id.as_ptr(),
+                                   value.as_ptr(),
+                                   tags.as_ptr(),
+                                   Some(rtn_obj.get_callback()))).map_err(map_indy_error_code).unwrap();
+
+    }
+
+    match receive(&rtn_obj.receiver, TimeoutUtils::some_long()) {
+        Ok(_) => Ok(()),
+        Err(err) => Err(WalletError::CommonError(err)),
+    }
+}
+
+
+pub fn get_record(wallet_handle: i32, get_record_request_str: &str) -> Result<String, WalletError> {
+    use utils::error::error_message;
+    let rtn_obj = Return_I32_STR::new().unwrap();
+    let type_ = CString::new("type1").unwrap();
+    let id = CString::new("id1").unwrap();
+//    let options = CString::new(to_string(&json!(
+//        {
+//            "retrieveType": "false",
+//            "retrieveValue": "true",
+//            "retrieveTags": "false"
+//        })).unwrap()).unwrap();
+    let options = json!({
+                "retrieveType": true,
+                "retrieveValue": true,
+                "retrieveTags": true
+            }).to_string();
+    let options2 = CString::new(options).unwrap();
+    unsafe {
+        indy_function_eval(
+            indy_get_wallet_record(rtn_obj.command_handle,
+                                   wallet_handle,
+                                   type_.as_ptr(),
+                                   id.as_ptr(),
+                                   options2.as_ptr(),
+                                   Some(rtn_obj.get_callback()))).map_err(map_indy_error_code).unwrap();
+    }
+    let res = rtn_obj.receive(TimeoutUtils::some_long());
+    Ok(res.unwrap().unwrap())
+
 }
 
 pub fn open_wallet(wallet_name: &str) -> Result<i32, u32> {
@@ -206,14 +280,14 @@ pub fn delete_wallet(wallet_name: &str) -> Result<(), u32> {
         return Ok(())
     }
 
-    match close_wallet() {
+    match close_wallet(){
         Ok(_) => (),
-        Err(x) => (),
+        Err(x) => { println!("Error Closing Wallet in delete_wallet"); ()},
     };
+
     let rtn_obj = Return_I32::new()?;
     let wallet_name = CString::new(wallet_name).map_err(map_string_error)?;
     let credentials =  CString::new(settings::get_wallet_credentials()).unwrap();
-
     unsafe {
         indy_function_eval(
             indy_delete_wallet(rtn_obj.command_handle,
@@ -254,7 +328,6 @@ pub fn export(wallet_handle: i32, path: &Path, key: &str) -> Result<(), WalletEr
                                               Some(rtn_obj.get_callback()))).map_err(|ec| WalletError::CommonError(ec as u32))?;
     }
 
-    println!("Waiting for cb from libindy...");
     rtn_obj.receive(TimeoutUtils::some_long()).map_err(|ec| WalletError::CommonError(ec as u32))
 
 }
@@ -292,14 +365,15 @@ pub mod tests {
     fn test_wallet_with_credentials() {
         use std::env;
         use std::fs;
+        use utils::error::error_message;
 
-        let KEY = "pass";
+        static KEY: &str = "pass";
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
         settings::set_config_value(settings::CONFIG_WALLET_KEY, KEY);
 
         let handle = init_wallet("password_wallet").unwrap();
-
+        assert_eq!(handle, get_wallet_handle());
         SignusUtils::create_and_store_my_did(handle,None).unwrap();
         let mut dir = env::temp_dir();
         let filename_str = &settings::get_config_value(settings::CONFIG_WALLET_NAME).unwrap();
@@ -307,14 +381,32 @@ pub mod tests {
         if Path::new(&dir).exists() {
             fs::remove_file(Path::new(&dir));
         }
+        let add_record_request = json!({
+            "type": "type1",
+            "id": "id1",
+            "value":"value1",
+            "tags": {}
+        });
+        let add_record_request_string = add_record_request.to_string();
+        add_record(handle, &add_record_request_string).unwrap();
+        let get_record_request = json!({"type": "type1", "id": "id1"});
+        let get_record_request_string = to_string(&get_record_request).unwrap();
+        let retrieved_record_string = get_record(handle, &get_record_request_string).unwrap();
+
+        // compare results
+        let retrieved_json:serde_json::Value = serde_json::from_str(&retrieved_record_string).unwrap();
+        let generated_json:serde_json::Value = serde_json::from_str(&add_record_request_string).unwrap();
+        assert_eq!(retrieved_json["value"], generated_json["value"]);
+        assert_eq!(retrieved_json["id"], generated_json["id"]);
+        assert_eq!(retrieved_json["type"], generated_json["type"]);
+
         export(handle, &dir, KEY).is_ok();
         assert!(Path::new(&dir).exists());
-//        match fs::remove_file(Path::new(&dir)) {
-//            Ok(_) => println!("file removed"),
-//            Err(_) => println!("File NOT removed"),
-//        };
-//        assert!(!Path::new(&dir).exists());
-        delete_wallet("password_wallet").unwrap();
+
+        // cleanup
+        delete_wallet("password_wallet").map_err(|e| error_message(&e)).unwrap();
+        fs::remove_file(Path::new(&dir)).unwrap();
+        assert!(!Path::new(&dir).exists());
     }
 
     #[test]
