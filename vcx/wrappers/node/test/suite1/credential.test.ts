@@ -14,45 +14,6 @@ import { initVcxTestMode, shouldThrow } from 'helpers/utils'
 import { Credential, rustAPI, StateType, VCXCode } from 'src'
 
 describe('Credential:', () => {
-  // const SERIALIZED_CREDENTIAL = {
-  //   source_id: 'wrapper_tests',
-  //   state: 3,
-  //   credential_name: null,
-  //   credential_request: null,
-  //   credential_offer: {
-  //     msg_type: 'CLAIM_OFFER',
-  //     version: '0.1',
-  //     to_did: '8XFh8yBzrpJQmNyZzgoTqB',
-  //     from_did: '8XFh8yBzrpJQmNyZzgoTqB',
-  //     libindy_offer: '{}',
-  //     cred_def_id: 'id',
-  //     credential_attrs: {
-  //       address1: ['101 Tela Lane'],
-  //       address2: ['101 Wilson Lane'],
-  //       city: ['SLC'],
-  //       state: ['UT'],
-  //       zip: ['87121']
-  //     },
-  //     schema_seq_no: 1487,
-  //     claim_name: 'Credential',
-  //     claim_id: 'defaultCredentialId',
-  //     msg_ref_id: '123'
-  //   },
-  //   link_secret_alias: 'main',
-  //   msg_uid: null,
-  //   agent_did: null,
-  //   agent_vk: null,
-  //   my_did: null,
-  //   my_vk: null,
-  //   their_did: null,
-  //   their_vk: null,
-  //   payment_info: {
-  //     payment_required: 'one-time',
-  //     payment_addr: 'pov:null:OsdjtGKavZDBuG2xFw2QunVwwGs5IB3j',
-  //     price: 25
-  //   }
-  // }
-
   before(() => initVcxTestMode())
 
   describe('create:', () => {
@@ -102,10 +63,10 @@ describe('Credential:', () => {
       assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
     })
 
-    it('throws: missing connection', async () => {
+    it('throws: missing connection handle', async () => {
       const { msgId, sourceId } = await dataCredentialCreateWithMsgId()
-      const error = await shouldThrow(() => Credential.createWithMsgId({ msgId, sourceId } as any))
-      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+      const error = await shouldThrow(() => Credential.createWithMsgId({ msgId, sourceId , connection: {} } as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_CONNECTION_HANDLE)
     })
   })
 
@@ -118,7 +79,7 @@ describe('Credential:', () => {
     })
 
     it('throws: not initialized', async () => {
-      const credential = new (Credential as any)()
+      const credential = new Credential(null as any)
       const error = await shouldThrow(() => credential.serialize())
       assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
     })
@@ -159,7 +120,7 @@ describe('Credential:', () => {
     })
 
     it('throws: not initialized', async () => {
-      const credential = new (Credential as any)()
+      const credential = new Credential(null as any)
       const error = await shouldThrow(() => credential.release())
       assert.equal(error.vcxCode, VCXCode.UNKNOWN_ERROR)
     })
@@ -167,7 +128,7 @@ describe('Credential:', () => {
 
   describe('updateState:', () => {
     it(`returns ${StateType.None}: not initialized`, async () => {
-      const credential = new (Credential as any)()
+      const credential = new Credential(null as any)
       await credential.updateState()
       assert.equal(await credential.getState(), StateType.None)
     })
@@ -180,7 +141,7 @@ describe('Credential:', () => {
   })
 
   describe('sendRequest:', () => {
-    it('success', async () => {
+    it.only('success', async () => {
       const data = await dataCredentialCreateWithOffer()
       const credential = await credentialCreateWithOffer(data)
       await credential.sendRequest({ connection: data.connection, payment: 0 })
@@ -194,9 +155,10 @@ describe('Credential:', () => {
       const offers = await Credential.getOffers(connection)
       assert.ok(offers)
       assert.ok(offers.length)
+      const offer = offers[0]
       await credentialCreateWithOffer({
         connection,
-        offer: offers[0],
+        offer: JSON.stringify(offer),
         sourceId: 'credentialGetOffersTestSourceId'
       })
     })

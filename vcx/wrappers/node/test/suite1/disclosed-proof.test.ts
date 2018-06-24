@@ -64,9 +64,9 @@ describe('DisclosedProof', () => {
       assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
     })
 
-    it('throws: missing connection', async () => {
+    it('throws: missing connection handle', async () => {
       const { msgId, sourceId } = await dataDisclosedProofCreateWithMsgId()
-      const error = await shouldThrow(() => DisclosedProof.createWithMsgId({ msgId, sourceId } as any))
+      const error = await shouldThrow(() => DisclosedProof.createWithMsgId({ msgId, sourceId, connection: {} } as any))
       assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
     })
   })
@@ -82,7 +82,7 @@ describe('DisclosedProof', () => {
     it('throws: not initialized', async () => {
       const disclosedProof = new (DisclosedProof as any)()
       const error = await shouldThrow(() => disclosedProof.serialize())
-      assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
+      assert.equal(error.vcxCode, VCXCode.INVALID_DISCLOSED_PROOF_HANDLE)
     })
 
     it('throws: disclosedProof released', async () => {
@@ -92,7 +92,7 @@ describe('DisclosedProof', () => {
       assert.equal(data.source_id, disclosedProof.sourceId)
       assert.equal(await disclosedProof.release(), VCXCode.SUCCESS)
       const error = await shouldThrow(() => disclosedProof.serialize())
-      assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
+      assert.equal(error.vcxCode, VCXCode.INVALID_DISCLOSED_PROOF_HANDLE)
     })
   })
 
@@ -117,7 +117,7 @@ describe('DisclosedProof', () => {
       const disclosedProof = await disclosedProofCreateWithRequest()
       assert.equal(await disclosedProof.release(), VCXCode.SUCCESS)
       const errorSerialize = await shouldThrow(() => disclosedProof.serialize())
-      assert.equal(errorSerialize.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
+      assert.equal(errorSerialize.vcxCode, VCXCode.INVALID_DISCLOSED_PROOF_HANDLE)
     })
 
     it('throws: not initialized', async () => {
@@ -156,9 +156,10 @@ describe('DisclosedProof', () => {
       const requests = await DisclosedProof.getRequests(connection)
       assert.ok(requests)
       assert.ok(requests.length)
+      const request = requests[0]
       const disclosedProof = await disclosedProofCreateWithRequest({
         connection,
-        request: requests[0],
+        request: JSON.stringify(request),
         sourceId: 'disclosedProofTestSourceId'
       })
       await disclosedProof.updateState()

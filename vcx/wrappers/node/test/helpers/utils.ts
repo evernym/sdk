@@ -2,12 +2,12 @@ import '../module-resolver-helper'
 
 import { VCX_CONFIG_TEST_MODE } from 'helpers/test-constants'
 import { SinonStub, stub } from 'sinon'
-import { initVcx, VCXInternalError } from 'src'
+import * as vcx from 'src'
 
 let _initVCXCalled = false
 let _patchInitVCXObj: SinonStub | undefined
 const _patchInitVCX = () => {
-  const initVCXOriginal = vcx.initVcx
+  const initVCXOriginal = vcx.initVcx as any
   const stubInitVCX = stub(vcx, 'initVcx')
   // tslint:disable-next-line only-arrow-functions
   stubInitVCX.callsFake(async function (...args) {
@@ -30,10 +30,10 @@ export const patchInitVCX = () => {
 
 export const initVcxTestMode = async () => {
   patchInitVCX()
-  await initVcx(VCX_CONFIG_TEST_MODE)
+  await vcx.initVcx(VCX_CONFIG_TEST_MODE)
 }
 
-export const shouldThrow = (fn: () => any): Promise<VCXInternalError> => new Promise(async (resolve, reject) => {
+export const shouldThrow = (fn: () => any): Promise<vcx.VCXInternalError> => new Promise(async (resolve, reject) => {
   try {
     await fn()
     reject(new Error(`${fn.toString()} should have thrown!`))

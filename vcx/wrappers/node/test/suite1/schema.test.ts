@@ -62,7 +62,7 @@ describe('Schema:', () => {
         data: 'invalid' as any,
         ...rest
       }))
-      assert.equal(error.vcxCode, VCXCode.INVALID_JSON)
+      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
     })
   })
 

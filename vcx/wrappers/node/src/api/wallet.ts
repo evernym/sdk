@@ -18,6 +18,12 @@ export interface IRecord {
   tags: any,
 }
 
+export interface IRecordUpdate {
+  type_: string,
+  id: string,
+  value: any
+}
+
 export interface ISendTokens {
   payment: PaymentHandle,
   tokens: PaymentAmount,
@@ -195,7 +201,7 @@ export class Wallet {
    * @param {Record} record
    * @returns {Promise<void>}
    */
-  public static async updateRecordValue (record: IRecord): Promise<void> {
+  public static async updateRecordValue (record: IRecordUpdate): Promise<void> {
     const commandHandle = 0
     try {
       await createFFICallbackPromise<string>(

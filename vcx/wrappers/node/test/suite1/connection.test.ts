@@ -42,7 +42,7 @@ describe('Connection:', () => {
       const data = await connection.serialize()
       assert.ok(data)
       assert.equal(data.source_id, connection.sourceId)
-      assert.equal(data.state, StateType.OfferSent)
+      assert.equal(data.state, StateType.Initialized)
     })
 
     it('throws: not initialized', async () => {

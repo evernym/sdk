@@ -12,6 +12,6 @@
     "preserveConstEnums": true
   },
   "include": [
-    "./**/*"
+    "./src/*"
   ]
 }

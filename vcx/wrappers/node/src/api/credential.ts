@@ -11,11 +11,11 @@ export interface ICredentialStructData {
   source_id: string,
 }
 
-export type ICredentialOffer = string
+export type ICredentialOffer = [ object, object ]
 
 export interface ICredentialCreateWithOffer {
   sourceId: string,
-  offer: ICredentialOffer,
+  offer: string,
   // We're going to need it in the future
   connection: Connection
 }
@@ -85,26 +85,30 @@ export class Credential extends VCXBaseWithState<ICredentialStructData> {
   }
 
   public static async getOffers (connection: Connection): Promise<ICredentialOffer[]> {
-    const offersStr = await createFFICallbackPromise<string>(
-      (resolve, reject, cb) => {
-        const rc = rustAPI().vcx_credential_get_offers(0, connection.handle, cb)
-        if (rc) {
-          reject(rc)
-        }
-      },
-      (resolve, reject) => Callback(
-        'void',
-        ['uint32', 'uint32', 'string'],
-        (handle: number, err: number, messages: string) => {
-          if (err) {
-            reject(err)
-            return
+    try {
+      const offersStr = await createFFICallbackPromise<string>(
+        (resolve, reject, cb) => {
+          const rc = rustAPI().vcx_credential_get_offers(0, connection.handle, cb)
+          if (rc) {
+            reject(rc)
           }
-          resolve(messages)
-        })
-    )
-    const offers: ICredentialOffer[] = JSON.parse(offersStr)
-    return offers
+        },
+        (resolve, reject) => Callback(
+          'void',
+          ['uint32', 'uint32', 'string'],
+          (handle: number, err: number, messages: string) => {
+            if (err) {
+              reject(err)
+              return
+            }
+            resolve(messages)
+          })
+      )
+      const offers: ICredentialOffer[] = JSON.parse(offersStr)
+      return offers
+    } catch (err) {
+      throw new VCXInternalError(err, VCXBase.errorMessage(err), `vcx_credential_get_offers`)
+    }
   }
 
   protected _releaseFn = rustAPI().vcx_credential_release

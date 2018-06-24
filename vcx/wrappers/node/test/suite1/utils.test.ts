@@ -29,7 +29,7 @@ describe('utils:', () => {
     })
 
     it('throws: invalid input', async () => {
-      const error = await shouldThrow(() => vcx.provisionAgent(''))
+      const error = await shouldThrow(() => provisionAgent(''))
       assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
     })
   })
@@ -41,7 +41,7 @@ describe('utils:', () => {
     })
 
     it('throws: invalid input', async () => {
-      const error = await shouldThrow(() => vcx.updateAgentInfo(''))
+      const error = await shouldThrow(() => updateAgentInfo(''))
       assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
     })
   })
@@ -56,19 +56,19 @@ describe('utils:', () => {
   describe('updateInstitutionConfigs:', () => {
     it('success', async () => {
       const res = await updateInstitutionConfigs(updateInstitutionConfigsData)
-      assert.ok(res)
+      assert.equal(res, 0)
     })
 
     it('throws: missing name', async () => {
       const { name, ...data } = updateInstitutionConfigsData
-      const error = await shouldThrow(() => updateAgentInfo(data as any))
-      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+      const error = await shouldThrow(() => updateInstitutionConfigs(data as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_CONFIGURATION)
     })
 
     it('throws: missing logoUrl', async () => {
       const { logoUrl, ...data } = updateInstitutionConfigsData
-      const error = await shouldThrow(() => updateAgentInfo(data as any))
-      assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
+      const error = await shouldThrow(() => updateInstitutionConfigs(data as any))
+      assert.equal(error.vcxCode, VCXCode.INVALID_CONFIGURATION)
     })
   })
 

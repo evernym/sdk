@@ -25,7 +25,7 @@ describe('CredentialDef:', () => {
     })
 
     it('throws: not initialized', async () => {
-      const credentialDef = new (CredentialDef as any)()
+      const credentialDef = new CredentialDef(null as any, {} as any)
       const error = await shouldThrow(() => credentialDef.serialize())
       assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_DEF_HANDLE)
     })
@@ -53,7 +53,7 @@ describe('CredentialDef:', () => {
 
     it('throws: incorrect data', async () => {
       const error = await shouldThrow(async () => CredentialDef.deserialize({ source_id: 'Invalid' } as any))
-      assert.equal(error.vcxCode, VCXCode.INVALID_JSON)
+      assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_DEF)
     })
   })
 
@@ -66,7 +66,7 @@ describe('CredentialDef:', () => {
     })
 
     it('throws: not initialized', async () => {
-      const credentialDef = new (CredentialDef as any)()
+      const credentialDef = new CredentialDef(null as any, {} as any)
       const error = await shouldThrow(() => credentialDef.release())
       assert.equal(error.vcxCode, VCXCode.UNKNOWN_ERROR)
     })
@@ -79,7 +79,7 @@ describe('CredentialDef:', () => {
     })
 
     it('throws: not initialized', async () => {
-      const credentialDef = new (CredentialDef as any)()
+      const credentialDef = new CredentialDef(null as any, {} as any)
       const error = await shouldThrow(() => credentialDef.getCredDefId())
       assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_DEF_HANDLE)
     })

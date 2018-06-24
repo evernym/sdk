@@ -173,6 +173,7 @@ export class Schema extends VCXBase<ISchemaSerializedData> {
     this._schemaAttrs = schemaAttrs
   }
 
+  // TODO: Why do we need it?
   /**
    * @memberof Schema
    * @description Retrieves the schema id associated with the created schema.

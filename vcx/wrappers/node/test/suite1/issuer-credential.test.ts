@@ -71,9 +71,9 @@ describe('IssuerCredential:', () => {
     })
 
     it('throws: not initialized', async () => {
-      const issuerCredential = new (IssuerCredential as any)()
+      const issuerCredential = new IssuerCredential(null as any, {} as any)
       const error = await shouldThrow(() => issuerCredential.serialize())
-      assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
+      assert.equal(error.vcxCode, VCXCode.INVALID_ISSUER_CREDENTIAL_HANDLE)
     })
 
     it('throws: issuerCredential released', async () => {
@@ -83,7 +83,7 @@ describe('IssuerCredential:', () => {
       assert.equal(data.source_id, issuerCredential.sourceId)
       assert.equal(await issuerCredential.release(), VCXCode.SUCCESS)
       const error = await shouldThrow(() => issuerCredential.serialize())
-      assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
+      assert.equal(error.vcxCode, VCXCode.INVALID_ISSUER_CREDENTIAL_HANDLE)
     })
   })
 
@@ -108,11 +108,11 @@ describe('IssuerCredential:', () => {
       const issuerCredential = await issuerCredentialCreate()
       assert.equal(await issuerCredential.release(), VCXCode.SUCCESS)
       const errorSerialize = await shouldThrow(() => issuerCredential.serialize())
-      assert.equal(errorSerialize.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
+      assert.equal(errorSerialize.vcxCode, VCXCode.INVALID_ISSUER_CREDENTIAL_HANDLE)
     })
 
     it('throws: not initialized', async () => {
-      const issuerCredential = new (IssuerCredential as any)()
+      const issuerCredential = new IssuerCredential(null as any, {} as any)
       const error = await shouldThrow(() => issuerCredential.release())
       assert.equal(error.vcxCode, VCXCode.UNKNOWN_ERROR)
     })
@@ -120,7 +120,7 @@ describe('IssuerCredential:', () => {
 
   describe('updateState:', () => {
     it(`returns ${StateType.None}: not initialized`, async () => {
-      const issuerCredential = new (IssuerCredential as any)()
+      const issuerCredential = new IssuerCredential(null as any, {} as any)
       await issuerCredential.updateState()
       assert.equal(await issuerCredential.getState(), StateType.None)
     })
@@ -142,7 +142,7 @@ describe('IssuerCredential:', () => {
 
     it('throws: not initialized', async () => {
       const connection = await connectionCreateConnect()
-      const issuerCredential = new (IssuerCredential as any)()
+      const issuerCredential = new IssuerCredential(null as any, {} as any)
       const error = await shouldThrow(() => issuerCredential.sendOffer(connection))
       assert.equal(error.vcxCode, VCXCode.INVALID_ISSUER_CREDENTIAL_HANDLE)
     })
@@ -170,7 +170,7 @@ describe('IssuerCredential:', () => {
 
     it('throws: not initialized', async () => {
       const connection = await connectionCreateConnect()
-      const issuerCredential = new (IssuerCredential as any)()
+      const issuerCredential = new IssuerCredential(null as any, {} as any)
       const error = await shouldThrow(() => issuerCredential.sendCredential(connection))
       assert.equal(error.vcxCode, VCXCode.INVALID_ISSUER_CREDENTIAL_HANDLE)
     })

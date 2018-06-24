@@ -27,7 +27,7 @@ describe('Proof:', () => {
 
     it('throws: missing attrs', async () => {
       const { attrs, ...data } = await dataProofCreate()
-      const error = await shouldThrow(() => Proof.create(data as any))
+      const error = await shouldThrow(() => Proof.create({ attrs: [], ...data }))
       assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
     })
 
@@ -39,7 +39,7 @@ describe('Proof:', () => {
 
     it('throws: invalid attr', async () => {
       const { attrs, ...data } = await dataProofCreate()
-      const error = await shouldThrow(() => Proof.create({ attrs: 'invalid' as any, ...data }))
+      const error = await shouldThrow(() => Proof.create({ attrs: [] as any, ...data }))
       assert.equal(error.vcxCode, VCXCode.INVALID_JSON)
     })
   })
@@ -53,7 +53,7 @@ describe('Proof:', () => {
     })
 
     it('throws: not initialized', async () => {
-      const proof = new (Proof as any)()
+      const proof = new Proof(null as any, {} as any)
       const error = await shouldThrow(() => proof.serialize())
       assert.equal(error.vcxCode, VCXCode.INVALID_PROOF_HANDLE)
     })
@@ -94,7 +94,7 @@ describe('Proof:', () => {
     })
 
     it('throws: not initialized', async () => {
-      const proof = new (Proof as any)()
+      const proof = new Proof(null as any, {} as any)
       const error = await shouldThrow(() => proof.release())
       assert.equal(error.vcxCode, VCXCode.UNKNOWN_ERROR)
     })
@@ -102,7 +102,7 @@ describe('Proof:', () => {
 
   describe('updateState:', () => {
     it(`returns ${StateType.None}: not initialized`, async () => {
-      const proof = new (Proof as any)()
+      const proof = new Proof(null as any, {} as any)
       await proof.updateState()
       assert.equal(await proof.getState(), StateType.None)
     })
@@ -140,9 +140,9 @@ describe('Proof:', () => {
 
     it('throws: not initialized', async () => {
       const connection = await connectionCreateConnect()
-      const proof = new (Proof as any)()
+      const proof = new Proof(null as any, {} as any)
       const error = await shouldThrow(() => proof.requestProof(connection))
-      assert.equal(error.vcxCode, VCXCode.INVALID_ISSUER_CREDENTIAL_HANDLE)
+      assert.equal(error.vcxCode, VCXCode.INVALID_PROOF_HANDLE)
     })
 
     it('throws: connection not initialized', async () => {

@@ -3,7 +3,7 @@ import { Callback } from 'ffi'
 import { VCXInternalError } from '../errors'
 import { initRustAPI, rustAPI } from '../rustlib'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
-import { IInitVCXOptions, IndyTransactions } from './common'
+import { IInitVCXOptions } from './common'
 import { VCXBase } from './vcx-base'
 
 export async function provisionAgent (configAgent: string, options: IInitVCXOptions = {}): Promise<string> {

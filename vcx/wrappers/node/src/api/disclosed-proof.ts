@@ -11,13 +11,13 @@ export interface IDisclosedProofData {
   source_id: string,
 }
 
-export type IDisclosedProofRequest = string
+export type IDisclosedProofRequest = object
 
 export interface IDisclosedProofCreateData {
   // We're going to need it in the future
   connection: Connection,
   sourceId: string,
-  request: IDisclosedProofRequest
+  request: string
 }
 
 export interface IDisclosedProofCreateWithMsgIdData {
