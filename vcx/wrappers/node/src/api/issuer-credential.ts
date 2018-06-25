@@ -2,7 +2,6 @@ import { Callback } from 'ffi'
 
 import { VCXInternalError } from '../errors'
 import { rustAPI } from '../rustlib'
-import { errorMessage } from '../utils/error-message'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
 import { StateType } from './common'
 import { Connection } from './connection'
@@ -109,8 +108,7 @@ class IssuerCredentialBase extends VCXBaseWithState<IIssuerCredentialData> {
             })
         )
     } catch (err) {
-      // TODO handle error
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_issuer_send_credential_offer')
+      throw new VCXInternalError(err)
     }
   }
 
@@ -145,7 +143,7 @@ class IssuerCredentialBase extends VCXBaseWithState<IIssuerCredentialData> {
           })
       )
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_issuer_send_credential')
+      throw new VCXInternalError(err)
     }
   }
 
@@ -201,7 +199,7 @@ export class IssuerCredential extends VCXPaymentTxn(IssuerCredentialBase) {
       )
       return credential
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_issuer_create_credential')
+      throw new VCXInternalError(err)
     }
   }
 
@@ -231,7 +229,7 @@ export class IssuerCredential extends VCXPaymentTxn(IssuerCredentialBase) {
       )
       return credential
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), `vcx_issuer_credential_deserialize`)
+      throw new VCXInternalError(err)
     }
   }
 }

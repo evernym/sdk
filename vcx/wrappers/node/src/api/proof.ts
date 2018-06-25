@@ -1,7 +1,6 @@
 import { Callback } from 'ffi'
 import { VCXInternalError } from '../errors'
 import { rustAPI } from '../rustlib'
-import { errorMessage } from '../utils/error-message'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
 import { StateType } from './common'
 import { Connection } from './connection'
@@ -113,7 +112,7 @@ export class Proof extends VCXBaseWithState<IProofData> {
       ))
       return proof
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_proof_create')
+      throw new VCXInternalError(err)
     }
   }
 
@@ -137,7 +136,7 @@ export class Proof extends VCXBaseWithState<IProofData> {
       const proof = await super._deserialize(Proof, proofData, constructorParams)
       return proof
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_proof_deserialize')
+      throw new VCXInternalError(err)
     }
   }
 
@@ -187,7 +186,7 @@ export class Proof extends VCXBaseWithState<IProofData> {
             })
         )
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_proof_send_request')
+      throw new VCXInternalError(err)
     }
   }
 
@@ -222,7 +221,7 @@ export class Proof extends VCXBaseWithState<IProofData> {
       this._proofState = proofRes.proofState
       return { proof: proofRes.proofData, proofState: proofRes.proofState }
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_get_proof')
+      throw new VCXInternalError(err)
     }
   }
 

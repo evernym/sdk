@@ -1,6 +1,5 @@
 import * as ffi from 'ffi'
 import { VCXInternalError } from '../errors'
-import { errorMessage } from '../utils/error-message'
 import { createFFICallbackPromise, ICbRef } from '../utils/ffi-helpers'
 import { GCWatcher } from '../utils/memory-management-helpers'
 
@@ -17,7 +16,7 @@ export abstract class VCXBase<SerializedData> extends GCWatcher {
       await obj._initFromData(objData)
       return obj
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), `${this.name}:_deserialize`)
+      throw new VCXInternalError(err)
     }
   }
 
@@ -68,7 +67,7 @@ export abstract class VCXBase<SerializedData> extends GCWatcher {
       const data: SerializedData = JSON.parse(dataStr)
       return data
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), `${this.constructor.name}:serialize`)
+      throw new VCXInternalError(err)
     }
   }
 

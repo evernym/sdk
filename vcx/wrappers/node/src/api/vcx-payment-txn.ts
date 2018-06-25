@@ -1,6 +1,5 @@
 import * as ffi from 'ffi'
 import { VCXInternalError } from '../errors'
-import { errorMessage } from '../utils/error-message'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
 
 export type Constructor<T> = new(...args: any[]) => T
@@ -32,7 +31,7 @@ export const VCXPaymentTxn = <T extends Constructor<{ handle: string }>>(Base: T
             })
           )
       } catch (err) {
-        throw new VCXInternalError(err, errorMessage(err), `getPaymentTxn`)
+        throw new VCXInternalError(err)
       }
     }
   }

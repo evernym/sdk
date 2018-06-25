@@ -2,7 +2,6 @@ import { Callback } from 'ffi'
 
 import { VCXInternalError } from '../errors'
 import { rustAPI } from '../rustlib'
-import { errorMessage } from '../utils/error-message'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
 import { Connection } from './connection'
 import { VCXBaseWithState } from './vcx-base-with-state'
@@ -62,7 +61,7 @@ export class DisclosedProof extends VCXBaseWithState<IDisclosedProofData> {
       )
       return newObj
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), `vcx_disclosed_proof_create_with_request`)
+      throw new VCXInternalError(err)
     }
   }
 
@@ -93,7 +92,7 @@ export class DisclosedProof extends VCXBaseWithState<IDisclosedProofData> {
             })
       )
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), `vcx_disclosed_proof_create_with_msgid`)
+      throw new VCXInternalError(err)
     }
   }
 
@@ -102,7 +101,7 @@ export class DisclosedProof extends VCXBaseWithState<IDisclosedProofData> {
       const newObj = await super._deserialize<DisclosedProof, {}>(DisclosedProof, data)
       return newObj
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), `vcx_disclosed_proof_deserialize`)
+      throw new VCXInternalError(err)
     }
   }
 
@@ -159,7 +158,7 @@ export class DisclosedProof extends VCXBaseWithState<IDisclosedProofData> {
       const creds: IRetrievedCreds = JSON.parse(credsStr)
       return creds
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), `vcx_disclosed_proof_retrieve_credentials`)
+      throw new VCXInternalError(err)
     }
   }
 
@@ -184,7 +183,7 @@ export class DisclosedProof extends VCXBaseWithState<IDisclosedProofData> {
             })
         )
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), `vcx_disclosed_proof_send_proof`)
+      throw new VCXInternalError(err)
     }
   }
 
@@ -215,7 +214,7 @@ export class DisclosedProof extends VCXBaseWithState<IDisclosedProofData> {
             })
         )
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), `vcx_disclosed_proof_generate_proof`)
+      throw new VCXInternalError(err)
     }
   }
 

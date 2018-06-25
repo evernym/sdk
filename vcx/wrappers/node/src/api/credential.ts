@@ -2,7 +2,6 @@ import { Callback } from 'ffi'
 
 import { VCXInternalError } from '../errors'
 import { rustAPI } from '../rustlib'
-import { errorMessage } from '../utils/error-message'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
 import { Connection } from './connection'
 import { VCXBaseWithState } from './vcx-base-with-state'
@@ -56,7 +55,7 @@ class CredentialBase extends VCXBaseWithState<ICredentialStructData> {
       const offers: ICredentialOffer[] = JSON.parse(offersStr)
       return offers
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), `vcx_credential_get_offers`)
+      throw new VCXInternalError(err)
     }
   }
 
@@ -86,7 +85,7 @@ class CredentialBase extends VCXBaseWithState<ICredentialStructData> {
           })
         )
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), `vcx_credential_send_request`)
+      throw new VCXInternalError(err)
     }
   }
 
@@ -113,7 +112,7 @@ class CredentialBase extends VCXBaseWithState<ICredentialStructData> {
           })
         )
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), `vcx_credential_get_payment_info`)
+      throw new VCXInternalError(err)
     }
   }
 }
@@ -132,7 +131,7 @@ export class Credential extends VCXPaymentTxn(CredentialBase) {
       )
       return credential
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), `vcx_credential_create_with_offer`)
+      throw new VCXInternalError(err)
     }
   }
 
@@ -163,7 +162,7 @@ export class Credential extends VCXPaymentTxn(CredentialBase) {
             })
       )
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), `vcx_credential_create_with_msgid`)
+      throw new VCXInternalError(err)
     }
   }
 

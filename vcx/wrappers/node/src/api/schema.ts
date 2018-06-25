@@ -2,7 +2,6 @@
 import * as ffi from 'ffi'
 import { VCXInternalError } from '../errors'
 import { rustAPI } from '../rustlib'
-import { errorMessage } from '../utils/error-message'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
 import { VCXBase } from './vcx-base'
 import { VCXPaymentTxn } from './vcx-payment-txn'
@@ -109,7 +108,7 @@ class SchemaBase extends VCXBase<ISchemaSerializedData> {
         )
       return schemaId
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_schema_get_schema_id')
+      throw new VCXInternalError(err)
     }
   }
 }
@@ -143,7 +142,7 @@ export class Schema extends VCXPaymentTxn(SchemaBase) {
       await schema.getSchemaId()
       return schema
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_schema_create')
+      throw new VCXInternalError(err)
     }
   }
 
@@ -213,7 +212,7 @@ export class Schema extends VCXPaymentTxn(SchemaBase) {
       newSchema._setHandle(schemaLookupData.handle.toString())
       return newSchema
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_schema_get_attributes')
+      throw new VCXInternalError(err)
     }
   }
 }

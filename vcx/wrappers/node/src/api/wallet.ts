@@ -2,7 +2,6 @@ import { Callback } from 'ffi'
 
 import { VCXInternalError } from '../errors'
 import { rustAPI } from '../rustlib'
-import { errorMessage } from '../utils/error-message'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
 
 export type PaymentAddress = string
@@ -85,7 +84,7 @@ export class Wallet {
           })
       )
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_wallet_get_token_info')
+      throw new VCXInternalError(err)
     }
   }
 
@@ -118,7 +117,7 @@ export class Wallet {
           })
       )
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_wallet_create_payment_address')
+      throw new VCXInternalError(err)
     }
   }
 
@@ -151,7 +150,7 @@ export class Wallet {
           })
       )
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_wallet_send_tokens')
+      throw new VCXInternalError(err)
     }
   }
 
@@ -189,7 +188,7 @@ export class Wallet {
           })
       )
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_wallet_add_record')
+      throw new VCXInternalError(err)
     }
   }
 
@@ -226,7 +225,7 @@ export class Wallet {
           })
       )
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_wallet_wallet_update_value')
+      throw new VCXInternalError(err)
     }
   }
 
@@ -264,7 +263,7 @@ export class Wallet {
           })
       )
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_wallet_wallet_update_tags')
+      throw new VCXInternalError(err)
     }
   }
 
@@ -302,7 +301,7 @@ export class Wallet {
           })
       )
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_wallet_wallet_update_tags')
+      throw new VCXInternalError(err)
     }
   }
 
@@ -341,7 +340,7 @@ export class Wallet {
           })
       )
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_wallet_wallet_update_tags')
+      throw new VCXInternalError(err)
     }
   }
 
@@ -379,7 +378,7 @@ export class Wallet {
           })
       )
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_wallet_delete_record')
+      throw new VCXInternalError(err)
     }
   }
 
@@ -417,7 +416,7 @@ export class Wallet {
           })
       )
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_wallet_get_record')
+      throw new VCXInternalError(err)
     }
   }
 
@@ -455,7 +454,7 @@ export class Wallet {
           })
       )
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_wallet_open_search')
+      throw new VCXInternalError(err)
     }
   }
 
@@ -492,7 +491,7 @@ export class Wallet {
           })
       )
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_wallet_open_search')
+      throw new VCXInternalError(err)
     }
   }
 
@@ -530,7 +529,7 @@ export class Wallet {
           })
       )
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_wallet_search_next_records')
+      throw new VCXInternalError(err)
     }
   }
 }

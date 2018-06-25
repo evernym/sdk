@@ -1,7 +1,6 @@
 import * as ffi from 'ffi'
 import { VCXInternalError } from '../errors'
 import { rustAPI } from '../rustlib'
-import { errorMessage } from '../utils/error-message'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
 import { StateType } from './common'
 import { VCXBaseWithState } from './vcx-base-with-state'
@@ -60,7 +59,7 @@ export class Connection extends VCXBaseWithState<IConnectionData> {
       await connection._create((cb) => rustAPI().vcx_connection_create(commandHandle, id, cb))
       return connection
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_connection_create')
+      throw new VCXInternalError(err)
     }
   }
 
@@ -84,7 +83,7 @@ export class Connection extends VCXBaseWithState<IConnectionData> {
 
       return connection
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_connection_create_with_invite')
+      throw new VCXInternalError(err)
     }
   }
 
@@ -140,7 +139,7 @@ export class Connection extends VCXBaseWithState<IConnectionData> {
           })
       )
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_connection_delete_connection')
+      throw new VCXInternalError(err)
     }
   }
   /**
@@ -180,7 +179,7 @@ export class Connection extends VCXBaseWithState<IConnectionData> {
             })
         )
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_connection_connect')
+      throw new VCXInternalError(err)
     }
   }
 
@@ -218,7 +217,7 @@ export class Connection extends VCXBaseWithState<IConnectionData> {
       )
       return data
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_connection_invite_details')
+      throw new VCXInternalError(err)
     }
   }
 }

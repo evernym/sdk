@@ -1,7 +1,6 @@
 import * as ffi from 'ffi'
 import { VCXInternalError } from '../errors'
 import { rustAPI } from '../rustlib'
-import { errorMessage } from '../utils/error-message'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
 import { VCXBase } from './vcx-base'
 import { VCXPaymentTxn } from './vcx-payment-txn'
@@ -90,7 +89,7 @@ class CredentialDefBase extends VCXBase<ICredentialDefData> {
         )
       return credDefId
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_credentialdef_get_cred_def_id')
+      throw new VCXInternalError(err)
     }
   }
 
@@ -150,7 +149,7 @@ export class CredentialDef extends VCXPaymentTxn(CredentialDefBase) {
       ))
       return credentialDef
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), 'vcx_credentialdef_create')
+      throw new VCXInternalError(err)
     }
   }
 

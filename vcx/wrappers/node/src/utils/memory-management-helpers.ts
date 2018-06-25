@@ -1,6 +1,5 @@
 import * as weak from 'weak'
 import { VCXInternalError } from '../errors'
-import { errorMessage } from '../utils/error-message'
 
 export abstract class GCWatcher {
   protected abstract _releaseFn: any
@@ -14,7 +13,7 @@ export abstract class GCWatcher {
       }
       return rc
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), this._releaseFn.toString())
+      throw new VCXInternalError(err)
     }
   }
 
@@ -37,7 +36,7 @@ export abstract class GCWatcher {
           throw rc
         }
       } catch (err) {
-        throw new VCXInternalError(err, errorMessage(err), '_clearOnExit')
+        throw new VCXInternalError(err)
       }
     })
   }

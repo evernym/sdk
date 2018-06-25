@@ -2,7 +2,6 @@ import { Callback } from 'ffi'
 
 import { VCXInternalError } from '../errors'
 import { initRustAPI, rustAPI } from '../rustlib'
-import { errorMessage } from '../utils/error-message'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
 import { IInitVCXOptions } from './common'
 
@@ -29,7 +28,7 @@ export async function initVcx (configPath: string, options: IInitVCXOptions = {}
         })
     )
   } catch (err) {
-    throw new VCXInternalError(err, errorMessage(err), 'vcx_init')
+    throw new VCXInternalError(err)
   }
 }
 
@@ -56,6 +55,6 @@ export async function initVcxWithConfig (config: string, options: IInitVCXOption
         })
     )
   } catch (err) {
-    throw new VCXInternalError(err, errorMessage(err), 'vcx_init_with_config')
+    throw new VCXInternalError(err)
   }
 }

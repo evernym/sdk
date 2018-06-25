@@ -1,6 +1,5 @@
 import * as ffi from 'ffi'
 import { VCXInternalError } from '../errors'
-import { errorMessage } from '../utils/error-message'
 import { createFFICallbackPromise, ICbRef } from '../utils/ffi-helpers'
 import { StateType } from './common'
 import { VCXBase } from './vcx-base'
@@ -37,7 +36,7 @@ export abstract class VCXBaseWithState<SerializedData> extends VCXBase<Serialize
           })
       )
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), `${this.constructor.name}:_updateState`)
+      throw new VCXInternalError(err)
     }
   }
 
@@ -70,7 +69,7 @@ export abstract class VCXBaseWithState<SerializedData> extends VCXBase<Serialize
       )
       return stateRes
     } catch (err) {
-      throw new VCXInternalError(err, errorMessage(err), `${this.constructor.name}:_getState`)
+      throw new VCXInternalError(err)
     }
   }
 }
