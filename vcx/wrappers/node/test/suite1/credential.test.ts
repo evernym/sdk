@@ -198,7 +198,8 @@ describe('Credential:', () => {
   })
 
   describe('getPaymentTxn:', () => {
-    it('success', async () => {
+    // TODO: Enable me once https://evernym.atlassian.net/browse/EN-669 is resolved
+    it.skip('success', async () => {
       const data = await dataCredentialCreateWithOffer()
       const credential = await credentialCreateWithOffer(data)
       await credential.sendRequest({ connection: data.connection, payment: 0 })
