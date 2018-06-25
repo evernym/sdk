@@ -119,7 +119,7 @@ def android() {
 }
 
 def ios() {
-    node('macos-02') {
+    node('macos-vcx') {
         stage('iOS Build') {
             try {
                 checkout scm
