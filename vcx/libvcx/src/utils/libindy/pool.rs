@@ -276,7 +276,7 @@ pub fn open_sandbox_pool() -> u32 {
     let config = r#"{"refresh_on_open": true}"#;
     open_pool_ledger(POOL, Some(config)).unwrap()
 }
-
+#[cfg(feature = "pool_tests")]
 #[cfg(test)]
 pub mod tests {
     use super::*;

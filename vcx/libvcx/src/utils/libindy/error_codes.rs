@@ -43,6 +43,7 @@ pub fn map_indy_error_code<C: PrimInt>(error_code: C) -> u32 {
     };
 
     if error_code >= error::UNKNOWN_ERROR.code_num {
+        println!("RETURNING ERROR CODE: {}", error_code);
         return error_code;
     }
 

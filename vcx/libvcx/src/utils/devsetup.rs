@@ -133,7 +133,6 @@ pub mod tests {
 
     pub fn setup_wallet_env(test_name: &str) -> Result<i32, String> {
         use utils::libindy::wallet::init_wallet;
-        use utils::libindy::signus::SignusUtils;
         static KEY: &str = "pass";
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");

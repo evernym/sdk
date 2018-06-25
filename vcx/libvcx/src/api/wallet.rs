@@ -135,7 +135,6 @@ pub extern fn vcx_wallet_add_record(command_handle: u32,
     check_useful_c_str!(tags_json, error::INVALID_OPTION.code_num);
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
-    use settings;
     let wallet_handle = get_wallet_handle();
     let tags_json:serde_json::Value = match serde_json::from_str(&tags_json) {
         Err(_) => return error::INVALID_JSON.code_num,
@@ -607,10 +606,10 @@ mod tests {
     }
 
     #[test]
-    fn test_wallet_system() {
+    fn test_wallet_add_retrieve_record() {
         use std::time::Duration;
         use utils::libindy::return_types_u32;
-        use serde_json::{ from_str, Value };
+        use serde_json::Value;
 
         use utils::devsetup::tests::{ setup_wallet_env, cleanup_wallet_env };
         // setup
@@ -618,13 +617,6 @@ mod tests {
         setup_wallet_env(test_name).unwrap();
 
         // add record
-        let add_record_request = json!({
-            "type": "type1",
-            "id": "id1",
-            "value":"value1",
-            "tags": {}
-        });
-        let command_handle = 0;
         let type_ = CStringUtils::string_to_cstring("type1".to_string());
         let id = CStringUtils::string_to_cstring("id1".to_string());
         let value = CStringUtils::string_to_cstring("value1".to_string());
@@ -638,6 +630,7 @@ mod tests {
                               Some(cb.get_callback()));
 
         cb.receive(Some(Duration::from_secs(10))).unwrap();
+
         let cb = return_types_u32::Return_U32_STR::new().unwrap();
         let retrieved_record_string = vcx_wallet_get_record(cb.command_handle,
                                                             type_.as_ptr(),
@@ -657,9 +650,6 @@ mod tests {
         };
 
         let retrieved_json: Value = serde_json::from_str(&retrieved_value).unwrap();
-        println!("retrieved_json: {:?}", retrieved_json);
-        let test_json = json!({"foo":"bar"});
-        assert_eq!(test_json["foo"], "bar");
         assert_eq!(retrieved_json["id"], "id1");
 
         // cleanup

@@ -6,15 +6,19 @@ use utils::error::{
     WALLET_ALREADY_EXISTS,
     INVALID_JSON,
     IOERROR,
+    NO_RESULTS,
+    INVALID_WALLET_STORAGE_PARAMETER,
 };
 
 #[derive(Debug)]
 pub enum WalletError {
     InvalidWalletCreation(),
+    InvalidParamters(),
     InvalidHandle(),
     InvalidJson(),
     IoError(),
     DuplicateWallet(String),
+    RecordNotFound(),
     CommonError(u32),
 }
 
@@ -26,6 +30,8 @@ impl ToErrorCode for WalletError {
             WalletError::DuplicateWallet(_) => WALLET_ALREADY_EXISTS.code_num,
             WalletError::InvalidJson() => INVALID_JSON.code_num,
             WalletError::IoError() => IOERROR.code_num,
+            WalletError::InvalidParamters() => INVALID_WALLET_STORAGE_PARAMETER.code_num,
+            WalletError::RecordNotFound() => NO_RESULTS.code_num,
             WalletError::CommonError(x) => x,
         }
     }
@@ -39,6 +45,8 @@ impl fmt::Display for WalletError {
             WalletError::IoError() => write!(f, "{}", IOERROR.message),
             WalletError::DuplicateWallet(ref s) => write!(f, "{}", s),
             WalletError::InvalidJson() => write!(f, "{}", INVALID_JSON.message),
+            WalletError::InvalidParamters() => write!(f, "{}", INVALID_WALLET_STORAGE_PARAMETER.message),
+            WalletError::RecordNotFound() => write!(f, "{}", NO_RESULTS.message),
             WalletError::CommonError(x) => write!(f, "This Wallet Common Error had a value of {}", x),
         }
     }
@@ -47,6 +55,15 @@ impl fmt::Display for WalletError {
 impl PartialEq for WalletError {
     fn eq(&self, other: &WalletError) -> bool {
         self.to_error_code() == other.to_error_code()
+    }
+}
+
+impl From<u32> for WalletError {
+    fn from(ec: u32) -> WalletError {
+        match ec {
+            1067 => WalletError::InvalidParamters(),
+            e => WalletError::CommonError(e),
+        }
     }
 }
 

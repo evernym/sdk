@@ -80,7 +80,10 @@ pub static INVALID_LIBINDY_PARAM: Error = Error{code_num: 1067, message: "Parame
 pub static INVALID_PAYMENT: Error = Error{code_num: 1068, message: "Invalid Payment Details"};
 pub static MISSING_WALLET_KEY: Error = Error{ code_num: 1069, message: "Configuration is missing wallet key"};
 pub static IOERROR: Error = Error { code_num: 1070, message: "IO Error, possibly creating a backup wallet"};
-pub static NO_RESULTS: Error = Error { code_num: 1071, message: "Wallet Get Record Returned No Results"};
+pub static NO_RESULTS: Error = Error { code_num: 1071,
+    message: "Wallet Get Record Returned No Results"};
+pub static INVALID_WALLET_STORAGE_PARAMETER: Error = Error { code_num: 1072,
+    message: "Wallet Storage Parameter Either Malformed or Missing"};
 
 lazy_static! {
     static ref ERROR_C_MESSAGES: HashMap<u32, CString> = {
@@ -155,6 +158,7 @@ lazy_static! {
         insert_c_message(&mut m, &MISSING_WALLET_KEY);
         insert_c_message(&mut m, &IOERROR);
         insert_c_message(&mut m, &NO_RESULTS);
+        insert_c_message(&mut m, &INVALID_WALLET_STORAGE_PARAMETER);
        m
     };
 }

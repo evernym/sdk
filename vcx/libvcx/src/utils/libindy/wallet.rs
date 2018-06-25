@@ -12,7 +12,6 @@ use utils::timeout::TimeoutUtils;
 use utils::error;
 use error::wallet::WalletError;
 use std::path::Path;
-use serde_json::to_string;
 
 pub static mut WALLET_HANDLE: i32 = 0;
 
@@ -147,7 +146,7 @@ pub fn add_record(wallet_handle: i32, type_: &str, id: &str, value: &str, tags: 
                                    id.as_ptr(),
                                    value.as_ptr(),
                                    tags.as_ptr(),
-                                   Some(rtn_obj.get_callback()))).map_err(map_indy_error_code).unwrap();
+                                   Some(rtn_obj.get_callback()))).map_err(map_indy_error_code)?;
 
     }
 
@@ -159,10 +158,9 @@ pub fn add_record(wallet_handle: i32, type_: &str, id: &str, value: &str, tags: 
 
 
 pub fn get_record(wallet_handle: i32, type_: &str, id: &str) -> Result<String, WalletError> {
-    use utils::error::error_message;
-    let rtn_obj = Return_I32_STR::new().unwrap();
-    let type_ = CString::new(type_).unwrap();
-    let id = CString::new(id).unwrap();
+    let rtn_obj = Return_I32_STR::new()?;
+    let type_ = CString::new(type_).or(Err(WalletError::InvalidWalletCreation()))?;
+    let id = CString::new(id).or(Err(WalletError::InvalidWalletCreation()))?;
 
     let options = json!({
                 "retrieveType": true,
@@ -178,10 +176,11 @@ pub fn get_record(wallet_handle: i32, type_: &str, id: &str) -> Result<String, W
                                    type_.as_ptr(),
                                    id.as_ptr(),
                                    options2.as_ptr(),
-                                   Some(rtn_obj.get_callback()))).map_err(map_indy_error_code).unwrap();
+                                   Some(rtn_obj.get_callback()))).map_err(map_indy_error_code)?;
     }
-    let res = rtn_obj.receive(TimeoutUtils::some_long());
-    Ok(res.unwrap().unwrap())
+    let option_string = rtn_obj.receive(TimeoutUtils::some_long())?;
+    let result = option_string.ok_or(WalletError::RecordNotFound())?;
+    Ok(result)
 
 }
 
@@ -360,7 +359,6 @@ pub mod tests {
     fn test_wallet_with_credentials_export_import() {
         use std::env;
         use std::fs;
-        use utils::error::error_message;
         use utils::devsetup::tests::{ setup_wallet_env, cleanup_wallet_env };
         let test_name = "test_wallet_with_crednetials_export_import";
         let handle = setup_wallet_env(test_name).unwrap();
@@ -369,7 +367,7 @@ pub mod tests {
         let filename_str = &settings::get_config_value(settings::CONFIG_WALLET_NAME).unwrap();
         dir.push(filename_str);
         if Path::new(&dir).exists() {
-            fs::remove_file(Path::new(&dir));
+            fs::remove_file(Path::new(&dir)).unwrap();
         }
         let add_record_request = json!({
             "type": "type1",
@@ -388,6 +386,8 @@ pub mod tests {
         assert_eq!(retrieved_json["value"], generated_json["value"]);
         assert_eq!(retrieved_json["id"], generated_json["id"]);
         assert_eq!(retrieved_json["type"], generated_json["type"]);
+
+        assert_eq!(add_record(handle, "", "id1", "value1", "{}").err(), Some(WalletError::InvalidParamters()));
 
         export(handle, &dir, &settings::get_config_value(settings::CONFIG_WALLET_KEY).unwrap()).is_ok();
         assert!(Path::new(&dir).exists());

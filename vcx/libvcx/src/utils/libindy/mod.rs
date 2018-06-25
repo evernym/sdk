@@ -57,6 +57,7 @@ fn next_u32_command_handle() -> u32 {
 // and all other values are an Err.
 fn indy_function_eval(err: i32) -> Result<(), i32> {
     if err != 0 {
+        println!("INDY EVAL ERROR CODE: {}", err);
         Err(err)
     }
     else {
