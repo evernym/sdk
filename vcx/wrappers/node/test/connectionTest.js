@@ -37,6 +37,13 @@ describe('A Connection object with ', function () {
     assert.notEqual(connection.handle, undefined)
   })
 
+  it.only('connections can be created in parallel', async () => {
+    await Promise.all(new Array(50).fill(0).map(async () => {
+      const connection = await Connection.create({ id: '999' })
+      assert.notEqual(connection.handle, undefined)
+    }))
+  })
+
   // connection_connect tests
 
   it(' a call to connect with connection already created should return success', async () => {
