@@ -2,9 +2,9 @@ import { Callback } from 'ffi'
 
 import { VCXInternalError } from '../errors'
 import { initRustAPI, rustAPI } from '../rustlib'
+import { errorMessage } from '../utils/error-message'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
 import { IInitVCXOptions } from './common'
-import { VCXBase } from './vcx-base'
 
 export async function provisionAgent (configAgent: string, options: IInitVCXOptions = {}): Promise<string> {
   try {
@@ -28,7 +28,7 @@ export async function provisionAgent (configAgent: string, options: IInitVCXOpti
         })
     )
   } catch (err) {
-    throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_provision_agent_async')
+    throw new VCXInternalError(err, errorMessage(err), 'vcx_provision_agent_async')
   }
 }
 
@@ -53,7 +53,7 @@ export async function updateAgentInfo (options: string): Promise<string> {
         })
     )
   } catch (err) {
-    throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_update_agent_info')
+    throw new VCXInternalError(err, errorMessage(err), 'vcx_update_agent_info')
   }
 }
 
@@ -83,7 +83,7 @@ export async function getLedgerFees (): Promise<string> {
     )
     return ledgerFees
   } catch (err) {
-    throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_ledger_get_fees')
+    throw new VCXInternalError(err, errorMessage(err), 'vcx_ledger_get_fees')
   }
 }
 
@@ -98,7 +98,7 @@ export interface IUpdateInstitutionConfigs {
 export function updateInstitutionConfigs ({ name, logoUrl }: IUpdateInstitutionConfigs): number {
   const rc = rustAPI().vcx_update_institution_info(name, logoUrl)
   if (rc) {
-    throw new VCXInternalError(rc, VCXBase.errorMessage(rc), 'vcx_update_institution_info')
+    throw new VCXInternalError(rc, errorMessage(rc), 'vcx_update_institution_info')
   }
   return rc
 }

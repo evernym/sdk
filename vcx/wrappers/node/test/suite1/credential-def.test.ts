@@ -65,7 +65,8 @@ describe('CredentialDef:', () => {
       assert.equal(errorSerialize.vcxCode, VCXCode.INVALID_CREDENTIAL_DEF_HANDLE)
     })
 
-    it('throws: not initialized', async () => {
+    // TODO: Enable once https://evernym.atlassian.net/browse/EN-668 is resolved
+    it.skip('throws: not initialized', async () => {
       const credentialDef = new CredentialDef(null as any, {} as any)
       const error = await shouldThrow(() => credentialDef.release())
       assert.equal(error.vcxCode, VCXCode.UNKNOWN_ERROR)

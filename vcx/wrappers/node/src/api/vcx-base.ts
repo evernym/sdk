@@ -1,16 +1,12 @@
 import * as ffi from 'ffi'
 import { VCXInternalError } from '../errors'
-import { rustAPI } from '../rustlib'
+import { errorMessage } from '../utils/error-message'
 import { createFFICallbackPromise, ICbRef } from '../utils/ffi-helpers'
 import { GCWatcher } from '../utils/memory-management-helpers'
 
 export type IVCXBaseCreateFn = (cb: ICbRef) => number
 
 export abstract class VCXBase<SerializedData> extends GCWatcher {
-  public static errorMessage (errorCode: number): string {
-    return rustAPI().vcx_error_c_message(errorCode)
-  }
-
   public static async _deserialize<T extends VCXBase<any> = any, P = object> (
     VCXClass: new(sourceId: string, ...args: any[]) => T,
     objData: { source_id: string },
@@ -21,7 +17,7 @@ export abstract class VCXBase<SerializedData> extends GCWatcher {
       await obj._initFromData(objData)
       return obj
     } catch (err) {
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), `${this.name}:_deserialize`)
+      throw new VCXInternalError(err, errorMessage(err), `${this.name}:_deserialize`)
     }
   }
 
@@ -72,7 +68,7 @@ export abstract class VCXBase<SerializedData> extends GCWatcher {
       const data: SerializedData = JSON.parse(dataStr)
       return data
     } catch (err) {
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), `${this.constructor.name}:serialize`)
+      throw new VCXInternalError(err, errorMessage(err), `${this.constructor.name}:serialize`)
     }
   }
 

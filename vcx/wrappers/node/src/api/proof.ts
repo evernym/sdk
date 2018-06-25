@@ -1,11 +1,10 @@
 import { Callback } from 'ffi'
 import { VCXInternalError } from '../errors'
 import { rustAPI } from '../rustlib'
-import { collectionRenameItemKeys } from '../utils/collection-helpers'
+import { errorMessage } from '../utils/error-message'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
 import { StateType } from './common'
 import { Connection } from './connection'
-import { VCXBase } from './vcx-base'
 import { VCXBaseWithState } from './vcx-base-with-state'
 
 export interface IProofCreateData {
@@ -101,21 +100,20 @@ export class Proof extends VCXBaseWithState<IProofData> {
    * @returns {Promise<Proof>} A Proof Object
    */
   public static async create ({ sourceId, ...createDataRest }: IProofCreateData): Promise<Proof> {
-    const proof = new Proof(sourceId, createDataRest)
-    const commandHandle = 0
-
     try {
+      const proof = new Proof(sourceId, createDataRest)
+      const commandHandle = 0
       await proof._create((cb) => rustAPI().vcx_proof_create(
         commandHandle,
         proof.sourceId,
-        JSON.stringify(collectionRenameItemKeys(createDataRest.attrs)),
+        JSON.stringify(createDataRest.attrs),
         JSON.stringify([]),
         createDataRest.name,
         cb
       ))
       return proof
     } catch (err) {
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_proof_create')
+      throw new VCXInternalError(err, errorMessage(err), 'vcx_proof_create')
     }
   }
 
@@ -130,13 +128,17 @@ export class Proof extends VCXBaseWithState<IProofData> {
    * @returns {Promise<Proof>} A Proof Object
    */
   public static async deserialize (proofData: IProofData) {
-    const attrs = JSON.parse(proofData.requested_attrs)
-    const constructorParams: IProofConstructorData = {
-      attrs,
-      name: proofData.name
+    try {
+      const attrs = JSON.parse(proofData.requested_attrs)
+      const constructorParams: IProofConstructorData = {
+        attrs,
+        name: proofData.name
+      }
+      const proof = await super._deserialize(Proof, proofData, constructorParams)
+      return proof
+    } catch (err) {
+      throw new VCXInternalError(err, errorMessage(err), 'vcx_proof_deserialize')
     }
-    const proof = await super._deserialize(Proof, proofData, constructorParams)
-    return proof
   }
 
   protected _releaseFn = rustAPI().vcx_proof_release
@@ -185,7 +187,7 @@ export class Proof extends VCXBaseWithState<IProofData> {
             })
         )
     } catch (err) {
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_proof_send_request')
+      throw new VCXInternalError(err, errorMessage(err), 'vcx_proof_send_request')
     }
   }
 
@@ -220,7 +222,7 @@ export class Proof extends VCXBaseWithState<IProofData> {
       this._proofState = proofRes.proofState
       return { proof: proofRes.proofData, proofState: proofRes.proofState }
     } catch (err) {
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_get_proof')
+      throw new VCXInternalError(err, errorMessage(err), 'vcx_get_proof')
     }
   }
 

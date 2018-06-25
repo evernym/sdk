@@ -1,5 +1,6 @@
 import * as ffi from 'ffi'
 import { VCXInternalError } from '../errors'
+import { errorMessage } from '../utils/error-message'
 import { createFFICallbackPromise, ICbRef } from '../utils/ffi-helpers'
 import { StateType } from './common'
 import { VCXBase } from './vcx-base'
@@ -16,8 +17,8 @@ export abstract class VCXBaseWithState<SerializedData> extends VCXBase<Serialize
    * @returns {Promise<void>}
    */
   public async updateState (): Promise<void> {
-    const commandHandle = 0
     try {
+      const commandHandle = 0
       await createFFICallbackPromise<number>(
         (resolve, reject, cb) => {
           const rc = this._updateStFn(commandHandle, this.handle, cb)
@@ -36,7 +37,7 @@ export abstract class VCXBaseWithState<SerializedData> extends VCXBase<Serialize
           })
       )
     } catch (err) {
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), `${this.constructor.name}:_updateState`)
+      throw new VCXInternalError(err, errorMessage(err), `${this.constructor.name}:_updateState`)
     }
   }
 
@@ -48,8 +49,8 @@ export abstract class VCXBaseWithState<SerializedData> extends VCXBase<Serialize
    * @returns {Promise<StateType>}
    */
   public async getState (): Promise<StateType> {
-    const commandHandle = 0
     try {
+      const commandHandle = 0
       const stateRes = await createFFICallbackPromise<StateType>(
         (resolve, reject, cb) => {
           const rc = this._getStFn(commandHandle, this.handle, cb)
@@ -69,7 +70,7 @@ export abstract class VCXBaseWithState<SerializedData> extends VCXBase<Serialize
       )
       return stateRes
     } catch (err) {
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), `${this.constructor.name}:_getState`)
+      throw new VCXInternalError(err, errorMessage(err), `${this.constructor.name}:_getState`)
     }
   }
 }

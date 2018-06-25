@@ -2,10 +2,10 @@ import { Callback } from 'ffi'
 
 import { VCXInternalError } from '../errors'
 import { rustAPI } from '../rustlib'
+import { errorMessage } from '../utils/error-message'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
 import { StateType } from './common'
 import { Connection } from './connection'
-import { VCXBase } from './vcx-base'
 import { VCXBaseWithState } from './vcx-base-with-state'
 
 /**
@@ -71,13 +71,13 @@ export class IssuerCredential extends VCXBaseWithState<IIssuerCredentialData> {
    */
   public static async create ({ attr, sourceId, credDefId,
                          credentialName, price }: IIssuerCredentialCreateData): Promise<IssuerCredential> {
-    const attrsVCX: IIssuerCredentialVCXAttributes = Object.keys(attr)
-      .reduce((accum, attrKey) => ({ ...accum, [attrKey]: [attr[attrKey]] }), {})
-    const credential = new IssuerCredential(sourceId, { credDefId, credentialName, attr: attrsVCX, price })
-    const attrsStringified = JSON.stringify(attrsVCX)
-    const commandHandle = 0
-    const issuerDid = null
     try {
+      const attrsVCX: IIssuerCredentialVCXAttributes = Object.keys(attr)
+      .reduce((accum, attrKey) => ({ ...accum, [attrKey]: [attr[attrKey]] }), {})
+      const credential = new IssuerCredential(sourceId, { credDefId, credentialName, attr: attrsVCX, price })
+      const attrsStringified = JSON.stringify(attrsVCX)
+      const commandHandle = 0
+      const issuerDid = null
       await credential._create((cb) => rustAPI().vcx_issuer_create_credential(
         commandHandle,
         sourceId,
@@ -91,7 +91,7 @@ export class IssuerCredential extends VCXBaseWithState<IIssuerCredentialData> {
       )
       return credential
     } catch (err) {
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_issuer_create_credential')
+      throw new VCXInternalError(err, errorMessage(err), 'vcx_issuer_create_credential')
     }
   }
 
@@ -106,17 +106,21 @@ export class IssuerCredential extends VCXBaseWithState<IIssuerCredentialData> {
  * @returns {Promise<IssuerCredential>} An Issuer credential Object
  */
   public static async deserialize (credentialData: IIssuerCredentialData) {
-    const attr = JSON.parse(credentialData.credential_attributes)
-    const params: IIssuerCredentialParams = {
-      attr,
-      credDefId: credentialData.cred_def_id,
-      credentialName: credentialData.credential_name,
-      price: credentialData.price
+    try {
+      const attr = JSON.parse(credentialData.credential_attributes)
+      const params: IIssuerCredentialParams = {
+        attr,
+        credDefId: credentialData.cred_def_id,
+        credentialName: credentialData.credential_name,
+        price: credentialData.price
+      }
+      const credential = await super._deserialize<IssuerCredential, IIssuerCredentialParams>(IssuerCredential,
+          credentialData,
+          params)
+      return credential
+    } catch (err) {
+      throw new VCXInternalError(err, errorMessage(err), `vcx_issuer_credential_deserialize`)
     }
-    const credential = await super._deserialize<IssuerCredential, IIssuerCredentialParams>(IssuerCredential,
-        credentialData,
-        params)
-    return credential
   }
 
   protected _releaseFn = rustAPI().vcx_issuer_credential_release
@@ -169,7 +173,7 @@ export class IssuerCredential extends VCXBaseWithState<IIssuerCredentialData> {
         )
     } catch (err) {
       // TODO handle error
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_issuer_send_credential_offer')
+      throw new VCXInternalError(err, errorMessage(err), 'vcx_issuer_send_credential_offer')
     }
   }
 
@@ -204,7 +208,7 @@ export class IssuerCredential extends VCXBaseWithState<IIssuerCredentialData> {
           })
       )
     } catch (err) {
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_issuer_send_credential')
+      throw new VCXInternalError(err, errorMessage(err), 'vcx_issuer_send_credential')
     }
   }
 
@@ -227,7 +231,7 @@ export class IssuerCredential extends VCXBaseWithState<IIssuerCredentialData> {
           })
         )
     } catch (err) {
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), `vcx_credential_get_payment_info`)
+      throw new VCXInternalError(err, errorMessage(err), `vcx_credential_get_payment_info`)
     }
   }
 

@@ -69,7 +69,7 @@ const credentialOffer = [{
   },
   from_did: '8XFh8yBzrpJQmNyZzgoTqB',
   libindy_offer: '{}',
-  msg_ref_id: null,
+  msg_ref_id: '123',
   msg_type: 'CLAIM_OFFER',
   schema_seq_no: 1487,
   to_did: '8XFh8yBzrpJQmNyZzgoTqB',

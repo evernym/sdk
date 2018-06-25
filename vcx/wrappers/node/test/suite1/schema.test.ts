@@ -21,43 +21,50 @@ describe('Schema:', () => {
     })
 
     it('throws: missing sourceId', async () => {
-      const { sourceId, ...data } = await dataSchemaCreate()
+      const { sourceId, ...data } = dataSchemaCreate()
       const error = await shouldThrow(() => Schema.create(data as any))
       assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
     })
 
-    it('throws: missing paymentHandle', async () => {
-      const { paymentHandle, ...data } = await dataSchemaCreate()
+    // TODO: Enable once https://evernym.atlassian.net/browse/EN-667 is resolved
+    it.skip('throws: missing paymentHandle', async () => {
+      const { paymentHandle, ...data } = dataSchemaCreate()
       const error = await shouldThrow(() => Schema.create(data as any))
       assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
     })
 
     it('throws: missing data', async () => {
-      const { data, ...rest } = await dataSchemaCreate()
+      const { data, ...rest } = dataSchemaCreate()
       const error = await shouldThrow(() => Schema.create(rest as any))
+      assert.equal(error.vcxCode, VCXCode.UNKNOWN_ERROR)
+    })
+
+    it('throws: imcpmplete data', async () => {
+      const { data, ...rest } = dataSchemaCreate()
+      const error = await shouldThrow(() => Schema.create({ data: {} as any ,...rest }))
       assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
     })
 
     it('throws: missing data.name', async () => {
-      const { data: { name, ...dataRest }, ...rest } = await dataSchemaCreate()
+      const { data: { name, ...dataRest }, ...rest } = dataSchemaCreate()
       const error = await shouldThrow(() => Schema.create({ data: dataRest, ...rest } as any))
       assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
     })
 
     it('throws: missing data.version', async () => {
-      const { data: { version, ...dataRest }, ...rest } = await dataSchemaCreate()
+      const { data: { version, ...dataRest }, ...rest } = dataSchemaCreate()
       const error = await shouldThrow(() => Schema.create({ data: dataRest, ...rest } as any))
       assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
     })
 
     it('throws: missing data.attrNames', async () => {
-      const { data: { attrNames, ...dataRest }, ...rest } = await dataSchemaCreate()
+      const { data: { attrNames, ...dataRest }, ...rest } = dataSchemaCreate()
       const error = await shouldThrow(() => Schema.create({ data: dataRest, ...rest } as any))
       assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
     })
 
     it('throws: invalid data', async () => {
-      const { data, ...rest } = await dataSchemaCreate()
+      const { data, ...rest } = dataSchemaCreate()
       const error = await shouldThrow(() => Schema.create({
         data: 'invalid' as any,
         ...rest
@@ -72,14 +79,14 @@ describe('Schema:', () => {
     })
 
     it('throws: missing sourceId', async () => {
-      const { sourceId, ...data } = await dataSchemaLookup()
-      const error = await shouldThrow(() => Schema.create(data as any))
+      const { sourceId, ...data } = dataSchemaLookup()
+      const error = await shouldThrow(() => Schema.lookup(data as any))
       assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
     })
 
     it('throws: missing schemaId', async () => {
-      const { schemaId, ...data } = await dataSchemaLookup()
-      const error = await shouldThrow(() => Schema.create(data as any))
+      const { schemaId, ...data } = dataSchemaLookup()
+      const error = await shouldThrow(() => Schema.lookup(data as any))
       assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
     })
   })
@@ -93,7 +100,7 @@ describe('Schema:', () => {
     })
 
     it('throws: not initialized', async () => {
-      const schema = new (Schema as any)()
+      const schema = new Schema(null as any, {} as any)
       const error = await shouldThrow(() => schema.serialize())
       assert.equal(error.vcxCode, VCXCode.INVALID_SCHEMA_HANDLE)
     })
@@ -133,23 +140,11 @@ describe('Schema:', () => {
       assert.equal(errorSerialize.vcxCode, VCXCode.INVALID_SCHEMA_HANDLE)
     })
 
-    it('throws: not initialized', async () => {
-      const schema = new (Schema as any)()
+    // TODO: Enable once https://evernym.atlassian.net/browse/EN-668 is resolved
+    it.skip('throws: not initialized', async () => {
+      const schema = new Schema(null as any, {} as any)
       const error = await shouldThrow(() => schema.release())
       assert.equal(error.vcxCode, VCXCode.UNKNOWN_ERROR)
-    })
-  })
-
-  describe('getSchemaId:', () => {
-    it('success', async () => {
-      const schema = await schemaCreate()
-      assert(await schema.getSchemaId(), schema.schemaId)
-    })
-
-    it('throws: not initialized', async () => {
-      const schema = new (Schema as any)()
-      const error = await shouldThrow(() => schema.getSchemaId())
-      assert.equal(error.vcxCode, VCXCode.INVALID_SCHEMA_HANDLE)
     })
   })
 

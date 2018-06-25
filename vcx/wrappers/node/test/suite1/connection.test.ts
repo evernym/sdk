@@ -93,7 +93,8 @@ describe('Connection:', () => {
       assert.equal(errorSerialize.vcxCode, VCXCode.INVALID_CONNECTION_HANDLE)
     })
 
-    it('throws: not initialized', async () => {
+    // TODO: Enable once https://evernym.atlassian.net/browse/EN-668 is resolved
+    it.skip('throws: not initialized', async () => {
       const connection = new (Connection as any)()
       const error = await shouldThrow(() => connection.release())
       assert.equal(error.vcxCode, VCXCode.UNKNOWN_ERROR)

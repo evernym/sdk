@@ -1,9 +1,9 @@
 import * as ffi from 'ffi'
 import { VCXInternalError } from '../errors'
 import { rustAPI } from '../rustlib'
+import { errorMessage } from '../utils/error-message'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
 import { StateType } from './common'
-import { VCXBase } from './vcx-base'
 import { VCXBaseWithState } from './vcx-base-with-state'
 
 /**
@@ -54,13 +54,13 @@ export class Connection extends VCXBaseWithState<IConnectionData> {
    * @returns {Promise<Connection>} A Connection Object
    */
   public static async create ({ id }: IConnectionCreateData): Promise<Connection> {
-    const connection = new Connection(id)
-    const commandHandle = 0
     try {
+      const connection = new Connection(id)
+      const commandHandle = 0
       await connection._create((cb) => rustAPI().vcx_connection_create(commandHandle, id, cb))
       return connection
     } catch (err) {
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_connection_create')
+      throw new VCXInternalError(err, errorMessage(err), 'vcx_connection_create')
     }
   }
 
@@ -84,7 +84,7 @@ export class Connection extends VCXBaseWithState<IConnectionData> {
 
       return connection
     } catch (err) {
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_connection_create_with_invite')
+      throw new VCXInternalError(err, errorMessage(err), 'vcx_connection_create_with_invite')
     }
   }
 
@@ -140,7 +140,7 @@ export class Connection extends VCXBaseWithState<IConnectionData> {
           })
       )
     } catch (err) {
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_connection_delete_connection')
+      throw new VCXInternalError(err, errorMessage(err), 'vcx_connection_delete_connection')
     }
   }
   /**
@@ -180,7 +180,7 @@ export class Connection extends VCXBaseWithState<IConnectionData> {
             })
         )
     } catch (err) {
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_connection_connect')
+      throw new VCXInternalError(err, errorMessage(err), 'vcx_connection_connect')
     }
   }
 
@@ -218,7 +218,7 @@ export class Connection extends VCXBaseWithState<IConnectionData> {
       )
       return data
     } catch (err) {
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_connection_invite_details')
+      throw new VCXInternalError(err, errorMessage(err), 'vcx_connection_invite_details')
     }
   }
 }

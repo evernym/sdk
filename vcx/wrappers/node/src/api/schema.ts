@@ -2,6 +2,7 @@
 import * as ffi from 'ffi'
 import { VCXInternalError } from '../errors'
 import { rustAPI } from '../rustlib'
+import { errorMessage } from '../utils/error-message'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
 import { VCXBase } from './vcx-base'
 
@@ -69,22 +70,22 @@ export class Schema extends VCXBase<ISchemaSerializedData> {
    * @returns {Promise<Schema>} A Schema Object
    */
   public static async create ({ paymentHandle, data, sourceId }: ISchemaCreateData): Promise<Schema> {
-    const schema = new Schema(sourceId, { name: data.name, schemaId: '', schemaAttrs: data })
-    const commandHandle = 0
     try {
+      const schema = new Schema(sourceId, { name: data.name, schemaId: '', schemaAttrs: data })
+      const commandHandle = 0
       await schema._create((cb) => rustAPI().vcx_schema_create(
-      commandHandle,
-      schema.sourceId,
-      schema._name,
-      data.version,
-      JSON.stringify(data.attrNames),
-      paymentHandle,
-      cb
+        commandHandle,
+        schema.sourceId,
+        schema._name,
+        data.version,
+        JSON.stringify(data.attrNames),
+        paymentHandle,
+        cb
       ))
       await schema.getSchemaId()
       return schema
     } catch (err) {
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_schema_create')
+      throw new VCXInternalError(err, errorMessage(err), 'vcx_schema_create')
     }
   }
 
@@ -154,7 +155,7 @@ export class Schema extends VCXBase<ISchemaSerializedData> {
       newSchema._setHandle(schemaLookupData.handle.toString())
       return newSchema
     } catch (err) {
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_schema_get_attributes')
+      throw new VCXInternalError(err, errorMessage(err), 'vcx_schema_get_attributes')
     }
   }
 
@@ -166,22 +167,48 @@ export class Schema extends VCXBase<ISchemaSerializedData> {
   private _schemaAttrs: ISchemaAttrs
 
   constructor (sourceId: string, { name, schemaId, schemaAttrs }: ISchemaParams) {
-    // Todo: update constructor to take name, schemaId, version, and attrs
     super(sourceId)
     this._name = name
     this._schemaId = schemaId
     this._schemaAttrs = schemaAttrs
   }
 
-  // TODO: Why do we need it?
-  /**
-   * @memberof Schema
-   * @description Retrieves the schema id associated with the created schema.
-   * @async
-   * @function getSchemaId
-   * @returns {Promise<string>} - Schema's Identifier
-   */
-  public async getSchemaId (): Promise<string> {
+  public async getPaymentTxn (): Promise<string> {
+    try {
+      return await createFFICallbackPromise<string>(
+          (resolve, reject, cb) => {
+            const rc = rustAPI().vcx_schema_get_payment_txn(0, this.handle, cb)
+            if (rc) {
+              reject(rc)
+            }
+          },
+          (resolve, reject) => ffi.Callback('void', ['uint32', 'uint32', 'string'],
+          (xcommandHandle: number, err: number, info: any) => {
+            if (err) {
+              reject(err)
+              return
+            }
+            resolve(info)
+          })
+        )
+    } catch (err) {
+      throw new VCXInternalError(err, errorMessage(err), `vcx_credential_get_payment_info`)
+    }
+  }
+
+  get schemaAttrs (): ISchemaAttrs {
+    return this._schemaAttrs
+  }
+
+  get schemaId () {
+    return this._schemaId
+  }
+
+  get name () {
+    return this._name
+  }
+
+  private async getSchemaId (): Promise<string> {
     try {
       const schemaId = await createFFICallbackPromise<string>(
           (resolve, reject, cb) => {
@@ -204,42 +231,7 @@ export class Schema extends VCXBase<ISchemaSerializedData> {
         )
       return schemaId
     } catch (err) {
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), 'vcx_schema_get_schema_id')
+      throw new VCXInternalError(err, errorMessage(err), 'vcx_schema_get_schema_id')
     }
-  }
-
-  public async getPaymentTxn (): Promise<string> {
-    try {
-      return await createFFICallbackPromise<string>(
-          (resolve, reject, cb) => {
-            const rc = rustAPI().vcx_schema_get_payment_txn(0, this.handle, cb)
-            if (rc) {
-              reject(rc)
-            }
-          },
-          (resolve, reject) => ffi.Callback('void', ['uint32', 'uint32', 'string'],
-          (xcommandHandle: number, err: number, info: any) => {
-            if (err) {
-              reject(err)
-              return
-            }
-            resolve(info)
-          })
-        )
-    } catch (err) {
-      throw new VCXInternalError(err, VCXBase.errorMessage(err), `vcx_credential_get_payment_info`)
-    }
-  }
-
-  get schemaAttrs (): ISchemaAttrs {
-    return this._schemaAttrs
-  }
-
-  get schemaId () {
-    return this._schemaId
-  }
-
-  get name () {
-    return this._name
   }
 }

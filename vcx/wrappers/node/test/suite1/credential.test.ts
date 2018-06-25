@@ -33,9 +33,10 @@ describe('Credential:', () => {
       assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
     })
 
-    it('throws: missing connection', async () => {
+    // Enable when we start utilizing connection prop
+    it.skip('throws: missing connection', async () => {
       const { connection, ...data } = await dataCredentialCreateWithOffer()
-      const error = await shouldThrow(() => Credential.create(data as any))
+      const error = await shouldThrow(() => Credential.create({ connection: {} as any, ...data }))
       assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
     })
 
@@ -63,9 +64,15 @@ describe('Credential:', () => {
       assert.equal(error.vcxCode, VCXCode.INVALID_OPTION)
     })
 
+    it('throws: missing connection', async () => {
+      const { connection, ...data } = await dataCredentialCreateWithMsgId()
+      const error = await shouldThrow(() => Credential.createWithMsgId(data as any))
+      assert.equal(error.vcxCode, VCXCode.UNKNOWN_ERROR)
+    })
+
     it('throws: missing connection handle', async () => {
-      const { msgId, sourceId } = await dataCredentialCreateWithMsgId()
-      const error = await shouldThrow(() => Credential.createWithMsgId({ msgId, sourceId , connection: {} } as any))
+      const { connection, ...data } = await dataCredentialCreateWithMsgId()
+      const error = await shouldThrow(() => Credential.createWithMsgId({ connection: {} as any, ...data }))
       assert.equal(error.vcxCode, VCXCode.INVALID_CONNECTION_HANDLE)
     })
   })
@@ -119,7 +126,8 @@ describe('Credential:', () => {
       assert.equal(errorSerialize.vcxCode, VCXCode.INVALID_CREDENTIAL_HANDLE)
     })
 
-    it('throws: not initialized', async () => {
+    // TODO: Enable once https://evernym.atlassian.net/browse/EN-668 is resolved
+    it.skip('throws: not initialized', async () => {
       const credential = new Credential(null as any)
       const error = await shouldThrow(() => credential.release())
       assert.equal(error.vcxCode, VCXCode.UNKNOWN_ERROR)
@@ -141,9 +149,16 @@ describe('Credential:', () => {
   })
 
   describe('sendRequest:', () => {
-    it.only('success', async () => {
+    it('success: with offer', async () => {
       const data = await dataCredentialCreateWithOffer()
       const credential = await credentialCreateWithOffer(data)
+      await credential.sendRequest({ connection: data.connection, payment: 0 })
+      assert.equal(await credential.getState(), StateType.OfferSent)
+    })
+
+    it('success: with message id', async () => {
+      const data = await dataCredentialCreateWithMsgId()
+      const credential = await credentialCreateWithMsgId(data)
       await credential.sendRequest({ connection: data.connection, payment: 0 })
       assert.equal(await credential.getState(), StateType.OfferSent)
     })

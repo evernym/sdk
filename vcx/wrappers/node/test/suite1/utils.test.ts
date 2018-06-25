@@ -55,7 +55,7 @@ describe('utils:', () => {
 
   describe('updateInstitutionConfigs:', () => {
     it('success', async () => {
-      const res = await updateInstitutionConfigs(updateInstitutionConfigsData)
+      const res = updateInstitutionConfigs(updateInstitutionConfigsData)
       assert.equal(res, 0)
     })
 

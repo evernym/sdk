@@ -1,11 +1,21 @@
 import * as weak from 'weak'
+import { VCXInternalError } from '../errors'
+import { errorMessage } from '../utils/error-message'
 
 export abstract class GCWatcher {
   protected abstract _releaseFn: any
   private _handleRef: string | null = null
 
   public async release (): Promise<number> {
-    return this._releaseFn(this._handleRef)
+    try {
+      const rc = this._releaseFn(this._handleRef)
+      if (rc) {
+        throw rc
+      }
+      return rc
+    } catch (err) {
+      throw new VCXInternalError(err, errorMessage(err), this._releaseFn.toString())
+    }
   }
 
   // Can not use setter because of https://github.com/Microsoft/TypeScript/issues/2521
@@ -20,7 +30,16 @@ export abstract class GCWatcher {
     const weakRef = weak(this)
     const release = this._releaseFn
     const handle = this._handleRef
-    weak.addCallback(weakRef, () => release(handle))
+    weak.addCallback(weakRef, () => {
+      try {
+        const rc = release(handle)
+        if (rc) {
+          throw rc
+        }
+      } catch (err) {
+        throw new VCXInternalError(err, errorMessage(err), '_clearOnExit')
+      }
+    })
   }
 
   get handle () {
