@@ -76,13 +76,25 @@ describe('CredentialDef:', () => {
   describe('getCredDefId:', () => {
     it('success', async () => {
       const credentialDef = await credentialDefCreate()
-      assert(await credentialDef.getCredDefId(), '2hoqvcwupRTUNkXn6ArYzs:3:CL:1766')
+      assert.equal(await credentialDef.getCredDefId(), '2hoqvcwupRTUNkXn6ArYzs:3:CL:2471')
     })
 
     it('throws: not initialized', async () => {
       const credentialDef = new CredentialDef(null as any, {} as any)
       const error = await shouldThrow(() => credentialDef.getCredDefId())
       assert.equal(error.vcxCode, VCXCode.INVALID_CREDENTIAL_DEF_HANDLE)
+    })
+  })
+
+  describe('getPaymentTxn:', () => {
+    it('success', async () => {
+      const credentialDef = await credentialDefCreate()
+      const paymentTxnStr = await credentialDef.getPaymentTxn()
+      assert.ok(paymentTxnStr)
+      const paymentTxn = JSON.parse(paymentTxnStr)
+      assert.property(paymentTxn, 'amount')
+      assert.property(paymentTxn, 'inputs')
+      assert.property(paymentTxn, 'outputs')
     })
   })
 

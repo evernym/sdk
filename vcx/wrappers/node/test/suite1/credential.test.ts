@@ -11,7 +11,7 @@ import {
 import { gcTest } from 'helpers/gc'
 import { TIMEOUT_GC } from 'helpers/test-constants'
 import { initVcxTestMode, shouldThrow } from 'helpers/utils'
-import { Credential, rustAPI, StateType, VCXCode } from 'src'
+import { Credential, rustAPI, StateType, VCXCode, VCXMock, VCXMockMessage } from 'src'
 
 describe('Credential:', () => {
   before(() => initVcxTestMode())
@@ -162,6 +162,16 @@ describe('Credential:', () => {
       await credential.sendRequest({ connection: data.connection, payment: 0 })
       assert.equal(await credential.getState(), StateType.OfferSent)
     })
+
+    it('success: issued', async () => {
+      const data = await dataCredentialCreateWithOffer()
+      const credential = await credentialCreateWithOffer(data)
+      await credential.sendRequest({ connection: data.connection, payment: 0 })
+      assert.equal(await credential.getState(), StateType.OfferSent)
+      VCXMock.setVcxMock(VCXMockMessage.CredentialResponse)
+      await credential.updateState()
+      assert.equal(await credential.getState(), StateType.Accepted)
+    })
   })
 
   describe('getOffers:', () => {
@@ -184,6 +194,24 @@ describe('Credential:', () => {
       const credential = await credentialCreateWithOffer()
       const paymentInfo = await credential.getPaymentInfo()
       assert.ok(paymentInfo)
+    })
+  })
+
+  describe('getPaymentTxn:', () => {
+    it('success', async () => {
+      const data = await dataCredentialCreateWithOffer()
+      const credential = await credentialCreateWithOffer(data)
+      await credential.sendRequest({ connection: data.connection, payment: 0 })
+      assert.equal(await credential.getState(), StateType.OfferSent)
+      VCXMock.setVcxMock(VCXMockMessage.CredentialResponse)
+      await credential.updateState()
+      assert.equal(await credential.getState(), StateType.Accepted)
+      const paymentTxnStr = await credential.getPaymentTxn()
+      assert.ok(paymentTxnStr)
+      const paymentTxn = JSON.parse(paymentTxnStr)
+      assert.property(paymentTxn, 'amount')
+      assert.property(paymentTxn, 'inputs')
+      assert.property(paymentTxn, 'outputs')
     })
   })
 

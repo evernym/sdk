@@ -94,7 +94,7 @@ export interface IFFIEntryPoint {
    number,
   vcx_issuer_send_credential_offer: (commandId: number, credentialHandle: string, connectionHandle: string, cb: any) =>
    number,
-  vcx_issuer_credential_get_payment_txn: (commandId: number, handle: string, cb: any) => string,
+  vcx_issuer_credential_get_payment_txn: (commandId: number, handle: string, cb: any) => number,
 
   // proof
   vcx_proof_create: (commandId: number, sourceId: string, attrs: string, predicates: string,
@@ -147,7 +147,7 @@ export interface IFFIEntryPoint {
   vcx_credentialdef_serialize: (commandId: number, handle: string, cb: any) => number,
   vcx_credentialdef_release: (handle: string) => number,
   vcx_credentialdef_get_cred_def_id: (commandId: number, handle: string, cb: any) => string,
-  vcx_credentialdef_get_payment_txn: (commandId: number, handle: string, cb: any) => string,
+  vcx_credentialdef_get_payment_txn: (commandId: number, handle: string, cb: any) => number,
 
   // schema
   vcx_schema_get_attributes: (commandId: number, sourceId: string, schemaId: string, cb: any) => number,
@@ -157,7 +157,7 @@ export interface IFFIEntryPoint {
   vcx_schema_deserialize: (commandId: number, data: string, cb: any) => number,
   vcx_schema_serialize: (commandId: number, handle: string, cb: any) => number,
   vcx_schema_release: (handle: string) => number,
-  vcx_schema_get_payment_txn: (commandId: number, handle: string, cb: any) => string,
+  vcx_schema_get_payment_txn: (commandId: number, handle: string, cb: any) => number,
 }
 
 // tslint:disable object-literal-sort-keys

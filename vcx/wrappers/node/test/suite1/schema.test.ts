@@ -148,6 +148,18 @@ describe('Schema:', () => {
     })
   })
 
+  describe('getPaymentTxn:', () => {
+    it('success', async () => {
+      const schema = await schemaCreate()
+      const paymentTxnStr = await schema.getPaymentTxn()
+      assert.ok(paymentTxnStr)
+      const paymentTxn = JSON.parse(paymentTxnStr)
+      assert.property(paymentTxn, 'amount')
+      assert.property(paymentTxn, 'inputs')
+      assert.property(paymentTxn, 'outputs')
+    })
+  })
+
   describe('GC:', function () {
     this.timeout(TIMEOUT_GC)
 
