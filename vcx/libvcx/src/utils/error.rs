@@ -79,6 +79,8 @@ pub static INVALID_PAYMENT_ADDRESS: Error = Error{code_num: 1066, message: "Inva
 pub static INVALID_LIBINDY_PARAM: Error = Error{code_num: 1067, message: "Parameter passed to libindy was invalid"};
 pub static INVALID_PAYMENT: Error = Error{code_num: 1068, message: "Invalid Payment Details"};
 pub static MISSING_WALLET_KEY: Error = Error{ code_num: 1069, message: "Configuration is missing wallet key"};
+pub static DUPLICATE_WALLET_RECORD: Error = Error{ code_num: 1070, message: "Record already exists in the wallet"};
+pub static WALLET_RECORD_NOT_FOUND: Error = Error{ code_num: 1071, message: "Wallet record not found"};
 
 lazy_static! {
     static ref ERROR_C_MESSAGES: HashMap<u32, CString> = {
@@ -151,6 +153,8 @@ lazy_static! {
         insert_c_message(&mut m, &INVALID_PAYMENT_ADDRESS);
         insert_c_message(&mut m, &INVALID_LIBINDY_PARAM);
         insert_c_message(&mut m, &MISSING_WALLET_KEY);
+        insert_c_message(&mut m, &DUPLICATE_WALLET_RECORD);
+        insert_c_message(&mut m, &WALLET_RECORD_NOT_FOUND);
        m
     };
 }
