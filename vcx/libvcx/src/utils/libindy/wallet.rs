@@ -362,18 +362,13 @@ pub mod tests {
     }
 
     #[test]
-    fn test_wallet_with_credentials() {
+    fn test_wallet_with_credentials_export_import() {
         use std::env;
         use std::fs;
         use utils::error::error_message;
-
-        static KEY: &str = "pass";
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
-        settings::set_config_value(settings::CONFIG_WALLET_KEY, KEY);
-
-        let handle = init_wallet("password_wallet").unwrap();
-        assert_eq!(handle, get_wallet_handle());
+        use utils::devsetup::tests::{ setup_wallet_env, cleanup_wallet_env };
+        let test_name = "test_wallet_with_crednetials_export_import";
+        let handle = setup_wallet_env(test_name).unwrap();
         SignusUtils::create_and_store_my_did(handle,None).unwrap();
         let mut dir = env::temp_dir();
         let filename_str = &settings::get_config_value(settings::CONFIG_WALLET_NAME).unwrap();
@@ -388,6 +383,7 @@ pub mod tests {
             "tags": {}
         });
         let add_record_request_string = add_record_request.to_string();
+        // add record
         add_record(handle, &add_record_request_string).unwrap();
         let get_record_request = json!({"type": "type1", "id": "id1"});
         let get_record_request_string = to_string(&get_record_request).unwrap();
@@ -400,11 +396,11 @@ pub mod tests {
         assert_eq!(retrieved_json["id"], generated_json["id"]);
         assert_eq!(retrieved_json["type"], generated_json["type"]);
 
-        export(handle, &dir, KEY).is_ok();
+        export(handle, &dir, &settings::get_config_value(settings::CONFIG_WALLET_KEY).unwrap()).is_ok();
         assert!(Path::new(&dir).exists());
 
         // cleanup
-        delete_wallet("password_wallet").map_err(|e| error_message(&e)).unwrap();
+        cleanup_wallet_env(test_name).unwrap();
         fs::remove_file(Path::new(&dir)).unwrap();
         assert!(!Path::new(&dir).exists());
     }

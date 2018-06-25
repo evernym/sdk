@@ -9,6 +9,7 @@ use utils::error::error_string;
 use error::ToErrorCode;
 use serde_json;
 use utils::libindy::payments::{pay_a_payee, get_wallet_token_info, create_address};
+use utils::libindy::wallet::{ get_record, add_record, get_wallet_handle };
 
 /// Get the total balance from all addresses contained in the configured wallet
 ///
@@ -127,17 +128,44 @@ pub extern fn vcx_wallet_add_record(command_handle: u32,
                                     value: *const c_char,
                                     tags_json: *const c_char,
                                     cb: Option<extern fn(xcommand_handle: u32, err: u32)>) -> u32 {
+
     check_useful_c_str!(type_, error::INVALID_OPTION.code_num);
     check_useful_c_str!(id, error::INVALID_OPTION.code_num);
     check_useful_c_str!(value, error::INVALID_OPTION.code_num);
     check_useful_c_str!(tags_json, error::INVALID_OPTION.code_num);
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
+
+    use settings;
+    let wallet_handle = get_wallet_handle();
     let tags_json:serde_json::Value = match serde_json::from_str(&tags_json) {
         Err(_) => return error::INVALID_JSON.code_num,
         Ok(v) => v,
     };
     thread::spawn(move || {
-        cb(command_handle, error::SUCCESS.code_num );
+        let function_name = "vcx_wallet_add_record";
+        let add_record_request = json!({"type": type_.to_string(),
+            "id": id.to_string(),
+            "value": value.to_string(),
+            "tags": tags_json.to_string()
+            });
+        let rc = match add_record(wallet_handle, &"{}".to_string()) {
+            Ok(_) => {
+                info!("{}_cb(command_handle: {}, rc: {})",
+                      function_name,
+                      command_handle,
+                      error::SUCCESS.code_num);
+                error::SUCCESS.code_num
+            },
+            Err(e) => {
+                let error_code = e.to_error_code();
+                warn!("{}_cb(command_handle: {}, rc: {})",
+                      function_name,
+                      command_handle,
+                      error_code);
+                error_code
+            }
+        };
+        cb(command_handle, rc)
     });
     error::SUCCESS.code_num
 }
@@ -303,9 +331,22 @@ pub extern fn vcx_wallet_get_record(command_handle: u32,
     check_useful_c_str!(type_, error::INVALID_JSON.code_num);
     check_useful_c_str!(id, error::INVALID_OPTION.code_num);
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
+
     thread::spawn(move || {
+        let wallet_handle = get_wallet_handle();
+        let function_name = "vcx_wallet_get_record";
         let msg = CStringUtils::string_to_cstring(r#"{"id":"RecordId","type": "TestType","value": "RecordValue","tags":null}"#.to_string());
-        cb(command_handle, error::SUCCESS.code_num, msg.as_ptr());
+        let get_record_request = json!({ "type": type_.to_string(), "id": id.to_string()});
+        match get_record(wallet_handle, &get_record_request.to_string()){
+            Ok(record) => {
+                let msg = CStringUtils::string_to_cstring(record);
+                cb(command_handle, error::SUCCESS.code_num, msg.as_ptr());
+            }
+            Err(e) => {
+                println!("ERROR GETTING RECORD IN VCX CALL");
+                cb(command_handle, e.to_error_code(), ptr::null_mut());
+            },
+        };
     });
     error::SUCCESS.code_num
 }
@@ -518,7 +559,7 @@ mod tests {
     #[test]
     fn test_get_token_info() {
         settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
         assert_eq!(vcx_wallet_get_token_info(0, 0, Some(generic_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
@@ -526,7 +567,7 @@ mod tests {
     #[test]
     fn test_send_tokens() {
         settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
         assert_eq!(vcx_wallet_send_tokens(0, 0, 50, CString::new("address").unwrap().into_raw(), Some(generic_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
@@ -548,15 +589,75 @@ mod tests {
         let name = "test_send_payment";
         tests::setup_local_env(name);
         mint_tokens(Some(1), Some(1000)).unwrap();
-        let balance =  get_wallet_token_info().unwrap().get_balance();
+        let balance = get_wallet_token_info().unwrap().get_balance();
         let recipient = CStringUtils::string_to_cstring("pay:null:iXvVdM4mjCUZFrnnFU2F0VoJrkzQEoLy".to_string());
         let tokens = 100;
         let cb = generic_cb;
         let err = vcx_wallet_send_tokens(0, 0, tokens, recipient.as_ptr(), Some(cb));
-        assert_eq!(err,0);
+        assert_eq!(err, 0);
         thread::sleep(Duration::from_secs(2));
-        let new_balance =  get_wallet_token_info().unwrap().get_balance();
+        let new_balance = get_wallet_token_info().unwrap().get_balance();
         assert_eq!(balance - tokens, new_balance);
         tests::cleanup_dev_env(name);
+    }
+
+    #[test]
+    fn test_wallet_system() {
+        use std::time::Duration;
+        use utils::libindy::return_types_u32;
+        use serde_json::{ from_str, Value };
+
+        use utils::devsetup::tests::{ setup_wallet_env, cleanup_wallet_env };
+        // setup
+        let test_name = "test_wallet_system";
+        setup_wallet_env(test_name).unwrap();
+
+        // add record
+        let add_record_request = json!({
+            "type": "type1",
+            "id": "id1",
+            "value":"value1",
+            "tags": {}
+        });
+        let command_handle = 0;
+        let type_ = CStringUtils::string_to_cstring("type1".to_string());
+        let id = CStringUtils::string_to_cstring("id1".to_string());
+        let value = CStringUtils::string_to_cstring("value1".to_string());
+        let tags_json = CStringUtils::string_to_cstring("{}".to_string());
+        let cb = return_types_u32::Return_U32::new().unwrap();
+        vcx_wallet_add_record(cb.command_handle,
+                              type_.as_ptr(),
+                              id.as_ptr(),
+                              value.as_ptr(),
+                              tags_json.as_ptr(),
+                              Some(cb.get_callback()));
+
+        cb.receive(Some(Duration::from_secs(10))).unwrap();
+        let cb = return_types_u32::Return_U32_STR::new().unwrap();
+        let retrieved_record_string = vcx_wallet_get_record(cb.command_handle,
+                                                            type_.as_ptr(),
+                                                            id.as_ptr(),
+                                                            Some(cb.get_callback()));
+
+        let retrieved_value = match cb.receive(Some(Duration::from_secs(10))) {
+            Ok(opt_s) => {
+                let s = opt_s.unwrap();
+                println!("callback returned string: {}", &s);
+                s
+            },
+            Err(e) => {
+                println!("error, no string returned");
+                "error_retrieve".to_string()
+            }
+        };
+
+        let retrieved_json: Value = serde_json::from_str(&retrieved_value).unwrap();
+        println!("retrieved_json: {:?}", retrieved_json);
+        let test_json = json!({"foo":"bar"});
+        assert_eq!(test_json["foo"], "bar");
+        assert_eq!(retrieved_json["id"], "id1");
+
+        // cleanup
+        cleanup_wallet_env(test_name).unwrap();
     }
 }

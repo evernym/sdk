@@ -130,4 +130,19 @@ pub mod tests {
         ::utils::libindy::anoncreds::tests::create_and_store_credential();
         cleanup_dev_env(wallet_name);
     }
+
+    pub fn setup_wallet_env(test_name: &str) -> Result<i32, String> {
+        use utils::libindy::wallet::init_wallet;
+        use utils::libindy::signus::SignusUtils;
+        static KEY: &str = "pass";
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
+        settings::set_config_value(settings::CONFIG_WALLET_KEY, KEY);
+        init_wallet(test_name).or(Err("Unable to init_wallet in tests".to_string()))
+    }
+
+    pub fn cleanup_wallet_env(test_name: &str) -> Result<(), String> {
+        use utils::libindy::wallet::delete_wallet;
+        delete_wallet(test_name).or(Err(format!("Unable to delet wallet: {}", test_name)))
+    }
 }
