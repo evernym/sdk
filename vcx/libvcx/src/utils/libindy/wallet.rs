@@ -133,13 +133,12 @@ pub fn create_wallet(wallet_name: &str, pool_name: &str) -> Result<(), u32> {
     }
 }
 
-pub fn add_record(wallet_handle: i32, add_record_request_str: &str) -> Result<(), WalletError> {
+pub fn add_record(wallet_handle: i32, type_: &str, id: &str, value: &str, tags: &str) -> Result<(), WalletError> {
     let rtn_obj = Return_I32::new().unwrap();
-    let type_ = CString::new("type1").unwrap();
-    let id = CString::new("id1").unwrap();
-    let value = CString::new("value1").unwrap();
-    let tags = CString::new(json!({}).to_string()).unwrap();
-//    let tags = CString::new(to_string(&json!({"tagName1": "tag value 1", "tagName2": 123})).unwrap()).unwrap();
+    let type_ = CString::new(type_).unwrap();
+    let id = CString::new(id).unwrap();
+    let value = CString::new(value).unwrap();
+    let tags = CString::new(tags).unwrap();
     unsafe {
         indy_function_eval(
             indy_add_wallet_record(rtn_obj.command_handle,
@@ -159,23 +158,19 @@ pub fn add_record(wallet_handle: i32, add_record_request_str: &str) -> Result<()
 }
 
 
-pub fn get_record(wallet_handle: i32, get_record_request_str: &str) -> Result<String, WalletError> {
+pub fn get_record(wallet_handle: i32, type_: &str, id: &str) -> Result<String, WalletError> {
     use utils::error::error_message;
     let rtn_obj = Return_I32_STR::new().unwrap();
-    let type_ = CString::new("type1").unwrap();
-    let id = CString::new("id1").unwrap();
-//    let options = CString::new(to_string(&json!(
-//        {
-//            "retrieveType": "false",
-//            "retrieveValue": "true",
-//            "retrieveTags": "false"
-//        })).unwrap()).unwrap();
+    let type_ = CString::new(type_).unwrap();
+    let id = CString::new(id).unwrap();
+
     let options = json!({
                 "retrieveType": true,
                 "retrieveValue": true,
                 "retrieveTags": true
             }).to_string();
     let options2 = CString::new(options).unwrap();
+
     unsafe {
         indy_function_eval(
             indy_get_wallet_record(rtn_obj.command_handle,
@@ -384,10 +379,8 @@ pub mod tests {
         });
         let add_record_request_string = add_record_request.to_string();
         // add record
-        add_record(handle, &add_record_request_string).unwrap();
-        let get_record_request = json!({"type": "type1", "id": "id1"});
-        let get_record_request_string = to_string(&get_record_request).unwrap();
-        let retrieved_record_string = get_record(handle, &get_record_request_string).unwrap();
+        add_record(handle, "type1", "id1", "value1", "{}").unwrap();
+        let retrieved_record_string = get_record(handle, "type1", "id1").unwrap();
 
         // compare results
         let retrieved_json:serde_json::Value = serde_json::from_str(&retrieved_record_string).unwrap();

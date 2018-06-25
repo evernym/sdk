@@ -143,12 +143,7 @@ pub extern fn vcx_wallet_add_record(command_handle: u32,
     };
     thread::spawn(move || {
         let function_name = "vcx_wallet_add_record";
-        let add_record_request = json!({"type": type_.to_string(),
-            "id": id.to_string(),
-            "value": value.to_string(),
-            "tags": tags_json.to_string()
-            });
-        let rc = match add_record(wallet_handle, &"{}".to_string()) {
+        let rc = match add_record(wallet_handle, "type1", "id1", "value1", "{}") {
             Ok(_) => {
                 info!("{}_cb(command_handle: {}, rc: {})",
                       function_name,
@@ -337,14 +332,24 @@ pub extern fn vcx_wallet_get_record(command_handle: u32,
         let function_name = "vcx_wallet_get_record";
         let msg = CStringUtils::string_to_cstring(r#"{"id":"RecordId","type": "TestType","value": "RecordValue","tags":null}"#.to_string());
         let get_record_request = json!({ "type": type_.to_string(), "id": id.to_string()});
-        match get_record(wallet_handle, &get_record_request.to_string()){
+        match get_record(wallet_handle, "type1", "id1"){
             Ok(record) => {
+                let error_code = error::SUCCESS.code_num;
+                info!("{}_cb(command_handle: {}, rc: {}, msg: {})", function_name,
+                      command_handle,
+                      error_code,
+                      record);
                 let msg = CStringUtils::string_to_cstring(record);
-                cb(command_handle, error::SUCCESS.code_num, msg.as_ptr());
+                cb(command_handle, error_code, msg.as_ptr());
             }
             Err(e) => {
-                println!("ERROR GETTING RECORD IN VCX CALL");
-                cb(command_handle, e.to_error_code(), ptr::null_mut());
+                let msg = ptr::null_mut();
+                let error_code = e.to_error_code();
+                warn!("{}_cb(command_handle: {}, rc: {}, msg: {})", function_name,
+                      command_handle,
+                      error_code,
+                      "");
+                cb(command_handle, error_code, msg);
             },
         };
     });
