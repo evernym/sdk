@@ -5,6 +5,7 @@ export BASE_DIR="../../../../.."
 
 
 ls
+mkdir .macosbuild
 cd ${SCRIPTS_PATH}
 ls
 #./mac.02.libindy.env.sh
