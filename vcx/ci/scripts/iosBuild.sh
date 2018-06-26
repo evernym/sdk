@@ -7,7 +7,8 @@ export BASE_DIR="../../../../.."
 ls
 mkdir .macosbuild
 cd ${SCRIPTS_PATH}
-ls
+ls -al
+ls ~
 #./mac.02.libindy.env.sh
 #./mac.03.libindy.build.sh
 #./mac.04.libvcx.setup.sh
