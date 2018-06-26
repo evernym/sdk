@@ -9,7 +9,8 @@ use utils::error::error_string;
 use error::ToErrorCode;
 use serde_json;
 use utils::libindy::payments::{pay_a_payee, get_wallet_token_info, create_address};
-use utils::libindy::wallet::{ get_record, add_record, get_wallet_handle };
+use utils::libindy::wallet::{ get_record, add_record, get_wallet_handle, export, import };
+use std::path::Path;
 
 /// Get the total balance from all addresses contained in the configured wallet
 ///
@@ -545,6 +546,62 @@ pub extern fn vcx_wallet_close_search(command_handle: u32,
     error::SUCCESS.code_num
 }
 
+#[no_mangle]
+pub extern fn vcx_wallet_export(command_handle: u32,
+                                path: *const c_char,
+                                backup_key: *const c_char,
+                                cb: Option<extern fn(xcommand_handle: u32,
+                                                     err: u32)>) -> u32 {
+    check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
+    check_useful_c_str!(path,  error::INVALID_OPTION.code_num);
+    check_useful_c_str!(backup_key, error::INVALID_OPTION.code_num);
+    thread::spawn(move || {
+        let path = Path::new(&path);
+        info!("vcx_wallet_export(command_handle: {}, path: {:?}, backup_key: ****)", command_handle, path);
+        match export(get_wallet_handle(), &path, &backup_key) {
+            Ok(_) => {
+                let return_code = error::SUCCESS.code_num;
+                info!("vcx_wallet_export(command_handle: {}, rc: {})", command_handle, return_code);
+                cb(command_handle, return_code);
+            }
+            Err(e) => {
+                let return_code = e.to_error_code();
+                warn!("vcx_wallet_export(command_handle: {}, rc: {})", command_handle, return_code);
+                cb(command_handle, return_code);
+            }
+        }
+    });
+    error::SUCCESS.code_num
+}
+
+#[no_mangle]
+pub extern fn vcx_wallet_import(command_handle: u32,
+                                path: *const c_char,
+                                backup_key: *const c_char,
+                                cb: Option<extern fn(xcommand_handle: u32,
+                                                     err: u32)>) -> u32 {
+    check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
+    check_useful_c_str!(path,  error::INVALID_OPTION.code_num);
+    check_useful_c_str!(backup_key, error::INVALID_OPTION.code_num);
+    thread::spawn(move || {
+        let path = Path::new(&path);
+        info!("vcx_wallet_import(command_handle: {}, path: {:?}, backup_key: ****)", command_handle, path);
+        match import(&path, &backup_key) {
+            Ok(_) => {
+                let return_code = error::SUCCESS.code_num;
+                info!("vcx_wallet_import(command_handle: {}, rc: {})", command_handle, return_code);
+                cb(command_handle, return_code);
+            }
+            Err(e) => {
+                let return_code = e.to_error_code();
+                warn!("vcx_wallet_import(command_handle: {}, rc: {})", command_handle, return_code);
+                cb(command_handle, return_code);
+            }
+        }
+    });
+    error::SUCCESS.code_num
+}
+
 #[cfg(test)]
 mod tests {
     extern crate serde_json;
@@ -654,5 +711,56 @@ mod tests {
 
         // cleanup
         cleanup_wallet_env(test_name).unwrap();
+    }
+
+    #[test]
+    fn test_wallet_import_export() {
+        use utils::devsetup::tests::setup_wallet_env;
+        use indy::wallet::Wallet;
+        use std::env;
+        use std::fs;
+        use std::path::Path;
+        use utils::libindy::return_types_u32;
+        use std::time::Duration;
+        use settings;
+
+        settings::set_defaults();
+        let wallet_name = settings::get_config_value(settings::CONFIG_WALLET_NAME).unwrap();
+        let filename_str = &settings::get_config_value(settings::CONFIG_WALLET_NAME).unwrap();
+        let wallet_key = settings::get_config_value(settings::CONFIG_WALLET_KEY).unwrap();
+        let pool_name = settings::get_config_value(settings::CONFIG_POOL_NAME).unwrap();
+        let backup_key = "backup_key";
+        let mut dir = env::temp_dir();
+        dir.push(filename_str);
+        if Path::new(&dir).exists() {
+            fs::remove_file(Path::new(&dir)).unwrap();
+        }
+        let credential_config = json!({"key": wallet_key, "storage": "{}"}).to_string();
+        let handle = setup_wallet_env(&wallet_name).unwrap();
+        let dir_c_str = CString::new(dir.to_str().unwrap()).unwrap();
+        let backup_key_c_str = CString::new(backup_key).unwrap();
+
+        let cb = return_types_u32::Return_U32::new().unwrap();
+        assert_eq!(vcx_wallet_export(cb.command_handle,
+                          dir_c_str.as_ptr(),
+                          backup_key_c_str.as_ptr(),
+                          Some(cb.get_callback())), error::SUCCESS.code_num);
+        cb.receive(Some(Duration::from_secs(5))).unwrap();
+
+        Wallet::close(handle).unwrap();
+        Wallet::delete(&wallet_name, Some(&credential_config)).unwrap();
+
+        let cb = return_types_u32::Return_U32::new().unwrap();
+        assert_eq!(vcx_wallet_import(cb.command_handle,
+                                     dir_c_str.as_ptr(),
+                                     backup_key_c_str.as_ptr(),
+                                     Some(cb.get_callback())), error::SUCCESS.code_num);
+        cb.receive(Some(Duration::from_secs(5))).unwrap();
+
+        let handle = setup_wallet_env(&wallet_name).unwrap();
+        Wallet::close(handle).unwrap();
+        Wallet::delete(&wallet_name, Some(&credential_config)).unwrap();
+        fs::remove_file(Path::new(&dir)).unwrap();
+        assert!(!Path::new(&dir).exists());
     }
 }

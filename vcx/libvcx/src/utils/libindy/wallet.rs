@@ -86,29 +86,6 @@ extern {
                                                err: i32)>) -> i32;
 }
 
-
-
-#[derive(Serialize)]
-struct Config {
-    path: String,
-    key: String,
-}
-
-impl Config {
-    pub fn new(path: &Path, key: &str) -> Result< Config, WalletError> {
-        let p = path.to_str().ok_or(WalletError::IoError())?;
-        Ok(Config {
-            path: p.to_string(),
-            key: key.to_string(),
-        })
-    }
-
-    pub fn to_string(c: Config) -> Result< String, WalletError > {
-        serde_json::to_string(&c).or(Err(WalletError::InvalidJson()))
-    }
-
-}
-
 pub fn get_wallet_handle() -> i32 { unsafe { WALLET_HANDLE } }
 
 pub fn create_wallet(wallet_name: &str, pool_name: &str) -> Result<(), u32> {
@@ -365,7 +342,6 @@ pub mod tests {
     use utils::error;
     use std::thread;
     use std::time::Duration;
-    use utils::libindy::signus::SignusUtils;
 
     #[test]
     fn test_wallet() {
@@ -389,22 +365,8 @@ pub mod tests {
     }
 
     #[test]
-    fn  test_config () {
-        let p: &Path = Path::new("/foobar");
-        println!("{:?}", p.to_str());
-        let path = "one/direction";
-        let key = "key";
-        let config: Config = Config {
-            path: path.to_string(),
-            key: key.to_string(),
-        };
-
-        assert_eq!(r#"{"path":"one/direction","key":"key"}"#, serde_json::to_string(&config).unwrap());
-    }
-
-    #[test]
     fn test_wallet_import_export() {
-        use utils::devsetup::tests::{ setup_wallet_env, cleanup_wallet_env };
+        use utils::devsetup::tests::setup_wallet_env;
         use indy::wallet::Wallet;
         settings::set_defaults();
         let wallet_name = settings::get_config_value(settings::CONFIG_WALLET_NAME).unwrap();
