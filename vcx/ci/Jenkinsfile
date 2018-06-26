@@ -125,19 +125,29 @@ def ios() {
                 SCRIPTS_PATH="vcx/libvcx/build_scripts/ios/mac"
                 WORK_DIR = "/Users/jenkins"
 
-                sh "./${SCRIPTS_PATH}/mac.02.libindy.env.sh"
-                sh "./${SCRIPTS_PATH}/mac.03.libindy.build.sh"
-                sh "./${SCRIPTS_PATH}/mac.04.libvcx.setup.sh"
-                sh "source ./${SCRIPTS_PATH}/mac.05.libvcx.env.sh"
-                sh "./${SCRIPTS_PATH}/mac.06.libvcx.build.sh"
+                sh "source ./vcx/ci/scripts/iosBuild.sh"
+                sh "./vcx/ci/scripts/iosBuild.sh"
 
-                sh "cp -rf ~/OpenSSL-for-iPhone ${WORK_DIR}/.macosbuild"
-                sh "cp -rf ~/libzmq-ios ${WORK_DIR}/.macosbuild"
-                sh "cp -rf ~/combine-libs ${WORK_DIR}/.macosbuild"
+                // sh "cd ${SCRIPTS_PATH}"
+                // sh "ls vcx"
+                // sh "ls vcx/libvcx"
+                // sh "ls vcx/libvcx/build_scripts"
+                // sh "ls vcx/libvcx/build_scripts/ios/mac"
+                // sh "${PWD}"
+                // sh "./${SCRIPTS_PATH}/mac.02.libindy.env.sh"
+                // sh "./${SCRIPTS_PATH}/mac.03.libindy.build.sh"
+                // sh "./${SCRIPTS_PATH}/mac.04.libvcx.setup.sh"
+                // sh "source ./${SCRIPTS_PATH}/mac.05.libvcx.env.sh"
+                // sh "./${SCRIPTS_PATH}/mac.06.libvcx.build.sh"
 
-                sh "./${SCRIPTS_PATH}/mac.11.copy.static.libs.to.app.sh"
-                sh "./${SCRIPTS_PATH}/mac.12.combine.static.libs.sh libvcxall"
+                // sh "cp -rf ~/OpenSSL-for-iPhone ${WORK_DIR}/.macosbuild"
+                // sh "cp -rf ~/libzmq-ios ${WORK_DIR}/.macosbuild"
+                // sh "cp -rf ~/combine-libs ${WORK_DIR}/.macosbuild"
 
+                // sh "./${SCRIPTS_PATH}/mac.11.copy.static.libs.to.app.sh"
+                // sh "./${SCRIPTS_PATH}/mac.12.combine.static.libs.sh libvcxall"
+
+                // sh "cd ${WORK_DIR}"
                 CERT_SCRIPT = 'vcx/ci/scripts/getCert.sh'
                 sh "${CERT_SCRIPT}"
 
