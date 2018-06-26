@@ -13,8 +13,6 @@ use utils::timeout::TimeoutUtils;
 use utils::error;
 use error::wallet::WalletError;
 use std::path::Path;
-use std::env;
-use std::fs;
 pub static mut WALLET_HANDLE: i32 = 0;
 
 extern {
@@ -368,6 +366,7 @@ pub mod tests {
     fn test_wallet_import_export() {
         use utils::devsetup::tests::setup_wallet_env;
         use indy::wallet::Wallet;
+        use std::{fs, env};
         settings::set_defaults();
         let wallet_name = settings::get_config_value(settings::CONFIG_WALLET_NAME).unwrap();
         let filename_str = &settings::get_config_value(settings::CONFIG_WALLET_NAME).unwrap();
