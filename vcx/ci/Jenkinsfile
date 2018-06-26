@@ -123,30 +123,21 @@ def ios() {
             try {
                 checkout scm
                 SCRIPTS_PATH="vcx/libvcx/build_scripts/ios/mac"
-                WORK_DIR = sh "${PWD}"
-                sh "pwd"
-                sh "ls"
+                WORK_DIR = "/Users/jenkins"
 
-                sh 'chmod +x vcx/ci/scripts/iosBuild.sh'
-                sh './vcx/ci/scripts/iosBuild.sh'
-
-                //sh "mkdir -p .macosbuild"
-                sh "cd ${SCRIPTS_PATH}"
-                //sh "./mac.01.libindy.setup.sh"
-                sh "./mac.02.libindy.env.sh"
-                sh "./mac.03.libindy.build.sh"
-                sh "./mac.04.libvcx.setup.sh"
-                sh "source ./mac.05.libvcx.env.sh"
-                sh "./mac.06.libvcx.build.sh"
+                sh "./${SCRIPTS_PATH}/mac.02.libindy.env.sh"
+                sh "./${SCRIPTS_PATH}/mac.03.libindy.build.sh"
+                sh "./${SCRIPTS_PATH}/mac.04.libvcx.setup.sh"
+                sh "source ./${SCRIPTS_PATH}/mac.05.libvcx.env.sh"
+                sh "./${SCRIPTS_PATH}/mac.06.libvcx.build.sh"
 
                 sh "cp -rf ~/OpenSSL-for-iPhone ${WORK_DIR}/.macosbuild"
                 sh "cp -rf ~/libzmq-ios ${WORK_DIR}/.macosbuild"
                 sh "cp -rf ~/combine-libs ${WORK_DIR}/.macosbuild"
 
-                sh "./mac.11.copy.static.libs.to.app.sh"
-                sh "./mac.12.combine.static.libs.sh libvcxall"
+                sh "./${SCRIPTS_PATH}/mac.11.copy.static.libs.to.app.sh"
+                sh "./${SCRIPTS_PATH}/mac.12.combine.static.libs.sh libvcxall"
 
-                sh "cd ${WORK_DIR}"
                 CERT_SCRIPT = 'vcx/ci/scripts/getCert.sh'
                 sh "${CERT_SCRIPT}"
 
