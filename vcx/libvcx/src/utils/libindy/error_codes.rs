@@ -43,10 +43,8 @@ pub fn map_indy_error_code<C: PrimInt>(error_code: C) -> u32 {
     };
 
     if error_code >= error::UNKNOWN_ERROR.code_num {
-        println!("RETURNING ERROR CODE: {}", error_code);
         return error_code;
     }
-
     match error_code {
         100 ... 112 => error::INVALID_LIBINDY_PARAM.code_num,
         203 =>  error::WALLET_ALREADY_EXISTS.code_num,

@@ -1,6 +1,7 @@
 extern crate libc;
 extern crate serde_json;
 
+use indy;
 use self::libc::c_char;
 use std::ffi::CString;
 use settings;
@@ -12,7 +13,8 @@ use utils::timeout::TimeoutUtils;
 use utils::error;
 use error::wallet::WalletError;
 use std::path::Path;
-
+use std::env;
+use std::fs;
 pub static mut WALLET_HANDLE: i32 = 0;
 
 extern {
@@ -104,6 +106,7 @@ impl Config {
     pub fn to_string(c: Config) -> Result< String, WalletError > {
         serde_json::to_string(&c).or(Err(WalletError::InvalidJson()))
     }
+
 }
 
 pub fn get_wallet_handle() -> i32 { unsafe { WALLET_HANDLE } }
@@ -166,6 +169,19 @@ pub fn add_record(wallet_handle: i32, type_: &str, id: &str, value: &str, tags: 
     }
 }
 
+pub fn get_record_indy(wallet_handle: i32, type_: &str, id: &str) -> Result< String, WalletError> {
+    let options = json!({
+                "retrieveType": true,
+                "retrieveValue": true,
+                "retrieveTags": true
+            }).to_string();
+
+    let res = match indy::wallet::Wallet::get_record(wallet_handle, type_, id, &options) {
+        Ok(s) => s,
+        Err(ec) => return Err(WalletError::CommonError(ec as u32)),
+    };
+    Ok(res)
+}
 
 pub fn get_record(wallet_handle: i32, type_: &str, id: &str) -> Result<String, WalletError> {
     let rtn_obj = Return_I32_STR::new()?;
@@ -257,7 +273,6 @@ pub fn init_wallet(wallet_name: &str) -> Result<i32, u32> {
     let c_pool_name = CString::new(pool_name.clone()).map_err(map_string_error)?;
     let c_wallet_name = CString::new(wallet_name).map_err(map_string_error)?;
     let xtype = CString::new("default").map_err(map_string_error)?;
-
     create_wallet(wallet_name, &pool_name)?;
     open_wallet(wallet_name)
 }
@@ -321,40 +336,26 @@ pub fn store_their_did(identity_json: &str) -> Result<(), u32> {
     rtn_obj.receive(TimeoutUtils::some_long())
 }
 
-pub fn export(wallet_handle: i32, path: &Path, key: &str) -> Result<(), WalletError> {
-    let config = Config::new(path, key).and_then(Config::to_string)?;
-    let wallet_export_config = CString::new(config).or(Err(WalletError::InvalidJson()))?;
-    let rtn_obj = Return_I32::new().map_err(|e| WalletError::CommonError(e))?;
-    unsafe {
-        indy_function_eval(indy_export_wallet(rtn_obj.command_handle,
-                                              wallet_handle,
-                                              wallet_export_config.as_ptr(),
-                                              Some(rtn_obj.get_callback()))).map_err(|ec| WalletError::CommonError(ec as u32))?;
-    }
-
-    rtn_obj.receive(TimeoutUtils::some_long()).map_err(|ec| WalletError::CommonError(ec as u32))
-
+pub fn export(wallet_handle: i32, path: &Path, backup_key: &str) -> Result<(), WalletError> {
+    use indy::wallet::Wallet;
+    let export_config = json!({ "key": backup_key, "path": &path}).to_string();
+    Ok(Wallet::export(wallet_handle, &export_config).unwrap())
 }
 
-pub fn import(path: &Path) -> Result<(), WalletError> {
+pub fn import(path: &Path, backup_key: &str) -> Result<(), WalletError> {
     use settings;
-    let pool_name = settings::get_config_value(settings::DEFAULT_POOL_NAME).unwrap();
-    let pool_name = CString::new(pool_name).or(Err(WalletError::InvalidParamters()))?;
-    let name   = settings::get_config_value(settings::DEFAULT_WALLET_NAME).unwrap();
-    let name = CString::new(name).or(Err(WalletError::InvalidParamters()))?;
-    let key = CString::new("KEY".to_string()).or(Err(WalletError::InvalidParamters()))?;
-    let rtn_obj = Return_I32::new()?;
-    unsafe {
-        indy_function_eval(indy_import_wallet(rtn_obj.command_handle,
-                           pool_name.as_ptr(),
-                           name.as_ptr(),
-                           null(),
-                           null(),
-                           null(),
-                           null(),
-                           Some(rtn_obj.get_callback()))).map_err(map_indy_error_code)?
+    use indy::wallet::Wallet;
+
+    let pool_name = settings::get_config_value(settings::CONFIG_POOL_NAME)?;
+    let name = settings::get_config_value(settings::CONFIG_WALLET_NAME)?;
+    let key = settings::get_config_value(settings::CONFIG_WALLET_KEY)?;
+    let credentials = json!({"key": key, "storage":"{}"}).to_string();
+    let import_config = json!({"key": backup_key, "path": path}).to_string();
+
+    match Wallet::import(&pool_name, &name, None, None,  &credentials, &import_config) {
+        Ok(_) => Ok(()),
+        Err(e) => Err(WalletError::CommonError(e as u32)),
     }
-   rtn_obj.receive(TimeoutUtils::some_long()).map_err(WalletError::from)
 
 }
 
@@ -388,50 +389,6 @@ pub mod tests {
     }
 
     #[test]
-    fn test_wallet_with_credentials_export_import() {
-        use std::env;
-        use std::fs;
-        use utils::devsetup::tests::{ setup_wallet_env, cleanup_wallet_env };
-        let test_name = "test_wallet_with_crednetials_export_import";
-        let handle = setup_wallet_env(test_name).unwrap();
-        SignusUtils::create_and_store_my_did(handle,None).unwrap();
-        let mut dir = env::temp_dir();
-        let filename_str = &settings::get_config_value(settings::CONFIG_WALLET_NAME).unwrap();
-        dir.push(filename_str);
-        if Path::new(&dir).exists() {
-            fs::remove_file(Path::new(&dir)).unwrap();
-        }
-
-        // add record
-        add_record(handle, "type1", "id1", "value1", "{}").unwrap();
-        let retrieved_record_string = get_record(handle, "type1", "id1").unwrap();
-
-        // compare results
-        let retrieved_json:serde_json::Value = serde_json::from_str(&retrieved_record_string).unwrap();
-        assert_eq!(retrieved_json["value"], "value1");
-        assert_eq!(retrieved_json["id"], "id1");
-        assert_eq!(retrieved_json["type"], "type1");
-
-        assert_eq!(add_record(handle, "", "id1", "value1", "{}").err(), Some(WalletError::InvalidParamters()));
-
-        export(handle, &dir, &settings::get_config_value(settings::CONFIG_WALLET_KEY).unwrap()).is_ok();
-        assert!(Path::new(&dir).exists());
-
-        cleanup_wallet_env(test_name).unwrap();
-
-        import(&dir).is_ok();
-
-        let handle = setup_wallet_env(test_name).unwrap();
-
-        let retrieved_record_string = get_record(handle, "type1", "id1").unwrap();
-        assert_eq!(retrieved_json["value"], "value1");
-
-        // remove exported wallet file
-        fs::remove_file(Path::new(&dir)).unwrap();
-        assert!(!Path::new(&dir).exists());
-    }
-
-    #[test]
     fn  test_config () {
         let p: &Path = Path::new("/foobar");
         println!("{:?}", p.to_str());
@@ -445,4 +402,36 @@ pub mod tests {
         assert_eq!(r#"{"path":"one/direction","key":"key"}"#, serde_json::to_string(&config).unwrap());
     }
 
+    #[test]
+    fn test_wallet_import_export() {
+        use utils::devsetup::tests::{ setup_wallet_env, cleanup_wallet_env };
+        use indy::wallet::Wallet;
+        settings::set_defaults();
+        let wallet_name = settings::get_config_value(settings::CONFIG_WALLET_NAME).unwrap();
+        let filename_str = &settings::get_config_value(settings::CONFIG_WALLET_NAME).unwrap();
+        let wallet_key = settings::get_config_value(settings::CONFIG_WALLET_KEY).unwrap();
+        let pool_name = settings::get_config_value(settings::CONFIG_POOL_NAME).unwrap();
+        let backup_key = "backup_key";
+        let mut dir = env::temp_dir();
+        dir.push(filename_str);
+        if Path::new(&dir).exists() {
+            fs::remove_file(Path::new(&dir)).unwrap();
+        }
+        let credential_config = json!({"key": wallet_key, "storage": "{}"}).to_string();
+
+        let handle = setup_wallet_env(&wallet_name).unwrap();
+        Wallet::add_record(handle, "type1", "id1", "value1", None).unwrap();
+        export(handle, &dir, backup_key).unwrap();
+        Wallet::close(handle).unwrap();
+        Wallet::delete(&wallet_name, Some(&credential_config)).unwrap();
+        println!("credential_config: {}", credential_config);
+
+        import(&dir, backup_key).unwrap();
+        let handle = setup_wallet_env(&wallet_name).unwrap();
+        Wallet::get_record(handle, "type1", "id1", "{}").unwrap();
+        Wallet::close(handle).unwrap();
+        Wallet::delete(&wallet_name, Some(&credential_config)).unwrap();
+        fs::remove_file(Path::new(&dir)).unwrap();
+        assert!(!Path::new(&dir).exists());
+    }
 }
