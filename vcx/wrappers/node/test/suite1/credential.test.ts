@@ -216,7 +216,7 @@ describe('Credential:', () => {
     })
 
     // TODO: Enable once https://evernym.atlassian.net/browse/EN-669 is resolved
-    it.skip('throws: not paymentTxn', async () => {
+    it.skip('throws: no paymentTxn', async () => {
       const data = await dataCredentialCreateWithOffer()
       data.offer = JSON.stringify([credentialOffer[0]])
       const credential = await credentialCreateWithOffer(data)
