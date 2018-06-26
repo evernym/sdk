@@ -5,14 +5,12 @@ export BASE_DIR="../../../../.."
 
 
 ls
-# take this out
-mkdir .macosbuild
 cd ${SCRIPTS_PATH}
-#./mac.02.libindy.env.sh
-#./mac.03.libindy.build.sh
-#./mac.04.libvcx.setup.sh
-#source ./mac.05.libvcx.env.sh
-#./mac.06.libvcx.build.sh
+./mac.02.libindy.env.sh
+./mac.03.libindy.build.sh
+./mac.04.libvcx.setup.sh
+source ./mac.05.libvcx.env.sh
+./mac.06.libvcx.build.sh
 cp -rf ~/OpenSSL-for-iPhone ${BASE_DIR}/.macosbuild
 cp -rf ~/libzmq-ios ${BASE_DIR}/.macosbuild
 cp -rf ~/combine-libs ${BASE_DIR}/.macosbuild
