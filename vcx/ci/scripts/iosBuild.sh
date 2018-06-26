@@ -16,6 +16,8 @@ cp -rf ~/OpenSSL-for-iPhone ${BASE_DIR}/.macosbuild
 cp -rf ~/libzmq-ios ${BASE_DIR}/.macosbuild
 cp -rf ~/combine-libs ${BASE_DIR}/.macosbuild
 echo '****************************'
+ls ~
+echo '-----------------------------'
 ls ${BASE_DIR}/.macosbuild
 echo '-----------------------------'
 ls ${BASE_DIR}/.macosbuild/OpenSSL-for-iPhone/lib/
