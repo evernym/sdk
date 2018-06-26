@@ -104,10 +104,10 @@ def android() {
                     publishAndroid(rust)
                 }
             } catch (Exception ex) {
-                // We currently do not fail the main build if the android and ios builds fail
+                // We currently do not fail the main build if the android and ios builds fai
                 // currentBuild.result = "FAILED"
                 // if (env.BRANCH_NAME == "master") {
-                //     fail()
+                    // fail()
                 // }
                 echo "$ex error"
             } finally {
