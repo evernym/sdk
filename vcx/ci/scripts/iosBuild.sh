@@ -4,6 +4,7 @@ export SCRIPTS_PATH="vcx/libvcx/build_scripts/ios/mac"
 export WORK_DIR="/Users/jenkins"
 
 
+sh "ls"
 sh "cd ${SCRIPTS_PATH}"
 sh "ls"
 sh "${PWD}"
