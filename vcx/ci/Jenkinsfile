@@ -123,7 +123,7 @@ def ios() {
             try {
                 checkout scm
                 SCRIPTS_PATH="vcx/libvcx/build_scripts/ios/mac"
-                WORK_DIR = sh "$(pwd)"
+                WORK_DIR = sh "${PWD}"
                 sh "pwd"
                 sh "ls"
 
