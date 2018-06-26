@@ -12,6 +12,7 @@ use utils::libindy::error_codes::{map_indy_error_code, map_string_error};
 use utils::timeout::TimeoutUtils;
 use utils::error;
 use error::wallet::WalletError;
+use indy::wallet::Wallet;
 use std::path::Path;
 pub static mut WALLET_HANDLE: i32 = 0;
 
@@ -274,14 +275,14 @@ pub fn delete_wallet(wallet_name: &str) -> Result<(), u32> {
         return Ok(())
     }
 
-    match close_wallet(){
+    match close_wallet() {
         Ok(_) => (),
-        Err(x) => { println!("Error Closing Wallet in delete_wallet"); ()},
+        Err(x) => (),
     };
-
     let rtn_obj = Return_I32::new()?;
     let wallet_name = CString::new(wallet_name).map_err(map_string_error)?;
     let credentials =  CString::new(settings::get_wallet_credentials()).unwrap();
+
     unsafe {
         indy_function_eval(
             indy_delete_wallet(rtn_obj.command_handle,
@@ -312,14 +313,15 @@ pub fn store_their_did(identity_json: &str) -> Result<(), u32> {
 }
 
 pub fn export(wallet_handle: i32, path: &Path, backup_key: &str) -> Result<(), WalletError> {
-    use indy::wallet::Wallet;
     let export_config = json!({ "key": backup_key, "path": &path}).to_string();
-    Ok(Wallet::export(wallet_handle, &export_config).unwrap())
+    match Wallet::export(wallet_handle, &export_config) {
+        Ok(_) => Ok(()),
+        Err(e) => Err(WalletError::CommonError(e as u32)),
+    }
 }
 
 pub fn import(path: &Path, backup_key: &str) -> Result<(), WalletError> {
     use settings;
-    use indy::wallet::Wallet;
 
     let pool_name = settings::get_config_value(settings::CONFIG_POOL_NAME)?;
     let name = settings::get_config_value(settings::CONFIG_WALLET_NAME)?;
