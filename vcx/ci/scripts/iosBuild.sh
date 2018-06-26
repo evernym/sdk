@@ -13,6 +13,8 @@ ls
 #source ./mac.05.libvcx.env.sh
 #./mac.06.libvcx.build.sh
 cp -rf ~/OpenSSL-for-iPhone ${BASE_DIR}/.macosbuild
+ls ~/OpenSSL-for-iPhone
+ls ~/OpenSSL-for-iPhone/lib
 ls ${BASE_DIR}/.macosbuild
 # cp -rf ~/libzmq-ios ${BASE_DIR}/.macosbuild
 # cp -rf ~/combine-libs ${BASE_DIR}/.macosbuild
