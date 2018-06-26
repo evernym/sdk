@@ -73,7 +73,17 @@ extern {
                               cb: Option<extern fn(command_handle_: i32,
                                                    err: i32,
                                                    record_json: *const c_char)>) -> i32;
+    fn indy_import_wallet(command_handle: i32,
+                          pool_name: *const c_char,
+                          name: *const c_char,
+                          storage_type: *const c_char,
+                          config: *const c_char,
+                          credentials: *const c_char,
+                          import_config_json: *const c_char,
+                          cb: Option<extern fn(xcommand_handle: i32,
+                                               err: i32)>) -> i32;
 }
+
 
 
 #[derive(Serialize)]
@@ -326,6 +336,28 @@ pub fn export(wallet_handle: i32, path: &Path, key: &str) -> Result<(), WalletEr
 
 }
 
+pub fn import(path: &Path) -> Result<(), WalletError> {
+    use settings;
+    let pool_name = settings::get_config_value(settings::DEFAULT_POOL_NAME).unwrap();
+    let pool_name = CString::new(pool_name).or(Err(WalletError::InvalidParamters()))?;
+    let name   = settings::get_config_value(settings::DEFAULT_WALLET_NAME).unwrap();
+    let name = CString::new(name).or(Err(WalletError::InvalidParamters()))?;
+    let key = CString::new("KEY".to_string()).or(Err(WalletError::InvalidParamters()))?;
+    let rtn_obj = Return_I32::new()?;
+    unsafe {
+        indy_function_eval(indy_import_wallet(rtn_obj.command_handle,
+                           pool_name.as_ptr(),
+                           name.as_ptr(),
+                           null(),
+                           null(),
+                           null(),
+                           null(),
+                           Some(rtn_obj.get_callback()))).map_err(map_indy_error_code)?
+    }
+   rtn_obj.receive(TimeoutUtils::some_long()).map_err(WalletError::from)
+
+}
+
 #[cfg(test)]
 pub mod tests {
     use super::*;
@@ -369,31 +401,32 @@ pub mod tests {
         if Path::new(&dir).exists() {
             fs::remove_file(Path::new(&dir)).unwrap();
         }
-        let add_record_request = json!({
-            "type": "type1",
-            "id": "id1",
-            "value":"value1",
-            "tags": {}
-        });
-        let add_record_request_string = add_record_request.to_string();
+
         // add record
         add_record(handle, "type1", "id1", "value1", "{}").unwrap();
         let retrieved_record_string = get_record(handle, "type1", "id1").unwrap();
 
         // compare results
         let retrieved_json:serde_json::Value = serde_json::from_str(&retrieved_record_string).unwrap();
-        let generated_json:serde_json::Value = serde_json::from_str(&add_record_request_string).unwrap();
-        assert_eq!(retrieved_json["value"], generated_json["value"]);
-        assert_eq!(retrieved_json["id"], generated_json["id"]);
-        assert_eq!(retrieved_json["type"], generated_json["type"]);
+        assert_eq!(retrieved_json["value"], "value1");
+        assert_eq!(retrieved_json["id"], "id1");
+        assert_eq!(retrieved_json["type"], "type1");
 
         assert_eq!(add_record(handle, "", "id1", "value1", "{}").err(), Some(WalletError::InvalidParamters()));
 
         export(handle, &dir, &settings::get_config_value(settings::CONFIG_WALLET_KEY).unwrap()).is_ok();
         assert!(Path::new(&dir).exists());
 
-        // cleanup
         cleanup_wallet_env(test_name).unwrap();
+
+        import(&dir).is_ok();
+
+        let handle = setup_wallet_env(test_name).unwrap();
+
+        let retrieved_record_string = get_record(handle, "type1", "id1").unwrap();
+        assert_eq!(retrieved_json["value"], "value1");
+
+        // remove exported wallet file
         fs::remove_file(Path::new(&dir)).unwrap();
         assert!(!Path::new(&dir).exists());
     }
