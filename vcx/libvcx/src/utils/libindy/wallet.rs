@@ -1,14 +1,12 @@
 extern crate libc;
-extern crate serde_json;
 
 use self::libc::c_char;
-use indy::wallet::Wallet;
 use std::ffi::CString;
 use settings;
 use std::ptr::null;
 use utils::libindy::{indy_function_eval};
 use utils::libindy::return_types::{ Return_I32, Return_I32_I32, receive};
-use utils::libindy::error_codes::{map_rust_indy_sdk_error_code, map_indy_error_code, map_string_error};
+use utils::libindy::error_codes::{map_indy_error_code, map_string_error};
 use utils::timeout::TimeoutUtils;
 use utils::error;
 
@@ -243,28 +241,6 @@ pub fn store_their_did(identity_json: &str) -> Result<(), u32> {
     rtn_obj.receive(TimeoutUtils::some_long())
 }
 
-pub fn add_record(xtype: &str, id: &str, value: &str, tags: Option<&str>) -> Result<(), u32> {
-    // Todo: what is id (source_id ???)
-    // Todo: Type is a user's own defined category for the record??
-    Wallet::add_record(get_wallet_handle(), xtype, id, value, tags)
-        .map_err(map_rust_indy_sdk_error_code)
-}
-
-pub fn get_record(xtype: &str, id: &str, options: &str) -> Result<String, u32> {
-    Wallet::get_record(get_wallet_handle(), xtype, id, options)
-        .map_err(map_rust_indy_sdk_error_code)
-}
-
-pub fn delete_record(xtype: &str, id: &str) -> Result<(), u32> {
-    Wallet::delete_record(get_wallet_handle(), xtype, id)
-        .map_err(map_rust_indy_sdk_error_code)
-}
-
-pub fn update_record_value(xtype: &str, id: &str, value: &str) -> Result<(), u32> {
-    Wallet::update_record_value(get_wallet_handle(), xtype, id, value)
-        .map_err(map_rust_indy_sdk_error_code)
-}
-
 #[cfg(test)]
 pub mod tests {
     use super::*;
@@ -304,184 +280,5 @@ pub mod tests {
 
         SignusUtils::create_and_store_my_did(handle,None).unwrap();
         delete_wallet("password_wallet").unwrap();
-    }
-
-    #[test]
-    fn test_add_new_record_with_no_tag() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
-
-        let record = "Record Value";
-        let record_type = "Type";
-        let id = "123";
-        let wallet_n = "test_add_new_record_with_no_tag";
-
-        init_wallet(wallet_n).unwrap();
-        add_record(record_type, id, record, None).unwrap();
-        delete_wallet(wallet_n).unwrap();
-    }
-
-    #[test]
-    fn test_add_duplicate_record_fails() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
-
-        let record = "Record Value";
-        let record_type = "Type";
-        let id = "123";
-        let wallet_n = "test_add_duplicate_record_fails";
-
-        init_wallet(wallet_n).unwrap();
-        add_record(record_type, id, record, None).unwrap();
-        let rc = add_record(record_type, id, record, None);
-        assert_eq!(rc, Err(error::DUPLICATE_WALLET_RECORD.code_num));
-        delete_wallet(wallet_n).unwrap();
-
-    }
-
-    #[test]
-    fn test_add_record_with_same_id_but_different_type_success() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
-
-        let record = "Record Value";
-        let record_type = "Type";
-        let record_type2 = "Type2";
-        let id = "123";
-        let wallet_n = "test_add_duplicate_record_fails";
-
-        init_wallet(wallet_n).unwrap();
-        add_record(record_type, id, record, None).unwrap();
-        add_record(record_type2, id, record, None).unwrap();
-        delete_wallet(wallet_n).unwrap();
-
-    }
-
-    #[test]
-    fn test_retrieve_missing_record_fails() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
-
-        let record_type = "Type";
-        let id = "123";
-        let options = json!({
-            "retrieveType": false,
-            "retrieveValue": false,
-            "retrieveTags": false
-        }).to_string();
-        let wallet_n = "test_retrieve_missing_record_fails";
-
-        init_wallet(wallet_n).unwrap();
-        let rc = get_record(record_type, id, &options);
-        assert_eq!(rc, Err(error::WALLET_RECORD_NOT_FOUND.code_num));
-        delete_wallet(wallet_n).unwrap();
-
-    }
-
-    #[test]
-    fn test_retrieve_record_success() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
-
-        let record = "Record Value";
-        let record_type = "Type";
-        let id = "123";
-        let wallet_n = "test_retrieve_record_success";
-        let options = json!({
-            "retrieveType": true,
-            "retrieveValue": true,
-            "retrieveTags": false
-        }).to_string();
-        let expected_retrieved_record = format!(r#"{{"id":"{}","type":"{}","value":"{}","tags":null}}"#, id, record_type, record);
-
-        init_wallet(wallet_n).unwrap();
-        add_record(record_type, id, record, None).unwrap();
-        let retrieved_record = get_record(record_type, id, &options).unwrap();
-        delete_wallet(wallet_n).unwrap();
-
-        assert_eq!(retrieved_record, expected_retrieved_record);
-    }
-
-    #[test]
-    fn test_delete_record_fails_with_no_record() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
-        let wallet_n = "test_delete_record_fails_with_no_record";
-        let record_type = "Type";
-        let id = "123";
-
-        init_wallet(wallet_n).unwrap();
-        let rc = delete_record(record_type, id);
-        assert_eq!(rc, Err(error::WALLET_RECORD_NOT_FOUND.code_num));
-
-    }
-
-    #[test]
-    fn test_delete_record_success() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
-
-        let record = "Record Value";
-        let record_type = "Type";
-        let id = "123";
-        let wallet_n = "test_delete_record_success";
-        let options = json!({
-            "retrieveType": true,
-            "retrieveValue": true,
-            "retrieveTags": false
-        }).to_string();
-
-        init_wallet(wallet_n).unwrap();
-        add_record(record_type, id, record, None).unwrap();
-        delete_record(record_type, id).unwrap();
-        let rc = get_record(record_type, id, &options);
-        assert_eq!(rc, Err(error::WALLET_RECORD_NOT_FOUND.code_num));
-        delete_wallet(wallet_n).unwrap();
-
-    }
-
-    #[test]
-    fn test_update_record_value_fails_with_no_initial_record() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
-
-        let record = "Record Value";
-        let record_type = "Type";
-        let id = "123";
-        let wallet_n = "test_update_record_value_fails_with_no_initial_record";
-
-        init_wallet(wallet_n).unwrap();
-        let rc = update_record_value(record_type, id, record);
-        assert_eq!(rc, Err(error::WALLET_RECORD_NOT_FOUND.code_num));
-        delete_wallet(wallet_n).unwrap();
-    }
-
-    #[test]
-    fn test_update_record_value_success() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
-
-        let initial_record = "Record1";
-        let changed_record = "Record2";
-        let record_type = "Type";
-        let id = "123";
-        let wallet_n = "test_update_record_value_success";
-        let options = json!({
-            "retrieveType": true,
-            "retrieveValue": true,
-            "retrieveTags": false
-        }).to_string();
-        let expected_initial_record = format!(r#"{{"id":"{}","type":"{}","value":"{}","tags":null}}"#, id, record_type, initial_record);
-        let expected_updated_record = format!(r#"{{"id":"{}","type":"{}","value":"{}","tags":null}}"#, id, record_type, changed_record);
-
-        init_wallet(wallet_n).unwrap();
-        add_record(record_type, id, initial_record, None).unwrap();
-        let initial_record = get_record(record_type, id, &options).unwrap();
-        update_record_value(record_type, id, changed_record).unwrap();
-        let changed_record = get_record(record_type, id, &options).unwrap();
-        delete_wallet(wallet_n).unwrap();
-
-        assert_eq!(initial_record, expected_initial_record);
-        assert_eq!(changed_record, expected_updated_record);
     }
 }
