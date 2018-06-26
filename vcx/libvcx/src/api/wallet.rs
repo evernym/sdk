@@ -129,13 +129,11 @@ pub extern fn vcx_wallet_add_record(command_handle: u32,
                                     value: *const c_char,
                                     tags_json: *const c_char,
                                     cb: Option<extern fn(xcommand_handle: u32, err: u32)>) -> u32 {
-
     check_useful_c_str!(type_, error::INVALID_OPTION.code_num);
     check_useful_c_str!(id, error::INVALID_OPTION.code_num);
     check_useful_c_str!(value, error::INVALID_OPTION.code_num);
     check_useful_c_str!(tags_json, error::INVALID_OPTION.code_num);
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
-
     let wallet_handle = get_wallet_handle();
     let tags_json:serde_json::Value = match serde_json::from_str(&tags_json) {
         Err(_) => return error::INVALID_JSON.code_num,
@@ -330,7 +328,6 @@ pub extern fn vcx_wallet_get_record(command_handle: u32,
     thread::spawn(move || {
         let wallet_handle = get_wallet_handle();
         let function_name = "vcx_wallet_get_record";
-        let msg = CStringUtils::string_to_cstring(r#"{"id":"RecordId","type": "TestType","value": "RecordValue","tags":null}"#.to_string());
         let get_record_request = json!({ "type": type_.to_string(), "id": id.to_string()});
         match get_record(wallet_handle, "type1", "id1"){
             Ok(record) => {

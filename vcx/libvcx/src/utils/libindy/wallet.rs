@@ -249,6 +249,7 @@ pub fn init_wallet(wallet_name: &str) -> Result<i32, u32> {
     let c_pool_name = CString::new(pool_name.clone()).map_err(map_string_error)?;
     let c_wallet_name = CString::new(wallet_name).map_err(map_string_error)?;
     let xtype = CString::new("default").map_err(map_string_error)?;
+
     create_wallet(wallet_name, &pool_name)?;
     open_wallet(wallet_name)
 }

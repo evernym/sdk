@@ -17,6 +17,9 @@ pub fn map_indy_error<T, C: PrimInt>(rtn: T, error_code: C) -> Result<T, u32> {
 // Todo - rename once it replaces map_indy_error
 pub fn map_rust_indy_sdk_error_code(error_code: ErrorCode) -> u32 {
     let error_code= error_code as u32;
+    if error_code >= error::UNKNOWN_ERROR.code_num {
+        return error_code;
+    }
 
     warn!("indy-sdk error code: {}", error_code);
 
@@ -45,6 +48,7 @@ pub fn map_indy_error_code<C: PrimInt>(error_code: C) -> u32 {
     if error_code >= error::UNKNOWN_ERROR.code_num {
         return error_code;
     }
+
     match error_code {
         100 ... 112 => error::INVALID_LIBINDY_PARAM.code_num,
         203 =>  error::WALLET_ALREADY_EXISTS.code_num,
