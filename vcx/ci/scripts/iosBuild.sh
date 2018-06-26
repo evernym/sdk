@@ -7,7 +7,6 @@ export WORK_DIR="/Users/jenkins"
 ls
 cd ${SCRIPTS_PATH}
 ls
-${PWD}
 ./mac.02.libindy.env.sh
 ./mac.03.libindy.build.sh
 ./mac.04.libvcx.setup.sh
