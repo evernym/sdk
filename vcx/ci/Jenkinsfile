@@ -104,10 +104,11 @@ def android() {
                     publishAndroid(rust)
                 }
             } catch (Exception ex) {
-                currentBuild.result = "FAILED"
-                if (env.BRANCH_NAME == "master") {
-                    fail()
-                }
+                // We currently do not fail the main build if the android and ios builds fail
+                // currentBuild.result = "FAILED"
+                // if (env.BRANCH_NAME == "master") {
+                //     fail()
+                // }
                 echo "$ex error"
             } finally {
                 step([$class: 'WsCleanup'])
@@ -157,6 +158,7 @@ def ios() {
                 }
 
             } catch (Exception ex) {
+                // We currently do not fail the main build if the android and ios builds fail
                 currentBuild.result = "FAILED"
                 if (env.BRANCH_NAME == "master") {
                     fail()

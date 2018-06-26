@@ -559,4 +559,13 @@ mod tests {
         assert_eq!(balance - tokens, new_balance);
         tests::cleanup_dev_env(name);
     }
+
+    #[test]
+    fn test_get_record() {
+        settings::set_defaults();
+        let xtype = CStringUtils::string_to_cstring("record_type".to_string());
+        let id = CStringUtils::string_to_cstring("123".to_string());
+        vcx_wallet_get_record(0, xtype.as_ptr(), id.as_ptr(), Some(generic_cb)).unwrap();
+        thread::sleep(Duration::from_millis(200));
+    }
 }

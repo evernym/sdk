@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export SCRIPTS_PATH="vcx/libvcx/build_scripts/ios/mac"
-export WORK_DIR="/Users/jenkins"
+export BASE_DIR="../../../../.."
 
 
 ls
@@ -12,8 +12,9 @@ ls
 ./mac.04.libvcx.setup.sh
 source ./mac.05.libvcx.env.sh
 ./mac.06.libvcx.build.sh
-cp -rf ~/OpenSSL-for-iPhone ${WORK_DIR}/.macosbuild
-cp -rf ~/libzmq-ios ${WORK_DIR}/.macosbuild
-cp -rf ~/combine-libs ${WORK_DIR}/.macosbuild
+cp -rf ~/OpenSSL-for-iPhone ${BASE_DIR}/.macosbuild
+cp -rf ~/libzmq-ios ${BASE_DIR}/.macosbuild
+cp -rf ~/combine-libs ${BASE_DIR}/.macosbuild
+ls ${BASE_DIR}/.macosbuild
 ./mac.11.copy.static.libs.to.app.sh
 ./mac.12.combine.static.libs.sh libvcxall
