@@ -50,6 +50,27 @@ extern {
                             wallet_handle: i32,
                             identity_json: *const c_char,
                             cb: Option<extern fn(xcommand_handle: i32, err: i32)>) -> i32;
+
+    pub fn indy_add_wallet_record(command_handle: i32,
+                                  wallet_handle: i32,
+                                  type_: *const c_char,
+                                  id: *const c_char,
+                                  value: *const c_char,
+                                  tags_json: *const c_char,
+                                  cb: Option<extern fn(command_handle_: i32, err: i32)>) -> i32;
+
+    pub fn indy_update_wallet_record_value(command_handle: i32,
+                                           wallet_handle: i32,
+                                           type_: *const c_char,
+                                           id: *const c_char,
+                                           value: *const c_char,
+                                           cb: Option<extern fn(command_handle_: i32, err: i32)>) -> i32;
+
+    pub fn indy_delete_wallet_record(command_handle: i32,
+                                     wallet_handle: i32,
+                                     type_: *const c_char,
+                                     id: *const c_char,
+                                     cb: Option<extern fn(command_handle_: i32, err: i32)>) -> i32;
 }
 
 pub fn get_wallet_handle() -> i32 { unsafe { WALLET_HANDLE } }
