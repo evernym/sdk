@@ -1,6 +1,8 @@
 #!/bin/bash
 mkdir -p /tmp/cert
-cat <<EOF > /tmp/cert/ca.cert 
+    
+if [ ! -f /tmp/cert/ca.crt ] ; then     
+    cat <<EOF > /tmp/cert/ca.cert 
 -----BEGIN CERTIFICATE-----
 MIIFJTCCAw2gAwIBAgIUMI0Z8YSLeRq8pZks40O3Dq2m8TIwDQYJKoZIhvcNAQEL
 BQAwGjEYMBYGA1UEAxMPRXZlcm55bSBSb290IENBMB4XDTE3MTAxMTIwMTAxMFoX
@@ -32,3 +34,4 @@ lFnjUUk49av67um43JHcinT5NFPuleZzkjaL/D8ueOrjXQDy05rwVdgmw9pXog4B
 Tw6APXtEnjfD2H8HOpOX/7ef4gWK0O1Q7A==
 -----END CERTIFICATE-----
 EOF
+fi
