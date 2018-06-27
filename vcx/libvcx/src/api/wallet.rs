@@ -150,6 +150,7 @@ pub extern fn vcx_wallet_add_record(command_handle: i32,
 ///
 /// #Returns
 /// Error code as a u32
+/// Error will be a libindy error code
 ///
 
 #[no_mangle]
@@ -308,6 +309,7 @@ pub extern fn vcx_wallet_get_record(command_handle: i32,
 ///
 /// #Returns
 /// Error code as a u32
+/// Error will be a libindy error code
 ///
 
 #[no_mangle]

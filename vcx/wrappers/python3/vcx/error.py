@@ -3,6 +3,9 @@ from enum import IntEnum
 
 class ErrorCode(IntEnum):
     Success = 0,
+    IndyInvalidWalletHandle = 200,
+    IndyWalletRecordNotFound = 212,
+    IndyDuplicateWalletRecord = 213,
     UnknownError = 1001,
     ConnectionError = 1002,
     InvalidConnectionHandle = 1003,
