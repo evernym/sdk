@@ -503,11 +503,6 @@ mod tests {
         println!("successfully called indy_generic_no_msg_cb");
     }
 
-    extern "C" fn indy_generic_no_msg_err_cb(command_handle: i32, err: i32) {
-        assert_ne!(err, 0);
-        println!("successfully called indy_generic_no_msg_err_cb");
-    }
-
     extern "C" fn indy_generic_msg_cb(command_handle: i32, err: i32, msg: *const c_char) {
         assert_eq!(err, 0);
         check_useful_c_str!(msg, ());
@@ -515,9 +510,21 @@ mod tests {
 
     }
 
-    extern "C" fn indy_generic_msg_err_cb(command_handle: i32, err: i32, msg: *const c_char) {
-        assert_ne!(err, 0);
-        println!("successfully indy_generic_msg_err_cb");
+    extern "C" fn duplicate_record_cb(command_handle: i32, err: i32) {
+        assert_ne!(err as u32, error::DUPLICATE_WALLET_RECORD.code_num);
+        println!("successfully called duplicate_record_cb");
+
+    }
+
+    extern "C" fn record_not_found_msg_cb(command_handle: i32, err: i32, msg: *const c_char) {
+        assert_ne!(err as u32, error::WALLET_RECORD_NOT_FOUND.code_num);
+        println!("successfully called record_not_found_msg_cb");
+
+    }
+
+    extern "C" fn record_not_found_cb(command_handle: i32, err: i32) {
+        assert_ne!(err as u32, error::WALLET_RECORD_NOT_FOUND.code_num);
+        println!("successfully called record_not_found_cb");
 
     }
 
@@ -569,6 +576,7 @@ mod tests {
     #[test]
     fn test_add_record() {
         settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
         let wallet_n = "test_add_record";
         let xtype = CStringUtils::string_to_cstring("record_type".to_string());
         let id = CStringUtils::string_to_cstring("123".to_string());
@@ -581,7 +589,7 @@ mod tests {
         thread::sleep(Duration::from_millis(200));
 
         // Failure because of duplicate
-        assert_eq!(vcx_wallet_add_record(0, xtype.as_ptr(), id.as_ptr(), value.as_ptr(), ptr::null(), Some(indy_generic_no_msg_err_cb)), error::SUCCESS.code_num);
+        assert_eq!(vcx_wallet_add_record(0, xtype.as_ptr(), id.as_ptr(), value.as_ptr(), ptr::null(), Some(duplicate_record_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
         delete_wallet(wallet_n).unwrap();
 
@@ -590,6 +598,7 @@ mod tests {
     #[test]
     fn test_add_record_with_tag() {
         settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
         let wallet_n = "test_add_record_with_tag";
         let xtype = CStringUtils::string_to_cstring("record_type".to_string());
         let id = CStringUtils::string_to_cstring("123".to_string());
@@ -603,9 +612,10 @@ mod tests {
     }
 
     #[test]
-    fn test_get_record() {
+    fn test_get_record_fails_with_no_value() {
         settings::set_defaults();
-        let wallet_n = "test_get_record";
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
+        let wallet_n = "test_get_fails_with_no_value";
         let xtype = CStringUtils::string_to_cstring("record_type".to_string());
         let id = CStringUtils::string_to_cstring("123".to_string());
         let value = CStringUtils::string_to_cstring("Record Value".to_string());
@@ -617,22 +627,43 @@ mod tests {
         let options = CStringUtils::string_to_cstring(options);
 
         init_wallet(wallet_n).unwrap();
-        // Assert no record
-        assert_eq!(vcx_wallet_get_record(0, xtype.as_ptr(), id.as_ptr(), options.as_ptr(), Some(indy_generic_msg_err_cb)), error::SUCCESS.code_num);
-        thread::sleep(Duration::from_millis(200));
-
-        assert_eq!(vcx_wallet_add_record(0, xtype.as_ptr(), id.as_ptr(), value.as_ptr(), ptr::null(), Some(indy_generic_no_msg_cb)), error::SUCCESS.code_num);
-        thread::sleep(Duration::from_millis(200));
-
-        // Assert valid record
-        assert_eq!(vcx_wallet_get_record(0, xtype.as_ptr(), id.as_ptr(), options.as_ptr(), Some(indy_generic_msg_cb)), error::SUCCESS.code_num);
+        assert_eq!(vcx_wallet_get_record(0, xtype.as_ptr(), id.as_ptr(), options.as_ptr(), Some(record_not_found_msg_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
         delete_wallet(wallet_n).unwrap();
     }
 
     #[test]
+    fn test_get_record_value_success() {
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
+        let wallet_n = "test_get_value_success";
+        let xtype = CStringUtils::string_to_cstring("record_type".to_string());
+        let id = CStringUtils::string_to_cstring("123".to_string());
+        let value = CStringUtils::string_to_cstring("Record Value".to_string());
+        let options = json!({
+            "retrieveType": true,
+            "retrieveValue": true,
+            "retrieveTags": false
+        }).to_string();
+        let options = CStringUtils::string_to_cstring(options);
+
+        init_wallet(wallet_n).unwrap();
+
+        // Valid add
+        assert_eq!(vcx_wallet_add_record(0, xtype.as_ptr(), id.as_ptr(), value.as_ptr(), ptr::null(), Some(indy_generic_no_msg_cb)), error::SUCCESS.code_num);
+        thread::sleep(Duration::from_millis(200));
+
+        assert_eq!(vcx_wallet_get_record(0, xtype.as_ptr(), id.as_ptr(), options.as_ptr(), Some(indy_generic_msg_cb)), error::SUCCESS.code_num);
+        thread::sleep(Duration::from_millis(200));
+        delete_wallet(wallet_n).unwrap();
+
+    }
+
+
+    #[test]
     fn test_delete_record() {
         settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
         let wallet_n = "test_delete_record";
         let xtype = CStringUtils::string_to_cstring("record_type".to_string());
         let id = CStringUtils::string_to_cstring("123".to_string());
@@ -655,7 +686,7 @@ mod tests {
         thread::sleep(Duration::from_millis(200));
 
         // Fails with no record
-        assert_eq!(vcx_wallet_delete_record(0, xtype.as_ptr(), id.as_ptr(), Some(indy_generic_no_msg_err_cb)), error::SUCCESS.code_num);
+        assert_eq!(vcx_wallet_delete_record(0, xtype.as_ptr(), id.as_ptr(), Some(record_not_found_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
         delete_wallet(wallet_n).unwrap();
     }
@@ -663,6 +694,7 @@ mod tests {
     #[test]
     fn test_update_record_value() {
         settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
         let wallet_n = "test_update_record_value";
         let xtype = CStringUtils::string_to_cstring("record_type".to_string());
         let id = CStringUtils::string_to_cstring("123".to_string());
@@ -676,7 +708,7 @@ mod tests {
 
         init_wallet(wallet_n).unwrap();
         // Assert no record to update
-        assert_eq!(vcx_wallet_update_record_value(0, xtype.as_ptr(), id.as_ptr(), options.as_ptr(), Some(indy_generic_no_msg_err_cb)), error::SUCCESS.code_num);
+        assert_eq!(vcx_wallet_update_record_value(0, xtype.as_ptr(), id.as_ptr(), options.as_ptr(), Some(record_not_found_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
 
         assert_eq!(vcx_wallet_add_record(0, xtype.as_ptr(), id.as_ptr(), value.as_ptr(), ptr::null(), Some(indy_generic_no_msg_cb)), error::SUCCESS.code_num);
