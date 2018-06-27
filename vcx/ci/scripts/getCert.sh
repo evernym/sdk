@@ -1,6 +1,6 @@
 #!/bin/bash
 mkdir -p /tmp/cert
-cat <<EOF > $PATH_TO
+cat <<EOF > /tmp/cert/ca.cert 
 -----BEGIN CERTIFICATE-----
 MIIFJTCCAw2gAwIBAgIUMI0Z8YSLeRq8pZks40O3Dq2m8TIwDQYJKoZIhvcNAQEL
 BQAwGjEYMBYGA1UEAxMPRXZlcm55bSBSb290IENBMB4XDTE3MTAxMTIwMTAxMFoX
