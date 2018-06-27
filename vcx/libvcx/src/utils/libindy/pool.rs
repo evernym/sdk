@@ -274,7 +274,7 @@ fn sandbox_pool_setup() {
 pub fn open_sandbox_pool() -> u32 {
     sandbox_pool_setup();
     let config = r#"{"refresh_on_open": true}"#;
-    open_pool_ledger(POOL, Some(config)).unwrap()
+    open_pool_ledger(POOL, None).unwrap()
 }
 
 #[cfg(test)]

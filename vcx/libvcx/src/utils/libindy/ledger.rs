@@ -144,6 +144,7 @@ pub fn libindy_build_get_txn_request(submitter_did: &str, sequence_num: i32) -> 
 
 pub fn libindy_build_schema_request(submitter_did: &str, data: &str) -> Result<String, u32>
 {
+    debug!("libindy_build_schema_request(submitter_did: {}, data: {})", submitter_did, data);
     let rtn_obj = Return_I32_STR::new()?;
     let did = CString::new(submitter_did).map_err(map_string_error)?;
     let data = CString::new(data).map_err(map_string_error)?;

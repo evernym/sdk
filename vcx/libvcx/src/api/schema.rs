@@ -50,7 +50,7 @@ pub extern fn vcx_schema_create(command_handle: u32,
         Ok(x) => x,
         Err(x) => return x
     };
-    info!("vcx_schema_create(command_handle: {}, source_id: {}, schema_name: {},  schema_data: {})",
+    info!(target:"vcx","vcx_schema_create(command_handle: {}, source_id: {}, schema_name: {},  schema_data: {})",
           command_handle, source_id, schema_name, schema_data);
 
     thread::spawn( move|| {
@@ -60,7 +60,7 @@ pub extern fn vcx_schema_create(command_handle: u32,
                                                             version,
                                                             schema_data) {
             Ok(x) => {
-                info!("vcx_schema_create_cb(command_handle: {}, rc: {}, handle: {}), source_id: {:?}",
+                info!(target:"vcx", "vcx_schema_create_cb(command_handle: {}, rc: {}, handle: {}), source_id: {:?}",
                       command_handle, error_string(0), x, &source_id);
                 (error::SUCCESS.code_num, x)
             },
@@ -523,5 +523,57 @@ mod tests {
         let handle = schema::create_new_schema("testid", did, "name".to_string(),"1.0".to_string(),"[\"name\":\"male\"]".to_string()).unwrap();
         let rc = vcx_schema_get_payment_txn(0, handle, Some(get_id_cb));
         thread::sleep(Duration::from_millis(200));
+    }
+
+    #[cfg(feature = "pool_tests")]
+    #[cfg(feature = "nullpay")]
+    #[test]
+    fn test_vcx_schema_serialize_contains_version() {
+        use settings;
+        use utils::libindy::{ return_types_u32, payments, pool, wallet };
+        use utils::logger::LoggerUtils;
+        use std::time::Duration;
+        use rand::Rng;
+        use utils::libindy::signus::SignusUtils;
+        pub const TRUSTEE_SEED: &'static str = "000000000000000000000000Trustee1";
+        use std::ffi::CString;
+
+        settings::set_defaults();
+        payments::init_payments().unwrap();
+        let pool_handle = pool::open_sandbox_pool();
+        let wallet_name = &settings::get_config_value(settings::CONFIG_WALLET_NAME).unwrap();
+        let pool_name = &settings::get_config_value(settings::CONFIG_POOL_NAME).unwrap();
+        wallet::delete_wallet(wallet_name).unwrap_or(());
+        let wallet_handle = wallet::init_wallet(wallet_name).unwrap();
+        let (my_did, my_verkey) = SignusUtils::create_and_store_my_did(wallet_handle, Some(TRUSTEE_SEED)).unwrap();
+        settings::set_config_value(settings::CONFIG_INSTITUTION_DID, &my_did);
+        settings::set_config_value(settings::CONFIG_INSTITUTION_VERKEY, &my_verkey);
+        payments::set_ledger_fees(None).unwrap();
+        payments::mint_tokens(Some(1), Some(1000)).unwrap();
+        let cb = return_types_u32::Return_U32_U32::new().unwrap();
+        let schema_name= format!("TestSchema-{}", rand::thread_rng().gen::<u32>());
+        let source_id = "Test Source ID";
+        assert_eq!(vcx_schema_create(cb.command_handle,
+                                     CString::new(source_id).unwrap().into_raw(),
+                                     CString::new(schema_name).unwrap().into_raw(),
+                                     CString::new("0.0.0").unwrap().into_raw(),
+                                     CString::new(r#"["name","dob"]"#).unwrap().into_raw(),
+                                     0,
+                                     Some(cb.get_callback())), error::SUCCESS.code_num);
+        let handle = match cb.receive(Some(Duration::from_secs(3))) {
+            Ok(h) => h,
+            Err(e) => panic!("Error Creating serialized schema: {}", e),
+        };
+
+        let cb = return_types_u32::Return_U32_STR::new().unwrap();
+        assert_eq!(vcx_schema_serialize(cb.command_handle, handle, Some(cb.get_callback())), error::SUCCESS.code_num);
+        let data = cb.receive(Some(Duration::from_secs(2))).unwrap().unwrap();
+        use schema::CreateSchema;
+        println!("{}", &data);
+        let j:serde_json::Value = serde_json::from_str(&data.clone()).unwrap();
+        let schema:CreateSchema = serde_json::from_value(j["data"].clone()).unwrap();
+        assert_eq!(j["version"], "1.0");
+        assert_eq!(schema.get_source_id(), source_id);
+        wallet::delete_wallet(wallet_name).unwrap();
     }
 }

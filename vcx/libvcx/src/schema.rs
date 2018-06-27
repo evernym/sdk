@@ -52,6 +52,38 @@ pub struct CreateSchema {
     sequence_num: u32,
     payment_txn: Option<PaymentTxn>,
 }
+trait HasVersion {
+    fn to_string_with_version(&self) -> String;
+}
+
+impl HasVersion for CreateSchema {
+    fn to_string_with_version(&self) -> String {
+        json!({
+            "version": "1.0",
+            "data": json!(self),
+        }).to_string()
+    }
+}
+
+fn from_string_with_version(data: &str) -> Result<CreateSchema, SchemaError> {
+    use serde_json::Value;
+    let data:Value = serde_json::from_str(&data).unwrap();
+    let version = data["version"].clone();
+    assert_eq!(version, "1.0");
+    let schema: CreateSchema = serde_json::from_value(data["data"].clone()).unwrap();
+    let source_id = "Test Source Id";
+    let schema_id = "schemaId1234";
+    Ok(CreateSchema {
+        data: vec![],
+        version: "1.0".to_string(),
+        schema_id: schema_id.to_string(),
+        source_id: source_id.to_string(),
+        handle: 1,
+        name: "schema_name".to_string(),
+        sequence_num: 306,
+        payment_txn: None,
+    })
+}
 
 pub trait Schema: ToString {
     type SchemaType;
@@ -259,7 +291,7 @@ pub fn get_sequence_num(handle: u32) -> Result<u32, SchemaError> {
 
 pub fn to_string(handle: u32) -> Result<String, SchemaError> {
     match SCHEMA_MAP.lock().unwrap().get(&handle) {
-        Some(p) => Ok(p.to_string().to_owned()),
+        Some(p) => Ok(p.to_string_with_version().to_owned()),
         None => Err(SchemaError::InvalidHandle()),
     }
 }
@@ -287,7 +319,7 @@ pub fn get_payment_txn(handle: u32) -> Option<PaymentTxn> {
 }
 
 pub fn from_string(schema_data: &str) -> Result<u32, SchemaError> {
-    let derived_schema: CreateSchema = serde_json::from_str(schema_data)
+    let derived_schema: CreateSchema = from_string_with_version(schema_data)
         .map_err(|_| {
             error!("Invalid Json format for CreateSchema string");
             SchemaError::CommonError(error::INVALID_JSON.code_num)
@@ -333,24 +365,33 @@ pub mod tests {
     #[test]
     fn test_ledger_schema_to_string(){
         let schema = LedgerSchema {schema_json: "".to_string(), schema_id: "".to_string()};
-        println!("{}", schema.to_string())
+        println!("{}", schema.to_string());
     }
 
     #[test]
     fn test_create_schema_to_string(){
+        let source_id = "testId";
         let create_schema = CreateSchema {
             data: vec!["name".to_string(), "age".to_string(), "sex".to_string(), "height".to_string()],
             version: "1.0".to_string(),
             schema_id: SCHEMA_ID.to_string(),
-            source_id: "testId".to_string(),
+            source_id: source_id.to_string(),
             handle: 1,
             name: "schema_name".to_string(),
             sequence_num: 306,
             payment_txn: None,
         };
-        println!("{}", create_schema.to_string());
         let create_schema_str = r#"{"data":["name","age","sex","height"],"version":"1.0","schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:test-licence:4.4.4","name":"schema_name","source_id":"testId","sequence_num":306,"payment_txn":null}"#;
         assert_eq!(create_schema.to_string(), create_schema_str.to_string());
+        let value: serde_json::Value = serde_json::from_str(&create_schema.to_string_with_version()).unwrap();
+        assert_eq!(value["version"], "1.0");
+        let create_schema:CreateSchema = serde_json::from_str(&value["data"].to_string()).unwrap();
+        assert_eq!(create_schema.source_id, source_id);
+        use utils::constants::SCHEMA_WITH_VERSION;
+        let handle = from_string(SCHEMA_WITH_VERSION).unwrap();
+        let schema_str = to_string(handle).unwrap();
+        let value: serde_json::Value = serde_json::from_str(&schema_str).unwrap();
+        assert_eq!(value["version"], "1.0");
     }
 
     #[test]

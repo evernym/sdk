@@ -408,6 +408,7 @@ pub fn libindy_issuer_create_schema(issuer_did: &str,
                                     name: &str,
                                     version: &str,
                                     attrs: &str) -> Result<(String, String), u32>{
+    debug!("libindy_issuer_create_schema(issuer_did: {}, name: {}, version: {}, attrs: {})", issuer_did, name, version, attrs);
     let rtn_obj = Return_I32_STR_STR::new()?;
     let issuer_did = CString::new(issuer_did).map_err(map_string_error)?;
     let name = CString::new(name).map_err(map_string_error)?;
