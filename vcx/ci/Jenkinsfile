@@ -7,8 +7,6 @@ def vcx_nodejs
 
 testing()
 
-//'Android' : { androidBuild() }
-
 def testing() {
     stage('Testing') {
         parallel([
@@ -126,11 +124,14 @@ def ios() {
                 SCRIPTS_PATH="vcx/libvcx/build_scripts/ios/mac"
                 WORK_DIR = "/Users/jenkins"
 
-                sh "./vcx/ci/scripts/iosBuild.sh"
+                // Build ios architectures
+                sh "source vcx/ci/scripts/iosBuild.sh"
 
+                // Make sure evernym certificate is on machine
                 CERT_SCRIPT = 'vcx/ci/scripts/getCert.sh'
                 sh "${CERT_SCRIPT}"
 
+                // Publish to Kraken
                 withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
                     sh "find vcx/libvcx/build_scripts/ios/mac -type f -name 'libvcxall.a' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/ios/upload -F 'file=@{}' \\;"
                 }
