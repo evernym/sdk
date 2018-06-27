@@ -61,6 +61,8 @@ impl PartialEq for WalletError {
 impl From<u32> for WalletError {
     fn from(ec: u32) -> WalletError {
         match ec {
+            114 => WalletError::IoError(),
+            200 => WalletError::InvalidWalletCreation(),
             1067 => WalletError::InvalidParamters(),
             e => WalletError::CommonError(e),
         }

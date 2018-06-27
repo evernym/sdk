@@ -317,7 +317,7 @@ pub fn export(wallet_handle: i32, path: &Path, backup_key: &str) -> Result<(), W
     let export_config = json!({ "key": backup_key, "path": &path}).to_string();
     match Wallet::export(wallet_handle, &export_config) {
         Ok(_) => Ok(()),
-        Err(e) => Err(WalletError::CommonError(e as u32)),
+        Err(e) => Err(WalletError::from(e as u32)),
     }
 }
 
@@ -332,7 +332,7 @@ pub fn import(path: &Path, backup_key: &str) -> Result<(), WalletError> {
 
     match Wallet::import(&pool_name, &name, None, None,  &credentials, &import_config) {
         Ok(_) => Ok(()),
-        Err(e) => Err(WalletError::CommonError(e as u32)),
+        Err(e) => Err(WalletError::from(e as u32)),
     }
 
 }
