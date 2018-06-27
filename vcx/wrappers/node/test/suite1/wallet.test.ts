@@ -85,15 +85,15 @@ describe('Wallet:', () => {
 
   describe('import:', () => {
     it('throws: libindy error', async () => {
-      const error = await shouldThrow(async() => Wallet.import('/tmp/foobar.wallet', 'key_for_wallet'))
-      assert.equal(error.vcxCode, VCXCode.IO_ERROR  )
+      const error = await shouldThrow(async () => Wallet.import('/tmp/foobar.wallet', 'key_for_wallet'))
+      assert.equal(error.vcxCode, VCXCode.IO_ERROR)
     })
   })
 
   describe('export:', () => {
     it('throws: libindy error', async () => {
-      const error = await shouldThrow(async() => Wallet.export('/tmp/foobar.wallet', 'key_for_wallet'))
-      assert.equal(error.vcxCode, VCXCode.INVALID_WALLET_CREATION  )
+      const error = await shouldThrow(async () => Wallet.export('/tmp/foobar.wallet', 'key_for_wallet'))
+      assert.equal(error.vcxCode, VCXCode.INVALID_WALLET_CREATION)
     })
   })
 })
