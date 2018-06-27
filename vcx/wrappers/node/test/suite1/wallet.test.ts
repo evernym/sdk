@@ -3,6 +3,7 @@ import '../module-resolver-helper'
 import { assert } from 'chai'
 import { initVcxTestMode, shouldThrow } from 'helpers/utils'
 import { VCXCode, Wallet } from 'src'
+import { validateUTXO } from 'helpers/asserts'
 
 const WALLET_RECORD = {
   id: 'RecordId',
@@ -40,7 +41,25 @@ describe('Wallet:', () => {
   describe('getTokenInfo:', () => {
     it('success', async () => {
       const info = await Wallet.getTokenInfo()
-      assert.ok(info)
+      assert.equal(typeof info, 'object')
+      assert.property(info, 'balance')
+      assert.equal(typeof info.balance, 'number')
+      assert.property(info, 'addresses')
+      const addresses = info.addresses
+      assert.ok(Array.isArray(addresses))
+      assert.ok(addresses.length)
+      for (const address of addresses) {
+        assert.equal(typeof address, 'object')
+        assert.property(address, 'address')
+        assert.equal(typeof address.address, 'string')
+        assert.property(address, 'balance')
+        assert.equal(typeof address.balance, 'number')
+        assert.property(address, 'utxo')
+        assert.ok(Array.isArray(address.utxo))
+        for (const utxo of address.utxo) {
+          validateUTXO(utxo)
+        }
+      }
     })
   })
 
