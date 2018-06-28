@@ -1,10 +1,16 @@
 extern crate env_logger;
 extern crate log;
 extern crate log4rs;
+extern crate log_panics;
+#[cfg(target_os = "android")]
+extern crate android_logger;
 
 use settings;
 use std::sync::{Once, ONCE_INIT};
 use std::env;
+use self::log::{Level};
+#[cfg(target_os = "android")]
+use self::android_logger::Filter;
 
 pub struct LoggerUtils {}
 
@@ -36,27 +42,38 @@ impl LoggerUtils {
 
     pub fn init() {
 
-        match settings::get_config_value(settings::CONFIG_ENABLE_TEST_MODE) {
-            Ok(_) => return LoggerUtils::init_test_logging("off"),
-            Err(x) => (),
-        };
+        // match settings::get_config_value(settings::CONFIG_ENABLE_TEST_MODE) {
+        //     Ok(_) => return LoggerUtils::init_test_logging("off"),
+        //     Err(x) => (),
+        // };
 
         // turn libindy logging off if RUST_LOG is not specified
 
-        match env::var("RUST_LOG") {
-            Err(_) => {
-                env::set_var("RUST_LOG", "off");
-            },
-            Ok(value) =>  (),
-        };
+        // match env::var("RUST_LOG") {
+        //     Err(_) => {
+        //         env::set_var("RUST_LOG", "off");
+        //     },
+        //     Ok(value) =>  (),
+        // };
 
         LOGGER_INIT.call_once(|| {
-            match settings::get_config_value(settings::CONFIG_LOG_CONFIG) {
-                Err(_) => {/* NO-OP - no logging configured */},
-                Ok(x) => {
-                    match log4rs::init_file(&x, Default::default()) {
-                        Err(e) => println!("invalid log configuration: {}", e),
-                        Ok(_) => {},
+                log_panics::init(); //Logging of panics is essential for android. As android does not log to stdout for native code
+            if cfg!(target_os = "android") {
+                // TODO: Set logging to off when deploying production android app.
+                #[cfg(target_os = "android")]
+                android_logger::init_once(
+                    Filter::default().with_min_level(Level::Trace)
+                );
+                info!("Logging for Android");
+                trace!("logging enabled for android");
+            } else {
+                match settings::get_config_value(settings::CONFIG_LOG_CONFIG) {
+                    Err(_) => {/* NO-OP - no logging configured */},
+                    Ok(x) => {
+                        match log4rs::init_file(&x, Default::default()) {
+                            Err(e) => println!("invalid log configuration: {}", e),
+                            Ok(_) => {},
+                        }
                     }
                 }
             }

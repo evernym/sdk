@@ -70,7 +70,7 @@ pub fn init_payments() -> Result<(), u32> {
     PAYMENT_INIT.call_once(|| {
         unsafe { rc = nullpay_init(); }
     });
-
+    trace!("rust: vcx: payment init inside after init {:?}", rc);
     if rc != 0 {
         Err(rc as u32)
     } else {

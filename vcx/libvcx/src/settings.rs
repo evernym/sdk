@@ -124,7 +124,7 @@ fn validate_optional_config_val<F, S, E>(val: Option<&String>, err: u32, closure
 
 pub fn log_settings() {
     let settings = SETTINGS.read().unwrap();
-    info!("loaded settings: {:?}", settings);
+    trace!("loaded settings: {:?}", settings);
 }
 
 pub fn test_indy_mode_enabled() -> bool {
@@ -148,16 +148,21 @@ pub fn test_agency_mode_enabled() -> bool {
 pub fn process_config_string(config: &str) -> Result<u32, u32> {
     let configuration: Value = serde_json::from_str(config)
         .or(Err(error::INVALID_JSON.code_num))?;
-
+    trace!("rust: after serde in process config string");
     if let Value::Object(ref map) = configuration {
         for (key, value) in map {
             if value.is_string() {
+                trace!("rust: inside for process config, before unwrap");
+                trace!("{:?}", key);
                 set_config_value(key, value.as_str().unwrap());
+                trace!("rust: after for loop process unwrap");
             }
         }
     }
 
+    trace!("rust: after all values done, before access settings");
     let config = SETTINGS.read().unwrap();
+    trace!("rust: after settings.read unwrap");
     validate_config(&config.clone())
 }
 

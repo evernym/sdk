@@ -86,8 +86,9 @@ pub fn init_pool_and_wallet() -> Result<(), u32>  {
     let path: String = settings::get_config_value(settings::CONFIG_GENESIS_PATH)
         .unwrap_or(settings::DEFAULT_GENESIS_PATH.to_string());
 
-    debug!("opening pool {} with genesis_path: {}", pool_name, path);
+    trace!("opening pool {} with genesis_path: {}", pool_name, path);
     let option_path = Some(Path::new(&path));
+    trace!("rust: vcx: open_pool_wallet after Some(Path) {:?}", option_path);
     match pool::create_pool_ledger_config(&pool_name, option_path.to_owned()) {
         Err(e) => {
             warn!("Pool Config Creation Error: {}", e);
@@ -106,7 +107,7 @@ pub fn init_pool_and_wallet() -> Result<(), u32>  {
             }
         }
     }
-
+trace!("rust: vcx: open_pool_wallet after after pool create pool ledger config");
     match wallet::open_wallet(&wallet_name) {
         Err(e) => {
             warn!("Init Wallet Error {}.", e);
@@ -116,7 +117,7 @@ pub fn init_pool_and_wallet() -> Result<(), u32>  {
             debug!("Init Wallet Successful");
         },
     };
-
+trace!("rust: vcx: open_pool_wallet after after open_wallet");
     Ok(())
 }
 

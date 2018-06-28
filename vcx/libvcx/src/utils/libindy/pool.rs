@@ -146,7 +146,7 @@ pub fn create_pool_ledger_config(pool_name: &str, path: Option<&Path>) -> Result
     let pool_config = CString::new(pool_config).map_err(map_string_error)?;
 
     let rtn_obj = Return_I32::new()?;
-
+trace!("rust: vcx: create_pool_ledger_config after command handle indy_create_pool");
     unsafe {
         let rc = indy_create_pool_ledger_config(rtn_obj.command_handle,
                                                  pool_name.as_ptr(),
@@ -163,6 +163,7 @@ pub fn create_pool_ledger_config(pool_name: &str, path: Option<&Path>) -> Result
                     println!("libindy create pool returned: {}", rc);
                     return Err(error::UNKNOWN_LIBINDY_ERROR.code_num)
                 }
+                trace!("rust: vcx: create_pool_ledger_config after match indy_create_pool");
                 Ok(0)
             }
             Err(rc) => return Err(error::UNKNOWN_LIBINDY_ERROR.code_num),
@@ -174,12 +175,14 @@ pub fn open_pool_ledger(pool_name: &str, config: Option<&str>) -> Result<u32, u3
 
     set_protocol_version();
 
+    trace!("disabled protocol version setting");
     let pool_name = CString::new(pool_name).map_err(map_string_error)?;
     let pool_config = match config {
         Some(str) => Some(CString::new(str).map_err(map_string_error)?),
         None => None
     };
     let rtn_obj = Return_I32_I32::new()?;
+    trace!("rust: vxc: pool_config is {:?}", pool_config);
 
     unsafe {
         indy_function_eval(indy_open_pool_ledger(rtn_obj.command_handle,
@@ -266,6 +269,7 @@ fn sandbox_pool_setup() {
         format!(r#"{{"reqSignature":{{}},"txn":{{"data":{{"data":{{"alias":"Node4","blskey":"2zN3bHM1m4rLz54MJHYSwvqzPchYp8jkHswveCLAEJVcX6Mm1wHQD1SkPYMzUDTZvWvhuE6VNAkK3KxVeEmsanSmvjVkReDeBEMxeDaayjcZjFGPydyey1qxBHmTvAnBKoPydvuTAqx5f7YNNRAdeLmUi99gERUU7TD8KfAa6MpQ9bw","client_ip":"{}","client_port":9708,"node_ip":"{}","node_port":9707,"services":["VALIDATOR"]}},"dest":"4PS3EDQ3dW1tci1Bp6543CfuuebjFrg36kLAUcskGfaA"}},"metadata":{{"from":"TWwCRQRZ2ZHMJFn9TzLp7W"}},"type":"0"}},"txnMetadata":{{"seqNo":4,"txnId":"aa5e817d7cc626170eca175822029339a444eb0ee8f0bd20d3b0b76e566fb008"}},"ver":"1"}}"#, test_pool_ip, test_pool_ip)];
 
     let txn_file_data = node_txns[0..4].join("\n");
+    trace!("vcx: rust: txn data {:?}", txn_file_data);
     create_genesis_txn_file(POOL, &txn_file_data, Some(Path::new(GENESIS_PATH)));
     pool_config_json(Path::new(GENESIS_PATH));
     assert_eq!(create_pool_ledger_config(POOL, Some(Path::new(GENESIS_PATH))),Ok(error::SUCCESS.code_num));
