@@ -1,6 +1,7 @@
 extern crate libc;
 
 use self::libc::c_char;
+use settings;
 use std::ptr;
 use std::thread;
 use utils::cstring::CStringUtils;
@@ -129,6 +130,13 @@ pub extern fn vcx_wallet_add_record(command_handle: i32,
                                     value: *const c_char,
                                     tags_json: *const c_char,
                                     cb: Option<extern fn(xcommand_handle: i32, err: i32)>) -> u32 {
+    if settings::test_indy_mode_enabled() {
+        check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
+        println!("vcx_wallet_add_record cb");
+        cb(command_handle, error::SUCCESS.code_num as i32);
+        return error::SUCCESS.code_num
+    }
+    println!("out of testmode");
     unsafe {
         indy_add_wallet_record(command_handle as i32, get_wallet_handle(), type_, id, value, tags_json, cb) as u32
     }
@@ -159,6 +167,11 @@ pub extern fn vcx_wallet_update_record_value(command_handle: i32,
                                              id: *const c_char,
                                              value: *const c_char,
                                              cb: Option<extern fn(xcommand_handle: i32, err: i32)>) -> u32 {
+    if settings::test_indy_mode_enabled() {
+        check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
+        cb(command_handle, error::SUCCESS.code_num as i32);
+        return error::SUCCESS.code_num
+    }
     unsafe {
         indy_update_wallet_record_value(command_handle, get_wallet_handle(), type_, id, value, cb) as u32
     }
@@ -290,6 +303,12 @@ pub extern fn vcx_wallet_get_record(command_handle: i32,
                                        options_json: *const c_char,
                                        cb: Option<extern fn(xcommand_handle: i32, err: i32,
                                        record_json: *const c_char)>) -> u32 {
+    if settings::test_indy_mode_enabled() {
+        check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
+        let msg = r#"{"id":"123","type":"record type","value":"record value","tags":null}"#.to_string();
+        cb(command_handle, error::SUCCESS.code_num as i32, CStringUtils::string_to_cstring(msg).as_ptr());
+        return error::SUCCESS.code_num
+    }
     unsafe {
         indy_get_wallet_record(command_handle, get_wallet_handle(), type_, id, options_json, cb) as u32
     }
@@ -317,6 +336,11 @@ pub extern fn vcx_wallet_delete_record(command_handle: i32,
                                             type_: *const c_char,
                                             id: *const c_char,
                                             cb: Option<extern fn(xcommand_handle: i32, err: i32)>) -> u32 {
+    if settings::test_indy_mode_enabled() {
+        check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
+        cb(command_handle, error::SUCCESS.code_num as i32);
+        return error::SUCCESS.code_num
+    }
     unsafe {
         indy_delete_wallet_record(command_handle, get_wallet_handle(), type_, id, cb) as u32
     }
