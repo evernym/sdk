@@ -132,11 +132,11 @@ def ios() {
                 sh "${CERT_SCRIPT}"
 
                 // Publish to Kraken
-                sh "cp vcx/libvcx/build_scripts/ios/mac/libvcxall.a ~"
-                sh "zip libvcxall.zip vcx/libvcx/build_scripts/ios/mac/libvcxall.a"
+                sh "cp vcx/wrappers/ios/vcx/lib/libvcxall.a ~"
+                sh "zip libvcxall.zip vcx/wrappers/ios/vcx/lib/libvcxall.a"
                 withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
                     //sh "find vcx/libvcx/build_scripts/ios/mac -type f -name 'libvcxall.a' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/ios/upload -F 'file=@{}' \\;"
-                    sh "find vcx/libvcx/build_scripts/ios/mac -type f -name 'libvcxall.zip' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/ios/upload -F 'file=@{}' \\;"
+                    sh "find vcx/wrappers/ios/vcx/lib/ -type f -name 'libvcxall.zip' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/ios/upload -F 'file=@{}' \\;"
                 }
 
             } catch (Exception ex) {
