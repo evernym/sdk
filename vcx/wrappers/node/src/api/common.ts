@@ -87,3 +87,10 @@ export enum StateType {
 export interface IInitVCXOptions {
   libVCXPath?: string
 }
+
+export interface IUTXO {
+  paymentAddress: string,
+  amount: string,
+  extra?: string,
+  txo?: string
+}
