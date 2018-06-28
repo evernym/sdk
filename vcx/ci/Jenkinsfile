@@ -132,11 +132,7 @@ def ios() {
                 sh "${CERT_SCRIPT}"
 
                 // Publish to Kraken
-sh (
-    script: 'git --no-pager show -s --format=\'%ae\'',
-    returnStdout: true
-).trim()
-                TIME_VERSION=sh (script: '$(date +%Y%m%d_%H%M%S)', returnStdout: true ).trim()
+                TIME_VERSION=sh (script: 'echo $(date +%Y%m%d_%H%M%S)', returnStdout: true ).trim()
                 sh "zip libvcxall_${TIME_VERSION}.zip vcx/wrappers/ios/vcx/lib/libvcxall.a"
                 withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
                     //sh "find vcx/libvcx/build_scripts/ios/mac -type f -name 'libvcxall.a' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/ios/upload -F 'file=@{}' \\;"
