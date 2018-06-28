@@ -83,8 +83,8 @@ describe('Wallet:', () => {
 
   describe('records:', () => {
     it('success', async () => {
-      await Wallet.addRecord(WALLET_RECORD)
-      await Wallet.getRecord({ type: WALLET_RECORD.type_, id: WALLET_RECORD.id })
+      var error = await shouldThrow(async() => Wallet.getRecord({ type: WALLET_RECORD.type_, id: WALLET_RECORD.id }))
+      assert.equal(error.vcxCode, VCXCode.UNKNOWN_LIBINDY_ERROR)
       await Wallet.updateRecordValue(UPDATE_WALLET_RECORD)
       await Wallet.updateRecordTags(UPDATE_WALLET_TAGS)
       await Wallet.addRecordTags(UPDATE_WALLET_TAGS)
