@@ -67,10 +67,11 @@ impl HasVersion for CreateSchema {
 
 fn from_string_with_version(data: &str) -> Result<CreateSchema, SchemaError> {
     use serde_json::Value;
-    let data:Value = serde_json::from_str(&data).unwrap();
+    let data:Value = serde_json::from_str(&data)
+        .or(Err(SchemaError::InvalidSchemaCreation()))?;
     let version = data["version"].clone();
-    assert_eq!(version, "1.0");
-    let schema: CreateSchema = serde_json::from_value(data["data"].clone()).unwrap();
+    let schema: CreateSchema = serde_json::from_value(data["data"].clone())
+        .or(Err(SchemaError::InvalidSchemaCreation()))?;
     let source_id = "Test Source Id";
     let schema_id = "schemaId1234";
     Ok(CreateSchema {
@@ -392,6 +393,8 @@ pub mod tests {
         let schema_str = to_string(handle).unwrap();
         let value: serde_json::Value = serde_json::from_str(&schema_str).unwrap();
         assert_eq!(value["version"], "1.0");
+        let data = value["data"].clone();
+        let schema:CreateSchema = serde_json::from_str(&data.to_string()).unwrap();
     }
 
     #[test]
