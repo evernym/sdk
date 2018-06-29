@@ -11,8 +11,8 @@ def testing() {
     stage('Testing') {
         parallel([
             //'Main' : { mainUbuntu() },
-            'Android': { android() },
-            //'iOS' : { ios() }
+            //'Android': { android() },
+            'iOS' : { ios() }
         ])
     }
 }
@@ -105,10 +105,42 @@ def android() {
                                 }
                             }
                         }
+                    },
+                    'arm64': {
+                        node('ubuntu') {
+                            stage('Android Build: ARM64') {
+                                checkout scm 
+                                rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
+                                rust.inside {
+                                    sh "./${ANDROID_SCRIPT_PATH} arm64"
+                                    stash (
+                                        name: androidArm64Stash,
+                                        include: "${LIBVCX_SO_PATH}/libvcx_arm.so"
+                                    )
+                                }
+                            }
+                        }
+                    },
+                    'x86': {
+                        node('ubuntu') {
+                            stage('Android Build: X86') {
+                                checkout scm 
+                                rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
+                                rust.inside {
+                                    sh "./${ANDROID_SCRIPT_PATH} x86"
+                                    stash (
+                                        name: androidx86Stash,
+                                        include: "${LIBVCX_SO_PATH}/libvcx_x86.so"
+                                    )
+                                }
+                            }
+                        }
                     }
                 ])
                 
                 unstash(name: androidArmStash)
+                unstash(name: androidArm64Stash)
+                unstash(name: androidx86Stash)
                 sh "ls"
                 // checkout scm
 
