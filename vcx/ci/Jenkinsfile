@@ -374,13 +374,3 @@ def publishAndroid(envn) {
         }
     }
 }
-
-def publishIOS(envn) {
-    envn.inside {
-        CERT_SCRIPT = 'vcx/ci/scripts/getCert.sh'
-        sh "${CERT_SCRIPT}"
-        withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
-            sh "find vcx/wrappers/java/vcx/build/outputs/aar/ -type f -name 'com.evernym-vcx_*-release.aar' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST  https://kraken.corp.evernym.com/repo/android/upload -F 'file=@{}' \\;"
-        }
-    }
-}
