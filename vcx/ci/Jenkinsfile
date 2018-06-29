@@ -10,9 +10,9 @@ testing()
 def testing() {
     stage('Testing') {
         parallel([
-            'Main' : { mainUbuntu() },
+            //'Main' : { mainUbuntu() },
             'Android': { android() },
-            'iOS' : { ios() }
+            //'iOS' : { ios() }
         ])
     }
 }
@@ -81,21 +81,80 @@ def mainUbuntu() {
     }
 }
 
-
+def androidArmStash = 'androidArmStash'
+def androidx86Stash = 'androidx86Stash'
+def androidArm64Stash = 'androidarm64Stash'
 def android() {
     node('ubuntu') {
         stage('Android Build') {
+            ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
+            LIBVCX_SO_PATH = 'vcx/libvcx/build_scripts/android/vcx/'
             try {
-                checkout scm
-
-                //Build android docker image
-                rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
+                parallel([
+                    'arm': {
+                        node('ubuntu') {
+                            stage('Android Build: ARM') {
+                                checkout scm 
+                                rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
+                                rust.inside {
+                                    sh "./${ANDROID_SCRIPT_PATH} arm"
+                                    sh "echo --------------------------"
+                                    stash (
+                                        name: 'androidArmStash',
+                                        includes: "${LIBVCX_SO_PATH}/libvcx_arm.so"
+                                    ) 
+                                    sh "echo --------------------------"
+                                }
+                            }
+                        }
+                    },
+                    // 'arm64': {
+                    //     node('ubuntu') {
+                    //         stage('Android Build: ARM64') {
+                    //             checkout scm 
+                    //             rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
+                    //             rust.inside {
+                    //                 sh "./${ANDROID_SCRIPT_PATH} arm64"
+                    //                 stash (
+                    //                     name: androidArm64Stash,
+                    //                     include: "${LIBVCX_SO_PATH}/libvcx_arm.so"
+                    //                 )
+                    //             }
+                    //         }
+                    //     }
+                    // },
+                    // 'x86': {
+                    //     node('ubuntu') {
+                    //         stage('Android Build: X86') {
+                    //             checkout scm 
+                    //             rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
+                    //             rust.inside {
+                    //                 sh "./${ANDROID_SCRIPT_PATH} x86"
+                    //                 stash (
+                    //                     name: androidx86Stash,
+                    //                     include: "${LIBVCX_SO_PATH}/libvcx_x86.so"
+                    //                 )
+                    //             }
+                    //         }
+                    //     }
+                    // }
+                ])
                 
-                //Build .so files for arm64, x86, and arm
-                buildAndroid(rust)
+                sh "echo ==========================="
+                unstash(name: 'androidArmStash')
+                sh "echo ==========================="
+                // unstash(name: androidArm64Stash)
+                sh "ls"
+                // checkout scm
 
-                //Package .so files into .aar 
-                packageAndroid(rust)
+                // //Build android docker image
+                // rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
+                
+                // //Build .so files for arm64, x86, and arm
+                // buildAndroid(rust)
+
+                // //Package .so files into .aar 
+                // packageAndroid(rust)
 
                 if (env.BRANCH_NAME == "master") {
                     //Publish package on aptly
@@ -121,22 +180,43 @@ def ios() {
         stage('iOS Build') {
             try {
                 checkout scm
-                SCRIPTS_PATH="vcx/libvcx/build_scripts/ios/mac"
+                SCRIPTS_PATH = "vcx/ci/scripts"
                 WORK_DIR = "/Users/jenkins"
 
+                // Build ios indy_sdk
+                sh "source ${SCRIPTS_PATH}/iosBuildIndySdk.sh"
                 // Build ios architectures
-                sh "source vcx/ci/scripts/iosBuild.sh"
+                parallel([
+                    "aarch64-apple-ios": {
+                        sh "source iosBuild.sh aarch64-apple-ios"
+                    } ,
+                //     "armv7-apple-ios": {
+                //         sh "source iosBuild.sh armv7-apple-ios"
+                //     },
+                //     "armv7s-apple-ios": {
+                //         sh "source iosBuild.sh armv7s-apple-ios"
+                //     },
+                //     "i386-apple-ios": {
+                //         sh "source iosBuild.sh i386-apple-ios"
+                //     },
+                //     "x86_64-apple-ios": {
+                //         sh "source iosBuild.sh x86_64-apple-ios"
+                //     },
+                ])
 
-                // Publish to Kraken
-                TIME_VERSION=sh (script: 'echo $(date +%Y%m%d_%H%M%S)', returnStdout: true ).trim()
-                sh "mkdir ${TIME_VERSION}"
-                sh "zip -r ${TIME_VERSION}/libvcxall_${TIME_VERSION}.zip vcx/wrappers/ios/vcx/lib/libvcxall.a"
+                sh "ls vcx/wrappers/ios/vcx/lib/"
+                // sh "source ${SCRIPTS_PATH}/iosBuild.sh"
 
-                if (env.BRANCH_NAME == "master") {
-                    withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
-                        sh "find ${TIME_VERSION} -type f -name 'libvcxall_${TIME_VERSION}.zip' -exec curl -u \"${KRAKEN_CREDENTIALS}\" -X POST  https://kraken.corp.evernym.com/repo/ios/upload -F 'file=@{}' \\;"
-                    }
-                }
+                // // Publish to Kraken
+                // TIME_VERSION=sh (script: 'echo $(date +%Y%m%d_%H%M%S)', returnStdout: true ).trim()
+                // sh "mkdir ${TIME_VERSION}"
+                // sh "zip -r ${TIME_VERSION}/libvcxall_${TIME_VERSION}.zip vcx/wrappers/ios/vcx/lib/libvcxall.a"
+
+                // if (env.BRANCH_NAME == "master") {
+                //     withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
+                //         sh "find ${TIME_VERSION} -type f -name 'libvcxall_${TIME_VERSION}.zip' -exec curl -u \"${KRAKEN_CREDENTIALS}\" -X POST  https://kraken.corp.evernym.com/repo/ios/upload -F 'file=@{}' \\;"
+                //     }
+                // }
             } catch (Exception ex) {
                 // We currently do not fail the main build if the android and ios builds fail
                 // currentBuild.result = "FAILED"
