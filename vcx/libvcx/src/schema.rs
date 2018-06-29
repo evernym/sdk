@@ -20,10 +20,41 @@ use utils::libindy::{
     anoncreds::libindy_issuer_create_schema,
     payments::{pay_for_txn, PaymentTxn},
 };
+use HasVersion;
 use error::schema::SchemaError;
 
 lazy_static! {
     static ref SCHEMA_MAP: Mutex<HashMap<u32, Box<CreateSchema>>> = Default::default();
+}
+
+impl HasVersion<CreateSchema, SchemaError> for CreateSchema {
+    fn to_string_with_version(&self) -> String {
+        json!({
+            "version": "1.0",
+            "data": json!(self),
+        }).to_string()
+    }
+    fn from_string_with_version(data: &str) -> Result<CreateSchema, SchemaError> {
+        use serde_json::Value;
+        let data:Value = serde_json::from_str(&data)
+            .or(Err(SchemaError::InvalidSchemaCreation()))?;
+        let version = data["version"].clone();
+        let schema: CreateSchema = serde_json::from_value(data["data"].clone())
+            .or(Err(SchemaError::InvalidSchemaCreation()))?;
+        let source_id = "Test Source Id";
+        let schema_id = "schemaId1234";
+        Ok(CreateSchema {
+            data: vec![],
+            version: "1.0".to_string(),
+            schema_id: schema_id.to_string(),
+            source_id: source_id.to_string(),
+            handle: 1,
+            name: "schema_name".to_string(),
+            sequence_num: 306,
+            payment_txn: None,
+        })
+    }
+
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -52,39 +83,9 @@ pub struct CreateSchema {
     sequence_num: u32,
     payment_txn: Option<PaymentTxn>,
 }
-trait HasVersion {
-    fn to_string_with_version(&self) -> String;
-}
 
-impl HasVersion for CreateSchema {
-    fn to_string_with_version(&self) -> String {
-        json!({
-            "version": "1.0",
-            "data": json!(self),
-        }).to_string()
-    }
-}
 
-fn from_string_with_version(data: &str) -> Result<CreateSchema, SchemaError> {
-    use serde_json::Value;
-    let data:Value = serde_json::from_str(&data)
-        .or(Err(SchemaError::InvalidSchemaCreation()))?;
-    let version = data["version"].clone();
-    let schema: CreateSchema = serde_json::from_value(data["data"].clone())
-        .or(Err(SchemaError::InvalidSchemaCreation()))?;
-    let source_id = "Test Source Id";
-    let schema_id = "schemaId1234";
-    Ok(CreateSchema {
-        data: vec![],
-        version: "1.0".to_string(),
-        schema_id: schema_id.to_string(),
-        source_id: source_id.to_string(),
-        handle: 1,
-        name: "schema_name".to_string(),
-        sequence_num: 306,
-        payment_txn: None,
-    })
-}
+
 
 pub trait Schema: ToString {
     type SchemaType;
@@ -319,7 +320,7 @@ pub fn get_payment_txn(handle: u32) -> Option<PaymentTxn> {
 }
 
 pub fn from_string(schema_data: &str) -> Result<u32, SchemaError> {
-    let derived_schema: CreateSchema = from_string_with_version(schema_data)
+    let derived_schema: CreateSchema = CreateSchema::from_string_with_version(schema_data)
         .map_err(|_| {
             error!("Invalid Json format for CreateSchema string");
             SchemaError::CommonError(error::INVALID_JSON.code_num)

@@ -246,6 +246,7 @@ pub extern fn vcx_schema_get_attributes(command_handle: u32,
             Ok((handle, data)) => {
                 let data:serde_json::Value = serde_json::from_str(&data).unwrap();
                 let data = data["data"]["data"].to_string();
+
                 info!("vcx_schema_get_attributes_cb(command_handle: {}, rc: {}, handle: {}, attrs: {})",
                       command_handle, error_string(0), handle, data);
                 let msg = CStringUtils::string_to_cstring(data.to_string());
@@ -334,6 +335,11 @@ mod tests {
     use std::time::Duration;
     use settings;
     use utils::constants::{ SCHEMA_ID, SCHEMA_WITH_VERSION };
+    use std::ffi::CString;
+    use utils::libindy::{ return_types_u32, payments, pool, wallet };
+    use utils::logger::LoggerUtils;
+    use rand::Rng;
+    use utils::libindy::signus::SignusUtils;
 
     extern "C" fn create_cb(command_handle: u32, err: u32, schema_handle: u32) {
         assert_eq!(err, 0);
@@ -513,6 +519,7 @@ mod tests {
     #[test]
     fn test_vcx_schema_get_attrs() {
         set_default_and_enable_test_mode();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
         let cb = return_types_u32::Return_U32_U32_STR::new().unwrap();
         let data = r#"["height","name","sex","age"]"#;
         assert_eq!(vcx_schema_get_attributes(cb.command_handle,
@@ -537,16 +544,9 @@ mod tests {
     #[cfg(feature = "nullpay")]
     #[test]
     fn test_vcx_schema_serialize_contains_version() {
-        use settings;
-        use utils::libindy::{ return_types_u32, payments, pool, wallet };
-        use utils::logger::LoggerUtils;
-        use std::time::Duration;
-        use rand::Rng;
-        use utils::libindy::signus::SignusUtils;
         pub const TRUSTEE_SEED: &'static str = "000000000000000000000000Trustee1";
-        use std::ffi::CString;
-
         settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         payments::init_payments().unwrap();
         let pool_handle = pool::open_sandbox_pool();
         let wallet_name = &settings::get_config_value(settings::CONFIG_WALLET_NAME).unwrap();

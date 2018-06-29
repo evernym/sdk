@@ -714,8 +714,13 @@ mod tests {
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_generate_proof() {
+        use utils::libindy::wallet::delete_wallet;
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         let wallet_name = "test_generate_proof";
+        match delete_wallet(wallet_name) {
+            Ok(_) => {},
+            Err(_) => {},
+        };
         ::utils::devsetup::tests::setup_ledger_env(wallet_name);
         let did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
         let (schema_id, _, cred_def_id, _, _, _, _, cred_id) = ::utils::libindy::anoncreds::tests::create_and_store_credential();

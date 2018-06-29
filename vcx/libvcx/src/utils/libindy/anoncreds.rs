@@ -439,6 +439,7 @@ pub mod tests {
     use rand::Rng;
     use settings;
     use utils::constants::*;
+    use utils::libindy::wallet;
 
     pub fn create_schema() -> (String, String) {
         let data = r#"["address1","address2","zip","city","state"]"#.to_string();
@@ -576,8 +577,8 @@ pub mod tests {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         let wallet_name = "test_verify_proof";
+        wallet::delete_wallet(wallet_name).unwrap_or(());
         ::utils::devsetup::tests::setup_ledger_env(wallet_name);
-
         let (schemas, cred_defs, proof_req, proof) = create_proof();
 
         let result = libindy_verifier_verify_proof(
