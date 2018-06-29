@@ -90,21 +90,24 @@ def android() {
             ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
             LIBVCX_SO_PATH = 'vcx/libvcx/build_scripts/android/vcx/'
             try {
-                'arm': {
-                    node('ubuntu') {
-                        stage('Android Build: ARM') {
-                            checkout scm 
-                            rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
-                            rust.inside {
-                                sh "./${ANDROID_SCRIPT_PATH} arm"
-                                stash (
-                                    name: androidArmStash,
-                                    include: "${LIBVCX_SO_PATH}/libvcx_arm.so"
-                                )
+                parallel([
+                    'arm': {
+                        node('ubuntu') {
+                            stage('Android Build: ARM') {
+                                checkout scm 
+                                rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
+                                rust.inside {
+                                    sh "./${ANDROID_SCRIPT_PATH} arm"
+                                    stash (
+                                        name: androidArmStash,
+                                        include: "${LIBVCX_SO_PATH}/libvcx_arm.so"
+                                    )
+                                }
                             }
                         }
                     }
-                }
+                ])
+                
                 unstash(name: androidArmStash)
                 sh "ls"
                 // checkout scm
