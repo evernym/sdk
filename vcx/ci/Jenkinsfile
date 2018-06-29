@@ -11,8 +11,8 @@ def testing() {
     stage('Testing') {
         parallel([
             //'Main' : { mainUbuntu() },
-            //'Android': { android() },
-            'iOS' : { ios() }
+            'Android': { android() },
+            //'iOS' : { ios() }
         ])
     }
 }
@@ -98,49 +98,52 @@ def android() {
                                 rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
                                 rust.inside {
                                     sh "./${ANDROID_SCRIPT_PATH} arm"
+                                    sh "echo --------------------------"
                                     stash (
-                                        name: androidArmStash,
-                                        include: "${LIBVCX_SO_PATH}/libvcx_arm.so"
-                                    )
+                                        name: 'androidArmStash',
+                                        includes: "${LIBVCX_SO_PATH}/libvcx_arm.so"
+                                    ) 
+                                    sh "echo --------------------------"
                                 }
                             }
                         }
                     },
-                    'arm64': {
-                        node('ubuntu') {
-                            stage('Android Build: ARM64') {
-                                checkout scm 
-                                rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
-                                rust.inside {
-                                    sh "./${ANDROID_SCRIPT_PATH} arm64"
-                                    stash (
-                                        name: androidArm64Stash,
-                                        include: "${LIBVCX_SO_PATH}/libvcx_arm.so"
-                                    )
-                                }
-                            }
-                        }
-                    },
-                    'x86': {
-                        node('ubuntu') {
-                            stage('Android Build: X86') {
-                                checkout scm 
-                                rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
-                                rust.inside {
-                                    sh "./${ANDROID_SCRIPT_PATH} x86"
-                                    stash (
-                                        name: androidx86Stash,
-                                        include: "${LIBVCX_SO_PATH}/libvcx_x86.so"
-                                    )
-                                }
-                            }
-                        }
-                    }
+                    // 'arm64': {
+                    //     node('ubuntu') {
+                    //         stage('Android Build: ARM64') {
+                    //             checkout scm 
+                    //             rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
+                    //             rust.inside {
+                    //                 sh "./${ANDROID_SCRIPT_PATH} arm64"
+                    //                 stash (
+                    //                     name: androidArm64Stash,
+                    //                     include: "${LIBVCX_SO_PATH}/libvcx_arm.so"
+                    //                 )
+                    //             }
+                    //         }
+                    //     }
+                    // },
+                    // 'x86': {
+                    //     node('ubuntu') {
+                    //         stage('Android Build: X86') {
+                    //             checkout scm 
+                    //             rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
+                    //             rust.inside {
+                    //                 sh "./${ANDROID_SCRIPT_PATH} x86"
+                    //                 stash (
+                    //                     name: androidx86Stash,
+                    //                     include: "${LIBVCX_SO_PATH}/libvcx_x86.so"
+                    //                 )
+                    //             }
+                    //         }
+                    //     }
+                    // }
                 ])
                 
-                unstash(name: androidArmStash)
-                unstash(name: androidArm64Stash)
-                unstash(name: androidx86Stash)
+                sh "echo ==========================="
+                unstash(name: 'androidArmStash')
+                sh "echo ==========================="
+                // unstash(name: androidArm64Stash)
                 sh "ls"
                 // checkout scm
 
