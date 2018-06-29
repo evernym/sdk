@@ -125,17 +125,12 @@ def ios() {
                 WORK_DIR = "/Users/jenkins"
 
                 // Build ios architectures
-                //sh "source vcx/ci/scripts/iosBuild.sh"
-
-                // Make sure evernym certificate is on machine
-                // CERT_SCRIPT = 'vcx/ci/scripts/getCert.sh'
-                // sh "${CERT_SCRIPT}"
+                sh "source vcx/ci/scripts/iosBuild.sh"
 
                 // Publish to Kraken
                 TIME_VERSION=sh (script: 'echo $(date +%Y%m%d_%H%M%S)', returnStdout: true ).trim()
                 sh "mkdir ${TIME_VERSION}"
-                //sh "zip -r ${TIME_VERSION}/libvcxall_${TIME_VERSION}.zip vcx/wrappers/ios/vcx/lib/libvcxall.a"
-                sh "zip -r ${TIME_VERSION}/libvcxall_${TIME_VERSION}.zip /Users/tmp_kraken/libvcxall.a"
+                sh "zip -r ${TIME_VERSION}/libvcxall_${TIME_VERSION}.zip vcx/wrappers/ios/vcx/lib/libvcxall.a"
 
                 withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
                     sh "find ${TIME_VERSION} -type f -name 'libvcxall_${TIME_VERSION}.zip' -exec curl -u \"${KRAKEN_CREDENTIALS}\" -X POST  https://kraken.corp.evernym.com/repo/ios/upload -F 'file=@{}' \\;"
