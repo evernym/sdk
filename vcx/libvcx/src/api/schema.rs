@@ -330,7 +330,7 @@ mod tests {
     use std::thread;
     use std::time::Duration;
     use settings;
-    use utils::constants::{ SCHEMA_ID };
+    use utils::constants::{ SCHEMA_ID, SCHEMA_WITH_VERSION };
 
     extern "C" fn create_cb(command_handle: u32, err: u32, schema_handle: u32) {
         assert_eq!(err, 0);
@@ -484,10 +484,14 @@ mod tests {
 
     #[test]
     fn test_vcx_schema_deserialize_succeeds() {
+        use utils::libindy::return_types_u32;
+        use std::time::Duration;
+        let cb = return_types_u32::Return_U32_U32::new().unwrap();
         set_default_and_enable_test_mode();
-        let original = r#"{"data":["age","name","height","sex"],"version":"0.0.11","schema_id":"2hoqvcwupRTUNkXn6ArYzs:2:schema_name:0.0.11","name":"schema_name","source_id":"Test Source ID","sequence_num":0}"#;
-        let schema_handle = vcx_schema_deserialize(0,CString::new(original).unwrap().into_raw(), Some(deserialize_cb));
-        thread::sleep(Duration::from_millis(200));
+        let err = vcx_schema_deserialize(cb.command_handle,CString::new(SCHEMA_WITH_VERSION).unwrap().into_raw(), Some(cb.get_callback()));
+        assert_eq!(err, error::SUCCESS.code_num);
+        let schema_handle = cb.receive(Some(Duration::from_secs(2))).unwrap();
+        assert!(schema_handle > 0);
     }
 
     #[test]
