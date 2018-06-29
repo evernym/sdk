@@ -2,11 +2,11 @@ import pytest
 from vcx.error import VcxError
 from vcx.api.wallet import *
 
-TYPE = "TestType"
+TYPE = "record type"
 EMPTY_TYPE = ""
-ID = "RecordId"
+ID = "123"
 EMPTY_ID = ""
-VALUE = "RecordValue"
+VALUE = "record value"
 VALUE_NEW = "RecordValueNew"
 EMPTY_VALUE = ""
 TAGS = "{\"tagName1\":\"str1\",\"tagName2\":\"5\",\"tagName3\":\"12\"}"
@@ -53,9 +53,9 @@ async def test_wallet_storage():
     await Wallet.delete_record_tags(TYPE, ID, ['one', 'two'])
     await Wallet.delete_record(TYPE, ID)
     record = {
-        "id": "123",
-        "type": "record type",
-        "value": "record value",
+        "id": ID,
+        "type": TYPE,
+        "value": VALUE,
         "tags": None,
     }
     assert (json.loads(await Wallet.get_record(TYPE, ID, OPTIONS)) == record)
