@@ -1,5 +1,6 @@
 #!/bin/sh
 
+IOS_ARCH=$1
 source ./mac.05.libvcx.env.sh
 cd ../../..
 cargo clean
@@ -10,7 +11,9 @@ cargo update
 #export RUST_BACKTRACE=1
 # To build for iOS
 #LIBINDY_DIR=/usr/local/lib RUST_BACKTRACE=1 cargo lipo --release
-cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios,armv7s-apple-ios,i386-apple-ios,x86_64-apple-ios"
+# expected architectures = "aarch64-apple-ios,armv7-apple-ios,armv7s-apple-ios,i386-apple-ios,x86_64-apple-ios"
+# cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios,armv7s-apple-ios,i386-apple-ios,x86_64-apple-ios"
+cargo lipo --relase --verbose --targets=${IOS_ARCH}
 #LIBINDY_DIR=/usr/local/lib RUST_BACKTRACE=1 cargo lipo
 #LIBINDY_DIR=/usr/local/lib cargo test
 
