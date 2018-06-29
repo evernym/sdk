@@ -2,8 +2,8 @@ import '../module-resolver-helper'
 
 import { assert } from 'chai'
 import { validateUTXO } from 'helpers/asserts'
-import { initVcxTestMode } from 'helpers/utils'
-import { Wallet } from 'src'
+import { initVcxTestMode, shouldThrow } from 'helpers/utils'
+import { VCXCode, Wallet } from 'src'
 
 const WALLET_RECORD = {
   id: 'RecordId',
@@ -87,7 +87,7 @@ describe('Wallet:', () => {
   })
 
   describe('records:', () => {
-    it.only('success', async () => {
+    it('success', async () => {
       await Wallet.addRecord(WALLET_RECORD)
       await Wallet.getRecord({ type: WALLET_RECORD.type_, id: WALLET_RECORD.id, options: OPTIONS})
       await Wallet.updateRecordValue(UPDATE_WALLET_RECORD)
@@ -104,6 +104,20 @@ describe('Wallet:', () => {
       const retrievedRecords = JSON.parse(await Wallet.searchNextRecords(searchHandle, { count: 1 }))
       assert.deepEqual(retrievedRecords, SEARCHED_RECORD)
       await Wallet.closeSearch(searchHandle)
+    })
+  })
+
+  describe('import:', () => {
+    it('throws: libindy error', async () => {
+      const error = await shouldThrow(async () => Wallet.import('/tmp/foobar.wallet', 'key_for_wallet'))
+      assert.equal(error.vcxCode, VCXCode.IO_ERROR)
+    })
+  })
+
+  describe('export:', () => {
+    it('throws: libindy error', async () => {
+      const error = await shouldThrow(async () => Wallet.export('/tmp/foobar.wallet', 'key_for_wallet'))
+      assert.equal(error.vcxCode, VCXCode.INVALID_WALLET_CREATION)
     })
   })
 })

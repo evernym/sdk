@@ -67,3 +67,9 @@ async def test_wallet_search():
     searched_record = await Wallet.search_next_records(search_handle, 1)
     assert (json.loads(searched_record) == SEARCHED_RECORD)
     await Wallet.close_search(search_handle)
+
+    with pytest.raises(VcxError) as e:
+        await Wallet.export("/tmp/output.wallet", "backupKey")
+
+    with pytest.raises(VcxError) as e:
+        await Wallet.import_wallet("/tmp/ouptut.wallet", "backupKey")

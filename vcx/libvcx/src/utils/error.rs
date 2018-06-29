@@ -83,6 +83,8 @@ pub static OBJECT_CACHE_ERROR: Error = Error{ code_num: 1070, message: "Object c
 pub static NO_PAYMENT_INFORMATION: Error = Error { code_num: 1071, message: "No payment information associated with object"};
 pub static DUPLICATE_WALLET_RECORD: Error = Error{ code_num: 1072, message: "Record already exists in the wallet"};
 pub static WALLET_RECORD_NOT_FOUND: Error = Error{ code_num: 1073, message: "Wallet record not found"};
+pub static IOERROR: Error = Error { code_num: 1074, message: "IO Error, possibly creating a backup wallet"};
+pub static INVALID_WALLET_STORAGE_PARAMETER: Error = Error { code_num: 1075, message: "Wallet Storage Parameter Either Malformed or Missing"};
 
 lazy_static! {
     static ref ERROR_C_MESSAGES: HashMap<u32, CString> = {
@@ -157,6 +159,8 @@ lazy_static! {
         insert_c_message(&mut m, &MISSING_WALLET_KEY);
         insert_c_message(&mut m, &DUPLICATE_WALLET_RECORD);
         insert_c_message(&mut m, &WALLET_RECORD_NOT_FOUND);
+        insert_c_message(&mut m, &IOERROR);
+        insert_c_message(&mut m, &INVALID_WALLET_STORAGE_PARAMETER);
         insert_c_message(&mut m, &OBJECT_CACHE_ERROR);
         insert_c_message(&mut m, &NO_PAYMENT_INFORMATION);
        m

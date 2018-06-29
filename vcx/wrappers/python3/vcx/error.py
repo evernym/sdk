@@ -74,7 +74,13 @@ class ErrorCode(IntEnum):
     InvalidPaymentAddress = 1066,
     InvalidLibindyParam = 1067,
     InvalidPayment = 1068,
+    MissingWalletKey = 1069,
+    ObjectCacheError = 1070,
     NoPaymentInformation = 1071,
+    DuplicateWalletRecord = 1072,
+    WalletRecordNotFound = 1073,
+    IOError = 1074,
+    InvalidWalletStorageParam = 1075,
 
 class VcxError(Exception):
     # error_code: ErrorCode
