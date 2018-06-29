@@ -177,13 +177,32 @@ def ios() {
         stage('iOS Build') {
             try {
                 checkout scm
-                SCRIPTS_PATH="vcx/libvcx/build_scripts/ios/mac"
+                SCRIPTS_PATH = "vcx/ci/scripts"
                 WORK_DIR = "/Users/jenkins"
 
-                iosBuildIndySdk()
-
+                // Build ios indy_sdk
+                sh "source ${SCRIPTS_PATH}/iosBuildIndySdk.sh"
                 // Build ios architectures
-                // sh "source vcx/ci/scripts/iosBuild.sh"
+                parallel([
+                    "aarch64-apple-ios": {
+                        sh "source iosBuild.sh aarch64-apple-ios"
+                    } ,
+                //     "armv7-apple-ios": {
+                //         sh "source iosBuild.sh armv7-apple-ios"
+                //     },
+                //     "armv7s-apple-ios": {
+                //         sh "source iosBuild.sh armv7s-apple-ios"
+                //     },
+                //     "i386-apple-ios": {
+                //         sh "source iosBuild.sh i386-apple-ios"
+                //     },
+                //     "x86_64-apple-ios": {
+                //         sh "source iosBuild.sh x86_64-apple-ios"
+                //     },
+                ])
+
+                sh "ls vcx/wrappers/ios/vcx/lib/"
+                // sh "source ${SCRIPTS_PATH}/iosBuild.sh"
 
                 // // Publish to Kraken
                 // TIME_VERSION=sh (script: 'echo $(date +%Y%m%d_%H%M%S)', returnStdout: true ).trim()
@@ -431,13 +450,4 @@ def publishAndroid(envn) {
             sh "find vcx/wrappers/java/vcx/build/outputs/aar/ -type f -name 'com.evernym-vcx_*-release.aar' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST  https://kraken.corp.evernym.com/repo/android/upload -F 'file=@{}' \\;"
         }
     }
-}
-
-def iosBuildIndySdk() {
-    sh "export SCRIPTS_PATH=vcx/libvcx/build_scripts/ios/mac"
-    sh "export BASE_DIR=../../../../.."
-    sh "cd ${SCRIPTS_PATH}"
-    sh "echo ${PWD}"
-    //sh "./mac.02.libindy.env.sh"
-    //sh "./mac.03.libindy.build.sh"
 }
