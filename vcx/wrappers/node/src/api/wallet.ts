@@ -47,7 +47,7 @@ export interface IGetRecordOptions {
 
 export interface IGerRecordData {
   type: string,
-  id: string, 
+  id: string,
   options: IGetRecordOptions
 }
 

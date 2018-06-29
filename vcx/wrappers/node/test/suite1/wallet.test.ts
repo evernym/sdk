@@ -13,9 +13,9 @@ const WALLET_RECORD = {
 }
 
 const OPTIONS = {
-    retrieveType: true,
-    retrieveValue: true,
-    retrieveTags: false
+  retrieveTags: false,
+  retrieveType: true,
+  retrieveValue: true
 }
 const QUERY_JSON = { tagName1: 'str1' }
 
@@ -89,7 +89,7 @@ describe('Wallet:', () => {
   describe('records:', () => {
     it('success', async () => {
       await Wallet.addRecord(WALLET_RECORD)
-      await Wallet.getRecord({ type: WALLET_RECORD.type_, id: WALLET_RECORD.id, options: OPTIONS})
+      await Wallet.getRecord({ type: WALLET_RECORD.type_, id: WALLET_RECORD.id, options: OPTIONS })
       await Wallet.updateRecordValue(UPDATE_WALLET_RECORD)
       await Wallet.updateRecordTags(UPDATE_WALLET_TAGS)
       await Wallet.addRecordTags(UPDATE_WALLET_TAGS)
