@@ -125,19 +125,20 @@ def ios() {
                 WORK_DIR = "/Users/jenkins"
 
                 // Build ios architectures
-                sh "source vcx/ci/scripts/iosBuild.sh"
+                //sh "source vcx/ci/scripts/iosBuild.sh"
 
                 // Make sure evernym certificate is on machine
-                CERT_SCRIPT = 'vcx/ci/scripts/getCert.sh'
-                sh "${CERT_SCRIPT}"
+                // CERT_SCRIPT = 'vcx/ci/scripts/getCert.sh'
+                // sh "${CERT_SCRIPT}"
 
                 // Publish to Kraken
                 TIME_VERSION=sh (script: 'echo $(date +%Y%m%d_%H%M%S)', returnStdout: true ).trim()
-                sh "zip libvcxall_${TIME_VERSION}.zip vcx/wrappers/ios/vcx/lib/libvcxall.a"
-                withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
-                    //sh "find vcx/libvcx/build_scripts/ios/mac -type f -name 'libvcxall.a' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/ios/upload -F 'file=@{}' \\;"
-                    sh "curl -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/ios/upload -F libvcxall_${TIME_VERSION}.zip"
+                sh "mkdir ${TIME_VERSION}"
+                //sh "zip -r ${TIME_VERSION}/libvcxall_${TIME_VERSION}.zip vcx/wrappers/ios/vcx/lib/libvcxall.a"
+                sh "zip -r ${TIME_VERSION}/libvcxall_${TIME_VERSION}.zip /Users/tmp_kraken/libvcxall.a"
 
+                withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
+                    sh "find ${TIME_VERSION} -type f -name 'libvcxall_${TIME_VERSION}.zip' -exec curl -u \"${KRAKEN_CREDENTIALS}\" -X POST  https://kraken.corp.evernym.com/repo/ios/upload -F 'file=@{}' \\;"
                 }
 
             } catch (Exception ex) {
@@ -382,9 +383,7 @@ def publishIOS(envn) {
     envn.inside {
         CERT_SCRIPT = 'vcx/ci/scripts/getCert.sh'
         sh "${CERT_SCRIPT}"
-        sh "echo after getCert"
         withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
-            sh "echo before publishing"
             sh "find vcx/wrappers/java/vcx/build/outputs/aar/ -type f -name 'com.evernym-vcx_*-release.aar' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST  https://kraken.corp.evernym.com/repo/android/upload -F 'file=@{}' \\;"
         }
     }
