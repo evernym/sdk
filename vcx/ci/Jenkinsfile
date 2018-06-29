@@ -11,8 +11,8 @@ def testing() {
     stage('Testing') {
         parallel([
             //'Main' : { mainUbuntu() },
-            //'Android': { android() },
-            'iOS' : { ios() }
+            'Android': { android() },
+            //'iOS' : { ios() }
         ])
     }
 }
@@ -81,21 +81,42 @@ def mainUbuntu() {
     }
 }
 
-
+def androidArmStash = 'androidArmStash'
+def androidx86Stash = 'androidx86Stash'
+def androidArm64Stash = 'androidarm64Stash'
 def android() {
     node('ubuntu') {
         stage('Android Build') {
+            ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
+            LIBVCX_SO_PATH = 'vcx/libvcx/build_scripts/android/vcx/'
             try {
-                checkout scm
+                'arm': {
+                    node('ubuntu') {
+                        stage('Android Build: ARM') {
+                            checkout scm 
+                            rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
+                            rust.inside {
+                                sh "./${ANDROID_SCRIPT_PATH} arm"
+                                stash (
+                                    name: androidArmStash,
+                                    include: "${LIBVCX_SO_PATH}/libvcx_arm.so"
+                                )
+                            }
+                        }
+                    }
+                }
+                unstash(name: androidArmStash)
+                sh "ls"
+                // checkout scm
 
-                //Build android docker image
-                rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
+                // //Build android docker image
+                // rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
                 
-                //Build .so files for arm64, x86, and arm
-                buildAndroid(rust)
+                // //Build .so files for arm64, x86, and arm
+                // buildAndroid(rust)
 
-                //Package .so files into .aar 
-                packageAndroid(rust)
+                // //Package .so files into .aar 
+                // packageAndroid(rust)
 
                 if (env.BRANCH_NAME == "master") {
                     //Publish package on aptly
