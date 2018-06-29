@@ -255,7 +255,6 @@ pub fn get_schema_attrs(source_id: String, schema_id: String) -> Result<(u32, St
     let (schema_id, schema_json) = LedgerSchema::retrieve_schema(&submitter_did, &schema_id)?;
     let schema_data: SchemaData = serde_json::from_str(&schema_json)
         .or(Err(SchemaError::CommonError(error::INVALID_JSON.code_num)))?;
-
     let new_schema = Box::new(CreateSchema {
         source_id,
         schema_id,

@@ -244,9 +244,11 @@ pub extern fn vcx_schema_get_attributes(command_handle: u32,
     thread::spawn( move|| {
         match schema::get_schema_attrs(source_id, schema_id) {
             Ok((handle, data)) => {
+                let data:serde_json::Value = serde_json::from_str(&data).unwrap();
+                let data = data["data"]["data"].to_string();
                 info!("vcx_schema_get_attributes_cb(command_handle: {}, rc: {}, handle: {}, attrs: {})",
                       command_handle, error_string(0), handle, data);
-                let msg = CStringUtils::string_to_cstring(data);
+                let msg = CStringUtils::string_to_cstring(data.to_string());
                 cb(command_handle, error::SUCCESS.code_num, handle, msg.as_ptr());
             },
             Err(x) => {
@@ -328,6 +330,7 @@ mod tests {
     use rand::Rng;
     use std::ffi::CString;
     use std::thread;
+    use utils::libindy::return_types_u32;
     use std::time::Duration;
     use settings;
     use utils::constants::{ SCHEMA_ID, SCHEMA_WITH_VERSION };
@@ -484,8 +487,6 @@ mod tests {
 
     #[test]
     fn test_vcx_schema_deserialize_succeeds() {
-        use utils::libindy::return_types_u32;
-        use std::time::Duration;
         let cb = return_types_u32::Return_U32_U32::new().unwrap();
         set_default_and_enable_test_mode();
         let err = vcx_schema_deserialize(cb.command_handle,CString::new(SCHEMA_WITH_VERSION).unwrap().into_raw(), Some(cb.get_callback()));
@@ -512,12 +513,15 @@ mod tests {
     #[test]
     fn test_vcx_schema_get_attrs() {
         set_default_and_enable_test_mode();
-        let data = r#"{"name":"name","version":"1.0","attr_names":["name","male"]}"#.to_string();
-        assert_eq!(vcx_schema_get_attributes(0,
+        let cb = return_types_u32::Return_U32_U32_STR::new().unwrap();
+        let data = r#"["height","name","sex","age"]"#;
+        assert_eq!(vcx_schema_get_attributes(cb.command_handle,
                                              CString::new("Test Source ID").unwrap().into_raw(),
                                              CString::new(SCHEMA_ID).unwrap().into_raw(),
-                                             Some(get_attrs_cb)), error::SUCCESS.code_num);
-        thread::sleep(Duration::from_millis(200));
+                                             Some(cb.get_callback())), error::SUCCESS.code_num);
+        let (handle, attr) = cb.receive(Some(Duration::from_secs(2))).unwrap();
+        let attr2 = attr.clone().unwrap();
+        assert_eq!(data, attr.unwrap());
     }
 
     #[test]
