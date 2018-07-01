@@ -13,7 +13,7 @@ VCX_SDK=$START_DIR/../../../../../..
 VCX_SDK=$(abspath "$VCX_SDK")
 
 declare -a archs=(
-    "x86" "x86" "i686-linux-android" "x86"
+    "x86_64" "x86_64" "x86_64-linux-android" "x86_64"
     )
 archslen=${#archs[@]}
 

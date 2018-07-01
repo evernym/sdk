@@ -45,23 +45,21 @@ export OPENSSL_DIR_DARWIN=$OPENSSL_DIR
 # export LIBNULLPAY_DIR=$WORK_DIR/vcx-indy-sdk/libnullpay/target/aarch64-linux-android/release
 # cargo build --target aarch64-linux-android --release --verbose
 
-export PATH=$WORK_DIR/NDK/x86/bin:$ORIGINAL_PATH
-export OPENSSL_DIR=$WORK_DIR/openssl_for_ios_and_android/output/android/openssl-x86
-export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_x86/lib
-export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_x86/lib
-export LIBINDY_DIR=$WORK_DIR/vcx-indy-sdk/libindy/target/i686-linux-android/release
-export LIBNULLPAY_DIR=$WORK_DIR/vcx-indy-sdk/libnullpay/target/i686-linux-android/release
-cargo build --target i686-linux-android
+# export PATH=$WORK_DIR/NDK/x86/bin:$ORIGINAL_PATH
+# export OPENSSL_DIR=$WORK_DIR/openssl_for_ios_and_android/output/android/openssl-x86
+# export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_x86/lib
+# export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_x86/lib
+# export LIBINDY_DIR=$WORK_DIR/vcx-indy-sdk/libindy/target/i686-linux-android/debug
+# export LIBNULLPAY_DIR=$WORK_DIR/vcx-indy-sdk/libnullpay/target/i686-linux-android/debug
+# cargo build --target i686-linux-android
 
-# KS: Commenting it out because we want to debug only on armv7 based device/simulator
-
-# export PATH=$WORK_DIR/NDK/x86_64/bin:$ORIGINAL_PATH
-# export OPENSSL_DIR=$WORK_DIR/openssl_for_ios_and_android/output/android/openssl-x86_64
-# export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_x86_64/lib
-# export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_x86_64/lib
-# export LIBINDY_DIR=$WORK_DIR/vcx-indy-sdk/libindy/target/x86_64-linux-android/release
-# export LIBNULLPAY_DIR=$WORK_DIR/vcx-indy-sdk/libnullpay/target/x86_64-linux-android/release
-# cargo build --target x86_64-linux-android --release --verbose
+export PATH=$WORK_DIR/NDK/x86_64/bin:$ORIGINAL_PATH
+export OPENSSL_DIR=$WORK_DIR/openssl_for_ios_and_android/output/android/openssl-x86_64
+export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_x86_64/lib
+export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_x86_64/lib
+export LIBINDY_DIR=$WORK_DIR/vcx-indy-sdk/libindy/target/x86_64-linux-android/release
+export LIBNULLPAY_DIR=$WORK_DIR/vcx-indy-sdk/libnullpay/target/x86_64-linux-android/release
+cargo build --target x86_64-linux-android
 
 # This builds the library for code that runs in OSX
 # ln -sf $WORK_DIR/vcx-indy-sdk/libindy/target/x86_64-apple-darwin/debug/libindy.dylib /usr/local/lib/libindy.dylib
