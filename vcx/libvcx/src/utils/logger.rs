@@ -42,29 +42,29 @@ impl LoggerUtils {
 
     pub fn init() {
 
-        // match settings::get_config_value(settings::CONFIG_ENABLE_TEST_MODE) {
-        //     Ok(_) => return LoggerUtils::init_test_logging("off"),
-        //     Err(x) => (),
-        // };
+        match settings::get_config_value(settings::CONFIG_ENABLE_TEST_MODE) {
+            Ok(_) => return LoggerUtils::init_test_logging("off"),
+            Err(x) => (),
+        };
 
         // turn libindy logging off if RUST_LOG is not specified
 
-        // match env::var("RUST_LOG") {
-        //     Err(_) => {
-        //         env::set_var("RUST_LOG", "off");
-        //     },
-        //     Ok(value) =>  (),
-        // };
+        match env::var("RUST_LOG") {
+            Err(_) => {
+                env::set_var("RUST_LOG", "off");
+            },
+            Ok(value) =>  (),
+        };
 
         LOGGER_INIT.call_once(|| {
-                log_panics::init(); //Logging of panics is essential for android. As android does not log to stdout for native code
+            // Logging of panics is essential for android. As android does not log to stdout for native code
+            log_panics::init();
             if cfg!(target_os = "android") {
                 // TODO: Set logging to off when deploying production android app.
                 #[cfg(target_os = "android")]
                 android_logger::init_once(
                     Filter::default().with_min_level(Level::Trace)
                 );
-                info!("Logging for Android");
                 trace!("logging enabled for android");
             } else {
                 match settings::get_config_value(settings::CONFIG_LOG_CONFIG) {

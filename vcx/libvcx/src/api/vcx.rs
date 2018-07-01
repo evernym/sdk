@@ -36,8 +36,6 @@ pub extern fn vcx_init_with_config(command_handle: u32,
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
         settings::set_defaults();
     } else {
-        trace!("rust: before processing config");
-        trace!("{:?}", config);
         match settings::process_config_string(&config) {
             Err(e) => {
                 println!("Invalid configuration specified: {}", e);
@@ -46,7 +44,7 @@ pub extern fn vcx_init_with_config(command_handle: u32,
             Ok(_) => (),
         }
     };
-    trace!("rust: vcx: calling finish_init");
+
     _finish_init(command_handle, cb)
 }
 
@@ -99,7 +97,7 @@ fn _finish_init(command_handle: u32, cb: extern fn(xcommand_handle: u32, err: u3
         Ok(_) => (),
         Err(x) => return x,
     };
-    trace!("after payments init");
+
     settings::log_settings();
 
    if wallet::get_wallet_handle() > 0 {
@@ -108,7 +106,6 @@ fn _finish_init(command_handle: u32, cb: extern fn(xcommand_handle: u32, err: u3
    }
 
     info!("libvcx version: {}{}", version_constants::VERSION, version_constants::REVISION);
-    trace!("rust: vcx: libvcx version: {}{}", version_constants::VERSION, version_constants::REVISION);
 
     thread::spawn(move|| {
         match ::utils::libindy::init_pool_and_wallet() {
