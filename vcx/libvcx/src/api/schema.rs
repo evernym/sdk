@@ -219,14 +219,16 @@ pub extern fn vcx_schema_get_schema_id(command_handle: u32,
     error::SUCCESS.code_num
 }
 
-/// Retrieves schema's attributes
+/// Retrieves all of the data associated with a schema on the ledger.
 ///
 /// #Params
 /// source_id: Enterprise's personal identification for the user.
 ///
 /// schema_id: id of schema given during the creation of the schema
 ///
-/// cb: Callback that provides schema number and provides error status
+/// cb: Callback contains the error status (if the schema cannot be found)
+/// and it will also contain a json string representing all of the data of a
+/// schema already on the ledger.
 ///
 /// #Returns
 /// Error code as a u32
@@ -245,8 +247,7 @@ pub extern fn vcx_schema_get_attributes(command_handle: u32,
         match schema::get_schema_attrs(source_id, schema_id) {
             Ok((handle, data)) => {
                 let data:serde_json::Value = serde_json::from_str(&data).unwrap();
-                let data = data["data"]["data"].to_string();
-
+                let data = data["data"].clone();
                 info!("vcx_schema_get_attributes_cb(command_handle: {}, rc: {}, handle: {}, attrs: {})",
                       command_handle, error_string(0), handle, data);
                 let msg = CStringUtils::string_to_cstring(data.to_string());
@@ -458,9 +459,10 @@ mod tests {
                                              CString::new("Test Source ID").unwrap().into_raw(),
                                              CString::new(SCHEMA_ID).unwrap().into_raw(),
                                              Some(cb.get_callback())), error::SUCCESS.code_num);
-        let (handle, attr) = cb.receive(Some(Duration::from_secs(2))).unwrap();
-        let attr2 = attr.clone().unwrap();
-        assert_eq!(data, attr.unwrap());
+        let (handle, schema_data_as_string) = cb.receive(Some(Duration::from_secs(2))).unwrap();
+        let schema_data_as_string = schema_data_as_string.unwrap();
+        let schema_as_json:serde_json::Value = serde_json::from_str(&schema_data_as_string).unwrap();
+        assert_eq!(schema_as_json["data"].to_string(), data);
     }
 
     #[test]

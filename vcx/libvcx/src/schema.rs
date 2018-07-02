@@ -38,21 +38,23 @@ impl HasVersion<CreateSchema, SchemaError> for CreateSchema {
         use serde_json::Value;
         let data:Value = serde_json::from_str(&data)
             .or(Err(SchemaError::InvalidSchemaCreation()))?;
-        let version = data["version"].clone();
+//        let version = data["version"].clone();
         let schema: CreateSchema = serde_json::from_value(data["data"].clone())
             .or(Err(SchemaError::InvalidSchemaCreation()))?;
-        let source_id = "Test Source Id";
-        let schema_id = "schemaId1234";
-        Ok(CreateSchema {
-            data: vec![],
-            version: "1.0".to_string(),
-            schema_id: schema_id.to_string(),
-            source_id: source_id.to_string(),
-            handle: 1,
-            name: "schema_name".to_string(),
-            sequence_num: 306,
-            payment_txn: None,
-        })
+        println!("Schema id: {}", schema.schema_id);
+//        let source_id = "Test Source Id";
+//        let schema_id = "schemaId1234";
+//        Ok(CreateSchema {
+//            data: vec![],
+//            version: "1.0".to_string(),
+//            schema_id: schema_id.to_string(),
+//            source_id: source_id.to_string(),
+//            handle: 1,
+//            name: "schema_name".to_string(),
+//            sequence_num: 306,
+//            payment_txn: None,
+//        })
+        Ok(schema)
     }
 
 }
@@ -434,6 +436,7 @@ pub mod tests {
     #[test]
     fn test_get_schema_attrs_from_ledger(){
         let wallet_name = "test_get_schema_attrs_from_ledger";
+        ::utils::libindy::wallet::delete_wallet(wallet_name).unwrap_or(());
         ::utils::devsetup::tests::setup_ledger_env(wallet_name);
 
         let (schema_id, _) = ::utils::libindy::anoncreds::tests::create_and_write_test_schema();
