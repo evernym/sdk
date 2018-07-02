@@ -657,7 +657,7 @@ mod tests {
     fn test_retrieve_credentials_fails_with_no_proof_req() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-        let wallet_name = "test_retrieve_creds_disclosed_proof";
+        let wallet_name = "retrieve_credentials_fails_with_no_proof_req";
 
         let proof: DisclosedProof = Default::default();
         assert_eq!(proof.retrieve_credentials(), Err(ProofError::ProofNotReadyError()));

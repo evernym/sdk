@@ -35,7 +35,6 @@ impl HasVersion<CreateSchema, SchemaError> for CreateSchema {
         }).to_string()
     }
     fn from_string_with_version(data: &str) -> Result<CreateSchema, SchemaError> {
-        use serde_json::Value;
         let data:Value = serde_json::from_str(&data)
             .or(Err(SchemaError::InvalidSchemaCreation()))?;
 //        let version = data["version"].clone();

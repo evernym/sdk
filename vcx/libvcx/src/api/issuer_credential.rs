@@ -438,7 +438,7 @@ mod tests {
     use settings;
     use connection;
     use api::VcxStateType;
-    use utils::constants::{CRED_DEF_ID, DEFAULT_SERIALIZED_ISSUER_CREDENTIAL, CREDENTIAL_REQ_STRING};
+    use utils::constants::{CRED_DEF_ID, DEFAULT_SERIALIZED_ISSUER_CREDENTIAL, CREDENTIAL_REQ_STRING, DEFAULT_SERIALIZE_VERSION};
     use credential_request::CredentialRequest;
     use error::issuer_cred::IssuerCredError;
 
@@ -534,15 +534,24 @@ mod tests {
         thread::sleep(Duration::from_millis(1000));
     }
 
+    //ignoring this for now, because test_real_proof() tests this without requiring a
+    // serialized issuer credential already in accepted state.
+    #[ignore]
     #[test]
     fn test_vcx_issuer_send_a_credential() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
         settings::set_config_value(settings::CONFIG_INSTITUTION_DID, DEFAULT_DID);
-
+        let serialized_credential = ISSUER_CREDENTIAL_STATE_ACCEPTED;
         let test_name = "test_vcx_issuer_send_a_credential";
-
-        let handle = issuer_credential::from_string(ISSUER_CREDENTIAL_STATE_ACCEPTED).unwrap();
+        let data = json!(ISSUER_CREDENTIAL_STATE_ACCEPTED);
+        println!("data: {:?}", data);
+        let version = DEFAULT_SERIALIZE_VERSION;
+        let serialized = json!({
+            "version": version,
+            "data": data,
+        });
+        let handle = issuer_credential::from_string(&serialized.to_string()).unwrap();
 
         // create connection
         let connection_handle = connection::build_connection("test_send_credential").unwrap();
@@ -619,7 +628,8 @@ mod tests {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
         let credential = issuer_credential::tests::create_standard_issuer_credential();
-        let handle = issuer_credential::from_string(&serde_json::to_string(&credential).unwrap()).unwrap();
+        let s = credential.to_string();
+        let handle = issuer_credential::from_string(&s).unwrap();
         vcx_issuer_credential_get_payment_txn(0, handle, Some(serialize_cb));
         thread::sleep(Duration::from_millis(200));
     }
