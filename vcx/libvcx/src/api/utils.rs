@@ -84,7 +84,6 @@ pub extern fn vcx_provision_agent(json: *const c_char) -> *mut c_char {
 pub extern fn vcx_agent_provision_async(command_handle : u32,
                                json: *const c_char,
                                cb: Option<extern fn(xcommand_handle: u32, err: u32, config: *const c_char)>) -> u32 {
-    ::utils::logger::LoggerUtils::init();
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
     check_useful_c_str!(json, error::INVALID_OPTION.code_num);
 
