@@ -22,6 +22,7 @@ use utils::libindy::{
 };
 use HasVersion;
 use error::schema::SchemaError;
+use utils::constants::DEFAULT_SERIALIZE_VERSION;
 
 lazy_static! {
     static ref SCHEMA_MAP: Mutex<HashMap<u32, Box<CreateSchema>>> = Default::default();
@@ -30,17 +31,15 @@ lazy_static! {
 impl HasVersion<CreateSchema, SchemaError> for CreateSchema {
     fn to_string_with_version(&self) -> String {
         json!({
-            "version": "1.0",
+            "version": DEFAULT_SERIALIZE_VERSION,
             "data": json!(self),
         }).to_string()
     }
     fn from_string_with_version(data: &str) -> Result<CreateSchema, SchemaError> {
         let data:Value = serde_json::from_str(&data)
             .or(Err(SchemaError::InvalidSchemaCreation()))?;
-//        let version = data["version"].clone();
         let schema: CreateSchema = serde_json::from_value(data["data"].clone())
             .or(Err(SchemaError::InvalidSchemaCreation()))?;
-        println!("Schema id: {}", schema.schema_id);
 //        let source_id = "Test Source Id";
 //        let schema_id = "schemaId1234";
 //        Ok(CreateSchema {
@@ -492,11 +491,11 @@ pub mod tests {
     }
 
     #[cfg(feature = "pool_tests")]
+    #[cfg(feature = "nullpay")]
     #[test]
     fn from_pool_ledger_with_id(){
         let wallet_name = "from_pool_ledger_with_id";
         ::utils::devsetup::tests::setup_ledger_env(wallet_name);
-
         let did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
         let (schema_id, schema_json) = ::utils::libindy::anoncreds::tests::create_and_write_test_schema();
 

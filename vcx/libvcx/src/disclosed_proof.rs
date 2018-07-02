@@ -634,7 +634,7 @@ mod tests {
     fn test_retrieve_credentials() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
-        let wallet_name = "test_retrieve_creds_disclosed_proof";
+        let wallet_name = "test_retrieve_credentials";
         ::utils::devsetup::tests::setup_ledger_env(wallet_name);
         ::utils::libindy::payments::mint_tokens(None, Some(10000000)).unwrap();
         ::utils::libindy::anoncreds::tests::create_and_store_credential();
@@ -647,7 +647,6 @@ mod tests {
         proof.proof_request = Some(proof_req);
 
         let retrieved_creds = proof.retrieve_credentials().unwrap();
-        println!("retrieved_creds: {}", retrieved_creds);
         assert!(retrieved_creds.len() > 500);
 
         ::utils::devsetup::tests::cleanup_dev_env(wallet_name);

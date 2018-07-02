@@ -571,12 +571,18 @@ mod tests {
 
     #[test]
     fn test_vcx_connection_deserialize_succeeds() {
+        use utils::libindy::return_types_u32;
+        use utils::error::SUCCESS;
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
-        let string = r#"{"source_id":"test_vcx_connection_deserialialize_succeeds","pw_did":"8XFh8yBzrpJQmNyZzgoTqB","pw_verkey":"EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A","did_endpoint":"","state":1,"uuid":"","endpoint":"","invite_detail":{"statusCode":"","connReqId":"","senderDetail":{"name":"","agentKeyDlgProof":{"agentDID":"","agentDelegatedKey":"","signature":""},"DID":"","logoUrl":"","verKey":""},"senderAgencyDetail":{"DID":"","verKey":"","endpoint":""},"targetName":"","statusMsg":""},"agent_did":"U5LXs4U7P9msh647kToezy","agent_vk":"FktSZg8idAVzyQZrdUppK6FTrfAzW3wWVzAjJAfdUvJq","their_pw_did":"","their_pw_verkey":""}"#;
-
-        vcx_connection_deserialize(0,CString::new(string).unwrap().into_raw(), Some(deserialize_cb));
-        thread::sleep(Duration::from_millis(200));
+        let string = r#"{ "data": {"source_id":"test_vcx_connection_deserialialize_succeeds","pw_did":"8XFh8yBzrpJQmNyZzgoTqB","pw_verkey":"EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A","did_endpoint":"","state":1,"uuid":"","endpoint":"","invite_detail":{"statusCode":"","connReqId":"","senderDetail":{"name":"","agentKeyDlgProof":{"agentDID":"","agentDelegatedKey":"","signature":""},"DID":"","logoUrl":"","verKey":""},"senderAgencyDetail":{"DID":"","verKey":"","endpoint":""},"targetName":"","statusMsg":""},"agent_did":"U5LXs4U7P9msh647kToezy","agent_vk":"FktSZg8idAVzyQZrdUppK6FTrfAzW3wWVzAjJAfdUvJq","their_pw_did":"","their_pw_verkey":""}, "version": "1.0"}"#;
+        let cb = return_types_u32::Return_U32_U32::new().unwrap();
+        let err = vcx_connection_deserialize(cb.command_handle,
+                                                CString::new(string).unwrap().into_raw(),
+                                                Some(cb.get_callback()));
+        assert_eq!(err, SUCCESS.code_num);
+        let handle = cb.receive(Some(Duration::from_secs(2))).unwrap();
+        assert!(handle>0);
     }
 
     extern "C" fn get_state_cb(command_handle: u32, err: u32, state: u32) {
