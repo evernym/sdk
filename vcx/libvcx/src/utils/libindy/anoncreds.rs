@@ -442,7 +442,7 @@ pub mod tests {
     use utils::libindy::wallet;
 
     pub fn create_schema() -> (String, String) {
-        let data = r#"["address1","address2","zip","city","state"]"#.to_string();
+        let data = DEFAULT_SCHEMA_ATTRS.to_string();
         let schema_name: String = rand::thread_rng().gen_ascii_chars().take(25).collect::<String>();
         let schema_version: String = format!("{}.{}", rand::thread_rng().gen::<u32>().to_string(),
                                              rand::thread_rng().gen::<u32>().to_string());
