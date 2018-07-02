@@ -133,7 +133,12 @@ void VcxWrapperCommonNumberStringCallback(vcx_command_handle_t xcommand_handle,
     requestedPredicates:(NSString *)requestedPredicates
               proofName:(NSString *)proofName
              completion:(void (^)(NSError *error, NSString *proofHandle))completion;
-
+- (void)getTokenInfo:(NSInteger)paymentHandle
+          completion:(void (^)(NSError *error, NSString *state))completion;
+- (void)sendTokens:(NSInteger)paymentHandle
+            tokens:(NSInteger)tokens
+         recipient:(NSString *)recipient
+        completion:(void (^)(NSError *error, NSString *state))completion;
 @end
 
 #endif /* init_h */
