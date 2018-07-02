@@ -90,3 +90,8 @@ export interface IUTXO {
   extra?: string,
   txo?: string
 }
+
+export interface ISerializedData<T> {
+  version: string,
+  data: T
+}
