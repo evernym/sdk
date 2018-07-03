@@ -134,10 +134,10 @@ void VcxWrapperCommonNumberStringCallback(vcx_command_handle_t xcommand_handle,
               proofName:(NSString *)proofName
              completion:(void (^)(NSError *error, NSString *proofHandle))completion;
 - (void)exportWallet:(NSString *)exportPath
-            offer:(NSString *)encryptionKey
+            encryptWith:(NSString *)encryptionKey
            completion:(void (^)(NSError *error, NSInteger exportHandle))completion;
-- (void)importWallet:(NSString *)exportPath
-            offer:(NSString *)encryptionKey
+- (void)importWallet:(NSString *)importPath
+            encryptWith:(NSString *)encryptionKey
            completion:(void (^)(NSError *error, NSInteger importHandle))completion;
 
 @end
