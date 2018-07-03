@@ -23,6 +23,8 @@ use schema::{ LedgerSchema };
 //use proof_compliance::{ proof_compliance };
 use error::proof::ProofError;
 use error::ToErrorCode;
+use serde_json::Value;
+use utils::constants::DEFAULT_SERIALIZE_VERSION;
 
 lazy_static! {
     static ref PROOF_MAP: Mutex<HashMap<u32, Box<Proof>>> = Default::default();
@@ -295,6 +297,22 @@ impl Proof {
     fn get_proof_uuid(&self) -> &String { &self.msg_uid }
 
     fn get_source_id(&self) -> &String { &self.source_id }
+
+    fn to_string(&self) -> String {
+        json!({
+            "version": DEFAULT_SERIALIZE_VERSION,
+            "data": json!(self),
+        }).to_string()
+    }
+
+    fn from_str(s: &str) -> Result<Proof, ProofError> {
+        let s:Value = serde_json::from_str(&s)
+            .or(Err(ProofError::InvalidJson()))?;
+        let proof: Proof = serde_json::from_value(s["data"].clone())
+            .or(Err(ProofError::InvalidJson()))?;
+        Ok(proof)
+    }
+
 }
 
 pub fn create_proof(source_id: String,
@@ -389,7 +407,7 @@ pub fn release_all() {
 
 pub fn to_string(handle: u32) -> Result<String, ProofError> {
     match PROOF_MAP.lock().unwrap().get(&handle) {
-        Some(p) => Ok(serde_json::to_string(&p).unwrap().to_owned()),
+        Some(p) => Ok(Proof::to_string(&p).to_owned()),
         None => Err(ProofError::InvalidHandle())
     }
 }
@@ -402,7 +420,7 @@ pub fn get_source_id(handle: u32) -> Result<String, ProofError> {
 }
 
 pub fn from_string(proof_data: &str) -> Result<u32, ProofError> {
-    let derived_proof: Proof = serde_json::from_str(proof_data).map_err(|err| {
+    let derived_proof: Proof = Proof::from_str(proof_data).map_err(|err| {
         warn!("{} with serde error: {}",error::INVALID_JSON.message, err);
         ProofError::CommonError(error::INVALID_JSON.code_num)
     })?;
@@ -541,12 +559,13 @@ mod tests {
     #[test]
     fn test_to_string_succeeds() {
         set_default_and_enable_test_mode();
-
         let handle = create_proof("1".to_string(),
                                   REQUESTED_ATTRS.to_owned(),
                                   REQUESTED_PREDICATES.to_owned(),
                                   "Optional".to_owned()).unwrap();
         let proof_string = to_string(handle).unwrap();
+        let s:Value = serde_json::from_str(&proof_string).unwrap();
+        assert_eq!(s["version"], DEFAULT_SERIALIZE_VERSION);
         assert!(!proof_string.is_empty());
     }
 
@@ -558,10 +577,11 @@ mod tests {
                                   REQUESTED_PREDICATES.to_owned(),
                                   "Optional".to_owned()).unwrap();
         let proof_data = to_string(handle).unwrap();
-        let mut proof1: Proof = serde_json::from_str(&proof_data).unwrap();
+        let mut proof1: Proof = Proof::from_str(&proof_data).unwrap();
         assert!(release(handle).is_ok());
+
         let new_handle = from_string(&proof_data).unwrap();
-        let proof2 : Proof = serde_json::from_str(&to_string(new_handle).unwrap()).unwrap();
+        let proof2 : Proof = Proof::from_str(&to_string(new_handle).unwrap()).unwrap();
         proof1.handle = proof2.handle;
         assert_eq!(proof1, proof2);
     }
