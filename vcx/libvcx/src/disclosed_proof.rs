@@ -21,7 +21,7 @@ use utils::libindy::crypto;
 
 use settings;
 use utils::httpclient;
-use utils::constants::{ SEND_MESSAGE_RESPONSE, CREDS_FROM_PROOF_REQ };
+use utils::constants::{ DEFAULT_SERIALIZE_VERSION, SEND_MESSAGE_RESPONSE, CREDS_FROM_PROOF_REQ };
 
 use serde_json::{Value};
 
@@ -297,6 +297,19 @@ impl DisclosedProof {
 
     fn set_source_id(&mut self, id: &str) { self.source_id = id.to_string(); }
     fn get_source_id(&self) -> &String { &self.source_id }
+    fn to_string(&self) -> String {
+        json!({
+            "version": DEFAULT_SERIALIZE_VERSION,
+            "data": json!(self),
+        }).to_string()
+    }
+    fn from_str(s: &str) -> Result<DisclosedProof, ProofError> {
+        let s:Value = serde_json::from_str(&s)
+            .or(Err(ProofError::InvalidJson()))?;
+        let proof: DisclosedProof= serde_json::from_value(s["data"].clone())
+            .or(Err(ProofError::InvalidJson()))?;
+        Ok(proof)
+    }
 }
 
 //********************************************
@@ -340,15 +353,12 @@ pub fn update_state(handle: u32) -> Result<u32, u32> {
 
 pub fn to_string(handle: u32) -> Result<String, u32> {
     HANDLE_MAP.get(handle, |obj|{
-        serde_json::to_string(&obj).map_err(|e|{
-            warn!("Unable to serialize: {:?}", e);
-            error::SERIALIZATION_ERROR.code_num
-        })
+        Ok(DisclosedProof::to_string(&obj))
     })
 }
 
 pub fn from_string(proof_data: &str) -> Result<u32, ProofError> {
-    let derived_proof: DisclosedProof = match serde_json::from_str(proof_data) {
+    let derived_proof: DisclosedProof = match DisclosedProof::from_str(proof_data) {
         Ok(x) => x,
         Err(y) => return Err(ProofError::CommonError(error::INVALID_JSON.code_num)),
     };
@@ -528,8 +538,9 @@ mod tests {
         settings::set_defaults();
         let handle = create_proof("id".to_string(),::utils::constants::PROOF_REQUEST_JSON.to_string()).unwrap();
         let serialized = to_string(handle).unwrap();
-        println!("serizlied: {}", serialized);
-        from_string(&serialized).unwrap();
+        let j:Value = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(j["version"], "1.0");
+        DisclosedProof::from_str(&serialized).unwrap();
     }
 
     #[test]
@@ -709,7 +720,9 @@ mod tests {
         let creds = credential_def_identifiers(&selected_credentials.to_string()).unwrap();
         assert_eq!(creds, vec![cred1, cred2]);
     }
-
+    // ignoring for quicker testing
+    // this ignore should not get committed
+//    #[ignore]
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_generate_proof() {
