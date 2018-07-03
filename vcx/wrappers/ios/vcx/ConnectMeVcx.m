@@ -582,7 +582,7 @@ completion:(void (^)(NSError *error))completion
 
 - (void)exportWallet:(NSString *)exportPath
             offer:(NSString *)encryptionKey
-           completion:(void (^)(NSError *error, NSInteger credentialHandle))completion{
+           completion:(void (^)(NSError *error, NSInteger exportHandle))completion{
    vcx_error_t ret;
    vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
    const char * export_path=[exportPath cString];
@@ -601,7 +601,7 @@ completion:(void (^)(NSError *error))completion
 
 - (void)importWallet:(NSString *)importPath
             offer:(NSString *)encryptionKey
-           completion:(void (^)(NSError *error, NSInteger credentialHandle))completion{
+           completion:(void (^)(NSError *error, NSInteger importHandle))completion{
    vcx_error_t ret;
    vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
    const char * import_path=[importPath cString];
