@@ -502,18 +502,33 @@ mod tests {
     }
 
     #[test]
-    fn test_vcx_issuer_credential_serialize() {
+    fn test_vcx_issuer_credential_serialize_deserialize() {
+        use utils::libindy::return_types_u32;
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
-        assert_eq!(vcx_issuer_create_credential(0,
+        let cb = return_types_u32::Return_U32_U32::new().unwrap();
+        assert_eq!(vcx_issuer_create_credential(cb.command_handle,
                                            CString::new(DEFAULT_CREDENTIAL_NAME).unwrap().into_raw(),
-                                                CString::new(CRED_DEF_ID).unwrap().into_raw(),
+                                           CString::new(CRED_DEF_ID).unwrap().into_raw(),
                                            CString::new(DEFAULT_DID).unwrap().into_raw(),
                                            CString::new(DEFAULT_ATTR).unwrap().into_raw(),
                                            CString::new(DEFAULT_CREDENTIAL_NAME).unwrap().into_raw(),
                                            1,
-                                           Some(create_and_serialize_cb)), error::SUCCESS.code_num);
-        thread::sleep(Duration::from_millis(200));
+                                           Some(cb.get_callback())), error::SUCCESS.code_num);
+        let handle = cb.receive(Some(Duration::from_secs(2))).unwrap();
+        let cb = return_types_u32::Return_U32_STR::new().unwrap();
+        assert_eq!(vcx_issuer_credential_serialize(cb.command_handle,
+                                                   handle,
+                                                   Some(cb.get_callback())),
+                   error::SUCCESS.code_num);
+        let s = cb.receive(Some(Duration::from_secs(2))).unwrap().unwrap();
+        let cb = return_types_u32::Return_U32_U32::new().unwrap();
+        assert_eq!(vcx_issuer_credential_deserialize(cb.command_handle,
+                                                     CString::new(s).unwrap().into_raw(),
+                                                     Some(cb.get_callback())),
+                  error::SUCCESS.code_num);
+        let handle = cb.receive(Some(Duration::from_secs(2))).unwrap();
+        assert!(handle > 0);
     }
 
     extern "C" fn send_offer_cb(command_handle: u32, err: u32) {
@@ -559,28 +574,6 @@ mod tests {
         // send the credential
         assert_eq!(vcx_issuer_send_credential(0, handle, connection_handle, Some(send_offer_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(1000));
-    }
-    extern "C" fn deserialize_cb(command_handle: u32, err: u32, credential_handle: u32) {
-        fn formatter(original: &str) -> String {
-            let original_json: serde_json::Value = serde_json::from_str(&original).unwrap();
-            serde_json::to_string(&original_json).unwrap()
-        }
-        assert_eq!(err, 0);
-        assert!(credential_handle > 0);
-        println!("successfully called deserialize_cb");
-        let serialized_issuer_credential = r#"{"source_id":"1","credential_attributes":"{\"attr\":\"value\"}","msg_uid":"","schema_seq_no":0,"issuer_did":"8XFh8yBzrpJQmNyZzgoTqB","state":1,"credential_request":null,"credential_offer":null,"credential_name":"credential_name","credential_id":"2936720225","cred_def_id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:1766","price":0,"payment_address":null,"ref_msg_id":null,"agent_did":"","agent_vk":"","issued_did":"","issued_vk":"","remote_did":"","remote_vk":""}"#;
-        let original = formatter(&serialized_issuer_credential);
-        let new = formatter(&issuer_credential::to_string(credential_handle).unwrap());
-        assert_eq!(original, new);
-    }
-
-    #[test]
-    fn test_vcx_issuer_credential_deserialize_succeeds() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
-        let string = DEFAULT_SERIALIZED_ISSUER_CREDENTIAL;
-        vcx_issuer_credential_deserialize(0,CString::new(string).unwrap().into_raw(), Some(deserialize_cb));
-        thread::sleep(Duration::from_millis(200));
     }
 
     #[test]

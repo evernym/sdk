@@ -1,3 +1,4 @@
+import { ISerializedData } from './common'
 import { Callback } from 'ffi'
 import { VCXInternalError } from '../errors'
 import { rustAPI } from '../rustlib'
@@ -123,15 +124,16 @@ export class Proof extends VCXBaseWithState<IProofData> {
    * @async
    * @memberof Proof
    * @function deserialize
-   * @param {IProofData} proofData - Data obtained by serialize api. Used to create proof object.
+   * @param {ISerializedData<IProofData>} proofData - Data obtained by serialize api. Used to create proof object.
    * @returns {Promise<Proof>} A Proof Object
    */
-  public static async deserialize (proofData: IProofData) {
+  public static async deserialize (proofData: ISerializedData<IProofData>) {
     try {
-      const attrs = JSON.parse(proofData.requested_attrs)
+      const { data: { requested_attrs, name } } = proofData
+      const attrs = JSON.parse(requested_attrs)
       const constructorParams: IProofConstructorData = {
         attrs,
-        name: proofData.name
+        name,
       }
       const proof = await super._deserialize(Proof, proofData, constructorParams)
       return proof
