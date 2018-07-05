@@ -55,7 +55,7 @@ describe('Proof:', () => {
   describe('serialize:', () => {
     it('success', async () => {
       const proof = await proofCreate()
-      const data = await proof.serialize()
+      const { data } = await proof.serialize()
       assert.ok(data)
       assert.equal(data.source_id, proof.sourceId)
     })
@@ -68,7 +68,7 @@ describe('Proof:', () => {
 
     it('throws: proof released', async () => {
       const proof = await proofCreate()
-      const data = await proof.serialize()
+      const { data } = await proof.serialize()
       assert.ok(data)
       assert.equal(data.source_id, proof.sourceId)
       assert.equal(await proof.release(), VCXCode.SUCCESS)

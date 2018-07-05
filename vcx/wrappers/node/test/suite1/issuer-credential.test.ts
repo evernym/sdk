@@ -67,7 +67,7 @@ describe('IssuerCredential:', () => {
   describe('serialize:', () => {
     it('success', async () => {
       const issuerCredential = await issuerCredentialCreate()
-      const data = await issuerCredential.serialize()
+      const { data } = await issuerCredential.serialize()
       assert.ok(data)
       assert.equal(data.source_id, issuerCredential.sourceId)
     })
@@ -80,7 +80,7 @@ describe('IssuerCredential:', () => {
 
     it('throws: issuerCredential released', async () => {
       const issuerCredential = await issuerCredentialCreate()
-      const data = await issuerCredential.serialize()
+      const { data } = await issuerCredential.serialize()
       assert.ok(data)
       assert.equal(data.source_id, issuerCredential.sourceId)
       assert.equal(await issuerCredential.release(), VCXCode.SUCCESS)
@@ -105,13 +105,13 @@ describe('IssuerCredential:', () => {
     })
 
     it('throws: incomplete data', async () => {
-      const error = await shouldThrow(async () => IssuerCredential.deserialize({
+      const error = await shouldThrow(async () => IssuerCredential.deserialize({ data: {
         cred_def_id: 'Invalid',
         credential_attributes: '{}',
         credential_name: 'Invalid',
         price: 'Invalid',
         source_id: 'Invalid'
-      } as any))
+      } } as any))
       assert.equal(error.vcxCode, VCXCode.INVALID_JSON)
     })
   })

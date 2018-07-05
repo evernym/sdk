@@ -154,7 +154,8 @@ export class Schema extends VCXPaymentTxn(SchemaBase) {
    * @static
    * @async
    * @function deserialize
-   * @param {ISerializedData<ISchemaSerializedData>} schema - contains the information that will be used to build a Schema object
+   * @param {ISerializedData<ISchemaSerializedData>} schema - contains the information that will
+   * be used to build a Schema object
    * @returns {Promise<Schema>} A Schema Object
    */
   public static async deserialize (schema: ISerializedData<ISchemaSerializedData>) {

@@ -1,9 +1,8 @@
-import { ISerializedData } from './common'
 import { Callback } from 'ffi'
 import { VCXInternalError } from '../errors'
 import { rustAPI } from '../rustlib'
 import { createFFICallbackPromise } from '../utils/ffi-helpers'
-import { StateType } from './common'
+import { ISerializedData, StateType } from './common'
 import { Connection } from './connection'
 import { VCXBaseWithState } from './vcx-base-with-state'
 
@@ -133,7 +132,7 @@ export class Proof extends VCXBaseWithState<IProofData> {
       const attrs = JSON.parse(requested_attrs)
       const constructorParams: IProofConstructorData = {
         attrs,
-        name,
+        name
       }
       const proof = await super._deserialize(Proof, proofData, constructorParams)
       return proof

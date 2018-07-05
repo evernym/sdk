@@ -81,7 +81,7 @@ describe('DisclosedProof', () => {
   describe('serialize:', () => {
     it('success', async () => {
       const disclosedProof = await disclosedProofCreateWithRequest()
-      const data = await disclosedProof.serialize()
+      const { data } = await disclosedProof.serialize()
       assert.ok(data)
       assert.equal(data.source_id, disclosedProof.sourceId)
     })
@@ -94,7 +94,7 @@ describe('DisclosedProof', () => {
 
     it('throws: disclosedProof released', async () => {
       const disclosedProof = await disclosedProofCreateWithRequest()
-      const data = await disclosedProof.serialize()
+      const { data } = await disclosedProof.serialize()
       assert.ok(data)
       assert.equal(data.source_id, disclosedProof.sourceId)
       assert.equal(await disclosedProof.release(), VCXCode.SUCCESS)
@@ -114,7 +114,7 @@ describe('DisclosedProof', () => {
     })
 
     it('throws: incorrect data', async () => {
-      const error = await shouldThrow(async () => DisclosedProof.deserialize({ source_id: 'Invalid' } as any))
+      const error = await shouldThrow(async () => DisclosedProof.deserialize({ data: { source_id: 'Invalid' } } as any))
       assert.equal(error.vcxCode, VCXCode.INVALID_JSON)
     })
   })

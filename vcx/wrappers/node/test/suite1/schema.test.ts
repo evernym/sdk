@@ -128,7 +128,7 @@ describe('Schema:', () => {
     })
 
     it('throws: incorrect data', async () => {
-      const error = await shouldThrow(async () => Schema.deserialize( { data: { source_id: 'Invalid' } } as any))
+      const error = await shouldThrow(async () => Schema.deserialize({ data: { source_id: 'Invalid' } } as any))
       assert.equal(error.vcxCode, VCXCode.INVALID_JSON)
     })
   })

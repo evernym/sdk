@@ -48,8 +48,8 @@ describe('Connection:', () => {
       const connection = await connectionCreate()
       const data = await connection.serialize()
       assert.ok(data)
-      assert.equal(data.source_id, connection.sourceId)
-      assert.equal(data.state, StateType.Initialized)
+      assert.equal(data.data.source_id, connection.sourceId)
+      assert.equal(data.data.state, StateType.Initialized)
     })
 
     it('throws: not initialized', async () => {
@@ -62,7 +62,7 @@ describe('Connection:', () => {
       const connection = await connectionCreateConnect()
       const data = await connection.serialize()
       assert.ok(data)
-      assert.equal(data.source_id, connection.sourceId)
+      assert.equal(data.data.source_id, connection.sourceId)
       assert.equal(await connection.release(), VCXCode.SUCCESS)
       const error = await shouldThrow(() => connection.serialize())
       assert.equal(error.vcxCode, VCXCode.INVALID_CONNECTION_HANDLE)
@@ -87,7 +87,8 @@ describe('Connection:', () => {
     })
 
     it('throws: incorrect data', async () => {
-      const error = await shouldThrow(async () => Connection.deserialize({ source_id: 'Invalid' } as any))
+      const error = await shouldThrow(async () => Connection.deserialize({ data:
+        { source_id: 'Invalid' } } as any))
       assert.equal(error.vcxCode, VCXCode.INVALID_JSON)
     })
   })
