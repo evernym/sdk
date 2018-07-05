@@ -68,8 +68,13 @@ describe('Proof:', () => {
 
     it('throws: proof released', async () => {
       const proof = await proofCreate()
-      const { data } = await proof.serialize()
+      const serialized = await proof.serialize()
+      assert.ok(serialized)
+      assert.property(serialized, 'version')
+      assert.property(serialized, 'data')
+      const { data, version } = serialized
       assert.ok(data)
+      assert.ok(version)
       assert.equal(data.source_id, proof.sourceId)
       assert.equal(await proof.release(), VCXCode.SUCCESS)
       const error = await shouldThrow(() => proof.serialize())

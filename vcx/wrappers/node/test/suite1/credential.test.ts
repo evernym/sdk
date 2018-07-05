@@ -82,7 +82,13 @@ describe('Credential:', () => {
   describe('serialize:', () => {
     it('success', async () => {
       const credential = await credentialCreateWithOffer()
-      const { data } = await credential.serialize()
+      const serialized = await credential.serialize()
+      assert.ok(serialized)
+      assert.property(serialized, 'version')
+      assert.property(serialized, 'data')
+      const { data, version } = serialized
+      assert.ok(data)
+      assert.ok(version)
       assert.equal(data.source_id, credential.sourceId)
     })
 

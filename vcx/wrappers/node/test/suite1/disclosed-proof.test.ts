@@ -81,8 +81,13 @@ describe('DisclosedProof', () => {
   describe('serialize:', () => {
     it('success', async () => {
       const disclosedProof = await disclosedProofCreateWithRequest()
-      const { data } = await disclosedProof.serialize()
+      const serialized = await disclosedProof.serialize()
+      assert.ok(serialized)
+      assert.property(serialized, 'version')
+      assert.property(serialized, 'data')
+      const { data, version } = serialized
       assert.ok(data)
+      assert.ok(version)
       assert.equal(data.source_id, disclosedProof.sourceId)
     })
 

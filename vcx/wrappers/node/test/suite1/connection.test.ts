@@ -45,10 +45,15 @@ describe('Connection:', () => {
   describe('serialize:', () => {
     it('success', async () => {
       const connection = await connectionCreate()
-      const data = await connection.serialize()
+      const serialized = await connection.serialize()
+      assert.ok(serialized)
+      assert.property(serialized, 'version')
+      assert.property(serialized, 'data')
+      const { data, version } = serialized
       assert.ok(data)
-      assert.equal(data.data.source_id, connection.sourceId)
-      assert.equal(data.data.state, StateType.Initialized)
+      assert.ok(version)
+      assert.equal(data.source_id, connection.sourceId)
+      assert.equal(data.state, StateType.Initialized)
     })
 
     it('throws: not initialized', async () => {

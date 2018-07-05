@@ -20,9 +20,14 @@ describe('CredentialDef:', () => {
   describe('serialize:', () => {
     it('success', async () => {
       const credentialDef = await credentialDefCreate()
-      const data = await credentialDef.serialize()
+      const serialized = await credentialDef.serialize()
+      assert.ok(serialized)
+      assert.property(serialized, 'version')
+      assert.property(serialized, 'data')
+      const { data, version } = serialized
       assert.ok(data)
-      assert.equal(data.data.source_id, credentialDef.sourceId)
+      assert.ok(version)
+      assert.equal(data.source_id, credentialDef.sourceId)
     })
 
     it('throws: not initialized', async () => {

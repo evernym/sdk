@@ -95,9 +95,14 @@ describe('Schema:', () => {
   describe('serialize:', () => {
     it('success', async () => {
       const schema = await schemaCreate()
-      const data = await schema.serialize()
+      const serialized = await schema.serialize()
+      assert.ok(serialized)
+      assert.property(serialized, 'version')
+      assert.property(serialized, 'data')
+      const { data, version } = serialized
       assert.ok(data)
-      assert.equal(data.data.source_id, schema.sourceId)
+      assert.ok(version)
+      assert.equal(data.source_id, schema.sourceId)
     })
 
     it('throws: not initialized', async () => {
