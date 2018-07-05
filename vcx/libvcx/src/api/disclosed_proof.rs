@@ -494,7 +494,7 @@ mod tests {
     use settings;
     use connection;
     use api::VcxStateType;
-    use utils::constants::{DEFAULT_SERIALIZED_PROOF, DEFAULT_SERIALIZE_VERSION};
+    use utils::constants::DEFAULT_SERIALIZE_VERSION;
     use utils::libindy::return_types_u32;
     use serde_json::Value;
 
@@ -683,7 +683,6 @@ mod tests {
 
     #[test]
     fn test_vcx_disclosed_proof_retrieve_credentials() {
-        use api::VcxStateType;
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
         let cb = return_types_u32::Return_U32_U32::new().unwrap();

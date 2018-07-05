@@ -5,7 +5,6 @@ use self::libc::c_char;
 use utils::cstring::CStringUtils;
 use utils::error;
 use utils::error::error_string;
-use utils::libindy::return_types_u32;
 use connection;
 use credential;
 use std::thread;
@@ -563,6 +562,7 @@ mod tests {
     use settings;
     use connection;
     use api::VcxStateType;
+    use utils::libindy::return_types_u32;
     use serde_json::Value;
     use utils::constants::{DEFAULT_SERIALIZED_CREDENTIAL, DEFAULT_SERIALIZE_VERSION};
 
