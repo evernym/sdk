@@ -14,7 +14,6 @@ use utils::libindy::ledger::{libindy_submit_request,
                              libindy_parse_get_cred_def_response};
 use error::ToErrorCode;
 use error::cred_def::CredDefError;
-use HasVersion;
 use object_cache::ObjectCache;
 
 lazy_static! {
@@ -67,9 +66,7 @@ impl CredentialDef {
             Err(error::NOT_READY.code_num)
         }
     }
-}
 
-impl HasVersion<CredentialDef,CredDefError> for CredentialDef {
     fn to_string_with_version(&self) -> String {
         json!({
             "version": "1.0",

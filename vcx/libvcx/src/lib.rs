@@ -38,12 +38,6 @@ pub mod error;
 pub mod credential;
 pub mod object_cache;
 pub mod disclosed_proof;
-trait HasVersion<T,E> {
-    fn to_string_with_version(&self) -> String;
-    fn from_string_with_version(s: &str) -> Result<T,E>;
-}
-
-
 
 #[allow(unused_imports)]
 #[cfg(test)]

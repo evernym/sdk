@@ -17,30 +17,12 @@ use utils::libindy::{
     anoncreds::libindy_issuer_create_schema,
     payments::{pay_for_txn, PaymentTxn},
 };
-use HasVersion;
 use error::schema::SchemaError;
 use utils::constants::DEFAULT_SERIALIZE_VERSION;
 use object_cache::ObjectCache;
 
 lazy_static! {
     static ref SCHEMA_MAP: ObjectCache<CreateSchema> = Default::default();
-}
-
-impl HasVersion<CreateSchema, SchemaError> for CreateSchema {
-    fn to_string_with_version(&self) -> String {
-        json!({
-            "version": DEFAULT_SERIALIZE_VERSION,
-            "data": json!(self),
-        }).to_string()
-    }
-    fn from_string_with_version(data: &str) -> Result<CreateSchema, SchemaError> {
-        let data:Value = serde_json::from_str(&data)
-            .or(Err(SchemaError::InvalidSchemaCreation()))?;
-        let schema: CreateSchema = serde_json::from_value(data["data"].clone())
-            .or(Err(SchemaError::InvalidSchemaCreation()))?;
-        Ok(schema)
-    }
-
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
@@ -212,6 +194,21 @@ impl CreateSchema {
             Err(error::NOT_READY.code_num)
         }
     }
+
+    fn to_string_with_version(&self) -> String {
+        json!({
+            "version": DEFAULT_SERIALIZE_VERSION,
+            "data": json!(self),
+        }).to_string()
+    }
+
+    fn from_str(data: &str) -> Result<CreateSchema, SchemaError> {
+        let data:Value = serde_json::from_str(&data)
+            .or(Err(SchemaError::InvalidSchemaCreation()))?;
+        let schema: CreateSchema = serde_json::from_value(data["data"].clone())
+            .or(Err(SchemaError::InvalidSchemaCreation()))?;
+        Ok(schema)
+    }
 }
 
 pub fn create_new_schema(source_id: &str,
@@ -300,7 +297,7 @@ pub fn get_payment_txn(handle: u32) -> Result<PaymentTxn, SchemaError> {
 }
 
 pub fn from_string(schema_data: &str) -> Result<u32, SchemaError> {
-    let derived_schema: CreateSchema = CreateSchema::from_string_with_version(schema_data)
+    let derived_schema: CreateSchema = CreateSchema::from_str(schema_data)
         .map_err(|_| {
             error!("Invalid Json format for CreateSchema string");
             SchemaError::CommonError(error::INVALID_JSON.code_num)
