@@ -28,7 +28,6 @@ use std::ffi::CString;
 pub extern fn vcx_init_with_config(command_handle: u32,
                                    config: *const c_char,
                                    cb: Option<extern fn(xcommand_handle: u32, err:u32)>) -> u32 {
-
     check_useful_c_str!(config,error::INVALID_OPTION.code_num);
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
@@ -92,8 +91,8 @@ pub extern fn vcx_init (command_handle: u32,
 }
 
 fn _finish_init(command_handle: u32, cb: extern fn(xcommand_handle: u32, err: u32)) -> u32 {
-
     ::utils::logger::LoggerUtils::init();
+
     match ::utils::libindy::payments::init_payments() {
         Ok(_) => (),
         Err(x) => return x,
@@ -431,7 +430,7 @@ mod tests {
         assert_eq!(::issuer_credential::release(issuer_credential),Err(::error::issuer_cred::IssuerCredError::InvalidHandle()));
         assert_eq!(::schema::release(schema).err(),Some(::error::schema::SchemaError::InvalidHandle()));
         assert_eq!(::proof::release(proof).err(),Some(::error::proof::ProofError::InvalidHandle()));
-        assert_eq!(::credential_def::release(credentialdef),Err(error::INVALID_CREDENTIAL_DEF_HANDLE.code_num));
+        assert_eq!(::credential_def::release(credentialdef),Err(::error::cred_def::CredDefError::InvalidHandle()));
         assert_eq!(::credential::release(credential), Err(::error::credential::CredentialError::CommonError(error::INVALID_CREDENTIAL_HANDLE.code_num)));
         assert_eq!(::disclosed_proof::release(disclosed_proof), Result::Err(error::INVALID_DISCLOSED_PROOF_HANDLE.code_num));
         assert_eq!(wallet::get_wallet_handle(), 0);
