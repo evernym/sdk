@@ -335,7 +335,6 @@ mod tests {
     use settings;
     use utils::constants::{ TRUSTEE_SEED, SCHEMA_ID, SCHEMA_WITH_VERSION, DEFAULT_SCHEMA_ATTRS, DEFAULT_SCHEMA_ID, DEFAULT_SCHEMA_NAME };
     use utils::libindy::{ return_types_u32, payments, pool, wallet };
-    use utils::libindy::signus::SignusUtils;
 
     fn set_default_and_enable_test_mode() {
         settings::set_defaults();
