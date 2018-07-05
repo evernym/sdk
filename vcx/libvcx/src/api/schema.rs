@@ -333,7 +333,7 @@ mod tests {
     use std::ffi::CString;
     use std::time::Duration;
     use settings;
-    use utils::constants::{ SCHEMA_ID, SCHEMA_WITH_VERSION, DEFAULT_SCHEMA_ATTRS, DEFAULT_SCHEMA_ID, DEFAULT_SCHEMA_NAME };
+    use utils::constants::{ TRUSTEE_SEED, SCHEMA_ID, SCHEMA_WITH_VERSION, DEFAULT_SCHEMA_ATTRS, DEFAULT_SCHEMA_ID, DEFAULT_SCHEMA_NAME };
     use utils::libindy::{ return_types_u32, payments, pool, wallet };
     use utils::libindy::signus::SignusUtils;
 
@@ -480,7 +480,6 @@ mod tests {
     #[cfg(feature = "nullpay")]
     #[test]
     fn test_vcx_schema_serialize_contains_version() {
-        pub const TRUSTEE_SEED: &'static str = "000000000000000000000000Trustee1";
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         payments::init_payments().unwrap();

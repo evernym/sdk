@@ -720,9 +720,7 @@ mod tests {
         let creds = credential_def_identifiers(&selected_credentials.to_string()).unwrap();
         assert_eq!(creds, vec![cred1, cred2]);
     }
-    // ignoring for quicker testing
-    // this ignore should not get committed
-//    #[ignore]
+
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_generate_proof() {

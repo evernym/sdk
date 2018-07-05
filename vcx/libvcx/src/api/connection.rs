@@ -441,6 +441,8 @@ mod tests {
     use api::VcxStateType;
     use utils::httpclient;
     use utils::constants::GET_MESSAGES_RESPONSE;
+    use utils::libindy::return_types_u32;
+    use utils::error::SUCCESS;
 
     extern "C" fn create_cb(command_handle: u32, err: u32, connection_handle: u32) {
         if err != 0 {panic!("create_cb failed")}
@@ -571,11 +573,9 @@ mod tests {
 
     #[test]
     fn test_vcx_connection_deserialize_succeeds() {
-        use utils::libindy::return_types_u32;
-        use utils::error::SUCCESS;
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
-        let string = r#"{ "data": {"source_id":"test_vcx_connection_deserialialize_succeeds","pw_did":"8XFh8yBzrpJQmNyZzgoTqB","pw_verkey":"EkVTa7SCJ5SntpYyX7CSb2pcBhiVGT9kWSagA8a9T69A","did_endpoint":"","state":1,"uuid":"","endpoint":"","invite_detail":{"statusCode":"","connReqId":"","senderDetail":{"name":"","agentKeyDlgProof":{"agentDID":"","agentDelegatedKey":"","signature":""},"DID":"","logoUrl":"","verKey":""},"senderAgencyDetail":{"DID":"","verKey":"","endpoint":""},"targetName":"","statusMsg":""},"agent_did":"U5LXs4U7P9msh647kToezy","agent_vk":"FktSZg8idAVzyQZrdUppK6FTrfAzW3wWVzAjJAfdUvJq","their_pw_did":"","their_pw_verkey":""}, "version": "1.0"}"#;
+        let string = ::utils::constants::DEFAULT_CONNECTION;
         let cb = return_types_u32::Return_U32_U32::new().unwrap();
         let err = vcx_connection_deserialize(cb.command_handle,
                                                 CString::new(string).unwrap().into_raw(),

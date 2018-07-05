@@ -751,13 +751,10 @@ pub mod tests {
     fn test_get_credential() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
-
         let handle = from_string(::utils::constants::DEFAULT_SERIALIZED_CREDENTIAL).unwrap();
         let offer_string = get_credential_offer(handle).unwrap();
-        println!("{}", offer_string);
-        let handle = from_string(r#"{"version": "1.0", "data": {"source_id":"test_credential_serialize_deserialize","state":4,"credential_name":null,"credential_request":null,"credential_offer":null,"msg_uid":null,"agent_did":null,"agent_vk":null,"my_did":null,"my_vk":null,"their_did":null,"their_vk":null,"cred_id":null,"credential":"something","payment_info":null}}"#).unwrap();
+        let handle = from_string(::utils::constants::FULL_CREDENTIAL_SERIALIZED).unwrap();
         let cred_string = get_credential(handle).unwrap();
-        println!("{}", cred_string);
     }
 
     #[cfg(feature = "pool_tests")]

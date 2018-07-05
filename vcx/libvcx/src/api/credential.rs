@@ -748,7 +748,7 @@ mod tests {
     fn test_get_credential(){
         use utils::constants::FULL_CREDENTIAL_SERIALIZED;
         settings::set_defaults();
-        let handle = credential::from_string(FULL_CREDENTIAL_SERIALIZED).unwrap();//SERIALIZED_CREDENTIAL
+        let handle = credential::from_string(FULL_CREDENTIAL_SERIALIZED).unwrap();
         let bad_handle = 1123;
         let command_handle = 0;
         assert_eq!(vcx_get_credential(command_handle, handle, Some(get_credential_cb)), error::SUCCESS.code_num);

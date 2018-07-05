@@ -457,6 +457,7 @@ mod tests {
     use utils::constants::{CRED_DEF_ID, DEFAULT_SERIALIZED_ISSUER_CREDENTIAL, CREDENTIAL_REQ_STRING, DEFAULT_SERIALIZE_VERSION};
     use credential_request::CredentialRequest;
     use error::issuer_cred::IssuerCredError;
+    use utils::libindy::return_types_u32;
 
     static DEFAULT_CREDENTIAL_NAME: &str = "Credential Name Default";
     static DEFAULT_DID: &str = "8XFh8yBzrpJQmNyZzgoTqB";
@@ -519,7 +520,6 @@ mod tests {
 
     #[test]
     fn test_vcx_issuer_credential_serialize_deserialize() {
-        use utils::libindy::return_types_u32;
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
         let cb = return_types_u32::Return_U32_U32::new().unwrap();
@@ -565,9 +565,6 @@ mod tests {
         thread::sleep(Duration::from_millis(1000));
     }
 
-    //ignoring this for now, because test_real_proof() tests this without requiring a
-    // serialized issuer credential already in accepted state.
-    #[ignore]
     #[test]
     fn test_vcx_issuer_send_a_credential() {
         settings::set_defaults();

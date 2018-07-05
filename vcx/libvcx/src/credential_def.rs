@@ -334,7 +334,7 @@ pub mod tests {
         set_default_and_enable_test_mode();
         let handle = create_new_credentialdef("SourceId".to_string(),
                                               CREDENTIAL_DEF_NAME.to_string(),
-                                            ISSUER_DID.to_string(),
+                                              ISSUER_DID.to_string(),
                                               SCHEMA_ID.to_string(),
                                               "tag".to_string(),
                                               "{}".to_string()).unwrap();
@@ -370,7 +370,7 @@ pub mod tests {
         release(handle).unwrap();
         let new_handle = from_string(&credentialdef_data).unwrap();
         let new_credentialdef_data = to_string(new_handle).unwrap();
-        let mut credentialdef1: CredentialDef = CredentialDef::from_str(&credentialdef_data).unwrap();
+        let credentialdef1: CredentialDef = CredentialDef::from_str(&credentialdef_data).unwrap();
         let credentialdef2: CredentialDef = CredentialDef::from_str(&new_credentialdef_data).unwrap();
         assert_eq!(credentialdef1,credentialdef2);
         assert_eq!(CredentialDef::from_str("{}").err(), Some(CredDefError::CreateCredDefError()));

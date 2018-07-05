@@ -573,7 +573,6 @@ mod tests {
     fn test_vcx_connection_get_state() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
-        use utils::libindy::return_types_u32;
         let cb = return_types_u32::Return_U32_U32::new().unwrap();
         let handle = proof::from_string(PROOF_OFFER_SENT).unwrap();
         assert!(handle > 0);
