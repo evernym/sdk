@@ -40,7 +40,11 @@ if [ -f $1.a ]; then
     exit 1
 fi
 
-archs=(armv7 armv7s arm64 i386 x86_64)
+if ["$1" = "libvcx_production"]; then
+    archs=(armv7, arm64)
+else
+    archs=(armv7 armv7s arm64 i386 x86_64)
+fi
 libraries=(*.a)
 libtool="/usr/bin/libtool"
 

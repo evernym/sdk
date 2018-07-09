@@ -15,4 +15,4 @@ cp -rf ~/OpenSSL-for-iPhone ${BASE_DIR}/.macosbuild
 cp -rf ~/libzmq-ios ${BASE_DIR}/.macosbuild
 cp -rf ~/combine-libs ${BASE_DIR}/.macosbuild
 ./mac.11.copy.static.libs.to.app.sh
-./mac.12.combine.static.libs.sh libvcxall
+./mac.12.combine.static.libs.sh libvcx_production
