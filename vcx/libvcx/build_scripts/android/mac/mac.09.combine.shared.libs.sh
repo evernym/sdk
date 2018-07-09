@@ -13,19 +13,20 @@ VCX_SDK=$START_DIR/../../../../..
 VCX_SDK=$(abspath "$VCX_SDK")
 
 declare -a archs=(
-    "arm" "arm" "arm-linux-androideabi"
-    "arm" "armv7" "arm-linux-androideabi"
-    "arm64" "arm64" "aarch64-linux-android"
-    "x86" "x86" "i686-linux-android"
-    "x86_64" "x86_64" "x86_64-linux-android"
+    "arm" "arm" "arm-linux-androideabi" "armeabi"
+    "arm" "armv7" "armv7-linux-androideabi" "armeabi-v7a"
+    "arm64" "arm64" "aarch64-linux-android" "arm64-v8a"
+    "x86" "x86" "i686-linux-android" "x86"
+    "x86_64" "x86_64" "x86_64-linux-android" "x86_64"
     )
 archslen=${#archs[@]}
 
-for (( arch=0; arch<${archslen}; arch=arch+3 ));
+for (( arch=0; arch<${archslen}; arch=arch+4 ));
 do
     export ndk_arch=${archs[$arch]}
     export target_arch=${archs[$arch+1]}
     export cross_compile=${archs[$arch+2]}
+    export aar_arch=${archs[$arch+3]}
     LIB_FOLDER="lib"
     if [ "$ndk_arch" == "x86_64" ]; then
         LIB_FOLDER="lib64"
@@ -45,8 +46,12 @@ do
     $NDK_DIR/${ndk_arch}/sysroot/usr/${LIB_FOLDER}/liblog.so \
     -Wl,--no-whole-archive -z muldefs
     echo "Created $VCX_SDK/vcx/wrappers/java/vcx/src/main/jniLibs/${target_arch}/libvcx.so"
-    cd $VCX_SDK/vcx/wrappers/java/vcx/src/main/jniLibs
-    rm libvcxall_${target_arch}.zip
+    #cd $VCX_SDK/vcx/wrappers/java/vcx/src/main/jniLibs
+    #rm libvcxall_${target_arch}.zip
     # zip -r libvcxall_${target_arch}.zip ${target_arch}
     # echo "Created $VCX_SDK/vcx/wrappers/java/vcx/src/main/jniLibs/libvcxall_${target_arch}.zip"
+    if [ "${aar_arch}" != "${target_arch}" ]; then
+        rm -rf ${aar_arch}
+        mv ${target_arch} ${aar_arch}
+    fi
 done
