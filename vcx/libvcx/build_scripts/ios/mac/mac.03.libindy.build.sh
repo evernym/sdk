@@ -2,6 +2,7 @@
 
 source ./shared.functions.sh
 
+BUILDS=$1
 START_DIR=$PWD
 WORK_DIR=$START_DIR/../../../../../.macosbuild
 mkdir -p $WORK_DIR
@@ -36,7 +37,11 @@ cargo update
 # To build for macos
 #cargo build
 # To build for iOS
-cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios,armv7s-apple-ios,i386-apple-ios,x86_64-apple-ios"
+if [ $BUILDS == "simulators" ]; then
+    cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios,armv7s-apple-ios,i386-apple-ios,x86_64-apple-ios"
+else
+    cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios"
+fi
 #cargo lipo
 
 #########################################################################################################################
@@ -50,5 +55,9 @@ cd $WORK_DIR/vcx-indy-sdk/libnullpay
 # To build for macos
 #cargo build
 # To build for iOS
-cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios,armv7s-apple-ios,i386-apple-ios,x86_64-apple-ios"
 #cargo lipo
+if [ $BUILDS == "simulators" ]; then
+    cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios,armv7s-apple-ios,i386-apple-ios,x86_64-apple-ios"
+else
+    cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios"
+fi
