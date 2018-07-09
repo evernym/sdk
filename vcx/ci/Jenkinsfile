@@ -131,7 +131,9 @@ def ios() {
                 // TIME_VERSION=sh (script: 'echo $(date +%Y%m%d_%H%M%S)', returnStdout: true ).trim()
                 // sh "mkdir ${TIME_VERSION}"
                 // sh "zip -r ${TIME_VERSION}/libvcxall_${TIME_VERSION}.zip vcx/wrappers/ios/vcx/lib/libvcxall.a"
-                sh "ls -l vcx/wrappers/ios/vcx/lib/libvcxall.a"
+
+                sh "ls -l vcx/wrappers/ios/vcx/lib/"
+                sh "ls -l vcx/wrappers/ios/vcx/lib/libvcx_production.a"
 
                 // if (env.BRANCH_NAME == "master") {
                 //     withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
