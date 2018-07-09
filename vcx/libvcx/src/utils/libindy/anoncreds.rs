@@ -55,7 +55,7 @@ pub fn libindy_issuer_create_credential(cred_offer_json: &str,
                                         cred_req_json: &str,
                                         cred_values_json: &str,
                                         rev_reg_id: Option<&str>,
-                                        blob_storage_reader_handle: Option<i32>) -> Result<(String, Option<String>, Option<String>), u32>{
+                                        blob_storage_reader_handle: Option<i32>) -> Result<(String, String, String), u32>{
 
     let blob_storage_reader_handle = blob_storage_reader_handle.unwrap_or(-1);
 

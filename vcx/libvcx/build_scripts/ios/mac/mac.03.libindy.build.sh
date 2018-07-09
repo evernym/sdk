@@ -36,7 +36,8 @@ cargo update
 # To build for macos
 #cargo build
 # To build for iOS
-cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios,armv7s-apple-ios,i386-apple-ios,x86_64-apple-ios"
+#cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios,armv7s-apple-ios,i386-apple-ios,x86_64-apple-ios"
+cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios"
 #cargo lipo
 
 #########################################################################################################################
@@ -50,5 +51,6 @@ cd $WORK_DIR/vcx-indy-sdk/libnullpay
 # To build for macos
 #cargo build
 # To build for iOS
-cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios,armv7s-apple-ios,i386-apple-ios,x86_64-apple-ios"
+#cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios,armv7s-apple-ios,i386-apple-ios,x86_64-apple-ios"
+cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios"
 #cargo lipo
