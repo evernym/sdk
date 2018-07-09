@@ -32,7 +32,6 @@ export interface IIssuerCredentialParams {
 /**
  * Interface that represents the attributes of an Issuer credential object.
  * This interface is expected as the type for deserialize's parameter and serialize's return value
- * @inheritdoc
  */
 export interface IIssuerCredentialData {
   source_id: string
@@ -83,7 +82,6 @@ class IssuerCredentialBase extends VCXBaseWithState<IIssuerCredentialData> {
    *   credDefId: "credDefId", attr: {k    ey: "value"}, credentialName: "name", price: 0})
    * await issuerCredential.sendOffer(connection)
    * ```
-   * @returns {Promise<void>}
    */
   public async sendOffer (connection: Connection): Promise<void> {
     try {
@@ -123,7 +121,6 @@ class IssuerCredentialBase extends VCXBaseWithState<IIssuerCredentialData> {
    * await issuerCredential.sendCredential(connection)
    * ```
    *
-   * @returns {Promise<void>}
    */
   public async sendCredential (connection: Connection): Promise<void> {
     try {
@@ -213,8 +210,6 @@ export class IssuerCredential extends VCXPaymentTxn(IssuerCredentialBase) {
  * data1 = await issuerCredential.serialize()
  * issuerCredential2 = await IssuerCredential.deserialize(data1)
  * ```
- *
- * @returns {Promise<IssuerCredential>} An Issuer credential Object
  */
   public static async deserialize (credentialData: ISerializedData<IIssuerCredentialData>) {
     try {
