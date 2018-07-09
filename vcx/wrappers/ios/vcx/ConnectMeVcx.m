@@ -619,28 +619,6 @@ completion:(void (^)(NSError *error))completion
    }
 }
 
-/// #Params
-///
-/// command_handle: command handle to map callback to user context.
-///
-/// type_: type of record. (e.g. 'data', 'string', 'foobar', 'image')
-///
-/// id: the id ("key") of the record.
-///
-/// value: value of the record with the associated id.
-///
-/// tags_json: the record tags used for search and storing meta information as json:
-///   {
-///     "tagName1": <str>, // string tag (will be stored encrypted)
-///     "tagName2": <int>, // int tag (will be stored encrypted)
-///     "~tagName3": <str>, // string tag (will be stored un-encrypted)
-///     "~tagName4": <int>, // int tag (will be stored un-encrypted)
-///   }
-///  The tags_json must be valid json, and if no tags are to be associated with the
-/// record, then the empty '{}' json must be passed.
-///
-/// cb: Callback that any errors or a receipt of transfer
-
 - (void)addItemWallet:(NSString *)recordType
             recordKey:(NSString *)recordId
             recordValue:(NSString *) recordValue
@@ -666,7 +644,7 @@ completion:(void (^)(NSError *error))completion
 - (void)addRecordWallet:(NSString *)recordType
             recordKey:(NSString *)recordId
             recordValue:(NSString *) recordValue
-           completion:(void (^)(NSError *error, NSInteger importHandle))completion {
+           completion:(void (^)(NSError *error, NSInteger walletHandle))completion {
    vcx_error_t ret;
    vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
    const char * record_type =[recordType cString];
@@ -687,7 +665,7 @@ completion:(void (^)(NSError *error))completion
 
 - (void)getRecordWallet:(NSString *)recordType
             recordId:(NSString *)recordId
-           completion:(void (^)(NSError *error, NSInteger importHandle))completion {
+           completion:(void (^)(NSError *error, NSInteger walletHandle, NSString walletValue))completion {
    vcx_error_t ret;
    vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
    const char * record_type =[recordType cString];
@@ -707,7 +685,7 @@ completion:(void (^)(NSError *error))completion
 
 - (void)deleteRecordWallet:(NSString *)recordType
             recordId:(NSString *)recordId
-           completion:(void (^)(NSError *error, NSInteger importHandle))completion {
+           completion:(void (^)(NSError *error, NSInteger walletHandle))completion {
    vcx_error_t ret;
    vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
    const char * record_type =[recordType cString];
