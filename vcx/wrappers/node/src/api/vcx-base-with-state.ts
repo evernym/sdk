@@ -9,6 +9,7 @@ export abstract class VCXBaseWithState<SerializedData> extends VCXBase<Serialize
   protected abstract _getStFn: (commandHandle: number, handle: string, cb: ICbRef) => number
 
   /**
+   * 
    * @memberof VCXBaseWithState
    * @description Communicates with the agent service for polling and setting the state of the entity.
    * @async
