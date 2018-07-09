@@ -39,7 +39,17 @@ export interface IDeleteRecordData {
   id: string
 }
 
-export type IGerRecordData = IDeleteRecordData
+export interface IGetRecordOptions {
+  retrieveType: boolean,
+  retrieveValue: boolean,
+  retrieveTags: boolean
+}
+
+export interface IGerRecordData {
+  type: string,
+  id: string,
+  options: IGetRecordOptions
+}
 
 export interface IOpenSearchData {
   type: string,
@@ -179,7 +189,7 @@ export class Wallet {
   public static async addRecord (record: IRecord): Promise<void> {
     const commandHandle = 0
     try {
-      await createFFICallbackPromise<string>(
+      await createFFICallbackPromise<void>(
         (resolve, reject, cb) => {
           const rc = rustAPI().vcx_wallet_add_record(commandHandle,
             record.type_,
@@ -192,13 +202,12 @@ export class Wallet {
         },
         (resolve, reject) => Callback(
           'void',
-          ['uint32','uint32','string'],
-          (xhandle: number, err: number, receipt: string) => {
+          ['int32','int32'], (xhandle: number, err: number) => {
             if (err) {
               reject(err)
               return
             }
-            resolve(receipt)
+            resolve()
           })
       )
     } catch (err) {
@@ -229,13 +238,13 @@ export class Wallet {
         },
         (resolve, reject) => Callback(
           'void',
-          ['uint32','uint32','string'],
-          (xhandle: number, err: number, receipt: string) => {
+          ['uint32','uint32'],
+          (xhandle: number, err: number) => {
             if (err) {
               reject(err)
               return
             }
-            resolve(receipt)
+            resolve()
           })
       )
     } catch (err) {
@@ -382,13 +391,13 @@ export class Wallet {
         },
         (resolve, reject) => Callback(
           'void',
-          ['uint32','uint32','string'],
-          (xhandle: number, err: number, receipt: string) => {
+          ['uint32','uint32'],
+          (xhandle: number, err: number) => {
             if (err) {
               reject(err)
               return
             }
-            resolve(receipt)
+            resolve()
           })
       )
     } catch (err) {
@@ -405,7 +414,7 @@ export class Wallet {
    * @param {String} id
    * @returns {Promise<string>}
    */
-  public static async getRecord ({ type, id }: IGerRecordData): Promise<string> {
+  public static async getRecord ({ type, id, options }: IGerRecordData): Promise<string> {
     const commandHandle = 0
     try {
       return await createFFICallbackPromise<string>(
@@ -413,6 +422,7 @@ export class Wallet {
           const rc = rustAPI().vcx_wallet_get_record(commandHandle,
             type,
             id,
+            JSON.stringify(options),
             cb)
           if (rc) {
             reject(rc)
@@ -540,6 +550,82 @@ export class Wallet {
               return
             }
             resolve(info)
+          })
+      )
+    } catch (err) {
+      throw new VCXInternalError(err)
+    }
+  }
+
+  /**
+   * @memberof Wallet
+   * @description Import a wallet from a file, backup key used for encrypting the file
+   * @static
+   * @async
+   * @param {String} importPath
+   * @param {String} backupKey
+   * @returns {Promise<void>}
+   */
+  public static async import (path: string, backupKey: string): Promise<void> {
+    const commandHandle = 0
+    try {
+      await createFFICallbackPromise<void>(
+        (resolve, reject, cb) => {
+          const rc = rustAPI().vcx_wallet_import(commandHandle,
+            path,
+            backupKey,
+            cb)
+          if (rc) {
+            reject(rc)
+          }
+        },
+        (resolve, reject) => Callback(
+          'void',
+          ['uint32','uint32'],
+          (xhandle: number, err: number) => {
+            if (err) {
+              reject(err)
+              return
+            }
+            resolve()
+          })
+      )
+    } catch (err) {
+      throw new VCXInternalError(err)
+    }
+  }
+
+  /**
+   * @memberof Wallet
+   * @description Export a file to a wallet, backup key used for decrypting the file.
+   * @static
+   * @async
+   * @param {String} exportPath
+   * @param {String} backupKey
+   * @returns {Promise<void>}
+   */
+  public static async export (path: string, backupKey: string): Promise<void> {
+    const commandHandle = 0
+    try {
+      await createFFICallbackPromise<void>(
+        (resolve, reject, cb) => {
+          const rc = rustAPI().vcx_wallet_export(commandHandle,
+            path,
+            backupKey,
+            cb)
+          if (rc) {
+            reject(rc)
+          }
+        },
+        (resolve, reject) => Callback(
+          'void',
+          ['uint32','uint32'],
+          (xhandle: number, err: number) => {
+            if (err) {
+              reject(err)
+              return
+            }
+            resolve()
           })
       )
     } catch (err) {

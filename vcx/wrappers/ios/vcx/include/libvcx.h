@@ -291,6 +291,18 @@ vcx_error_t vcx_wallet_get_token_info(vcx_command_handle_t command_handle,vcx_pa
 vcx_error_t vcx_wallet_send_tokens(vcx_command_handle_t command_handle, vcx_payment_handle_t payment_handle, int tokens, const char recipient, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, const char *receipt));
     
 
+/**
+ * wallet object
+ *
+ * Used for exporting and importing and managing the wallet.
+ */
+
+/** Export the wallet as an encrypted file */
+vcx_error_t vcx_wallet_export(vcx_command_handle_t handle, const char *path, const char *backup_key, void (*cb)(vcx_command_handle_t command_handle, vcx_error_t err));
+
+/** Import an encrypted file back into the wallet */
+vcx_error_t vcx_wallet_import(vcx_command_handle_t handle, const char *path, const char *backup_key, void (*cb)(vcx_command_handle_t command_handle, vcx_error_t err));
+
 /** For testing purposes only */
 void vcx_set_next_agency_response(int);
 #ifdef __cplusplus

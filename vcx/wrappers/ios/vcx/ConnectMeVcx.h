@@ -139,6 +139,13 @@ void VcxWrapperCommonNumberStringCallback(vcx_command_handle_t xcommand_handle,
             tokens:(NSInteger)tokens
          recipient:(NSString *)recipient
         completion:(void (^)(NSError *error, NSString *state))completion;
+- (void)exportWallet:(NSString *)exportPath
+            encryptWith:(NSString *)encryptionKey
+           completion:(void (^)(NSError *error, NSInteger exportHandle))completion;
+- (void)importWallet:(NSString *)importPath
+            encryptWith:(NSString *)encryptionKey
+           completion:(void (^)(NSError *error, NSInteger importHandle))completion;
+
 @end
 
 #endif /* init_h */

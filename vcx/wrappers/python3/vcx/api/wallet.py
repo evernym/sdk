@@ -5,7 +5,7 @@ import json
 import logging
 
 
-class Wallet():
+class Wallet:
 
     @staticmethod
     async def close_search(handle: int):
@@ -64,7 +64,7 @@ class Wallet():
         return data.decode()
 
     @staticmethod
-    async def get_record(type_: str, id: str):
+    async def get_record(type_: str, id: str, options: str):
         logger = logging.getLogger(__name__)
 
         if not hasattr(Wallet.get_record, "cb"):
@@ -73,10 +73,12 @@ class Wallet():
 
         c_type_ = c_char_p(type_.encode('utf-8'))
         c_id = c_char_p(id.encode('utf-8'))
+        c_options = c_char_p(options.encode('utf-8'))
         data = await do_call('vcx_wallet_get_record',
-                               c_type_,
-                               c_id,
-                               Wallet.get_record.cb)
+                             c_type_,
+                             c_id,
+                             c_options,
+                             Wallet.get_record.cb)
 
         logger.debug("vcx_wallet_get_record completed")
         return data.decode()
@@ -252,4 +254,46 @@ class Wallet():
                                Wallet.send_tokens.cb)
 
         logger.debug("vcx_wallet_send_tokens completed")
+        return result
+
+    @staticmethod
+    async def export(path, backup_key):
+        logger = logging.getLogger(__name__)
+
+        if not hasattr(Wallet.export, "cb"):
+            logger.debug("vcx_wallet_export: Creating callback")
+            Wallet.export.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32))
+
+        c_handle = c_uint32(0)
+        c_backupKey = c_char_p(backup_key.encode('utf-8'))
+        c_path = c_char_p(path.encode('utf-8'))
+
+        result = await do_call('vcx_wallet_export',
+                               c_handle,
+                               c_path,
+                               c_backupKey,
+                               Wallet.export.cb)
+
+        logger.debug("vcx_wallet_export completed")
+        return result
+
+    @staticmethod
+    async def import_wallet(path, backupKey):
+        logger = logging.getLogger(__name__)
+
+        if not hasattr(Wallet.import_wallet, "cb"):
+            logger.debug("vcx_wallet_import: Creating callback")
+            Wallet.import_wallet.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32))
+
+        c_handle = c_uint32(0)
+        c_backup_key = c_char_p(backupKey.encode('utf-8'))
+        c_path = c_char_p(path.encode('utf-8'))
+
+        result = await do_call('vcx_wallet_import',
+                               c_handle,
+                               c_path,
+                               c_backup_key,
+                               Wallet.import_wallet.cb)
+
+        logger.debug("vcx_wallet_export completed")
         return result
