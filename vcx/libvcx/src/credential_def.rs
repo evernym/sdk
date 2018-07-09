@@ -6,7 +6,6 @@ use utils::error;
 use settings;
 use schema::LedgerSchema;
 use utils::constants::{ CRED_DEF_ID, CRED_DEF_JSON, CRED_DEF_TXN_TYPE };
-use utils::libindy::SigTypes;
 use utils::libindy::payments::{pay_for_txn, PaymentTxn};
 use utils::libindy::anoncreds::{libindy_create_and_store_credential_def};
 use utils::libindy::ledger::{libindy_submit_request,
@@ -45,7 +44,11 @@ impl Default for CredentialDef {
 impl CredentialDef {
 
     pub fn from_str(input: &str) -> Result<CredentialDef, CredDefError> {
-        serde_json::from_str(&input).or(Err(CredDefError::CreateCredDefError()))
+        CredentialDef::from_string_with_version(&input).or(Err(CredDefError::CreateCredDefError()))
+    }
+
+    pub fn to_string(&self) -> String {
+        self.to_string_with_version()
     }
 
     pub fn get_source_id(&self) -> &String { &self.source_id }
@@ -62,6 +65,20 @@ impl CredentialDef {
         } else {
             Err(error::NOT_READY.code_num)
         }
+    }
+
+    fn to_string_with_version(&self) -> String {
+        json!({
+            "version": "1.0",
+            "data": json!(self),
+        }).to_string()
+    }
+
+    fn from_string_with_version(data: &str) -> Result<CredentialDef, CredDefError> {
+        let values:serde_json::Value = serde_json::from_str(data).unwrap();
+        let version = values["version"].to_string();
+        let data = values["data"].to_string();
+        serde_json::from_str(&data).or(Err(CredDefError::CreateCredDefError()))
     }
 }
 
@@ -80,7 +97,7 @@ pub fn create_new_credentialdef(source_id: String,
     let (id, payment_txn) = _create_and_store_credential_def( &issuer_did,
                                                    &schema_json,
                                                    &tag,
-                                                   Some(SigTypes::CL),
+                                                   None,
                                                    &config_json)?;
 
     let new_cred_def = CredentialDef {
@@ -100,7 +117,7 @@ pub fn create_new_credentialdef(source_id: String,
 fn _create_and_store_credential_def(issuer_did: &str,
                                    schema_json: &str,
                                    tag: &str,
-                                   sig_type: Option<SigTypes>,
+                                   sig_type: Option<&str>,
                                    config_json: &str) -> Result<(String, Option<PaymentTxn>), CredDefError> {
     if settings::test_indy_mode_enabled() {
         return Ok((CRED_DEF_ID.to_string(), Some(PaymentTxn::from_parts(r#"["pay:null:9UFgyjuJxi1i1HD"]"#,r#"[{"amount":4,"extra":null,"paymentAddress":"pay:null:xkIsxem0YNtHrRO"}]"#,1).unwrap())));
@@ -153,17 +170,13 @@ pub fn is_valid_handle(handle: u32) -> bool {
 }
 
 pub fn to_string(handle: u32) -> Result<String, u32> {
-    CREDENTIALDEF_MAP.get(handle, |c| {
-        serde_json::to_string(&c).map_err(|ec|error::INVALID_JSON.code_num)
+    CREDENTIALDEF_MAP.get(handle, |cd| {
+        Ok(CredentialDef::to_string_with_version(&cd))
     })
 }
 
 pub fn from_string(credentialdef_data: &str) -> Result<u32, CredDefError> {
-    let derived_credentialdef: CredentialDef = serde_json::from_str(credentialdef_data)
-        .map_err(|err| {
-            error!("{} with: {}", error::INVALID_CREDENTIAL_DEF_JSON.message, err);
-            CredDefError::CommonError(error::INVALID_CREDENTIAL_DEF_JSON.code_num)
-        })?;
+    let derived_credentialdef: CredentialDef = CredentialDef::from_str(credentialdef_data)?;
     let source_id = derived_credentialdef.source_id.clone();
     let new_handle = CREDENTIALDEF_MAP.add(derived_credentialdef).map_err(|ec|CredDefError::CommonError(ec))?;
 
@@ -219,7 +232,6 @@ pub mod tests {
     #[test]
     fn test_get_cred_def() {
         set_default_and_enable_test_mode();
-        let sig_type = Some(SigTypes::CL);
 
         let (id, cred_def_json) = retrieve_credential_def(CRED_DEF_ID).unwrap();
         assert_eq!(&id, CRED_DEF_ID);
@@ -258,7 +270,6 @@ pub mod tests {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         let wallet_name = "test_create_credential_def_real";
         ::utils::devsetup::tests::setup_ledger_env(wallet_name);
-        ::utils::libindy::payments::tests::token_setup(None, None);
 
         let data = r#"["address1","address2","zip","city","state"]"#.to_string();
         let (schema_id, _) = ::utils::libindy::anoncreds::tests::create_and_write_test_schema();
@@ -283,7 +294,7 @@ pub mod tests {
         assert!(init_wallet("test_credential_def").unwrap() > 0);
         let wallet_handle = get_wallet_handle();
         let config = r#"{"support_revocation":false}"#;
-        let (id, _) = _create_and_store_credential_def(SCHEMAS_JSON, ISSUER_DID, "tag_1",Some(SigTypes::CL), config).unwrap();
+        let (id, _) = _create_and_store_credential_def(SCHEMAS_JSON, ISSUER_DID, "tag_1",None, config).unwrap();
         delete_wallet("test_credential_def").unwrap();
         assert_eq!(id, CRED_DEF_ID);
     }
@@ -292,11 +303,22 @@ pub mod tests {
     #[test]
     fn test_create_credential_def_fails_when_already_created() {
         let wallet_name = "a_test_wallet";
+        match delete_wallet(wallet_name) {
+            Ok(_) => {},
+            Err(_) => {},
+        };
         ::utils::devsetup::tests::setup_ledger_env(wallet_name);
         let wallet_handle = get_wallet_handle();
-        let (schema_id, _, _, _) = ::utils::libindy::anoncreds::tests::create_and_store_credential_def();
-
+        let (schema_id, _) = ::utils::libindy::anoncreds::tests::create_and_write_test_schema();
         let my_did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
+
+        let handle = create_new_credentialdef("1".to_string(),
+                                              "name".to_string(),
+                                              my_did.clone(),
+                                              schema_id.clone(),
+                                              "tag_1".to_string(),
+                                              r#"{"support_revocation":false}"#.to_string()).unwrap();
+
         let rc = create_new_credentialdef("1".to_string(),
                                           "name".to_string(),
                                           my_did,
@@ -313,7 +335,7 @@ pub mod tests {
         set_default_and_enable_test_mode();
         let handle = create_new_credentialdef("SourceId".to_string(),
                                               CREDENTIAL_DEF_NAME.to_string(),
-                                            ISSUER_DID.to_string(),
+                                              ISSUER_DID.to_string(),
                                               SCHEMA_ID.to_string(),
                                               "tag".to_string(),
                                               "{}".to_string()).unwrap();
@@ -326,12 +348,13 @@ pub mod tests {
 
         let handle = create_new_credentialdef("SourceId".to_string(),
                                               CREDENTIAL_DEF_NAME.to_string(),
-                                            ISSUER_DID.to_string(),
+                                              ISSUER_DID.to_string(),
                                               SCHEMA_ID.to_string(),
                                               "tag".to_string(),
                                               "{}".to_string()).unwrap();
         let credential_string = to_string(handle).unwrap();
-        assert!(!credential_string.is_empty());
+        let credential_values: serde_json::Value = serde_json::from_str(&credential_string).unwrap();
+        assert_eq!(credential_values["version"].clone(), "1.0");
     }
 
     #[test]
@@ -348,8 +371,8 @@ pub mod tests {
         release(handle).unwrap();
         let new_handle = from_string(&credentialdef_data).unwrap();
         let new_credentialdef_data = to_string(new_handle).unwrap();
-        let credentialdef1: CredentialDef = serde_json::from_str(&credentialdef_data).unwrap();
-        let credentialdef2: CredentialDef = serde_json::from_str(&new_credentialdef_data).unwrap();
+        let credentialdef1: CredentialDef = CredentialDef::from_str(&credentialdef_data).unwrap();
+        let credentialdef2: CredentialDef = CredentialDef::from_str(&new_credentialdef_data).unwrap();
         assert_eq!(credentialdef1,credentialdef2);
         assert_eq!(CredentialDef::from_str("{}").err(), Some(CredDefError::CreateCredDefError()));
     }
