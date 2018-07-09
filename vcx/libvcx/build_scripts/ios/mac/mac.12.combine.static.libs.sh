@@ -40,7 +40,7 @@ if [ -f $1.a ]; then
     exit 1
 fi
 
-if ["$1" = "libvcx_production"]; then
+if [ "$1" = "libvcx_production" ]; then
     archs=(armv7, arm64)
 else
     archs=(armv7 armv7s arm64 i386 x86_64)

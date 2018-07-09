@@ -11,7 +11,7 @@ cargo update
 #export RUST_BACKTRACE=1
 # To build for iOS
 #LIBINDY_DIR=/usr/local/lib RUST_BACKTRACE=1 cargo lipo --release
-if [ $BUILDS == "simulators"]; then
+if [ $BUILDS == "simulators" ]; then
     cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios,armv7s-apple-ios,i386-apple-ios,x86_64-apple-ios"
 else
     cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios"

@@ -37,7 +37,7 @@ cargo update
 # To build for macos
 #cargo build
 # To build for iOS
-if [ $BUILDS == "simulators"]; then
+if [ $BUILDS == "simulators" ]; then
     cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios,armv7s-apple-ios,i386-apple-ios,x86_64-apple-ios"
 else
     cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios"
@@ -56,7 +56,7 @@ cd $WORK_DIR/vcx-indy-sdk/libnullpay
 #cargo build
 # To build for iOS
 #cargo lipo
-if [ $BUILDS == "simulators"]; then
+if [ $BUILDS == "simulators" ]; then
     cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios,armv7s-apple-ios,i386-apple-ios,x86_64-apple-ios"
 else
     cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios"
