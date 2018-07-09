@@ -33,7 +33,7 @@ export interface IIssuerCredentialParams {
  * Interface that represents the attributes of an Issuer credential object.
  * This interface is expected as the type for deserialize's parameter and serialize's return value
  * @inheritdoc
-*/
+ */
 export interface IIssuerCredentialData {
   source_id: string
   handle: number
@@ -72,14 +72,15 @@ class IssuerCredentialBase extends VCXBaseWithState<IIssuerCredentialData> {
 
   /**
    * Sends a credential Offer to the end user.
-   * 
+   *
    * A Credential Offer is made up of the data provided in the creation of this object
-   * 
+   *
    * Example:
    * ```
    * connection = await Connection.create({id: 'foobar'})
    * inviteDetails = await connection.connect()
-   * issuerCredential = await IssuerCredential.create({sourceId: "12", credDefId: "credDefId", attr: {k    ey: "value"}, credentialName: "name", price: 0})
+   * issuerCredential = await IssuerCredential.create({sourceId: "12",
+   *   credDefId: "credDefId", attr: {k    ey: "value"}, credentialName: "name", price: 0})
    * await issuerCredential.sendOffer(connection)
    * ```
    * @returns {Promise<void>}
@@ -111,7 +112,7 @@ class IssuerCredentialBase extends VCXBaseWithState<IIssuerCredentialData> {
 
   /**
    * Sends the credential to the end user.
-   * 
+   *
    * Credential is made up of the data sent during Credential Offer
    * ```
    * connection = await connectionCreateConnect()
@@ -121,7 +122,7 @@ class IssuerCredentialBase extends VCXBaseWithState<IIssuerCredentialData> {
    * assert.equal(await issuerCredential.getState(), StateType.RequestReceived)
    * await issuerCredential.sendCredential(connection)
    * ```
-   * 
+   *
    * @returns {Promise<void>}
    */
   public async sendCredential (connection: Connection): Promise<void> {
@@ -171,7 +172,8 @@ export class IssuerCredential extends VCXPaymentTxn(IssuerCredentialBase) {
   /**
    * Builds a generic Issuer Credential object
    * ```
-   * issuerCredential = await IssuerCredential.create({sourceId: "12", credDefId: "credDefId", attr: {key: "value"}, credentialName: "name", price: 0})
+   * issuerCredential = await IssuerCredential.create({sourceId: "12",
+   * credDefId: "credDefId", attr: {key: "value"}, credentialName: "name", price: 0})
    * ```
    * @returns {Promise<IssuerCredential>} An Issuer credential Object
    */
@@ -203,14 +205,15 @@ export class IssuerCredential extends VCXPaymentTxn(IssuerCredentialBase) {
 
 /**
  * Builds an Issuer credential object with defined attributes.
- * 
+ *
  * Attributes are provided by a previous call to the serialize function.
  * ```
- * issuerCredential = await IssuerCredential.create({sourceId: "12", credDefId: "credDefId", attr: {key: "value"}, credentialName: "name", price: 0})
+ * issuerCredential = await IssuerCredential.create({sourceId: "12",
+ * credDefId: "credDefId", attr: {key: "value"}, credentialName: "name", price: 0})
  * data1 = await issuerCredential.serialize()
  * issuerCredential2 = await IssuerCredential.deserialize(data1)
  * ```
- * 
+ *
  * @returns {Promise<IssuerCredential>} An Issuer credential Object
  */
   public static async deserialize (credentialData: ISerializedData<IIssuerCredentialData>) {

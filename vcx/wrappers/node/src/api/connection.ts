@@ -145,7 +145,7 @@ export class Connection extends VCXBaseWithState<IConnectionData> {
   }
   /**
    * Creates a connection between enterprise and end user.
-   * 
+   *
    * Example:
    * ```
    * connection = await Connection.create({id: 'foobar'})

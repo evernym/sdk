@@ -9,9 +9,9 @@ export abstract class VCXBaseWithState<SerializedData> extends VCXBase<Serialize
   protected abstract _getStFn: (commandHandle: number, handle: string, cb: ICbRef) => number
 
   /**
-   * 
+   *
    * Communicates with the agent service for polling and setting the state of the entity.
-   * 
+   *
    * Example:
    * ```
    * await object.updateState()

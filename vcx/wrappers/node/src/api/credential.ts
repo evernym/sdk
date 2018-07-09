@@ -35,7 +35,7 @@ export interface ICredentialSendData {
 class CredentialBase extends VCXBaseWithState<ICredentialStructData> {
   /**
    * Retrieves all pending credential offers.
-   * 
+   *
    * ```
    * connection = await Connection.create({id: 'foobar'})
    * inviteDetails = await connection.connect()
@@ -77,15 +77,16 @@ class CredentialBase extends VCXBaseWithState<ICredentialStructData> {
   protected _getPaymentTxnFn = rustAPI().vcx_credential_get_payment_txn
   protected _credOffer: string = ''
 /**
- * Approves the credential offer and submits a credential request.  The result will be a credential stored in the prover's wallet.
- * 
+ * Approves the credential offer and submits a credential request.
+ * The result will be a credential stored in the prover's wallet.
+ *
  * ```
  * connection = await Connection.create({id: 'foobar'})
  * inviteDetails = await connection.connect()
  * credential = Credential.create(data)
  * await credential.sendRequest({ connection, 1000 })
  * ```
- * 
+ *
  */
   public async sendRequest ({ connection, payment }: ICredentialSendData): Promise<void> {
     try {
@@ -147,51 +148,49 @@ class CredentialBase extends VCXBaseWithState<ICredentialStructData> {
 }
 /**
  * A Credential Object, which is issued by the issuing party to the prover and stored in the prover's wallet.
- * 
  */
 // tslint:disable max-classes-per-file
 export class Credential extends VCXPaymentTxn(CredentialBase) {
-    /**
-   * Creates a credential with an offer.
-   * 
-   * * Requires a credential offer to be submitted to prover.
-   * 
-   * 
-   * ```
-   * credentialOffer = [
-   *   {
-   *     claim_id: 'defaultCredentialId',
-   *     claim_name: 'Credential',
-   *     cred_def_id: 'id',
-   *     credential_attrs: {
-   *     address1: ['101 Tela Lane'],
-   *     address2: ['101 Wilson Lane'],
-   *     city: ['SLC'],
-   *     state: ['UT'],
-   *     zip: ['87121']
-   *   },
-   *   from_did: '8XFh8yBzrpJQmNyZzgoTqB',
-   *   libindy_offer: '{}',
-   *   msg_ref_id: '123',
-   *   msg_type: 'CLAIM_OFFER',
-   *   schema_seq_no: 1487,
-   *   to_did: '8XFh8yBzrpJQmNyZzgoTqB',
-   *   version: '0.1'
-   * },
-   * {
-   *   payment_addr: 'pov:null:OsdjtGKavZDBuG2xFw2QunVwwGs5IB3j',
-   *   payment_required: 'one-time',
-   *   price: 5
-   * }]
-   *
-   * {
-   *   JSON.stringify(credentialOffer),
-   *   'testCredentialSourceId'
-   * }
-   * credential = Credential.create(data)
-   * ```
-   * 
-   */
+/**
+ * Creates a credential with an offer.
+ *
+ * * Requires a credential offer to be submitted to prover.
+ *
+ * ```
+ * credentialOffer = [
+ *   {
+ *     claim_id: 'defaultCredentialId',
+ *     claim_name: 'Credential',
+ *     cred_def_id: 'id',
+ *     credential_attrs: {
+ *     address1: ['101 Tela Lane'],
+ *     address2: ['101 Wilson Lane'],
+ *     city: ['SLC'],
+ *     state: ['UT'],
+ *     zip: ['87121']
+ *   },
+ *   from_did: '8XFh8yBzrpJQmNyZzgoTqB',
+ *   libindy_offer: '{}',
+ *   msg_ref_id: '123',
+ *   msg_type: 'CLAIM_OFFER',
+ *   schema_seq_no: 1487,
+ *   to_did: '8XFh8yBzrpJQmNyZzgoTqB',
+ *   version: '0.1'
+ * },
+ * {
+ *   payment_addr: 'pov:null:OsdjtGKavZDBuG2xFw2QunVwwGs5IB3j',
+ *   payment_required: 'one-time',
+ *   price: 5
+ * }]
+ *
+ * {
+ *   JSON.stringify(credentialOffer),
+ *   'testCredentialSourceId'
+ * }
+ * credential = Credential.create(data)
+ * ```
+ *
+ */
   public static async create ({ sourceId, offer }: ICredentialCreateWithOffer): Promise<Credential> {
     const credential = new Credential(sourceId)
     try {
@@ -208,8 +207,8 @@ export class Credential extends VCXPaymentTxn(CredentialBase) {
     }
   }
 
-/** 
- * 
+/**
+ *
  * ```
  * credential = Credential.createWithMsgId({
  *   connection,
@@ -217,8 +216,8 @@ export class Credential extends VCXPaymentTxn(CredentialBase) {
  *   sourceId: 'testCredentialSourceId'
  * })
  * ```
- * 
- * 
+ *
+ *
  */
   public static async createWithMsgId (
     { connection, sourceId, msgId }: ICredentialCreateWithMsgId
@@ -252,12 +251,12 @@ export class Credential extends VCXPaymentTxn(CredentialBase) {
   }
   /**
    * Create an object from a JSON Structured data produced from the objects serialize method
-   * 
+   *
    * ```
    * data = credential.deserialize()
    * ```
    */
-  public static async deserialize (credentialData: ICredentialStructData) {
+  public static async deserialize (credentialData: ISerializedData<ICredentialStructData>) {
     const credential = await super._deserialize<Credential, {}>(Credential, credentialData)
     return credential
   }
