@@ -144,11 +144,10 @@ void VcxWrapperCommonNumberStringCallback(vcx_command_handle_t xcommand_handle,
            completion:(void (^)(NSError *error, NSInteger walletHandle))completion;
 - (void)getRecordWallet:(NSString *)recordType
             recordId:(NSString *)recordId
-           completion:(void (^)(NSError *error, NSInteger walletHandle, NSString walletValue))completion ;
+           completion:(void (^)(NSError *error, NSInteger walletHandle, NSString walletValue))completion;
 - (void)deleteRecordWallet:(NSString *)recordType
             recordId:(NSString *)recordId
            completion:(void (^)(NSError *error, NSInteger walletHandle))completion;
-
 @end
 
 #endif /* init_h */
