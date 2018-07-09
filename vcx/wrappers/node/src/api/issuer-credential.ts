@@ -77,8 +77,9 @@ class IssuerCredentialBase extends VCXBaseWithState<IIssuerCredentialData> {
    * 
    * Example:
    * ```
-   * connection = await connectionCreateConnect()
-   * issuerCredential = await issuerCredentialCreate()
+   * connection = await Connection.create({id: 'foobar'})
+   * inviteDetails = await connection.connect()
+   * issuerCredential = await IssuerCredential.create({sourceId: "12", credDefId: "credDefId", attr: {k    ey: "value"}, credentialName: "name", price: 0})
    * await issuerCredential.sendOffer(connection)
    * ```
    * @returns {Promise<void>}
@@ -207,6 +208,7 @@ export class IssuerCredential extends VCXPaymentTxn(IssuerCredentialBase) {
  * ```
  * issuerCredential = await IssuerCredential.create({sourceId: "12", credDefId: "credDefId", attr: {key: "value"}, credentialName: "name", price: 0})
  * data1 = await issuerCredential.serialize()
+ * issuerCredential2 = await IssuerCredential.deserialize(data1)
  * ```
  * 
  * @returns {Promise<IssuerCredential>} An Issuer credential Object

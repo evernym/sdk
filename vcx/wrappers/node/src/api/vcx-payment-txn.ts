@@ -10,7 +10,7 @@ export interface IPaymentTxn {
 }
 
 export type Constructor<T> = new(...args: any[]) => T
-/** Represents a transaction on the ledger that shows that this was paid for. */
+/** Represents a transaction on the ledger that shows that this was paid for. */  
 export interface IVCXPaymentTxnRes {
   getPaymentTxn: () => Promise<IPaymentTxn>
 }

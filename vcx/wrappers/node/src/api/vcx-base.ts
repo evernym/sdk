@@ -35,6 +35,12 @@ export abstract class VCXBase<SerializedData> extends GCWatcher {
    * Data returned can be used to recreate an entity by passing it to the deserialize function.
    * 
    * Same json object structure that is passed to the deserialize function.
+   * 
+   * Example:
+   * 
+   * ```
+   *  data = await object.serialize()
+   * ```
    */
   public async serialize (): Promise<ISerializedData<SerializedData>> {
     try {

@@ -37,8 +37,9 @@ class CredentialBase extends VCXBaseWithState<ICredentialStructData> {
    * Retrieves all pending credential offers.
    * 
    * ```
-   * const connection = await connectionCreateConnect()
-   * const offers = await Credential.getOffers(connection)
+   * connection = await Connection.create({id: 'foobar'})
+   * inviteDetails = await connection.connect()
+   * offers = await Credential.getOffers(connection)
    * ```
    */
   public static async getOffers (connection: Connection): Promise<ICredentialOffer[]> {
@@ -79,7 +80,10 @@ class CredentialBase extends VCXBaseWithState<ICredentialStructData> {
  * Approves the credential offer and submits a credential request.  The result will be a credential stored in the prover's wallet.
  * 
  * ```
- *  await credential.sendRequest({ connection: data.connection, payment: 0 })
+ * connection = await Connection.create({id: 'foobar'})
+ * inviteDetails = await connection.connect()
+ * credential = Credential.create(data)
+ * await credential.sendRequest({ connection, 1000 })
  * ```
  * 
  */
@@ -108,7 +112,16 @@ class CredentialBase extends VCXBaseWithState<ICredentialStructData> {
   get credOffer (): string {
     return this._credOffer
   }
-
+/**
+ * Retrieve Payment Transaction Information for this Credential. Typically this will include
+ * how much payment is requried by the issuer, which needs to be provided by the prover, before
+ * the issuer will issue the credential to the prover. Ideally a prover would want to know
+ * how much payment is being asked before submitting the credential request (which triggers
+ * the payment to be made).
+ * ```
+ * EXAMPLE HERE
+ * ```
+ */
   public async getPaymentInfo (): Promise<string> {
     try {
       return await createFFICallbackPromise<string>(
@@ -238,6 +251,7 @@ export class Credential extends VCXPaymentTxn(CredentialBase) {
     }
   }
   /**
+   * Create an object from a JSON Structured data produced from the objects serialize method
    * 
    * ```
    * data = credential.deserialize()
