@@ -126,7 +126,7 @@ def ios() {
 
                 // Build ios architectures
                 sh "source vcx/ci/scripts/iosBuild.sh"
-                sh "ls -al /Users/jenkins/vcx"
+                sh "ehco after iosBuild.sh"
 
                 // Publish to Kraken
                 // TIME_VERSION=sh (script: 'echo $(date +%Y%m%d_%H%M%S)', returnStdout: true ).trim()

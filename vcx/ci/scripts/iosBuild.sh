@@ -16,8 +16,8 @@ cp -rf ~/OpenSSL-for-iPhone ${BASE_DIR}/.macosbuild
 cp -rf ~/libzmq-ios ${BASE_DIR}/.macosbuild
 cp -rf ~/combine-libs ${BASE_DIR}/.macosbuild
 # Package for all architectures (simulator architectures included)
-# ./mac.11.copy.static.libs.to.app.sh
-# ./mac.12.combine.static.libs.sh libvcxall
+./mac.11.copy.static.libs.to.app.sh
+./mac.12.combine.static.libs.sh libvcxall
 
 rm ${WRAPPER_LIBS}/*
 
@@ -26,4 +26,9 @@ rm ${WRAPPER_LIBS}/*
 ./mac.12.combine.static.libs.sh libvcxpartial
 
 ./mac.13.build.cocopod.sh $(date '+%Y%m%d.%H%M%S') libvcxpartial
+echo "-----------------------------------------"
+echo "after libvcxpartial cocopod"
+ls vcx
+ls -al vcx/vcx.libvcxpartial_*_universal.zip
+echo "-----------------------------------------"
 #
