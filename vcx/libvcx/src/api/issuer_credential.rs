@@ -40,17 +40,6 @@ use error::ToErrorCode;
 /// Error code as a u32
 ///
 /// # Example credential_data -> "{"state":["UT"]}"
-/// ```
-/// let command_handle = 0;
-/// let credential_source_id = CString::new("Credential Source ID").unwrap().into_raw();
-/// let credential_name = CString::new("Credential Name").unwrap().into_raw();
-/// let id = CString::new("2hoqvcwupRTUNkXn6ArYzs:3:CL:2471").unwrap().into_raw();
-/// let issuer_did = ptr::null();
-/// let attributes = CString::new(r#"{"attr1":"value1"}"#).unwrap().into_raw();
-/// let price = 1000;
-/// let err = vcx_issuer_create_credential(command_handle, credential_source_id, id, issuer_did, attributes, credential_name, price, Some(callback));
-/// let handle = cb.receive()
-/// ```
 #[no_mangle]
 #[allow(unused_variables, unused_mut)]
 pub extern fn vcx_issuer_create_credential(command_handle: u32,
