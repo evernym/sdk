@@ -24,11 +24,11 @@ cp -v lib/${COMBINED_LIB}.a vcx.framework/lib/libvcx.a
 cp -v ConnectMeVcx.h vcx.framework/Headers
 cp -v include/libvcx.h vcx.framework/Headers
 cp -v vcx/vcx.h vcx.framework/Headers
-rm -rf $VCX_SDK/vcx/wrappers/ios/vcx/tmp
+#rm -rf $VCX_SDK/vcx/wrappers/ios/vcx/tmp
 mkdir -p $VCX_SDK/vcx/wrappers/ios/vcx/tmp/vcx/
 cp -rvp vcx.framework $VCX_SDK/vcx/wrappers/ios/vcx/tmp/vcx/
 cd $VCX_SDK/vcx/wrappers/ios/vcx/tmp
-rm vcx.framework_${DATETIME}_universal.zip
+#rm vcx.framework_${DATETIME}_universal.zip
 zip -r vcx.${COMBINED_LIB}_${DATETIME}_universal.zip vcx
 # |---vcx.framework_20180522.1635_universal.zip
 # |---vcx
