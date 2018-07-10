@@ -74,6 +74,6 @@ zip -r vcx.framework_${DATETIME}_universal.zip vcx
 #            |----Modules
 #            |       |---module.modulemap
 #            |----Info.plist
-curl --insecure -u normjarvis -X POST -F file=@./vcx.framework_${DATETIME}_universal.zip https://kraken.corp.evernym.com/repo/ios/upload
+#curl --insecure -u normjarvis -X POST -F file=@./vcx.framework_${DATETIME}_universal.zip https://kraken.corp.evernym.com/repo/ios/upload
 # Download the file at https://repo.corp.evernym.com/filely/ios/vcx.framework_${DATETIME}_universal.zip
-sudo cp ./vcx.framework_${DATETIME}_universal.zip  /usr/local/var/www/download/ios
+#sudo cp ./vcx.framework_${DATETIME}_universal.zip  /usr/local/var/www/download/ios
