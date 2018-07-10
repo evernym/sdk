@@ -526,7 +526,7 @@ pub extern fn vcx_credential_get_payment_txn(command_handle: u32,
 
     thread::spawn(move|| {
         match credential::get_payment_txn(handle) {
-            Some(x) => {
+            Ok(x) => {
                 match serde_json::to_string(&x) {
                     Ok(x) => {
                         info!("vcx_credential_get_payment_txn_cb(command_handle: {}, rc: {}, : {}), source_id: {:?}",
@@ -542,10 +542,10 @@ pub extern fn vcx_credential_get_payment_txn(command_handle: u32,
                     }
                 }
             },
-            None => {
+            Err(x) => {
                 error!("vcx_credential_get_payment_txn_cb(command_handle: {}, rc: {}, txn: {}), source_id: {:?}",
-                       command_handle, error_string(error::NOT_READY.code_num), "null", credential::get_source_id(handle).unwrap_or_default());
-                cb(command_handle, error::NOT_READY.code_num, ptr::null());
+                       command_handle, x.to_string(), "null", credential::get_source_id(handle).unwrap_or_default());
+                cb(command_handle, x.to_error_code(), ptr::null());
             },
         };
     });
@@ -562,7 +562,9 @@ mod tests {
     use settings;
     use connection;
     use api::VcxStateType;
-    use utils::constants::{DEFAULT_SERIALIZED_CREDENTIAL};
+    use utils::libindy::return_types_u32;
+    use serde_json::Value;
+    use utils::constants::{DEFAULT_SERIALIZED_CREDENTIAL, DEFAULT_SERIALIZE_VERSION};
 
     pub const BAD_CREDENTIAL_OFFER: &str = r#"{"version": "0.1","to_did": "LtMgSjtFcyPwenK9SHCyb8","from_did": "LtMgSjtFcyPwenK9SHCyb8","credential": {"account_num": ["8BEaoLf8TBmK4BUyX8WWnA"],"name_on_account": ["Alice"]},"schema_seq_no": 48,"issuer_did": "Pd4fnFtRBcMKRVC2go5w3j","credential_name": "Account Certificate","credential_id": "3675417066","msg_ref_id": "ymy5nth"}"#;
 
@@ -628,14 +630,23 @@ mod tests {
     }
 
     #[test]
-    fn test_vcx_credential_serialize() {
+    fn test_vcx_credential_serialize_and_deserialize() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
+        let cb = return_types_u32::Return_U32_STR::new().unwrap();
         let handle = credential::credential_create_with_offer("test_vcx_credential_serialize",::utils::constants::CREDENTIAL_OFFER_JSON).unwrap();
-        assert_eq!(vcx_credential_serialize(0,
+        assert_eq!(vcx_credential_serialize(cb.command_handle,
                                        handle,
-                                       Some(serialize_cb)), error::SUCCESS.code_num);
-        thread::sleep(Duration::from_millis(200));
+                                       Some(cb.get_callback())), error::SUCCESS.code_num);
+        let s = cb.receive(Some(Duration::from_secs(2))).unwrap().unwrap();
+        let j: Value = serde_json::from_str(&s).unwrap();
+        assert_eq!(j["version"], DEFAULT_SERIALIZE_VERSION);
+        let cb = return_types_u32::Return_U32_U32::new().unwrap();
+        assert_eq!(vcx_credential_deserialize(cb.command_handle,
+                                              CString::new(s).unwrap().into_raw(),
+                                              Some(cb.get_callback())), error::SUCCESS.code_num);
+        let handle = cb.receive(Some(Duration::from_secs(2))).unwrap();
+        assert!(handle > 0);
     }
 
     extern "C" fn send_offer_cb(command_handle: u32, err: u32) {
@@ -671,15 +682,6 @@ mod tests {
         let original = formatter(DEFAULT_SERIALIZED_CREDENTIAL);
         let new = formatter(&credential::to_string(credential_handle).unwrap());
         assert_eq!(original, new);
-    }
-
-    #[test]
-    fn test_vcx_credential_deserialize_succeeds() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
-        let string = DEFAULT_SERIALIZED_CREDENTIAL;
-        vcx_credential_deserialize(0,CString::new(string).unwrap().into_raw(), Some(deserialize_cb));
-        thread::sleep(Duration::from_millis(200));
     }
 
     extern "C" fn get_offers_cb(command_handle: u32, err:u32, offers: *const c_char) {
@@ -744,9 +746,9 @@ mod tests {
 
     #[test]
     fn test_get_credential(){
-        use utils::constants::SERIALIZED_CREDENTIAL;
+        use utils::constants::FULL_CREDENTIAL_SERIALIZED;
         settings::set_defaults();
-        let handle = credential::from_string(SERIALIZED_CREDENTIAL).unwrap();
+        let handle = credential::from_string(FULL_CREDENTIAL_SERIALIZED).unwrap();
         let bad_handle = 1123;
         let command_handle = 0;
         assert_eq!(vcx_get_credential(command_handle, handle, Some(get_credential_cb)), error::SUCCESS.code_num);

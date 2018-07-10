@@ -25,6 +25,7 @@ __pycache__/
 
 #libraries
 *.so
+*.a
 
 # dat files for demo of python wrapper
 *.dat

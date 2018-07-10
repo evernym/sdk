@@ -18,7 +18,7 @@ use settings;
 
 static NULL_PAYMENT: &str = "null";
 static EMPTY_CONFIG: &str = "{}";
-static FEES: &str = r#"{"0":1, "NYM":1, "SCHEMA":2, "CRED_DEF":42, "103":1999998889, "104":0, "105":0, "106":0, "107":0, "108":0, "109":0, "110":0, "111":0, "112":0, "113":0, "114":0, "115":0, "116":0, "117":0, "118":0, "119":0}"#;
+static DEFAULT_FEES: &str = r#"{"0":1, "1":1, "101":2, "102":42, "103":1999998889, "104":0, "105":0, "106":0, "107":0, "108":0, "109":0, "110":0, "111":0, "112":0, "113":0, "114":0, "115":0, "116":0, "117":0, "118":0, "119":0}"#;
 static PARSED_TXN_PAYMENT_RESPONSE: &str = r#"[{"amount":4,"extra":null,"input":"["pov:null:1","pov:null:2"]"}]"#;
 
 static PAYMENT_INIT: Once = ONCE_INIT;
@@ -41,9 +41,11 @@ pub struct AddressInfo {
     utxo: Vec<UTXO>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct UTXO {
-    input: String,
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+pub struct UTXO {
+    txo: Option<String>,
+    #[serde(rename = "paymentAddress")]
+    payment_address: String,
     amount: u64,
     extra: Option<String>,
 }
@@ -79,18 +81,10 @@ pub fn init_payments() -> Result<(), u32> {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
-pub struct PaymentUTXO {
-    #[serde(rename = "paymentAddress")]
-    payment_address: String,
-    amount: u64,
-    extra: Option<String>,
-}
-
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct PaymentTxn {
     pub amount: u64,
     pub inputs: Vec<String>,
-    pub outputs: Vec<PaymentUTXO>,
+    pub outputs: Vec<UTXO>,
 }
 
 impl PaymentTxn {
@@ -98,7 +92,7 @@ impl PaymentTxn {
         let inputs: Vec<String> = serde_json::from_str(&inputs)
             .map_err(|err| {error::INVALID_JSON.code_num})?;
 
-        let outputs: Vec<PaymentUTXO> = serde_json::from_str(&outputs)
+        let outputs: Vec<UTXO> = serde_json::from_str(&outputs)
             .map_err(|err| {error::INVALID_JSON.code_num})?;
 
         Ok(PaymentTxn {
@@ -118,7 +112,7 @@ pub fn create_address() -> Result<String, u32> {
 
 pub fn get_address_info(address: &str) -> Result<AddressInfo, u32> {
     if settings::test_indy_mode_enabled() {
-        let utxo: Vec<UTXO> = serde_json::from_str(r#"[{"input":"pov:null:1","amount":1,"extra":"yqeiv5SisTeUGkw"},{"input":"pov:null:2","amount":2,"extra":"Lu1pdm7BuAN2WNi"}]"#).unwrap();
+        let utxo: Vec<UTXO> = serde_json::from_str(r#"[{"txo":"pov:null:1","paymentAddress":"pay:null:zR3GN9lfbCVtHjp","amount":1,"extra":"yqeiv5SisTeUGkw"},{"txo":"pov:null:2","paymentAddress":"pay:null:zR3GN9lfbCVtHjp","amount":2,"extra":"Lu1pdm7BuAN2WNi"}]"#).unwrap();
         return Ok(AddressInfo { address: address.to_string(), balance: _address_balance(&utxo), utxo})
     }
 
@@ -178,7 +172,7 @@ pub fn get_wallet_token_info() -> Result<WalletInfo, u32> {
 }
 
 pub fn get_ledger_fees() -> Result<String, u32> {
-    if settings::test_indy_mode_enabled() { return Ok(FEES.to_string()); }
+    if settings::test_indy_mode_enabled() { return Ok(DEFAULT_FEES.to_string()); }
 
     let did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
 
@@ -187,11 +181,13 @@ pub fn get_ledger_fees() -> Result<String, u32> {
         Err(x) => return Err(map_rust_indy_sdk_error_code(x)),
     };
 
-    Payment::parse_get_txn_fees_response(NULL_PAYMENT, &response)
-        .map_err(map_rust_indy_sdk_error_code)
+    let res = Payment::parse_get_txn_fees_response(NULL_PAYMENT, &response)
+        .map_err(map_rust_indy_sdk_error_code);
+    res
 }
 
 pub fn pay_for_txn(req: &str, txn_type: &str) -> Result<(PaymentTxn, String), u32> {
+    debug!("pay_for_txn(req: {}, txn_type: {})", req, txn_type);
     if settings::test_indy_mode_enabled() { return Ok((PaymentTxn::from_parts(r#"["pay:null:9UFgyjuJxi1i1HD"]"#,r#"[{"amount":4,"extra":null,"paymentAddress":"pay:null:xkIsxem0YNtHrRO"}]"#,1).unwrap(), SUBMIT_SCHEMA_RESPONSE.to_string())); }
 
     let txn_price = get_txn_price(txn_type)?;
@@ -270,7 +266,7 @@ pub fn inputs(cost: u64) -> Result<(u64, String), PaymentError> {
     'outer: for address in wallet_info.addresses.iter() {
         'inner: for utxo in address.utxo.iter() {
             if balance < cost {
-                inputs.push(utxo.input.to_string());
+                inputs.push(utxo.txo.clone().unwrap().to_string());
                 balance += utxo.amount;
             } else { break 'outer }
         }
@@ -326,7 +322,7 @@ pub fn mint_tokens(number_of_addresses: Option<u32>, tokens_per_address: Option<
 // This is used for testing purposes only!!!
 pub fn set_ledger_fees(fees: Option<String>) -> Result<(), u32> {
     let did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
-    let fees = fees.unwrap_or(FEES.to_string());
+    let fees = fees.unwrap_or(DEFAULT_FEES.to_string());
 
     match Payment::build_set_txn_fees_req(get_wallet_handle() as i32, &did, NULL_PAYMENT, &fees) {
         Ok(txn) => match libindy_sign_and_submit_request(&did, &txn) {
@@ -343,7 +339,6 @@ pub fn set_ledger_fees(fees: Option<String>) -> Result<(), u32> {
 pub mod tests {
     use super::*;
     use settings;
-    use utils::devsetup::tests;
 
     pub fn token_setup(number_of_addresses: Option<u32>, tokens_per_address: Option<u32>) {
         init_payments().unwrap();
@@ -382,7 +377,7 @@ pub mod tests {
         init_payments().unwrap();
         create_address().unwrap();
         let balance = get_wallet_token_info().unwrap().to_string();
-        assert_eq!(balance, r#"{"balance":6,"addresses":[{"address":"pay:null:9UFgyjuJxi1i1HD","balance":3,"utxo":[{"input":"pov:null:1","amount":1,"extra":"yqeiv5SisTeUGkw"},{"input":"pov:null:2","amount":2,"extra":"Lu1pdm7BuAN2WNi"}]},{"address":"pay:null:zR3GN9lfbCVtHjp","balance":3,"utxo":[{"input":"pov:null:1","amount":1,"extra":"yqeiv5SisTeUGkw"},{"input":"pov:null:2","amount":2,"extra":"Lu1pdm7BuAN2WNi"}]}]}"#);
+        assert_eq!(balance, r#"{"balance":6,"addresses":[{"address":"pay:null:9UFgyjuJxi1i1HD","balance":3,"utxo":[{"txo":"pov:null:1","paymentAddress":"pay:null:zR3GN9lfbCVtHjp","amount":1,"extra":"yqeiv5SisTeUGkw"},{"txo":"pov:null:2","paymentAddress":"pay:null:zR3GN9lfbCVtHjp","amount":2,"extra":"Lu1pdm7BuAN2WNi"}]},{"address":"pay:null:zR3GN9lfbCVtHjp","balance":3,"utxo":[{"txo":"pov:null:1","paymentAddress":"pay:null:zR3GN9lfbCVtHjp","amount":1,"extra":"yqeiv5SisTeUGkw"},{"txo":"pov:null:2","paymentAddress":"pay:null:zR3GN9lfbCVtHjp","amount":2,"extra":"Lu1pdm7BuAN2WNi"}]}]}"#);
     }
 
     #[cfg(feature = "pool_tests")]
@@ -390,13 +385,13 @@ pub mod tests {
     #[test]
     fn test_get_wallet_token_info_real() {
         let name = "test_get_wallet_info_real";
-        tests::setup_ledger_env(name);
+        ::utils::devsetup::tests::setup_ledger_env(name);
         create_address().unwrap();
         create_address().unwrap();
         create_address().unwrap();
         let wallet_info = get_wallet_token_info().unwrap();
         assert_eq!(wallet_info.balance, 45);
-        tests::cleanup_dev_env(name);
+        ::utils::devsetup::tests::cleanup_dev_env(name);
     }
 
     #[test]
@@ -404,8 +399,8 @@ pub mod tests {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
         let fees = get_ledger_fees().unwrap();
-        assert!(fees.contains(r#""SCHEMA":2"#));
-        assert!(fees.contains(r#""NYM":1"#));
+        assert!(fees.contains(r#""101":2"#));
+        assert!(fees.contains(r#""1":1"#));
     }
 
     #[cfg(feature = "pool_tests")]
@@ -413,20 +408,20 @@ pub mod tests {
     #[test]
     fn test_get_ledger_fees_real() {
         let name = "test_get_ledger_fees_real";
-        tests::setup_ledger_env(name);
+        ::utils::devsetup::tests::setup_ledger_env(name);
         set_ledger_fees(None).unwrap();
         let fees = get_ledger_fees().unwrap();
         println!("{}", fees);
-        assert!(fees.contains(r#""SCHEMA":2"#));
-        assert!(fees.contains(r#""NYM":1"#));
-        tests::cleanup_dev_env(name);
+        assert!(fees.contains(r#""101":2"#));
+        assert!(fees.contains(r#""1":1"#));
+        ::utils::devsetup::tests::cleanup_dev_env(name);
     }
 
     #[test]
     fn test_address_balance() {
         let addresses = vec![
-            UTXO { input: "pov::null:2".to_string(), amount: 2, extra: Some("abcde".to_string()) },
-            UTXO { input: "pov::null:3".to_string(), amount: 3, extra: Some("bcdef".to_string()) }
+            UTXO { txo: Some("pov::null:2".to_string()), payment_address: "pay:null:J81AxU9hVHYFtJc".to_string(), amount: 2, extra: Some("abcde".to_string()) },
+            UTXO { txo: Some("pov::null:3".to_string()), payment_address: "pay:null:J81AxU9hVHYFtJc".to_string(), amount: 3, extra: Some("bcdef".to_string()) }
         ];
 
         assert_eq!(_address_balance(&addresses), 5);
@@ -484,8 +479,8 @@ pub mod tests {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
 
-        assert_eq!(get_txn_price("SCHEMA").unwrap(), 2);
-        assert_eq!(get_txn_price("CRED_DEF").unwrap(), 42);
+        assert_eq!(get_txn_price("101").unwrap(), 2);
+        assert_eq!(get_txn_price("102").unwrap(), 42);
         assert_eq!(get_txn_price("Unknown txn type"), Err(error::UNKNOWN_TXN_TYPE.code_num));
     }
 
@@ -496,7 +491,7 @@ pub mod tests {
 
         // Schema
         let create_schema_req = ::utils::constants::SCHEMA_CREATE_JSON.to_string();
-        let (payment, response) = pay_for_txn(&create_schema_req, "SCHEMA").unwrap();
+        let (payment, response) = pay_for_txn(&create_schema_req, "101").unwrap();
         assert_eq!(response, SUBMIT_SCHEMA_RESPONSE.to_string());
     }
 
@@ -506,17 +501,17 @@ pub mod tests {
     fn test_pay_for_txn_real() {
         let name = "test_pay_for_txn_real";
 
-        tests::setup_ledger_env(name);
+        ::utils::devsetup::tests::setup_ledger_env(name);
 
         let (_, schema_json) = ::utils::libindy::anoncreds::tests::create_schema();
         let create_schema_req = ::utils::libindy::anoncreds::tests::create_schema_req(&schema_json);
         let start_wallet = get_wallet_token_info().unwrap();
 
-        let (payment, response) = pay_for_txn(&create_schema_req, "SCHEMA").unwrap();
+        let (payment, response) = pay_for_txn(&create_schema_req, "101").unwrap();
 
         let end_wallet = get_wallet_token_info().unwrap();
 
-        tests::cleanup_dev_env(name);
+        ::utils::devsetup::tests::cleanup_dev_env(name);
         assert_eq!(payment.amount, 2);
         assert_eq!(payment.outputs.len(), 1);
         assert_eq!(start_wallet.balance - 2, end_wallet.balance);
@@ -527,7 +522,7 @@ pub mod tests {
     #[test]
     fn test_pay_for_txn_fails_with_insufficient_tokens_in_wallet() {
         let name = "test_pay_for_txn_real";
-        tests::setup_ledger_env(name);
+        ::utils::devsetup::tests::setup_ledger_env(name);
 
         let (_, schema_json) = ::utils::libindy::anoncreds::tests::create_schema();
         let create_schema_req = ::utils::libindy::anoncreds::tests::create_schema_req(&schema_json);
@@ -535,7 +530,7 @@ pub mod tests {
 
         let rc= pay_for_txn(&create_schema_req, "103");
 
-        tests::cleanup_dev_env(name);
+        ::utils::devsetup::tests::cleanup_dev_env(name);
         assert_eq!(rc, Err(error::INSUFFICIENT_TOKEN_AMOUNT.code_num));
     }
 
@@ -582,7 +577,7 @@ pub mod tests {
     fn test_submit_fees_with_insufficient_tokens_on_ledger() {
         let name = "test_submit_fees_with_insufficient_tokens_on_ledger";
 
-        tests::setup_ledger_env(name);
+        ::utils::devsetup::tests::setup_ledger_env(name);
 
         let (_, schema_json) = ::utils::libindy::anoncreds::tests::create_schema();
         let req = ::utils::libindy::anoncreds::tests::create_schema_req(&schema_json);
@@ -597,7 +592,7 @@ pub mod tests {
 
         let rc = _submit_fees_request(&req, &inputs, &output);
 
-        tests::cleanup_dev_env(name);
+        ::utils::devsetup::tests::cleanup_dev_env(name);
         assert_eq!(rc, Err(error::INSUFFICIENT_TOKEN_AMOUNT.code_num));
     }
 
@@ -606,7 +601,7 @@ pub mod tests {
     #[test]
     fn test_pay_for_txn_with_empty_outputs_success() {
         let name = "test_pay_for_txn_with_empty_outputs_success";
-        tests::setup_ledger_env(name);
+        ::utils::devsetup::tests::setup_ledger_env(name);
 
         let (_, schema_json) = ::utils::libindy::anoncreds::tests::create_schema();
         let req = ::utils::libindy::anoncreds::tests::create_schema_req(&schema_json);
@@ -624,7 +619,7 @@ pub mod tests {
         assert!(rc.is_ok());
         assert_eq!(end_wallet.balance, 0);
 
-        tests::cleanup_dev_env(name);
+        ::utils::devsetup::tests::cleanup_dev_env(name);
     }
 
     #[test]
@@ -648,4 +643,5 @@ pub mod tests {
         ::utils::devsetup::tests::cleanup_dev_env(name);
         assert_eq!(start_wallet.balance, 5720045);
     }
+
 }

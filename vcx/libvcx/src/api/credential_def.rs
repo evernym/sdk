@@ -167,10 +167,11 @@ pub extern fn vcx_credentialdef_deserialize(command_handle: u32,
                       command_handle, error_string(0), x, credential_def::get_source_id(x).unwrap_or_default());
                 (error::SUCCESS.code_num, x)
             },
-            Err(x) => {
+            Err(e) => {
+                let error_code = e.to_error_code();
                 warn!("vcx_credentialdef_deserialize_cb(command_handle: {}, rc: {}, handle: {}), source_id: {:?}",
-                      command_handle, error_string(x), 0, "");
-                (x, 0)
+                      command_handle, error_code, 0, "");
+                (error_code, 0)
             },
         };
         cb(command_handle, rc, handle);
@@ -207,8 +208,8 @@ pub extern fn vcx_credentialdef_get_cred_def_id(command_handle: u32, cred_def_ha
             },
             Err(x) => {
                 warn!("vcx_credentialdef_get_cred_def_id(command_handle: {}, cred_def_handle: {}, rc: {}, cred_def_id: {})",
-                      command_handle, cred_def_handle, error_string(x), "");
-                cb(command_handle, x, ptr::null_mut());
+                      command_handle, cred_def_handle, x.to_string(), "");
+                cb(command_handle, x.to_error_code(), ptr::null_mut());
             },
         };
     });
@@ -245,7 +246,7 @@ pub extern fn vcx_credentialdef_get_payment_txn(command_handle: u32,
 
     thread::spawn(move|| {
         match credential_def::get_payment_txn(handle) {
-            Some(x) => {
+            Ok(x) => {
                 match serde_json::to_string(&x) {
                     Ok(x) => {
                         info!("vcx_credentialdef_get_payment_txn_cb(command_handle: {}, rc: {}, : {}), source_id: {:?}",
@@ -261,10 +262,10 @@ pub extern fn vcx_credentialdef_get_payment_txn(command_handle: u32,
                     }
                 }
             },
-            None => {
+            Err(x) => {
                 error!("vcx_credentialdef_get_payment_txn_cb(command_handle: {}, rc: {}, txn: {}), source_id: {:?}",
-                       command_handle, error_string(error::NOT_READY.code_num), "null", credential_def::get_source_id(handle).unwrap_or_default());
-                cb(command_handle, error::NOT_READY.code_num, ptr::null());
+                       command_handle, x.to_string(), "null", credential_def::get_source_id(handle).unwrap_or_default());
+                cb(command_handle, x.to_error_code(), ptr::null());
             },
         };
     });
@@ -286,7 +287,7 @@ pub extern fn vcx_credentialdef_release(credentialdef_handle: u32) -> u32 {
         Ok(_) => info!("vcx_credentialdef_release(credentialdef_handle: {}, rc: {}), source_id: {:?}",
                       credentialdef_handle, error_string(0), source_id),
         Err(x) => warn!("vcx_credentialdef_release(credentialdef_handle: {}, rc: {}), source_id: {:?}",
-                        credentialdef_handle, error_string(x), source_id),
+                        credentialdef_handle, x.to_string(), source_id),
     };
     error::SUCCESS.code_num
 }
@@ -300,6 +301,7 @@ mod tests {
     use std::thread;
     use std::time::Duration;
     use settings;
+    use utils::libindy::return_types_u32;
     use utils::constants::{SCHEMA_ID};
 
     extern "C" fn create_cb(command_handle: u32, err: u32, credentialdef_handle: u32) {
@@ -358,9 +360,8 @@ mod tests {
         println!("successfully called deserialize_cb");
         let expected = r#"{"id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:1697","tag":"tag","name":"Test Credential Definition","source_id":"SourceId"}"#;
         let new = credential_def::to_string(credentialdef_handle).unwrap();
-        let mut def1: credential_def::CredentialDef = serde_json::from_str(expected).unwrap();
+        let def1: credential_def::CredentialDef = serde_json::from_str(expected).unwrap();
         let def2: credential_def::CredentialDef = serde_json::from_str(&new).unwrap();
-        def1.handle = def2.handle;
         assert_eq!(def1,def2);
     }
 
@@ -418,9 +419,15 @@ mod tests {
     #[test]
     fn test_vcx_credentialdef_deserialize_succeeds() {
         set_default_and_enable_test_mode();
-        let original = r#"{"id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:1697","tag":"tag","name":"Test Credential Definition","source_id":"SourceId"}"#;
-        vcx_credentialdef_deserialize(0,CString::new(original).unwrap().into_raw(), Some(deserialize_cb));
-        thread::sleep(Duration::from_millis(200));
+        let cb = return_types_u32::Return_U32_U32::new().unwrap();
+        let original = r#"{"version":"1.0", "data": {"id":"2hoqvcwupRTUNkXn6ArYzs:3:CL:1697","tag":"tag","name":"Test Credential Definition","source_id":"SourceId"}}"#;
+        assert_eq!(vcx_credentialdef_deserialize(cb.command_handle,
+                                      CString::new(original).unwrap().into_raw(),
+                                      Some(cb.get_callback())), error::SUCCESS.code_num);
+
+        let handle = cb.receive(Some(Duration::from_secs(2))).unwrap();
+        assert!(handle > 0);
+
     }
 
     #[test]

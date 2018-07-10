@@ -27,7 +27,7 @@ log = "0.4"
 log4rs = "0.8.0"
 chrono = "0.4"
 lazy_static = "0.2"
-libc = "0.2.21"
+libc = "=0.2.41"
 rand = "0.3"
 serde = "1.0"
 serde_json = "1.0"
@@ -42,7 +42,7 @@ rmp-serde = "0.13.7"
 base64 = "0.8.0"
 openssl = "0.10"
 num-traits = "0.2.0"
-rust-indy-sdk = {git = "https://github.com/mikelodder7/rust-indy-sdk.git"}
+rust-indy-sdk = {git = "https://github.com/mikelodder7/rust-indy-sdk.git", rev = "df103b42e5c8df0a870a8911f73c6c50d5d7a23c"}
 log-panics = "2.0.0"
 
 [target.'cfg(target_os = "android")'.dependencies]
@@ -61,7 +61,7 @@ tempfile = "2.2"
 [package.metadata.deb]
 maintainer = "Mark Hadley<mark.hadley@evernym.com>, Devin Fisher, Ryan Marsh, Doug Wightman"
 copyright = "2018, Evernym Inc."
-depends = "$auto, libindy (=1.4.0~586), libnullpay (=0.1.0~586)"
+depends = "$auto, libindy (=1.5.0), libnullpay (=1.5.0)"
 extended-description = """\
 "TODO DESCRIPTION"""
 section = "admin"
