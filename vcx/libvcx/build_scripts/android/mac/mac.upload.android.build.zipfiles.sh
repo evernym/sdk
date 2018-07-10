@@ -9,11 +9,11 @@ WORK_DIR=$(abspath "$WORK_DIR")
 VCX_SDK=$START_DIR/../../../../..
 VCX_SDK=$(abspath "$VCX_SDK")
 
-DATETIME=$1
-if [ "$DATETIME" = "" ]; then
-    echo "You must pass the datetime as the first parameter to the script. (i.e. 20180522.1354 - YYYYmmdd.hhMM)"
-    exit 1
-fi
+# DATETIME=$1
+# if [ "$DATETIME" = "" ]; then
+#     echo "You must pass the datetime as the first parameter to the script. (i.e. 20180522.1354 - YYYYmmdd.hhMM)"
+#     exit 1
+# fi
 
 # cd $VCX_SDK/vcx/wrappers/java/android/vcxtest/app/jni
 
