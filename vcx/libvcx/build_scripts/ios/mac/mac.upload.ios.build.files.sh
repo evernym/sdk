@@ -33,8 +33,8 @@ cp -v lib/libvcxall.a lib/libvcx.a
 # 2) Select vcx as the target in Xcode
 # 3) Select generic iOS device as Build only device
 # 4) Select the menu Product -> archive
-xcodebuild -project vcx.xcodeproj -scheme vcx -configuration Release -sdk iphoneos CONFIGURATION_BUILD_DIR=. clean
-xcodebuild -project vcx.xcodeproj -scheme vcx -configuration Release -sdk iphoneos CONFIGURATION_BUILD_DIR=. build
+xcodebuild -project vcx.xcodeproj -scheme vcx -configuration Debug -sdk iphoneos CONFIGURATION_BUILD_DIR=. clean
+xcodebuild -project vcx.xcodeproj -scheme vcx -configuration Debug -sdk iphoneos CONFIGURATION_BUILD_DIR=. build
 mv lib/libvcx.a.original lib/libvcx.a
 # 5) If every thing compiled successfully then folder with `vcx.framework` will be opened 
 # 6) Now upload iOS .tar.gz and .zip files from the build as assets to servers...
