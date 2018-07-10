@@ -2,6 +2,7 @@
 
 export SCRIPTS_PATH="vcx/libvcx/build_scripts/ios/mac"
 export BASE_DIR="../../../../.."
+export WRAPPER_LIBS="vcx/wrappers/ios/vcx/lib"
 
 
 ls
@@ -14,5 +15,15 @@ source ./mac.05.libvcx.env.sh
 cp -rf ~/OpenSSL-for-iPhone ${BASE_DIR}/.macosbuild
 cp -rf ~/libzmq-ios ${BASE_DIR}/.macosbuild
 cp -rf ~/combine-libs ${BASE_DIR}/.macosbuild
+# Package for all architectures (simulator architectures included)
+# ./mac.11.copy.static.libs.to.app.sh
+# ./mac.12.combine.static.libs.sh libvcxall
+
+rm ${WRAPPER_LIBS}/*
+
+# Package for armv7 and arm64
 ./mac.11.copy.static.libs.to.app.sh
-./mac.12.combine.static.libs.sh libvcxall
+./mac.12.combine.static.libs.sh libvcxpartial
+
+./mac.13.build.cocopod.sh $(date '+%Y%m%d.%H%M%S') libvcxpartial
+#

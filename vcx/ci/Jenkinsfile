@@ -10,8 +10,8 @@ testing()
 def testing() {
     stage('Testing') {
         parallel([
-            'Main' : { mainUbuntu() },
-            'Android': { android() },
+            // 'Main' : { mainUbuntu() },
+            // 'Android': { android() },
             'iOS' : { ios() }
         ])
     }
@@ -126,23 +126,24 @@ def ios() {
 
                 // Build ios architectures
                 sh "source vcx/ci/scripts/iosBuild.sh"
+                sh "ls -al /Users/jenkins/vcx"
 
                 // Publish to Kraken
-                TIME_VERSION=sh (script: 'echo $(date +%Y%m%d_%H%M%S)', returnStdout: true ).trim()
-                sh "mkdir ${TIME_VERSION}"
-                sh "zip -r ${TIME_VERSION}/libvcxall_${TIME_VERSION}.zip vcx/wrappers/ios/vcx/lib/libvcxall.a"
+                // TIME_VERSION=sh (script: 'echo $(date +%Y%m%d_%H%M%S)', returnStdout: true ).trim()
+                // sh "mkdir ${TIME_VERSION}"
+                // sh "zip -r ${TIME_VERSION}/libvcxall_${TIME_VERSION}.zip vcx/wrappers/ios/vcx/lib/libvcxall.a"
 
-                if (env.BRANCH_NAME == "master") {
-                    withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
-                        sh "find ${TIME_VERSION} -type f -name 'libvcxall_${TIME_VERSION}.zip' -exec curl -u \"${KRAKEN_CREDENTIALS}\" -X POST  https://kraken.corp.evernym.com/repo/ios/upload -F 'file=@{}' \\;"
-                    }
-                }
+                // if (env.BRANCH_NAME == "master") {
+                //     withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
+                //         sh "find ${TIME_VERSION} -type f -name 'libvcxall_${TIME_VERSION}.zip' -exec curl -u \"${KRAKEN_CREDENTIALS}\" -X POST  https://kraken.corp.evernym.com/repo/ios/upload -F 'file=@{}' \\;"
+                //     }
+                // }
             } catch (Exception ex) {
                 // We currently do not fail the main build if the android and ios builds fail
-                // currentBuild.result = "FAILED"
-                // if (env.BRANCH_NAME == "master") {
-                //     fail()
-                // }
+                currentBuild.result = "FAILED"
+                if (env.BRANCH_NAME == "master") {
+                    fail()
+                }
                 echo "$ex error"
             } finally {
                 step([$class: 'WsCleanup'])

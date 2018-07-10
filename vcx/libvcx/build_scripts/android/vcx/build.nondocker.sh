@@ -178,8 +178,8 @@ ${TOOLCHAIN_DIR}/sysroot/usr/lib/libz.so \
 ${TOOLCHAIN_DIR}/sysroot/usr/lib/libm.a \
 ${TOOLCHAIN_DIR}/sysroot/usr/lib/liblog.so \
 ${LIBINDY_DIR}/libindy.a \
-${OPENSSL_DIR}/lib/libssl.a \
-${OPENSSL_DIR}/lib/libcrypto.a \
+${LIBNULLPAY_DIR}/libnullpay.a \
+${TOOLCHAIN_DIR}/${CROSS_COMPILE}/lib/libgnustl_shared.so \
 ${SODIUM_LIB_DIR}/libsodium.a \
 ${LIBZMQ_LIB_DIR}/libzmq.a \
 ${TOOLCHAIN_DIR}/${CROSS_COMPILE}/lib/libstdc++.a -Wl,--no-whole-archive -z muldefs

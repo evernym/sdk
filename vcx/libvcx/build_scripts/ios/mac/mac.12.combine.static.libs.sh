@@ -3,6 +3,7 @@
 # Combined all static libaries in the current directory into a single static library
 # It is hardcoded to use the i386, armv7, and armv7s architectures; this can easily be changed via the 'archs' variable at the top
 # The script takes a single argument, which is the name of the final, combined library to be created.
+# If libvcxpartial is passed in as the parameter, only armv7 and arm64 are packaged 
 #
 #   For example:
 #  =>    combine_static_libraries.sh combined-library
@@ -40,7 +41,12 @@ if [ -f $1.a ]; then
     exit 1
 fi
 
-archs=(armv7 armv7s arm64 i386 x86_64)
+if [ "$1" = "libvcxpartial" ]; then
+    archs=(armv7 arm64)
+else
+    archs=(armv7 armv7s arm64 i386 x86_64)
+fi
+
 libraries=(*.a)
 libtool="/usr/bin/libtool"
 
