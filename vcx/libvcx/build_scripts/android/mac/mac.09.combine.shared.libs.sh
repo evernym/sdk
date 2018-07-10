@@ -14,7 +14,7 @@ VCX_SDK=$(abspath "$VCX_SDK")
 
 declare -a archs=(
     "arm" "arm" "arm-linux-androideabi" "armeabi"
-    "arm" "armv7" "armv7-linux-androideabi" "armeabi-v7a"
+    "arm" "armv7" "arm-linux-androideabi" "armeabi-v7a"
     "arm64" "arm64" "aarch64-linux-android" "arm64-v8a"
     "x86" "x86" "i686-linux-android" "x86"
     "x86_64" "x86_64" "x86_64-linux-android" "x86_64"
@@ -55,6 +55,7 @@ do
     # zip -r libvcxall_${target_arch}.zip ${target_arch}
     # echo "Created $VCX_SDK/vcx/wrappers/java/vcx/src/main/jniLibs/libvcxall_${target_arch}.zip"
     if [ "${aar_arch}" != "${target_arch}" ]; then
+        cd $VCX_SDK/vcx/wrappers/java/vcx/src/main/jniLibs
         rm -rf ${aar_arch}
         mv ${target_arch} ${aar_arch}
     fi
