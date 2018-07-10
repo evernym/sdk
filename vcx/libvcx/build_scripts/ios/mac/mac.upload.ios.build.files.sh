@@ -37,10 +37,10 @@ fi
 cd $VCX_SDK/vcx/wrappers/ios/vcx
 mv lib/libvcx.a lib/libvcx.a.original
 cp -v lib/libvcxall.a lib/libvcx.a
-xcodebuild -project vcx.xcodeproj -scheme vcx -configuration Debug CONFIGURATION_BUILD_DIR=. clean > xcodebuild.vcx.framework.build.out 2>&1
-xcodebuild -project vcx.xcodeproj -scheme vcx -configuration Debug -sdk iphonesimulator CONFIGURATION_BUILD_DIR=. build >> xcodebuild.vcx.framework.build.out 2>&1
+xcodebuild -project vcx.xcodeproj -scheme vcx -configuration Debug CONFIGURATION_BUILD_DIR=. clean > $START_DIR/xcodebuild.vcx.framework.build.out 2>&1
+xcodebuild -project vcx.xcodeproj -scheme vcx -configuration Debug -sdk iphonesimulator CONFIGURATION_BUILD_DIR=. build >> $START_DIR/xcodebuild.vcx.framework.build.out 2>&1
 mv vcx.framework vcx.framework.iphonesimulator
-xcodebuild -project vcx.xcodeproj -scheme vcx -configuration Debug -sdk iphoneos CONFIGURATION_BUILD_DIR=. build >> xcodebuild.vcx.framework.build.out 2>&1
+xcodebuild -project vcx.xcodeproj -scheme vcx -configuration Debug -sdk iphoneos CONFIGURATION_BUILD_DIR=. build >> $START_DIR/xcodebuild.vcx.framework.build.out 2>&1
 lipo -create -output combined.ios.vcx vcx.framework/vcx vcx.framework.iphonesimulator/vcx
 mv combined.ios.vcx vcx.framework/vcx
 mv lib/libvcx.a.original lib/libvcx.a
