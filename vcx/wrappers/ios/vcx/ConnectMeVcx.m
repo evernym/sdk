@@ -619,30 +619,8 @@ completion:(void (^)(NSError *error))completion
    }
 }
 
-- (void)addItemWallet:(NSString *)recordType
-            recordKey:(NSString *)recordId
-            recordValue:(NSString *) recordValue
-           completion:(void (^)(NSError *error, NSInteger importHandle))completion {
-   vcx_error_t ret;
-   vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
-   const char * record_type =[recordType cString];
-   const char * record_id = [recordId cString];
-   const char * record_value =[recordValue cString];
-   const char * record_tag = ["{}" cString];
-   ret = vcx_wallet_add_record(handle, record_type, record_id, record_value, record_tag, VcxWrapperCommonCallback);
-
-   if( ret != 0 )
-   {
-       [[VcxCallbacks sharedInstance] deleteCommandHandleFor: handle];
-       
-       dispatch_async(dispatch_get_main_queue(), ^{
-           completion([NSError errorFromVcxError: ret], 0);
-       });
-   }
-}
-
 - (void)addRecordWallet:(NSString *)recordType
-            recordKey:(NSString *)recordId
+            recordId:(NSString *)recordId
             recordValue:(NSString *) recordValue
            completion:(void (^)(NSError *error, NSInteger walletHandle))completion {
    vcx_error_t ret;
