@@ -27,7 +27,7 @@ VCX_SDK=$(abspath "$VCX_SDK")
 cd $VCX_SDK/vcx/wrappers/ios/vcx/lib
 
 if [ "$1" = "" ] || [ "$1" = "libvcx" ]; then
-    echo "You must provide a name for the resultant library, not libvcx.a as it is already used!"
+    echo "You must provide a name for the resultant library, the name libvcx is ALREADY used!"
     exit 1
 fi
 
@@ -38,6 +38,11 @@ fi
 if [ -f $1.a ]; then
     echo "The library $1.a already exists!!!"
     exit 1
+fi
+
+DEBUG_SYMBOLS="debuginfo"
+if [ ! -z "$3" ]; then
+    DEBUG_SYMBOLS=$3
 fi
 
 archs=(armv7 armv7s arm64 i386 x86_64)
@@ -53,7 +58,7 @@ do
     # Extract individual architectures for this library
     for arch in ${archs[*]}
     do
-            lipo -extract $arch $library -o ${library}_${arch}.a
+        lipo -extract $arch $library -o ${library}_${arch}.a
     done
 done
 
@@ -65,6 +70,12 @@ do
     
     for library in ${libraries[*]}
     do
+        if [ "$DEBUG_SYMBOLS" = "nodebug" ]; then
+            lipo ${library}_${arch}.a -thin $arch -output ${library}-$arch-unstripped.a
+            strip -S -x -o ${library}-$arch-stripped.a -r ${library}-$arch-unstripped.a
+            mv ${library}-$arch-stripped.a ${library}_${arch}.a
+            rm ${library}-$arch-unstripped.a
+        fi
         source_libraries="${source_libraries} ${library}_${arch}.a"
     done
     
