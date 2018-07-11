@@ -19,8 +19,6 @@ cp -rf ~/combine-libs ${BASE_DIR}/.macosbuild
 ./mac.11.copy.static.libs.to.app.sh
 ./mac.12.combine.static.libs.sh libvcxall
 
-rm ${WRAPPER_LIBS}/*
-
 # Package for armv7 and arm64
 ./mac.11.copy.static.libs.to.app.sh
 ./mac.12.combine.static.libs.sh libvcxpartial
