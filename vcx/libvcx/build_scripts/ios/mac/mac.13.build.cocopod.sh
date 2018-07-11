@@ -19,13 +19,26 @@ if [ "$DATETIME" = "" ]; then
 fi
 
 cd $VCX_SDK/vcx/wrappers/ios/vcx
+mv lib/libvcx.a lib/libvcx.a.original
+cp -v lib/${COMBINED_LIB}.a lib/libvcx.a
+xcodebuild -project vcx.xcodeproj -scheme vcx -configuration Debug CONFIGURATION_BUILD_DIR=. clean > $START_DIR/xcodebuild.vcx.framework.build.out 2>&1
+if [ "$1" = "libvcxall" ]; then
+    xcodebuild -project vcx.xcodeproj -scheme vcx -configuration Debug -sdk iphonesimulator CONFIGURATION_BUILD_DIR=. build >> $START_DIR/xcodebuild.vcx.framework.build.out 2>&1
+    mv vcx.framework vcx.framework.iphonesimulator
+fi 
+xcodebuild -project vcx.xcodeproj -scheme vcx -configuration Debug -sdk iphoneos CONFIGURATION_BUILD_DIR=. build >> $START_DIR/xcodebuild.vcx.framework.build.out 2>&1
+
+mv lib/libvcx.a.original lib/libvcx.a
+if [ "$1" = "libvcxall" ]; then
+    rm -rf vcx.framework.iphonesimulator
+fi 
+
 mkdir -p vcx.framework/lib
 cp -v lib/${COMBINED_LIB}.a vcx.framework/lib/libvcx.a
+mkdir -p vcx.framework/Headers
 cp -v ConnectMeVcx.h vcx.framework/Headers
 cp -v include/libvcx.h vcx.framework/Headers
 cp -v vcx/vcx.h vcx.framework/Headers
-
-
 if [ -d $VCX_SDK/vcx/wrappers/ios/vcx/tmp ]; then
     rm -rf $VCX_SDK/vcx/wrappers/ios/vcx/tmp
 fi

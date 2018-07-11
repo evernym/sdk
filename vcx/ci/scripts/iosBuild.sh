@@ -16,17 +16,18 @@ cp -rf ~/OpenSSL-for-iPhone ${BASE_DIR}/.macosbuild
 cp -rf ~/libzmq-ios ${BASE_DIR}/.macosbuild
 cp -rf ~/combine-libs ${BASE_DIR}/.macosbuild
 # Package for all architectures (simulator architectures included)
-# ./mac.11.copy.static.libs.to.app.sh
-# ./mac.12.combine.static.libs.sh libvcxall
+./mac.11.copy.static.libs.to.app.sh
+./mac.12.combine.static.libs.sh libvcxall
 
-# rm ${WRAPPER_LIBS}/*
+rm ${WRAPPER_LIBS}/*
 
 # Package for armv7 and arm64
 ./mac.11.copy.static.libs.to.app.sh
 ./mac.12.combine.static.libs.sh libvcxpartial
 
+# clear previous builds from jenkins machine
+rm /Users/jenkins/IOSBuilds/libvcxpartial/*
+rm /Users/jenkins/IOSBuilds/libvcxall/*
+
 ./mac.13.build.cocopod.sh $(date '+%Y%m%d.%H%M%S') libvcxpartial
-echo "-----------------------------------------"
-echo "after libvcxpartial cocopod"
-echo "-----------------------------------------"
-#
+./mac.13.build.cocopod.sh $(date '+%Y%m%d.%H%M%S') libvcxall
