@@ -24,8 +24,14 @@ cp -rf ~/combine-libs ${BASE_DIR}/.macosbuild
 ./mac.12.combine.static.libs.sh libvcxpartial
 
 # clear previous builds from jenkins machine
-rm /Users/jenkins/IOSBuilds/libvcxpartial/*
-rm /Users/jenkins/IOSBuilds/libvcxall/*
+if [ ! -z "$(ls -A /Users/jenkins/IOSBuilds/libvcxpartial/)" ]; then
+   echo "deleting old libvcxpartial builds"
+   rm /Users/jenkins/IOSBuilds/libvcxpartial/*
+fi
+if [ ! -z "$(ls -A /Users/jenkins/IOSBuilds/libvcxall/)" ]; then
+   echo "deleting old libvcxall builds"
+   rm /Users/jenkins/IOSBuilds/libvcxall/*
+fi
 
 ./mac.13.build.cocopod.sh $(date '+%Y%m%d.%H%M%S') libvcxpartial
 ./mac.13.build.cocopod.sh $(date '+%Y%m%d.%H%M%S') libvcxall
