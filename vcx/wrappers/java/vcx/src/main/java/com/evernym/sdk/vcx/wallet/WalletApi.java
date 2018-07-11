@@ -64,7 +64,7 @@ public class WalletApi extends VcxJava.API {
         public void callback(int command_handle, int err, int wallet_handle){
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
             if(!checkCallback(future,err)) return;
-            Integer result = wallet_handle;
+            Integer result = command_handle;
             future.complete(result);
         }
     };
@@ -88,10 +88,10 @@ public class WalletApi extends VcxJava.API {
     }
 
     private static Callback vcxDeleteRecordWalletCB = new Callback() {
-        public void callback(int command_handle, int err, int wallet_handle){
+        public void callback(int command_handle, int err){
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
             if(!checkCallback(future,err)) return;
-            Integer result = wallet_handle;
+            Integer result = command_handle;
             future.complete(result);
         }
     };
@@ -113,14 +113,14 @@ public class WalletApi extends VcxJava.API {
 
     private static Callback vcxGetRecordWalletCB = new Callback() {
         public void callback(int command_handle, int err, String wallet_value){
-            CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
+            CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(command_handle);
             if(!checkCallback(future,err)) return;
             String result = wallet_value;
             future.complete(result);
         }
     };
 
-    public static CompletableFuture<Integer> getRecordWallet(
+    public static CompletableFuture<String> getRecordWallet(
             String recordType,
             String recordId,
             String recordValue
@@ -128,7 +128,7 @@ public class WalletApi extends VcxJava.API {
         ParamGuard.notNull(recordType, "recordType");
         ParamGuard.notNull(recordId, "recordId");
         ParamGuard.notNull(recordValue, "recordValue");
-        CompletableFuture<Integer> future = new CompletableFuture<Integer>();
+        CompletableFuture<String> future = new CompletableFuture<String>();
         int commandHandle = addFuture(future);
         String recordTag = "{}";
 
