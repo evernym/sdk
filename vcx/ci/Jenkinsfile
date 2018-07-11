@@ -123,10 +123,14 @@ def ios() {
                 checkout scm
                 SCRIPTS_PATH="vcx/libvcx/build_scripts/ios/mac"
                 WORK_DIR = "/Users/jenkins"
+                sh "echo checking if dir exists"
+                sh "ls ~/IOSBuilds"
 
                 // Build ios architectures
                 sh "source vcx/ci/scripts/iosBuild.sh"
-                sh "ehco after iosBuild.sh"
+                sh "ls ~/IOSBuilds"
+                sh "ls -l ~/IOSBuilds/libvcxall"
+                sh "ls -l ~/IOSBuilds/libvcxpartial"
 
                 // Publish to Kraken
                 // TIME_VERSION=sh (script: 'echo $(date +%Y%m%d_%H%M%S)', returnStdout: true ).trim()

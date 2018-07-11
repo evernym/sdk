@@ -24,11 +24,14 @@ cp -v lib/${COMBINED_LIB}.a vcx.framework/lib/libvcx.a
 cp -v ConnectMeVcx.h vcx.framework/Headers
 cp -v include/libvcx.h vcx.framework/Headers
 cp -v vcx/vcx.h vcx.framework/Headers
-#rm -rf $VCX_SDK/vcx/wrappers/ios/vcx/tmp
+
+
+if [ -d $VCX_SDK/vcx/wrappers/ios/vcx/tmp ]; then
+    rm -rf $VCX_SDK/vcx/wrappers/ios/vcx/tmp
+fi
 mkdir -p $VCX_SDK/vcx/wrappers/ios/vcx/tmp/vcx/
 cp -rvp vcx.framework $VCX_SDK/vcx/wrappers/ios/vcx/tmp/vcx/
 cd $VCX_SDK/vcx/wrappers/ios/vcx/tmp
-#rm vcx.framework_${DATETIME}_universal.zip
 zip -r vcx.${COMBINED_LIB}_${DATETIME}_universal.zip vcx
 # |---vcx.framework_20180522.1635_universal.zip
 # |---vcx
@@ -44,5 +47,5 @@ zip -r vcx.${COMBINED_LIB}_${DATETIME}_universal.zip vcx
 #            |       |---module.modulemap
 #            |----Info.plist
 
-cp $VCX_SDK/vcx/wrappers/ios/vcx/tmp/vcx.${COMBINED_LIB}_${DATETIME}_universal.zip ${WORK_DIR}
+cp $VCX_SDK/vcx/wrappers/ios/vcx/tmp/vcx.${COMBINED_LIB}_${DATETIME}_universal.zip ~/IOSBuilds/${COMBINED_LIB}
 
