@@ -10,11 +10,12 @@ WORK_DIR=$(abspath "$WORK_DIR")
 VCX_SDK=$START_DIR/../../../../..
 VCX_SDK=$(abspath "$VCX_SDK")
 
-DATETIME=$1
-if [ "$DATETIME" = "" ]; then
-    echo "You must pass the datetime as the first parameter to the script. (i.e. 20180522.1527 - YYYYmmdd.hhMM)"
-    exit 1
-fi
+# DATETIME=$1
+# if [ "$DATETIME" = "" ]; then
+#     echo "You must pass the datetime as the first parameter to the script. (i.e. 20180522.1527 - YYYYmmdd.hhMM)"
+#     exit 1
+# fi
+DATETIME=$(date +"%Y%m%d.%H%M")
 
 # cd $VCX_SDK/vcx/wrappers/ios/vcx/lib
 # mv libvcx.a libvcx.a.original
