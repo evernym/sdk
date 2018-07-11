@@ -28,7 +28,5 @@ cp -rf ~/combine-libs ${BASE_DIR}/.macosbuild
 ./mac.13.build.cocopod.sh $(date '+%Y%m%d.%H%M%S') libvcxpartial
 echo "-----------------------------------------"
 echo "after libvcxpartial cocopod"
-ls vcx
-ls -al vcx/vcx.libvcxpartial_*_universal.zip
 echo "-----------------------------------------"
 #
