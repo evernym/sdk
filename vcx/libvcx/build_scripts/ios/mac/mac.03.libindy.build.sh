@@ -65,7 +65,7 @@ fi
 cargo clean
 cargo update
 # Replace '\"cdylib\"' with '\"staticlib\", \"cdylib\"' in Cargo.toml
-sed -i .bak 's/\"cdylib\"/\"staticlib\", \"cdylib\"/' Cargo.toml
+#sed -i .bak 's/\"cdylib\"/\"staticlib\", \"cdylib\"/' Cargo.toml
 
 # To build for macos
 #cargo build
