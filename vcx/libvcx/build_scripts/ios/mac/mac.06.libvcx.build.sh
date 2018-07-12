@@ -2,8 +2,8 @@
 
 source ./mac.05.libvcx.env.sh
 cd ../../..
-
 DEBUG_SYMBOLS="debuginfo"
+
 if [ ! -z "$1" ]; then
     DEBUG_SYMBOLS=$1
 fi
