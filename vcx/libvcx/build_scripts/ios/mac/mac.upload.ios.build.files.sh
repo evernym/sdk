@@ -52,6 +52,7 @@ xcodebuild -project vcx.xcodeproj -scheme vcx -configuration Debug CONFIGURATION
 IPHONE_SDK=iphoneos
 for arch in ${archs[*]}
 do
+    rm -rf vcx.framework
     if [ "${arch}" = "i386" ] || [ "${arch}" = "x86_64" ]; then
         # This sdk supports i386 and x86_64
         IPHONE_SDK=iphonesimulator
@@ -66,7 +67,7 @@ do
         mv combined.ios.vcx vcx.framework/vcx
         rm -rf vcx.framework.previousbuild
     fi
-    mv vcx.framework vcx.framework.previousbuild
+    cp -rp vcx.framework vcx.framework.previousbuild
 done
 
 mv lib/libvcx.a.original lib/libvcx.a
