@@ -13,7 +13,7 @@ IOS_TARGETS="x86_64-apple-ios"
 #IOS_ARCHS="armv7,armv7s,arm64,i386,x86_64"
 IOS_ARCHS="x86_64"
 cd vcx/libvcx/build_scripts/ios/mac
-./mac.03.libindy.build.sh "${IOS_TARGETS}" > ./mac.03.libindy.build.sh.out 2>&1
+./mac.03.libindy.build.sh debuginfo "${IOS_TARGETS}" > ./mac.03.libindy.build.sh.out 2>&1
 ./mac.04.libvcx.setup.sh > ./mac.04.libvcx.setup.sh.out 2>&1
 ./mac.06.libvcx.build.sh debuginfo "${IOS_TARGETS}" > ./mac.06.libvcx.build.sh.out 2>&1
 ./mac.11.copy.static.libs.to.app.sh > ./mac.11.copy.static.libs.to.app.sh.out 2>&1

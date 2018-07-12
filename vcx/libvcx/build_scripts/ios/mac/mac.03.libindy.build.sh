@@ -26,15 +26,24 @@ git checkout `cat $SHA_HASH_DIR/libindy.commit.sha1.hash.txt`
 #cd $WORK_DIR/vcx-indy-sdk
 #git checkout tags/v1.3.0
 
-IOS_TARGETS="aarch64-apple-ios,armv7-apple-ios,armv7s-apple-ios,i386-apple-ios,x86_64-apple-ios"
+DEBUG_SYMBOLS="debuginfo"
 if [ ! -z "$1" ]; then
-    IOS_TARGETS=$1
+    DEBUG_SYMBOLS=$1
+fi
+
+IOS_TARGETS="aarch64-apple-ios,armv7-apple-ios,armv7s-apple-ios,i386-apple-ios,x86_64-apple-ios"
+if [ ! -z "$2" ]; then
+    IOS_TARGETS=$2
 fi
 
 #########################################################################################################################
 # Now build libindy
 #########################################################################################################################
 cd $WORK_DIR/vcx-indy-sdk/libindy
+
+if [ "$DEBUG_SYMBOLS" = "debuginfo" ]; then
+    cat $START_DIR/cargo.toml.add.debug.txt >> Cargo.toml
+fi
 
 cargo clean
 cargo update
@@ -48,6 +57,10 @@ cargo lipo --release --verbose --targets="${IOS_TARGETS}"
 # Now build libnullpay
 #########################################################################################################################
 cd $WORK_DIR/vcx-indy-sdk/libnullpay
+
+if [ "$DEBUG_SYMBOLS" = "debuginfo" ]; then
+    cat $START_DIR/cargo.toml.add.debug.txt >> Cargo.toml
+fi
 
 cargo clean
 cargo update
