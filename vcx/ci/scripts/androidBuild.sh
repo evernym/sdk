@@ -104,7 +104,7 @@ generate_flags(){
 clone_indy_sdk() {
     if [ ! -d "indy-sdk" ]; then
         echo "cloning indy-sdk"
-        git clone -b rc --single-branch https://github.com/evernym/indy-sdk.git
+        git clone https://github.com/evernym/indy-sdk.git
     fi
 }
 
