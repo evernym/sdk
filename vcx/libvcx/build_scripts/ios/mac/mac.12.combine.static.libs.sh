@@ -45,7 +45,16 @@ if [ ! -z "$3" ]; then
     DEBUG_SYMBOLS=$3
 fi
 
-archs=(armv7 armv7s arm64 i386 x86_64)
+#archs=(armv7 armv7s arm64 i386 x86_64)
+IOS_ARCHS="armv7,armv7s,arm64,i386,x86_64"
+if [ ! -z "$4" ]; then
+    IOS_ARCHS=$4
+fi
+bkpIFS="$IFS"
+IFS=',()][' read -r -a archs <<<"${IOS_ARCHS}"
+echo "Combining architectures: ${archs[@]}"    ##Or printf "%s\n" ${array[@]}
+IFS="$bkpIFS"
+
 libraries=(*.a)
 libtool="/usr/bin/libtool"
 
