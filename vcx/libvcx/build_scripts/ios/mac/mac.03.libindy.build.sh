@@ -26,6 +26,11 @@ git checkout `cat $SHA_HASH_DIR/libindy.commit.sha1.hash.txt`
 #cd $WORK_DIR/vcx-indy-sdk
 #git checkout tags/v1.3.0
 
+IOS_TARGETS="aarch64-apple-ios,armv7-apple-ios,armv7s-apple-ios,i386-apple-ios,x86_64-apple-ios"
+if [ ! -z "$1" ]; then
+    IOS_TARGETS=$1
+fi
+
 #########################################################################################################################
 # Now build libindy
 #########################################################################################################################
@@ -36,7 +41,7 @@ cargo update
 # To build for macos
 #cargo build
 # To build for iOS
-cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios,armv7s-apple-ios,i386-apple-ios,x86_64-apple-ios"
+cargo lipo --release --verbose --targets="${IOS_TARGETS}"
 #cargo lipo
 
 #########################################################################################################################
@@ -52,5 +57,5 @@ sed -i .bak 's/\"cdylib\"/\"staticlib\", \"cdylib\"/' Cargo.toml
 # To build for macos
 #cargo build
 # To build for iOS
-cargo lipo --release --verbose --targets="aarch64-apple-ios,armv7-apple-ios,armv7s-apple-ios,i386-apple-ios,x86_64-apple-ios"
+cargo lipo --release --verbose --targets="${IOS_TARGETS}"
 #cargo lipo
