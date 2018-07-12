@@ -39,8 +39,9 @@ ARG RUST_VER="1.26.0"
 RUN mkdir -p /libindy
 WORKDIR /libindy
 
-ENV LIBINDY_DEB=libindy_${LIBINDY_VER}_amd64.deb
-ENV LIBINDY_DOWNLOAD_URL=https://repo.sovrin.org/sdk/lib/apt/xenial/stable/$LIBINDY_DEB
+RUN echo $LIBINDY_DEB
+ENV LIBINDY_DEB=libindy_1.5.0_amd64.deb
+ENV LIBINDY_DOWNLOAD_URL=https://repo.sovrin.org/sdk/lib/apt/xenial/stable/${LIBINDY_DEB}
 
 RUN curl -fsOSL $LIBINDY_DOWNLOAD_URL \
     && dpkg -i $LIBINDY_DEB \
@@ -50,7 +51,7 @@ RUN curl -fsOSL $LIBINDY_DOWNLOAD_URL \
 ENV LIBNULLPAY_DEB=libnullpay_${LIBNULL_VER}_amd64.deb
 ENV LIBNULLPAY_DOWNLOAD_URL=https://repo.sovrin.org/sdk/lib/apt/xenial/stable/$LIBNULLPAY_DEB
 
-RUN curl -fsOSL $LIBNULLPAY_DOWNLOAD_URL\
+RUN curl -fOL $LIBNULLPAY_DOWNLOAD_URL\
     && dpkg -i $LIBNULLPAY_DEB\
     && apt-get -f install
 
@@ -61,7 +62,7 @@ ENV RUST_DOWNLOAD_URL=https://static.rust-lang.org/dist/$RUST_ARCHIVE
 RUN mkdir -p /rust
 WORKDIR /rust
 
-RUN curl -fsOSL $RUST_DOWNLOAD_URL \
+RUN curl -fOL $RUST_DOWNLOAD_URL \
     && curl -s $RUST_DOWNLOAD_URL.sha256 | sha256sum -c - \
     && tar -C /rust -xzf $RUST_ARCHIVE --strip-components=1 \
     && rm $RUST_ARCHIVE \
@@ -71,4 +72,6 @@ RUN curl -fsOSL $RUST_DOWNLOAD_URL \
 RUN gem install fpm
 RUN apt-get install rpm -y
 
+COPY ./vcx/ci/scripts/installCert.sh /tmp
+RUN /tmp/installCert.sh
 

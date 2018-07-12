@@ -1,26 +1,22 @@
 FROM libindy
-
+#
+# cargo deb for debian packaging of libvcx
+RUN cargo install cargo-deb --color=never
 
 COPY . /sdk
 
-ARG uid=1000
-RUN chown ${uid}:${uid} /sdk -R
-RUN useradd -ms /bin/bash -u $uid vcx
-USER vcx
-
-# cargo deb for debian packaging of libvcx
-RUN cargo install cargo-deb --color=never
+# where debian will be copied to
+RUN mkdir /sdk/vcx/output
 
 ENV PATH=${PATH}:/sdk/vcx/ci/scripts
 
 WORKDIR /sdk/vcx/libvcx
+RUN cargo test -- --test-threads=1
 RUN cargo update-version
-RUN cargo build
 RUN cargo update-so
 RUN cargo deb --no-build
 
-# where debian will be copied to
-RUN mkdir /sdk/vcx/output
+RUN find -type f -name "libvcx*.deb" -exec dpkg -i {} \;
 
 CMD ["sh", "-c", "cp `find /sdk/vcx/libvcx/target/debian -type f -name \"*.deb\"` /sdk/vcx/output"]
 
