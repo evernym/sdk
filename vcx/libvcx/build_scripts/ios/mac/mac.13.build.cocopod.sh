@@ -10,26 +10,23 @@ WORK_DIR=$(abspath "$WORK_DIR")
 VCX_SDK=$START_DIR/../../../../..
 VCX_SDK=$(abspath "$VCX_SDK")
 
-DATETIME=$1
-COMBINED_LIB=$2
+COMBINED_LIB=$1
 
-if [ "$DATETIME" = "" ]; then
-    echo "You must pass the datetime as the first parameter to the script. (i.e. 20180522.1527 - YYYYmmdd.hhMM)"
-    exit 1
-fi
+DATETIME=$(date +"%Y%m%d.%H%M")
 
 cd $VCX_SDK/vcx/wrappers/ios/vcx
 mv lib/libvcx.a lib/libvcx.a.original
 cp -v lib/${COMBINED_LIB}.a lib/libvcx.a
-xcodebuild -project vcx.xcodeproj -scheme vcx -configuration Debug CONFIGURATION_BUILD_DIR=. clean > $START_DIR/xcodebuild.vcx.framework.build.out 2>&1
-if [ "$1" = "libvcxall" ]; then
-    xcodebuild -project vcx.xcodeproj -scheme vcx -configuration Debug -sdk iphonesimulator CONFIGURATION_BUILD_DIR=. build >> $START_DIR/xcodebuild.vcx.framework.build.out 2>&1
+xcodebuild -project vcx.xcodeproj -scheme vcx -configuration Release CONFIGURATION_BUILD_DIR=. clean > $START_DIR/xcodebuild.vcx.framework.build.out 2>&1
+if [ ${COMBINED_LIB} = "libvcxall" ]; then
+    xcodebuild -project vcx.xcodeproj -scheme vcx -configuration Release -sdk iphonesimulator CONFIGURATION_BUILD_DIR=. build >> $START_DIR/xcodebuild.vcx.framework.build.out 2>&1
     mv vcx.framework vcx.framework.iphonesimulator
 fi 
-xcodebuild -project vcx.xcodeproj -scheme vcx -configuration Debug -sdk iphoneos CONFIGURATION_BUILD_DIR=. build >> $START_DIR/xcodebuild.vcx.framework.build.out 2>&1
+xcodebuild -project vcx.xcodeproj -scheme vcx -configuration -sdk iphoneos CONFIGURATION_BUILD_DIR=. build >> $START_DIR/xcodebuild.vcx.framework.build.out 2>&1
 
 mv lib/libvcx.a.original lib/libvcx.a
-if [ "$1" = "libvcxall" ]; then
+if [ ${COMBINED_LIB} = "libvcxall" ]; then
+    lipo -create -output combined.ios.vcx vcx.framework/vcx vcx.framework.iphonesimulator/vcx
     rm -rf vcx.framework.iphonesimulator
 fi 
 
