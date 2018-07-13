@@ -48,7 +48,7 @@ def mainUbuntu() {
                     def publish = docker.build('publish', "-f vcx/ci/Dockerfile-publish .")
                     publish.inside("--network=host -v $volumeName:$volumeInternalDir") {
                         sh "find $volumeInternalDir -type f -name \"*.deb\""
-                        sh "/sdk/vcx/ci/scripts/publish.sh *.deb $volumeInternalDir npm foobar:credentials"
+                        sh "/sdk/vcx/ci/scripts/publish.sh *.deb $volumeInternalDir npm $KRAKEN_CREDENTIALS"
                     }
                 }
                 // sh 'vcx/ci/scripts/buildAll.sh' $volume_name

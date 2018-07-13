@@ -19,6 +19,6 @@ echo "Credentials: ${CREDENTIALS}"
 echo "URL: $URL"
 FILE=`find $LOOKUP_DIR -type f -name ${FILENAME}`
 ls $FILE
-curl -v -u $KRAKEN_CREDENTIALS -X POST $URL $FILE
+curl -v -u ${CREDENTIALS} -X POST $URL $FILE
 echo result is "$?"
 
