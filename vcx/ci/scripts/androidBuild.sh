@@ -106,7 +106,6 @@ clone_indy_sdk() {
         echo "cloning indy-sdk"
         #git clone https://github.com/evernym/indy-sdk.git
         git clone https://github.com/hyperledger/indy-sdk.git
-        #git clone -b android_builds --single-branch https://github.com/faisal00813/indy-sdk.git
     fi
 }
 
