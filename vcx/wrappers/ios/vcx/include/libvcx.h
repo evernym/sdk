@@ -286,7 +286,7 @@ vcx_error_t vcx_credential_deserialize(vcx_command_handle_t, const char *seriali
 /** Releases the credential from memory. */
 vcx_error_t vcx_credential_release(vcx_credential_handle_t credential_handle);
     
-vcx_error_t vcx_wallet_get_token_info(vcx_command_handle_t command_handle,vcx_payment_handle_t  payment_handle, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, vcx_state_t state));
+vcx_error_t vcx_wallet_get_token_info(vcx_command_handle_t command_handle,vcx_payment_handle_t  payment_handle, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, const char *state));
     
 vcx_error_t vcx_wallet_send_tokens(vcx_command_handle_t command_handle, vcx_payment_handle_t payment_handle, int tokens, const char recipient, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, const char *receipt));
     
