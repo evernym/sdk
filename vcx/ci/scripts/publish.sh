@@ -15,4 +15,4 @@ echo "Filename: ${FILENAME}"
 echo "TYPE: ${TYPE}"
 echo "Credentials: ${CREDENTIALS}"
 FILE=`find $LOOKUP_DIR -type f -name ${FILENAME}`
-curl -u $CREDENTIALS -X POST $URL -F $FILE
+curl -u $CREDENTIALS -X POST $URL $FILE
