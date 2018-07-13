@@ -33,7 +33,7 @@ def mainUbuntu() {
     node('ubuntu-10') {
         stage('Main Build - Ubuntu') {
             try {
-                checkout scm
+                checkout scm
                 def volumeName = "vcx-volume"
 				sh "docker volume rm -f $volumeName"
                 
