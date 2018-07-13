@@ -47,7 +47,7 @@ def mainUbuntu() {
                 withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
                     def publish = docker.build('publish', "-f vcx/ci/Dockerfile-publish .")
                     publish.inside("--network=host -v $volumeName:$volumeInternalDir") {
-                        sh "/sdk/vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\"
+                        sh "/sdk/vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\""
                     }
                 }
                 // sh 'vcx/ci/scripts/buildAll.sh' $volume_name
