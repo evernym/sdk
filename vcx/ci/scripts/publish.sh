@@ -14,4 +14,5 @@ echo "Lookup directory: ${LOOKUP_DIR}"
 echo "Filename: ${FILENAME}"
 echo "TYPE: ${TYPE}"
 echo "Credentials: ${CREDENTIALS}"
-find $LOOKUP_DIR -type f -name ${FILENAME} -exec curl -u $CREDENTIALS -X POST $URL -F 'file=@{}' \;
+FILE=`find $LOOKUP_DIR -type f -name ${FILENAME}`
+curl -u $CREDENTIALS -X POST $URL -F $FILE
