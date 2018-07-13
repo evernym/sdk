@@ -5,12 +5,10 @@
 #    exit 1
 #fi
 
-FILENAME='*.deb'
 LOOKUP_DIR="/sdk/vcx/output"
 #TYPE=$3
 CREDENTIALS=$1
-#URL="https://kraken.corp.evernym.com/repo/npm/upload"
-#URL="https://kraken.corp.evernym.com/repo/agency_dev/upload"
+FILENAME=$2
 URL="https://kraken.corp.evernym.com/repo/portal_dev/upload"
 echo "Lookup directory: ${LOOKUP_DIR}"
 echo "Filename: ${FILENAME}"
@@ -18,6 +16,5 @@ echo "TYPE: ${TYPE}"
 echo "Credentials: $(echo ${CREDENTIALS} | md5sum )"
 echo "URL: $URL"
 
-FILE=`find $LOOKUP_DIR -type f -name $FILENAME`
-find $LOOKUP_DIR -type f -name $FILENAME -exec curl -u $CREDENTIALS -X POST $URL -F 'file=@{}' \;
+find $LOOKUP_DIR -type f -name ${FILENAME} -exec curl -u $CREDENTIALS -X POST $URL -F 'file=@{}' \;
 
