@@ -19,5 +19,5 @@ echo "Credentials: $(echo ${CREDENTIALS} | md5sum )"
 echo "URL: $URL"
 
 FILE=`find $LOOKUP_DIR -type f -name $FILENAME`
-curl -u $CREDENTIALS -X POST $URL $FILE
+curl -u $CREDENTIALS -X POST $URL -F 'file=$FILE'
 
