@@ -13,7 +13,7 @@ public class TokenApi extends VcxJava.API {
     
       private static Callback vcxTokenCB = new Callback() {
         public void callback(int command_handle, int err, String state){
-            CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
+            CompletableFuture<String> future = (CompletableFuture<Integer>) removeFuture(command_handle);
             if(!checkCallback(future,err)) return;
             String result = state;
             future.complete(result);
