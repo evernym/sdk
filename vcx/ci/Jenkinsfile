@@ -37,14 +37,13 @@ def mainUbuntu() {
                 def volumeName = "vcx-volume"
                 def volumeInternalDir = "/sdk/vcx/output"
 				// sh "docker volume rm -f $volumeName"
-                
+              
                 // def libindy = docker.build("libindy", "-f vcx/ci/Dockerfile-libindy .")
-                
+
                 // def libvcx = docker.build("libvcx", "-f vcx/ci/Dockerfile-libvcx .")
                 sh "docker run --rm -v $volumeName:$volumeInternalDir libvcx"
                 
                 def node = docker.build("node", "-f vcx/wrappers/node/ci/Dockerfile-nodejs-wrapper .")
-
                 sh "docker run --rm -v $volumeName:$volumeInternalDir node"
 
                 // PUBLISHING
