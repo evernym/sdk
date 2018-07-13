@@ -42,12 +42,19 @@ def mainUbuntu() {
                 
                 // def libvcx = docker.build("libvcx", "-f vcx/ci/Dockerfile-libvcx .")
                 sh "docker run --rm -v $volumeName:$volumeInternalDir libvcx"
+                
+                def node = docker.build("node", "-f vcx/wrappers/node/ci/Dockerfile-nodejs-wrapper .")
+
+                sh "docker run --rm -v $volumeName:$volumeInternalDir node"
+
+                // PUBLISHING
                 sh "docker build -t publish -f vcx/ci/Dockerfile-publish ."
                 
                 withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
                     def publish = docker.build('publish', "-f vcx/ci/Dockerfile-publish .")
                     publish.inside("--network=host -v $volumeName:$volumeInternalDir") {
                         sh "/sdk/vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"*.deb\" https://kraken.corp.evernym.com/repo/portal_dev/upload"
+                        sh "/sdk/vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"*.tgz\" https://kraken.corp.evernym.com/repo/npm/upload"
                     }
                 }
                 // sh 'vcx/ci/scripts/buildAll.sh' $volume_name
