@@ -48,7 +48,7 @@ RUN curl -fsOSL $LIBINDY_DOWNLOAD_URL \
 
 # Install libnullpay
 ENV LIBNULLPAY_DEB=libnullpay_${LIBNULL_VER}_amd64.deb
-ENV LIBNULLPAY_DOWNLOAD_URL=https://repo.sovrin.org/sdk/lib/apt/xenial/stable/$LIBNULLPAY_DEB
+ENV LIBNULLPAY_DOWNLOAD_URL=https://repo.sovrin.org/sdk/lib/apt/xenial/master/${LIBNULLPAY_DEB}
 
 RUN curl -fOL $LIBNULLPAY_DOWNLOAD_URL\
     && dpkg -i $LIBNULLPAY_DEB\
