@@ -30,7 +30,8 @@ def mainUbuntu() {
         stage('Main Build - Ubuntu') {
             try {
                 checkout scm
-				sh 'vcx/ci/scripts/buildAll.sh'
+                def volume_name = "vcx-volume"
+				sh 'vcx/ci/scripts/buildAll.sh' $volume_name
                 // rust = build('rust', 'vcx/ci/ubuntu.dockerfile', 'vcx')
 				
                 // update the versions in the toml file and package.json
@@ -76,6 +77,7 @@ def mainUbuntu() {
                 }
                 echo "$ex error"
             } finally {
+                sh 'vcx/ci/scripts/cleanup.sh' $volume_name
                 step([$class: 'WsCleanup'])
             }
         }
