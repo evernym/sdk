@@ -5,7 +5,7 @@
 #    exit 1
 #fi
 
-FILENAME="libvcx_0.1.16004266-a109a0c_amd64.deb"
+FILENAME='*.deb'
 LOOKUP_DIR="/sdk/vcx/output"
 #TYPE=$3
 CREDENTIALS=$1
