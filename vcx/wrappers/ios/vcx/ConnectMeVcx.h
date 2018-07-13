@@ -139,8 +139,9 @@ void VcxWrapperCommonNumberStringCallback(vcx_command_handle_t xcommand_handle,
 - (void)importWallet:(NSString *)importPath
             encryptWith:(NSString *)encryptionKey
            completion:(void (^)(NSError *error, NSInteger importHandle))completion;
-- (void)addRecordWallet:(NSString *)importPath
-            encryptWith:(NSString *)encryptionKey
+- (void)addRecordWallet:(NSString *)recordType
+            recordId:(NSString *)recordId
+            recordValue:(NSString *)recordValue
            completion:(void (^)(NSError *error, NSInteger walletHandle))completion;
 - (void)getRecordWallet:(NSString *)recordType
             recordId:(NSString *)recordId
