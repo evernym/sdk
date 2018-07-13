@@ -31,17 +31,16 @@ RUN apt-get update -y && apt-get install -y \
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - \
     && apt-get install -y nodejs
 
-ARG LIBINDY_VER="1.5.0"
-ARG LIBNULL_VER="1.5.0"
+ARG LIBINDY_VER="1.5.0~619"
+ARG LIBNULL_VER="1.5.0~619"
 ARG RUST_VER="1.26.0"
 
 # Install libindy
 RUN mkdir -p /libindy
 WORKDIR /libindy
 
-RUN echo $LIBINDY_DEB
-ENV LIBINDY_DEB=libindy_1.5.0_amd64.deb
-ENV LIBINDY_DOWNLOAD_URL=https://repo.sovrin.org/sdk/lib/apt/xenial/stable/${LIBINDY_DEB}
+ENV LIBINDY_DEB=libindy_${LIBINDY_VER}_amd64.deb
+ENV LIBINDY_DOWNLOAD_URL=https://repo.sovrin.org/sdk/lib/apt/xenial/master/$LIBINDY_DEB
 
 RUN curl -fsOSL $LIBINDY_DOWNLOAD_URL \
     && dpkg -i $LIBINDY_DEB \
