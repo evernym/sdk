@@ -61,7 +61,9 @@ def mainUbuntu() {
                 // if (env.BRANCH_NAME == "master") {
                     // create the debian of the library (just the libvcx.so file)
                     // createDeb(rust)
-
+                    // sh 'vcx/ci/scripts/publish.sh' $volume_name deb
+                    // sh 'vcx/ci/scripts/publish.sh' $volume_name npm
+                    // sh 'vcx/ci/scripts/publish.sh' $volume_name python
                     // create the npm deb
                     // createNpmDeb(rust, "*_amd64.tgz")
                     // renameAndUploadNpmTgz(rust, "vcx")
