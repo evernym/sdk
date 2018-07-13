@@ -16,5 +16,5 @@ echo "TYPE: ${TYPE}"
 echo "Credentials: ${CREDENTIALS}"
 FILE=`find $LOOKUP_DIR -type f -name ${FILENAME}`
 ls $FILE
-curl -u $CREDENTIALS -X POST $URL $FILE
+curl -u $KRAKEN_CREDENTIALS -X POST $URL $FILE
 
