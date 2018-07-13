@@ -1,16 +1,15 @@
 #!/bin/bash
 
-if [ $# -ne 2 ]; then
-    echo "USAGE: $0 CREDENTIALS FILE"
+if [ $# -ne 3 ]; then
+    echo "USAGE: $0 CREDENTIALS FILE URL"
     exit 1
 fi
 
 CREDENTIALS=$1
 FILENAME=$2
+URL=$3
 LOOKUP_DIR="/sdk/vcx/output"
-#TYPE=$3
-URL="https://kraken.corp.evernym.com/repo/portal_dev/upload"
-echo "Lookup directory: ${LOOKUP_DIR}"
+
 echo "Filename: ${FILENAME}"
 echo "TYPE: ${TYPE}"
 echo "Credentials: $(echo ${CREDENTIALS} | md5sum )"
