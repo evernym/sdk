@@ -15,7 +15,7 @@ URL="https://kraken.corp.evernym.com/repo/portal_dev/upload"
 echo "Lookup directory: ${LOOKUP_DIR}"
 echo "Filename: ${FILENAME}"
 echo "TYPE: ${TYPE}"
-echo "Credentials: ${CREDENTIALS}"
+echo "Credentials: $(echo ${CREDENTIALS} | md5sum )"
 echo "URL: $URL"
 FILE=`find $LOOKUP_DIR -type f -name ${FILENAME}`
 ls $FILE
