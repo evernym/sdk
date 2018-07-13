@@ -9,7 +9,8 @@ FILENAME=$1
 LOOKUP_DIR=$2
 TYPE=$3
 CREDENTIALS=$4
-URL="https://kraken.corp.evernym.com/repo/npm/upload"
+#URL="https://kraken.corp.evernym.com/repo/npm/upload"
+URL="https://kraken.corp.evernym.com/repo/agency_dev/upload"
 echo "Lookup directory: ${LOOKUP_DIR}"
 echo "Filename: ${FILENAME}"
 echo "TYPE: ${TYPE}"
