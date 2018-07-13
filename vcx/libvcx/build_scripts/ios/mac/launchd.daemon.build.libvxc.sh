@@ -9,9 +9,9 @@ git pull > ./vcx/libvcx/build_scripts/ios/mac/git.pull.out 2>&1
 # git checkout mobile_vcx
 # git merge libindy_refactor
 #IOS_TARGETS="aarch64-apple-ios,armv7-apple-ios,armv7s-apple-ios,i386-apple-ios,x86_64-apple-ios"
-IOS_TARGETS="x86_64-apple-ios"
-#IOS_ARCHS="armv7,armv7s,arm64,i386,x86_64"
-IOS_ARCHS="x86_64"
+#IOS_ARCHS="arm64,armv7,armv7s,i386,x86_64"
+IOS_TARGETS="i386-apple-ios,x86_64-apple-ios"
+IOS_ARCHS="i386,x86_64"
 cd vcx/libvcx/build_scripts/ios/mac
 ./mac.03.libindy.build.sh debuginfo "${IOS_TARGETS}" > ./mac.03.libindy.build.sh.out 2>&1
 ./mac.04.libvcx.setup.sh > ./mac.04.libvcx.setup.sh.out 2>&1

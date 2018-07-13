@@ -46,7 +46,7 @@ if [ ! -z "$3" ]; then
     DEBUG_SYMBOLS=$3
 fi
 
-IOS_ARCHS="armv7,armv7s,arm64,i386,x86_64"
+IOS_ARCHS="arm64,armv7,armv7s,i386,x86_64"
 if [ ! -z "$4" ]; then
     IOS_ARCHS=$4
 fi

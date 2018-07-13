@@ -35,7 +35,7 @@ DATETIME=$(date +"%Y%m%d.%H%M")
 # 6) Now upload iOS .tar.gz and .zip files from the build as assets to servers...
 #    Just run the script /Users/iosbuild1/forge/work/code/evernym/sdk/vcx/libvcx/build_scripts/ios/mac/mac.upload.ios.build.files.sh
 
-IOS_ARCHS="armv7,armv7s,arm64,i386,x86_64"
+IOS_ARCHS="arm64,armv7,armv7s,i386,x86_64"
 if [ ! -z "$1" ]; then
     IOS_ARCHS=$1
 fi
