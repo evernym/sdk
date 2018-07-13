@@ -35,14 +35,21 @@ def mainUbuntu() {
             try {
                 checkout scm
                 def volumeName = "vcx-volume"
-				sh "docker volume rm -f $volumeName"
+                def volumeInternalDir = "/sdk/vcx/output"
+				// sh "docker volume rm -f $volumeName"
                 
                 // def libindy = docker.build("libindy", "-f vcx/ci/Dockerfile-libindy .")
                 
                 // def libvcx = docker.build("libvcx", "-f vcx/ci/Dockerfile-libvcx .")
+                sh "docker run --rm -v $volumeName:$volumeInternalDir libvcx"
+                sh "docker build -t publish -f vcx/ci/Dockerfile-publish ."
+                
                 withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
                     def publish = docker.build('publish', "-f vcx/ci/Dockerfile-publish .")
-                    publish.run(args="--rm -v $volumeName:/data libvcx sh -c \"/sdk/vcx/ci/scripts/publish.sh \'vcx*.tgz\' /data npm $KRAKEN_CREDENTIALS\"")
+                    publish.inside("-v $volumeName:$volumeInternalDir") {
+                        sh "find $volumeInternalDir -type f -name \"*.deb\""
+                        sh "/sdk/vcx/ci/scripts/publish.sh \"*.deb\" $volumeInternalDir npm ${KRAKEN_CREDENTIALS} /sdk/vcx/output"
+                    }
                 }
                 // sh 'vcx/ci/scripts/buildAll.sh' $volume_name
                 // rust = build('rust', 'vcx/ci/ubuntu.dockerfile', 'vcx')

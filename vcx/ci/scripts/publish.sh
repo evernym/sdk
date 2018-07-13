@@ -10,5 +10,8 @@ LOOKUP_DIR=$2
 TYPE=$3
 CREDENTIALS=$4
 URL="https://kraken.corp.evernym.com/repo/npm/upload"
+echo "Lookup directory: ${LOOKUP_DIR}"
+echo "Filename: ${FILENAME}"
+echo "TYPE: ${TYPE}"
+echo "Credentials: ${CREDENTIALS}"
 find $LOOKUP_DIR -type f -name ${FILENAME} -exec curl -u $CREDENTIALS -X POST $URL -F 'file=@{}' \;
-echo $?
