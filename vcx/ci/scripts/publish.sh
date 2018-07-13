@@ -1,14 +1,14 @@
 #!/bin/bash
 
-#if [ $# -ne 4 ]; then
-#    echo "USAGE: $0 FILE LOOKUP_DIR TYPE CREDENTIALS"
-#    exit 1
-#fi
+if [ $# -ne 2 ]; then
+    echo "USAGE: $0 CREDENTIALS FILE"
+    exit 1
+fi
 
-LOOKUP_DIR="/sdk/vcx/output"
-#TYPE=$3
 CREDENTIALS=$1
 FILENAME=$2
+LOOKUP_DIR="/sdk/vcx/output"
+#TYPE=$3
 URL="https://kraken.corp.evernym.com/repo/portal_dev/upload"
 echo "Lookup directory: ${LOOKUP_DIR}"
 echo "Filename: ${FILENAME}"
