@@ -37,10 +37,13 @@ def mainUbuntu() {
                 def volumeName = "vcx-volume"
 				sh "docker volume rm -f $volumeName"
                 
-                def libindy = docker.build("libindy", "-f vcx/ci/Dockerfile-libindy --no-cache .")
+                // def libindy = docker.build("libindy", "-f vcx/ci/Dockerfile-libindy .")
                 
-                def libvcx = docker.build("libvcx", "-f vcx/ci/Dockerfile-libvcx --no-cache .")
-                
+                // def libvcx = docker.build("libvcx", "-f vcx/ci/Dockerfile-libvcx .")
+                withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
+                    def publish = docker.build('publish', "-f vcx/ci/Dockerfile-publish .")
+                    publish.run(args="--rm -v $volumeName:/data libvcx sh -c \"/sdk/vcx/ci/scripts/publish.sh \'vcx*.tgz\' /data npm $KRAKEN_CREDENTIALS\"")
+                }
                 // sh 'vcx/ci/scripts/buildAll.sh' $volume_name
                 // rust = build('rust', 'vcx/ci/ubuntu.dockerfile', 'vcx')
 				
