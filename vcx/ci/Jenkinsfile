@@ -11,8 +11,8 @@ def testing() {
     stage('Testing') {
         parallel([
             'Main' : { mainUbuntu() },
-            'Android': { android() },
-            'iOS' : { ios() }
+            // 'Android': { android() },
+            // 'iOS' : { ios() }
         ])
     }
 }
@@ -25,13 +25,23 @@ def build(name, file, context='.', customParams = '') {
     return docker.build("$name", "${customParams} --build-arg uid=${getUserUid()} -f $file $context")
 }
 
+def buildImage(name, filename, cache='', context='.') {
+    return docker.build(name, "$cache -f $filename $context")
+}
+
 def mainUbuntu() {
-    node('ubuntu') {
+    node('ubuntu-10') {
         stage('Main Build - Ubuntu') {
             try {
-                checkout scm
-                def volume_name = "vcx-volume"
-				sh 'vcx/ci/scripts/buildAll.sh' $volume_name
+                checkout scm
+                def volumeName = "vcx-volume"
+				sh "docker volume rm -f $volumeName"
+                
+                def libindy = docker.build("libindy", "-f vcx/ci/Dockerfile-libindy --no-cache .")
+                
+                def libvcx = docker.build("libvcx", "-f vcx/ci/Dockerfile-libvcx --no-cache .")
+                
+                // sh 'vcx/ci/scripts/buildAll.sh' $volume_name
                 // rust = build('rust', 'vcx/ci/ubuntu.dockerfile', 'vcx')
 				
                 // update the versions in the toml file and package.json
@@ -61,9 +71,9 @@ def mainUbuntu() {
                 // if (env.BRANCH_NAME == "master") {
                     // create the debian of the library (just the libvcx.so file)
                     // createDeb(rust)
-                    // sh 'vcx/ci/scripts/publish.sh' $volume_name deb
-                    // sh 'vcx/ci/scripts/publish.sh' $volume_name npm
-                    // sh 'vcx/ci/scripts/publish.sh' $volume_name python
+                    // sh 'vcx/ci/scripts/publish.sh' $volumeName deb
+                    // sh 'vcx/ci/scripts/publish.sh' $volumeName npm
+                    // sh 'vcx/ci/scripts/publish.sh' $volumeName python
                     // create the npm deb
                     // createNpmDeb(rust, "*_amd64.tgz")
                     // renameAndUploadNpmTgz(rust, "vcx")
@@ -79,7 +89,7 @@ def mainUbuntu() {
                 }
                 echo "$ex error"
             } finally {
-                sh 'vcx/ci/scripts/cleanup.sh' $volume_name
+                // sh 'vcx/ci/scripts/cleanup.sh' $volume_name
                 step([$class: 'WsCleanup'])
             }
         }
