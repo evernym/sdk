@@ -20,16 +20,58 @@ def recursive_walk(folder):
             f = open(folderName + '/' + filename, "r")
             print(folderName + '/' + filename + ".newrs")
             copy = open(folderName + '/' + filename + ".newrs", "w")
+            previousLine = ""
+            insideExternCurly = 0
             for line in f:
                 trimmedLine = line.strip()
+                
+                if (trimmedLine == "extern {"):
+                    insideExternCurly = 1
+
                 if (
                     trimmedLine.endswith(";") and
                     not trimmedLine.startswith("extern") and
-                    not trimmedLine.startswith("use")
+                    not trimmedLine.startswith("use") and
+                    not trimmedLine.startswith("pub mod") and
+                    not trimmedLine.startswith("pub const") and
+                    not trimmedLine.startswith("pub static") and
+                    not trimmedLine.startswith("static ref") and
+                    not trimmedLine.startswith("fn matches") and
+                    not trimmedLine.startswith("//") and
+                    not trimmedLine.startswith("}") and
+                    not trimmedLine.startswith(".") and
+                    not trimmedLine.startswith(")") and
+                    not previousLine.endswith(",") and
+                    not previousLine.endswith(".") and
+                    not previousLine.endswith("=") and
+                    not previousLine.startswith("#[cfg")
                 ):
                     traceNumber += 1
                     copy.write("trace!(\"DEBUG TRACE FROM MOBILE TEAM -- " + str(traceNumber) + "\");\n")
+                
                 copy.write(line)
+
+                if (
+                    trimmedLine.endswith(";") and
+                    not trimmedLine == "};" and
+                    not trimmedLine.startswith("extern") and
+                    not trimmedLine.startswith("use") and
+                    not trimmedLine.startswith("pub mod") and
+                    not trimmedLine.startswith("pub const") and
+                    not trimmedLine.startswith("pub static") and
+                    not trimmedLine.startswith("static ref") and
+                    not trimmedLine.startswith("fn matches") and
+                    not trimmedLine.startswith("//") and
+                    not trimmedLine.startswith("r#\"{\"") and
+                    insideExternCurly == 0
+                ):
+                    traceNumber += 1
+                    copy.write("trace!(\"DEBUG TRACE FROM MOBILE TEAM -- " + str(traceNumber) + "\");\n")
+                
+                if ( insideExternCurly == 1 and trimmedLine == "}" ):
+                    insideExternCurly = 0
+
+                previousLine = trimmedLine
             f.close()
             copy.close()
             os.rename(folderName + '/' + filename + ".newrs", folderName + '/' + filename)
