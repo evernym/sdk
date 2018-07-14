@@ -86,10 +86,10 @@ do
     for library in ${libraries[*]}
     do
         if [ "$DEBUG_SYMBOLS" = "nodebug" ]; then
-            lipo ${library}_${arch}.a -thin $arch -output ${library}-$arch-unstripped.a
-            strip -S -x -o ${library}-$arch-stripped.a -r ${library}-$arch-unstripped.a
+            #lipo ${library}_${arch}.a -thin $arch -output ${library}-$arch-unstripped.a
+            strip -S -x -o ${library}-$arch-stripped.a -r ${library}_${arch}.a
             mv ${library}-$arch-stripped.a ${library}_${arch}.a
-            rm ${library}-$arch-unstripped.a
+            #rm ${library}-$arch-unstripped.a
         fi
         source_libraries="${source_libraries} ${library}_${arch}.a"
     done
@@ -98,14 +98,14 @@ do
     source_combined="${source_combined} ${1}_${arch}.a"
     
     # Delete intermediate files
-    rm ${source_libraries}
+    #rm ${source_libraries}
 done
 
 # Merge the combined library for each architecture into a single fat binary
 lipo -create $source_combined -o $1.a
 
 # Delete intermediate files
-rm ${source_combined}
+#rm ${source_combined}
 
 # Show info on the output library as confirmation
 echo "Combination complete."

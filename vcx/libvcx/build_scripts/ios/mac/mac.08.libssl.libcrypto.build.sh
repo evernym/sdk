@@ -34,6 +34,10 @@ cd $WORK_DIR/OpenSSL-for-iPhone/lib
 for arch in ${archs[*]}
 do
     mkdir -p ${arch}
-    lipo -extract ${arch} libssl.a -o ${arch}/libssl.a
-    lipo -extract ${arch} libcrypto.a -o ${arch}/libcrypto.a
+    lipo -extract ${arch} libssl.a -o ${arch}/libssl-fat.a
+    lipo ${arch}/libssl-fat.a -thin $arch -output ${arch}/libssl.a
+    rm ${arch}/libssl-fat.a
+    lipo -extract ${arch} libcrypto.a -o ${arch}/libcrypto-fat.a
+    lipo ${arch}/libcrypto-fat.a -thin $arch -output ${arch}/libcrypto.a
+    rm ${arch}/libcrypto-fat.a
 done
