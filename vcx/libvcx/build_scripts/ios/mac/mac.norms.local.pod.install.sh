@@ -15,8 +15,8 @@ COCOAPOD_SPEC=/Users/norm/.cocoapods/repos/evernym-1/Specs/vcx/0.0.15/vcx.podspe
 
 cd ${COCOAPOD_BUILD_FOLDER}
 COCOAPOD=$(ls *.zip)
-sudo rm ${PODSERVER_DOCROOT}/*.zip
-sudo mv "${COCOAPOD_BUILD_FOLDER}/${COCOAPOD}" ${PODSERVER_DOCROOT}
+rm ${PODSERVER_DOCROOT}/*.zip
+mv "${COCOAPOD_BUILD_FOLDER}/${COCOAPOD}" ${PODSERVER_DOCROOT}
 
 sed -i .bak "s/vcx\.framework_[0-9]*\.[0-9]*_universal\.zip/${COCOAPOD}/" ${COCOAPOD_SPEC}
 
