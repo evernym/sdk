@@ -22,7 +22,11 @@ def recursive_walk(folder):
             copy = open(folderName + '/' + filename + ".newrs", "w")
             for line in f:
                 trimmedLine = line.strip()
-                if trimmedLine.endswith(";"):
+                if (
+                    trimmedLine.endswith(";") and
+                    not trimmedLine.startswith("extern") and
+                    not trimmedLine.startswith("use")
+                ):
                     traceNumber += 1
                     copy.write("trace!(\"DEBUG TRACE FROM MOBILE TEAM -- " + str(traceNumber) + "\");\n")
                 copy.write(line)
