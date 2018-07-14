@@ -137,7 +137,7 @@ void VcxWrapperCommonNumberStringCallback(vcx_command_handle_t xcommand_handle,
             encryptWith:(NSString *)encryptionKey
            completion:(void (^)(NSError *error, NSInteger exportHandle))completion;
 - (void)importWallet:(NSString *)importPath
-            encryptWith:(NSString *)encryptionKey
+            decryptWith:(NSString *)decryptionKey
            completion:(void (^)(NSError *error, NSInteger importHandle))completion;
 
 @end

@@ -606,7 +606,7 @@ completion:(void (^)(NSError *error))completion
    vcx_error_t ret;
    vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
    const char * import_path=[importPath cString];
-   const char * encryption_key = [encryptionKey cString];
+   const char * encryption_key = [decryptionKey cString];
     ret = vcx_wallet_import(handle, import_path, encryption_key, VcxWrapperCommonCallback);
 
    if( ret != 0 )

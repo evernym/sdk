@@ -28,8 +28,15 @@ if [ ! -z "$2" ]; then
     IOS_TARGETS=$2
 fi
 
-cargo clean
-cargo update
+CLEAN_BUILD="cleanbuild"
+if [ ! -z "$3" ]; then
+    CLEAN_BUILD=$3
+fi
+
+if [ "$CLEAN_BUILD" = "cleanbuild" ]; then
+    cargo clean
+    cargo update
+fi
 
 export OPENSSL_LIB_DIR_DARWIN=$OPENSSL_LIB_DIR
 
