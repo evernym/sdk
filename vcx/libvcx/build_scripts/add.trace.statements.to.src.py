@@ -37,6 +37,7 @@ def recursive_walk(folder):
                 if (
                     not trimmedLine.startswith("use") and
                     not trimmedLine.startswith("extern") and
+                    waitForSemiColon == 0 and
                     len(trimmedLine) > 0
                 ):
                     atTopOfFile = 0
@@ -102,6 +103,8 @@ def recursive_walk(folder):
                     not trimmedLine.startswith("pub static ref") and
                     not trimmedLine.startswith("r#\"{\"") and
                     not trimmedLine.startswith("fn ") and
+                    not trimmedLine.startswith("return ") and
+                    not trimmedLine.startswith("break") and
                     not line.startswith("extern") and
                     not line.startswith("use") and
                     not line.startswith("pub mod") and
