@@ -89,7 +89,7 @@ def recursive_walk(folder):
                     not previousLine.startswith("impl")
                 ):
                     traceNumber += 1
-                    copy.write("trace!(\"DEBUG TRACE FROM MOBILE TEAM -- " + str(traceNumber) + "\");\n")
+                    copy.write("println!(\"DEBUG TRACE FROM MOBILE TEAM -- " + str(traceNumber) + "\");\n")
                 
                 copy.write(line)
 
@@ -122,7 +122,7 @@ def recursive_walk(folder):
                     not previousLine.startswith("impl")
                 ):
                     traceNumber += 1
-                    copy.write("trace!(\"DEBUG TRACE FROM MOBILE TEAM -- " + str(traceNumber) + "\");\n")
+                    copy.write("println!(\"DEBUG TRACE FROM MOBILE TEAM -- " + str(traceNumber) + "\");\n")
                 
                 if ( insideExternCurly == 1 and trimmedLine == "}" ):
                     insideExternCurly = 0
