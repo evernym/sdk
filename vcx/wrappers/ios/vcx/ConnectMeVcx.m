@@ -601,7 +601,7 @@ completion:(void (^)(NSError *error))completion
 }
 
 - (void)importWallet:(NSString *)importPath
-            encryptWith:(NSString *)encryptionKey
+            decryptWith:(NSString *)decryptionKey
            completion:(void (^)(NSError *error, NSInteger importHandle))completion {
    vcx_error_t ret;
    vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
