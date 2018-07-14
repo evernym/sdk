@@ -88,6 +88,7 @@ cp -rvp vcx.framework $VCX_SDK/vcx/wrappers/ios/vcx/tmp/vcx/
 cd $VCX_SDK/vcx/wrappers/ios/vcx/tmp
 rm vcx.framework_${DATETIME}_universal.zip
 zip -r vcx.framework_${DATETIME}_universal.zip vcx
+chmod -R a+rw $VCX_SDK/vcx/wrappers/ios/vcx
 # |---vcx.framework_20180522.1635_universal.zip
 # |---vcx
 #      |---vcx.framework
