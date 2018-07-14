@@ -21,30 +21,71 @@ def recursive_walk(folder):
             print(folderName + '/' + filename + ".newrs")
             copy = open(folderName + '/' + filename + ".newrs", "w")
             previousLine = ""
+            previousTrimmedLine = ""
             insideExternCurly = 0
+            atTopOfFile = 1
+            waitForSemiColon = 0
+            eatingCurlys = 0
+            openCurlys = -1
             for line in f:
                 trimmedLine = line.strip()
                 
                 if (trimmedLine == "extern {"):
                     insideExternCurly = 1
+                if (trimmedLine.endswith(",")):
+                    waitForSemiColon = 1
+                if (
+                    not trimmedLine.startswith("use") and
+                    not trimmedLine.startswith("extern") and
+                    len(trimmedLine) > 0
+                ):
+                    atTopOfFile = 0
+                
+                if (trimmedLine.startswith("macro_rules!")):
+                    eatingCurlys = 1
+
+                if (eatingCurlys == 1):
+                    if (openCurlys == -1):
+                        openCurlys = trimmedLine.count('{')
+                    else
+                        openCurlys += trimmedLine.count('{')
+                    openCurlys -= trimmedLine.count('}')
 
                 if (
                     trimmedLine.endswith(";") and
-                    not trimmedLine.startswith("extern") and
-                    not trimmedLine.startswith("use") and
-                    not trimmedLine.startswith("pub mod") and
-                    not trimmedLine.startswith("pub const") and
-                    not trimmedLine.startswith("pub static") and
-                    not trimmedLine.startswith("static ref") and
-                    not trimmedLine.startswith("fn matches") and
-                    not trimmedLine.startswith("//") and
-                    not trimmedLine.startswith("}") and
+                    waitForSemiColon == 0 and
+                    atTopOfFile = 0 and
+                    eatingCurlys = 0 and
+                    not trimmedLine == "};" and
+                    not trimmedLine == "})?;" and
                     not trimmedLine.startswith(".") and
-                    not trimmedLine.startswith(")") and
-                    not previousLine.endswith(",") and
-                    not previousLine.endswith(".") and
-                    not previousLine.endswith("=") and
-                    not previousLine.startswith("#[cfg")
+                    not trimmedLine.startswith(").") and
+                    not trimmedLine.startswith("}).") and
+                    not trimmedLine.startswith(");") and
+                    not trimmedLine.startswith("});") and
+                    not trimmedLine.startswith("}));") and
+                    not trimmedLine.startswith("static ref") and
+                    not trimmedLine.startswith("pub static ref") and
+                    not trimmedLine.startswith("fn ") and
+                    not line.startswith("extern") and
+                    not line.startswith("use") and
+                    not line.startswith("pub mod") and
+                    not line.startswith("pub const") and
+                    not line.startswith("const ") and
+                    not line.startswith("pub static") and
+                    not line.startswith("fn matches") and
+                    not line.startswith("//") and
+                    not line.startswith("}") and
+                    not line.startswith(")") and
+                    not line.startswith("/*") and
+                    not line.startswith("static") and
+                    not line.startswith("mod ") and
+                    not previousTrimmedLine.endswith(",") and
+                    not previousTrimmedLine.endswith(".") and
+                    not previousTrimmedLine.endswith("=") and
+                    not previousLine.startswith("#[cfg") and
+                    not previousLine.startswith("pub trait") and
+                    not previousLine.startswith("impl")
                 ):
                     traceNumber += 1
                     copy.write("trace!(\"DEBUG TRACE FROM MOBILE TEAM -- " + str(traceNumber) + "\");\n")
@@ -53,25 +94,43 @@ def recursive_walk(folder):
 
                 if (
                     trimmedLine.endswith(";") and
+                    atTopOfFile = 0 and
+                    eatingCurlys = 0 and
                     not trimmedLine == "};" and
-                    not trimmedLine.startswith("extern") and
-                    not trimmedLine.startswith("use") and
-                    not trimmedLine.startswith("pub mod") and
-                    not trimmedLine.startswith("pub const") and
-                    not trimmedLine.startswith("pub static") and
+                    not trimmedLine == "})?;" and
                     not trimmedLine.startswith("static ref") and
-                    not trimmedLine.startswith("fn matches") and
-                    not trimmedLine.startswith("//") and
+                    not trimmedLine.startswith("pub static ref") and
                     not trimmedLine.startswith("r#\"{\"") and
-                    insideExternCurly == 0
+                    not trimmedLine.startswith("fn ") and
+                    not line.startswith("extern") and
+                    not line.startswith("use") and
+                    not line.startswith("pub mod") and
+                    not line.startswith("pub const") and
+                    not line.startswith("const ") and
+                    not line.startswith("pub static") and
+                    not line.startswith("fn matches") and
+                    not line.startswith("//") and
+                    not line.startswith("/*") and
+                    not line.startswith("static") and
+                    not line.startswith("mod ") and
+                    not line.startswith("});") and
+                    insideExternCurly == 0 and
+                    not previousLine.startswith("pub trait") and
+                    not previousLine.startswith("impl")
                 ):
                     traceNumber += 1
                     copy.write("trace!(\"DEBUG TRACE FROM MOBILE TEAM -- " + str(traceNumber) + "\");\n")
                 
                 if ( insideExternCurly == 1 and trimmedLine == "}" ):
                     insideExternCurly = 0
+                if (trimmedLine.endswith(";")):
+                    waitForSemiColon = 0
+                if (openCurlys == 0):
+                    eatingCurlys = 0
+                    openCurlys = -1
 
-                previousLine = trimmedLine
+                previousTrimmedLine = trimmedLine
+                previousLine = line
             f.close()
             copy.close()
             os.rename(folderName + '/' + filename + ".newrs", folderName + '/' + filename)
