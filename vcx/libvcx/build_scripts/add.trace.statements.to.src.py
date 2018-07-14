@@ -47,15 +47,15 @@ def recursive_walk(folder):
                 if (eatingCurlys == 1):
                     if (openCurlys == -1):
                         openCurlys = trimmedLine.count('{')
-                    else
+                    else:
                         openCurlys += trimmedLine.count('{')
                     openCurlys -= trimmedLine.count('}')
 
                 if (
                     trimmedLine.endswith(";") and
                     waitForSemiColon == 0 and
-                    atTopOfFile = 0 and
-                    eatingCurlys = 0 and
+                    atTopOfFile == 0 and
+                    eatingCurlys == 0 and
                     not trimmedLine == "};" and
                     not trimmedLine == "})?;" and
                     not trimmedLine.startswith(".") and
@@ -94,8 +94,8 @@ def recursive_walk(folder):
 
                 if (
                     trimmedLine.endswith(";") and
-                    atTopOfFile = 0 and
-                    eatingCurlys = 0 and
+                    atTopOfFile == 0 and
+                    eatingCurlys == 0 and
                     not trimmedLine == "};" and
                     not trimmedLine == "})?;" and
                     not trimmedLine.startswith("static ref") and
