@@ -2,6 +2,7 @@
 # findLargeFiles.py - given a folder name, walk through its entire hierarchy
 #                   - print folders and files within each folder
 # python add.trace.statements.to.src.py /Users/iosbuild1/forge/work/code/evernym/sdk/vcx/libvcx/src
+# python add.trace.statements.to.src.py /Users/iosbuild1/forge/work/code/evernym/sdk/.macosbuild/vcx-indy-sdk/libnullpay/src
 
 import os
 import sys
@@ -84,12 +85,13 @@ def recursive_walk(folder):
                     not previousTrimmedLine.endswith(",") and
                     not previousTrimmedLine.endswith(".") and
                     not previousTrimmedLine.endswith("=") and
+                    not previousTrimmedLine.endswith(")") and
                     not previousLine.startswith("#[cfg") and
                     not previousLine.startswith("pub trait") and
                     not previousLine.startswith("impl")
                 ):
                     traceNumber += 1
-                    copy.write("println!(\"DEBUG TRACE FROM MOBILE TEAM -- " + str(traceNumber) + "\");\n")
+                    copy.write("println!(\"TRACE[" + str(traceNumber) + "]: " + folderName + "/" + filename + "\");\n")
                 
                 copy.write(line)
 
@@ -122,7 +124,7 @@ def recursive_walk(folder):
                     not previousLine.startswith("impl")
                 ):
                     traceNumber += 1
-                    copy.write("println!(\"DEBUG TRACE FROM MOBILE TEAM -- " + str(traceNumber) + "\");\n")
+                    copy.write("println!(\"TRACE[" + str(traceNumber) + "]: " + folderName + "/" + filename + "\");\n")
                 
                 if ( insideExternCurly == 1 and trimmedLine == "}" ):
                     insideExternCurly = 0
