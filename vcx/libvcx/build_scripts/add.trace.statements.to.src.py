@@ -3,6 +3,7 @@
 #                   - print folders and files within each folder
 # python add.trace.statements.to.src.py /Users/iosbuild1/forge/work/code/evernym/sdk/vcx/libvcx/src
 # python add.trace.statements.to.src.py /Users/iosbuild1/forge/work/code/evernym/sdk/.macosbuild/vcx-indy-sdk/libnullpay/src
+# python add.trace.statements.to.src.py /Users/iosbuild1/forge/work/code/evernym/sdk/.macosbuild/vcx-indy-sdk/libindy/src
 
 import os
 import sys
@@ -27,6 +28,7 @@ def recursive_walk(folder):
             atTopOfFile = 1
             waitForSemiColon = 0
             eatingCurlys = 0
+            eatingLines = 0
             openCurlys = -1
             for line in f:
                 trimmedLine = line.strip()
@@ -44,6 +46,9 @@ def recursive_walk(folder):
                 ):
                     atTopOfFile = 0
                 
+                if (trimmedLine.count("\"") == 1 and trimmedLine.endswith("\"")):
+                    eatingLines = 1
+                
                 if (trimmedLine.startswith("macro_rules!")):
                     eatingCurlys = 1
 
@@ -59,9 +64,12 @@ def recursive_walk(folder):
                     waitForSemiColon == 0 and
                     atTopOfFile == 0 and
                     eatingCurlys == 0 and
+                    eatingLines == 0 and
+                    not filename == "sodium_type.rs" and
                     not trimmedLine == "};" and
                     not trimmedLine == "})?;" and
                     not trimmedLine.startswith(".") and
+                    not trimmedLine.startswith("{") and
                     not trimmedLine.startswith(").") and
                     not trimmedLine.startswith("}).") and
                     not trimmedLine.startswith(");") and
@@ -75,6 +83,7 @@ def recursive_walk(folder):
                     not trimmedLine.startswith("return") and
                     not line.startswith("pub mod") and
                     not line.startswith("pub const") and
+                    not line.startswith("sodium_type!") and
                     not line.startswith("const ") and
                     not line.startswith("pub static") and
                     not line.startswith("fn matches") and
@@ -87,7 +96,11 @@ def recursive_walk(folder):
                     not previousTrimmedLine.endswith(",") and
                     not previousTrimmedLine.endswith(".") and
                     not previousTrimmedLine.endswith("=") and
+                    not previousTrimmedLine.endswith("?") and
                     not previousTrimmedLine.endswith(")") and
+                    not previousTrimmedLine.endswith("(") and
+                    not previousTrimmedLine.endswith("|") and
+                    not previousTrimmedLine.endswith("\\") and
                     not previousTrimmedLine.endswith("}") and
                     not previousTrimmedLine.startswith("retun") and
                     not previousLine.startswith("#[cfg") and
@@ -103,6 +116,8 @@ def recursive_walk(folder):
                     trimmedLine.endswith(";") and
                     atTopOfFile == 0 and
                     eatingCurlys == 0 and
+                    eatingLines == 0 and
+                    not filename == "sodium_type.rs" and
                     not trimmedLine == "};" and
                     not trimmedLine == "})?;" and
                     not trimmedLine.startswith("static ref") and
@@ -115,6 +130,7 @@ def recursive_walk(folder):
                     not trimmedLine.startswith("use") and
                     not line.startswith("pub mod") and
                     not line.startswith("pub const") and
+                    not line.startswith("sodium_type!") and
                     not line.startswith("const ") and
                     not line.startswith("pub static") and
                     not line.startswith("fn matches") and
@@ -137,6 +153,8 @@ def recursive_walk(folder):
                 if (openCurlys == 0):
                     eatingCurlys = 0
                     openCurlys = -1
+                if (trimmedLine.startswith("\"") and eatingLines == 1):
+                    eatingLines = 0
 
                 previousTrimmedLine = trimmedLine
                 previousLine = line
