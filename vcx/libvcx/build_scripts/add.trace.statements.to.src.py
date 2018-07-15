@@ -30,6 +30,7 @@ def recursive_walk(folder):
             eatingCurlys = 0
             eatingLines = 0
             openCurlys = -1
+            ignoreEnding = 0
             for line in f:
                 trimmedLine = line.strip()
                 
@@ -49,9 +50,12 @@ def recursive_walk(folder):
                 if (trimmedLine.count("\"") == 1 and trimmedLine.endswith("\"")):
                     eatingLines = 1
                 
-                if (trimmedLine.startswith("macro_rules!")):
-                    eatingCurlys = 1
+                if (line.startswith("pub type ") or line.startswith("pub const ") or line.startswith("const ")):
+                    ignoreEnding = 1
 
+                if (trimmedLine.startswith("macro_rules!") or trimmedLine.startswith("impl Node")):
+                    eatingCurlys = 1
+                
                 if (eatingCurlys == 1):
                     if (openCurlys == -1):
                         openCurlys = trimmedLine.count('{')
@@ -77,12 +81,14 @@ def recursive_walk(folder):
                     not trimmedLine.startswith("}));") and
                     not trimmedLine.startswith("static ref") and
                     not trimmedLine.startswith("pub static ref") and
+                    not trimmedLine.startswith("pub type ") and
+                    not trimmedLine.startswith("type ") and
                     not trimmedLine.startswith("fn ") and
                     not trimmedLine.startswith("extern") and
                     not trimmedLine.startswith("use") and
                     not trimmedLine.startswith("return") and
+                    not trimmedLine.startswith("pub const") and
                     not line.startswith("pub mod") and
-                    not line.startswith("pub const") and
                     not line.startswith("sodium_type!") and
                     not line.startswith("const ") and
                     not line.startswith("pub static") and
@@ -117,19 +123,23 @@ def recursive_walk(folder):
                     atTopOfFile == 0 and
                     eatingCurlys == 0 and
                     eatingLines == 0 and
+                    ignoreEnding == 0 and
                     not filename == "sodium_type.rs" and
                     not trimmedLine == "};" and
                     not trimmedLine == "})?;" and
                     not trimmedLine.startswith("static ref") and
                     not trimmedLine.startswith("pub static ref") and
+                    not trimmedLine.startswith("pub type ") and
+                    not trimmedLine.startswith("type ") and
                     not trimmedLine.startswith("r#\"{\"") and
                     not trimmedLine.startswith("fn ") and
                     not trimmedLine.startswith("return") and
                     not trimmedLine.startswith("break") and
+                    not trimmedLine.startswith("continue") and
                     not trimmedLine.startswith("extern") and
                     not trimmedLine.startswith("use") and
+                    not trimmedLine.startswith("pub const") and
                     not line.startswith("pub mod") and
-                    not line.startswith("pub const") and
                     not line.startswith("sodium_type!") and
                     not line.startswith("const ") and
                     not line.startswith("pub static") and
@@ -140,6 +150,9 @@ def recursive_walk(folder):
                     not line.startswith("mod ") and
                     not line.startswith("});") and
                     insideExternCurly == 0 and
+                    not previousTrimmedLine.startswith("return") and
+                    not previousTrimmedLine.startswith("break") and
+                    not previousTrimmedLine.startswith("continue") and
                     not previousLine.startswith("pub trait") and
                     not previousLine.startswith("impl")
                 ):
@@ -150,6 +163,7 @@ def recursive_walk(folder):
                     insideExternCurly = 0
                 if (trimmedLine.endswith(";")):
                     waitForSemiColon = 0
+                    ignoreEnding = 0
                 if (openCurlys == 0):
                     eatingCurlys = 0
                     openCurlys = -1
