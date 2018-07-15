@@ -36,8 +36,9 @@ def recursive_walk(folder):
                 if (trimmedLine.endswith(",")):
                     waitForSemiColon = 1
                 if (
-                    not trimmedLine.startswith("use") and
-                    not trimmedLine.startswith("extern") and
+                    not line.startswith("use") and
+                    not line.startswith("extern") and
+                    not line.startswith("type ") and
                     waitForSemiColon == 0 and
                     len(trimmedLine) > 0
                 ):
