@@ -70,8 +70,9 @@ def recursive_walk(folder):
                     not trimmedLine.startswith("static ref") and
                     not trimmedLine.startswith("pub static ref") and
                     not trimmedLine.startswith("fn ") and
-                    not line.startswith("extern") and
-                    not line.startswith("use") and
+                    not trimmedLine.startswith("extern") and
+                    not trimmedLine.startswith("use") and
+                    not trimmedLine.startswith("return") and
                     not line.startswith("pub mod") and
                     not line.startswith("pub const") and
                     not line.startswith("const ") and
@@ -87,6 +88,8 @@ def recursive_walk(folder):
                     not previousTrimmedLine.endswith(".") and
                     not previousTrimmedLine.endswith("=") and
                     not previousTrimmedLine.endswith(")") and
+                    not previousTrimmedLine.endswith("}") and
+                    not previousTrimmedLine.startswith("retun") and
                     not previousLine.startswith("#[cfg") and
                     not previousLine.startswith("pub trait") and
                     not previousLine.startswith("impl")
@@ -106,10 +109,10 @@ def recursive_walk(folder):
                     not trimmedLine.startswith("pub static ref") and
                     not trimmedLine.startswith("r#\"{\"") and
                     not trimmedLine.startswith("fn ") and
-                    not trimmedLine.startswith("return ") and
+                    not trimmedLine.startswith("return") and
                     not trimmedLine.startswith("break") and
-                    not line.startswith("extern") and
-                    not line.startswith("use") and
+                    not trimmedLine.startswith("extern") and
+                    not trimmedLine.startswith("use") and
                     not line.startswith("pub mod") and
                     not line.startswith("pub const") and
                     not line.startswith("const ") and
