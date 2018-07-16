@@ -46,11 +46,12 @@ if [ "$DEBUG_SYMBOLS" = "debuginfo" ]; then
 fi
 
 cargo clean
-cargo update
+# cargo update
 # To build for macos
 #cargo build
 # To build for iOS
 cargo lipo --release --verbose --targets="${IOS_TARGETS}"
+# cargo lipo --release --targets="${IOS_TARGETS}"
 #cargo lipo
 
 #########################################################################################################################
@@ -63,7 +64,7 @@ if [ "$DEBUG_SYMBOLS" = "debuginfo" ]; then
 fi
 
 cargo clean
-cargo update
+# cargo update
 # Replace '\"cdylib\"' with '\"staticlib\", \"cdylib\"' in Cargo.toml
 #sed -i .bak 's/\"cdylib\"/\"staticlib\", \"cdylib\"/' Cargo.toml
 
@@ -71,4 +72,5 @@ cargo update
 #cargo build
 # To build for iOS
 cargo lipo --release --verbose --targets="${IOS_TARGETS}"
+# cargo lipo --release --targets="${IOS_TARGETS}"
 #cargo lipo

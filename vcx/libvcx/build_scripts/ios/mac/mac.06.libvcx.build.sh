@@ -35,7 +35,7 @@ fi
 
 if [ "$CLEAN_BUILD" = "cleanbuild" ]; then
     cargo clean
-    cargo update
+    # cargo update
 fi
 
 export OPENSSL_LIB_DIR_DARWIN=$OPENSSL_LIB_DIR
@@ -65,6 +65,8 @@ do
     export IOS_ZMQ_LIB=$WORK_DIR/libzmq-ios/dist/ios/lib/${target_arch}
     export LIBINDY_DIR=$WORK_DIR/vcx-indy-sdk/libindy/target/${target}/release
     export LIBNULLPAY_DIR=$WORK_DIR/vcx-indy-sdk/libnullpay/target/${target}/release
+    # export LIBINDY_DIR=$WORK_DIR/vcx-indy-sdk/libindy/target/${target}/debug
+    # export LIBNULLPAY_DIR=$WORK_DIR/vcx-indy-sdk/libnullpay/target/${target}/debug
     #export LIBINDY_DIR=$WORK_DIR/vcx-indy-sdk/libindy/target/universal/release
     #export LIBNULLPAY_DIR=$WORK_DIR/vcx-indy-sdk/libnullpay/target/universal/release
 
@@ -83,6 +85,7 @@ do
     #rm ./target/universal/release/libvcx.a
     #cargo lipo --release --verbose --targets="${target}"
     cargo build --target "${target}" --release --verbose
+    # cargo build --release --target "${target}"
 
     # if [ -f "./libvcx.previous.a" ]; then
     #     lipo -create -output ./combined.ios.libvcx.a ./target/universal/release/libvcx.a ./libvcx.previous.a
@@ -102,4 +105,3 @@ export OPENSSL_LIB_DIR=$OPENSSL_LIB_DIR_DARWIN
 #cargo test
 
 #lipo -info 
-
