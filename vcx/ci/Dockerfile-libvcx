@@ -8,10 +8,12 @@ COPY . /sdk
 # where debian will be copied to
 RUN mkdir /sdk/vcx/output
 
+ARG test_flag
+ENV VCX_TEST_FLAG=$test_flag
 ENV PATH=${PATH}:/sdk/vcx/ci/scripts
 
 WORKDIR /sdk/vcx/libvcx
-RUN if [ "$VCX_TEST_FLAG" ]; \
+RUN if [ "$VCX_TEST_FLAG" == "no" ]; \
 	then cargo build; \
 	else cargo test -- --test-threads=1; \ 
 	fi
