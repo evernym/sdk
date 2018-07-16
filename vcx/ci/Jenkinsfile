@@ -60,7 +60,8 @@ def mainUbuntu() {
                         // sh "/sdk/vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"*.deb\" https://kraken.corp.evernym.com/repo/portal_dev/upload"
                         // sh "/sdk/vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"*.tgz\" https://kraken.corp.evernym.com/repo/npm/upload"
                         sh "ls $volumeInternalDir/*.tar.gz"
-                        archiveArtifacts allowEmptyArchive: true, artifacts: '${volumeInternalDir}/*.tar.gz'
+                        sh 'docker run -v $volumeName:$volumeInternalDir -v $(pwd)/tmp/output:/tmp/output --rm ubuntu:16.04 sh -c \"cp ${volumeInternalDir}/* /tmp/output\"'
+                        archiveArtifacts allowEmptyArchive: true, artifacts: '~/*.tar.gz'
                     }
                 }
                 
