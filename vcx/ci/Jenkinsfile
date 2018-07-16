@@ -5,8 +5,7 @@ def vcx_python
 def libindy
 def vcx_nodejs
 
-def volumeName = "vcx-volume"
-def volumeInternalDir = "/sdk/vcx/output"
+
 
 testing()
 
@@ -33,13 +32,15 @@ def buildImage(name, filename, cache='', context='.') {
 }
 
 def mainUbuntu() {
-    node('ubuntu') {
+    node('ubuntu-10') {
         stage('Main Build - Ubuntu') {
+            def volumeName = "vcx-volume"
+            def volumeInternalDir = "/sdk/vcx/output"
             try {
                 checkout scm
                 
 				sh "docker volume rm -f $volumeName"
-              
+
                 def libindy = docker.build("libindy", "-f vcx/ci/Dockerfile-libindy .")
 
                 // ******* Build the libvcx base image (runs tests and creates debian automatically) ********
@@ -51,21 +52,21 @@ def mainUbuntu() {
                 sh "docker run --rm -v $volumeName:$volumeInternalDir node"
 
                 // ******** Builds and tests the Python Wrapper *******
-                def python = docker.build("python", "-f vcx/wrappers/python3/ci/Dockerfile-python-wrapper .")    
-                sh "docker run --rm -v $volumeName:$volumeInternalDir python"
+                // def python = docker.build("python", "-f vcx/wrappers/python3/ci/Dockerfile-python-wrapper .")    
+                // sh "docker run --rm -v $volumeName:$volumeInternalDir python"
 
                 // ******** PUBLISHING (artifacts are in a Docker Volume) ********
                 sh "docker build -t publish -f vcx/ci/Dockerfile-publish ."
                 withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
                     def publish = docker.build('publish', "-f vcx/ci/Dockerfile-publish .")
                     publish.inside("--network=host -v $volumeName:$volumeInternalDir") {
-                        sh "/sdk/vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"*.deb\" https://kraken.corp.evernym.com/repo/portal_dev/upload"
+                        // sh "/sdk/vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"*.deb\" https://kraken.corp.evernym.com/repo/portal_dev/upload"
                         sh "/sdk/vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"*.tgz\" https://kraken.corp.evernym.com/repo/npm/upload"
-                        sh "ls $volumeInternalDir/*.tar.gz"
-                        sh 'mkdir -p vcx/output'
-                        sh "cp $volumeInternalDir/*.tar.gz vcx/output"
-                        // archive artifacts to Jenkins
-                        archiveArtifacts allowEmptyArchive: true, artifacts: 'vcx/output/**/*.tar.gz'
+                        // sh "ls $volumeInternalDir/*.tar.gz"
+                        // sh 'mkdir -p vcx/output'
+                        // sh "cp $volumeInternalDir/*.tar.gz vcx/output"
+                        // // archive artifacts to Jenkins
+                        // archiveArtifacts allowEmptyArchive: true, artifacts: 'vcx/output/**/*.tar.gz'
 
                     }
                 }
@@ -116,7 +117,7 @@ def mainUbuntu() {
                 }
                 echo "$ex error"
             } finally {
-                sh 'vcx/ci/scripts/cleanup.sh' $volume_name
+                sh "vcx/ci/scripts/cleanup.sh $volumeName"
                 step([$class: 'WsCleanup'])
             }
         }
