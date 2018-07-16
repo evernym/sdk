@@ -451,6 +451,9 @@ public abstract class LibVcx {
         /** Get a record from wallet */
         public int vcx_wallet_get_record(int command_handle, String recordType, String recordId, String recordTag, Callback cb);
 
+        /** Update a record in wallet */
+        public int vcx_wallet_update_record_value(int command_handle, String recordType, String recordId, String recordValue, Callback cb);
+
 
     }
 

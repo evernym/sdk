@@ -138,4 +138,30 @@ public class WalletApi extends VcxJava.API {
         return future;
     }
 
+    private static Callback vcxUpdateRecordWalletCB = new Callback() {
+        public void callback(int command_handle, int err){
+            CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
+            if(!checkCallback(future,err)) return;
+            Integer result = command_handle;
+            future.complete(result);
+        }
+    };
+
+    public static CompletableFuture<Integer> updateRecordWallet(
+            String recordType,
+            String recordId,
+            String recordValue
+    ) throws VcxException {
+        ParamGuard.notNull(recordType, "recordType");
+        ParamGuard.notNull(recordId, "recordId");
+        ParamGuard.notNull(recordValue, "recordValue");
+        CompletableFuture<Integer> future = new CompletableFuture<Integer>();
+        int commandHandle = addFuture(future);
+
+        int result = LibVcx.api.vcx_wallet_update_record_value( commandHandle, recordType, recordId, recordValue, vcxUpdateRecordWalletCB);
+        checkResult(result);
+
+        return future;
+    }
+
 }
