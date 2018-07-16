@@ -13,8 +13,8 @@ ENV VCX_TEST_FLAG $test_flag
 
 WORKDIR /sdk/vcx/libvcx
 RUN if [ "$VCX_TEST_FLAG" == "no" ]; \
-	then cargo build; \
-	else cargo test -- --test-threads=1; \ 
+	then cargo build --color=never; \
+	else cargo test --color=never -- --test-threads=1; \ 
 	fi
 
 RUN cargo update-version
