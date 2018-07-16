@@ -2,6 +2,7 @@
 
 setup() {
     echo "Working Directory: ${PWD}"
+    set -e
     export ARCH=$1
 
     export PATH=${HOME}/.cargo/bin:${PATH}
@@ -152,24 +153,24 @@ build_vcx() {
     #LIBVCX_PATH=~/vcx/libvcx/build_scripts/android/vcx/
     #PREBUILT_BIN=../../../../ci/scripts/runtime_android_build
 
-    if [ ! -d libindy_${ARCH} ]; then
-        echo "missing libindy_${ARCH}. Cannot proceed without it."
-        exit 1
-    fi
-    if [ ! -d libnullpay_${ARCH} ]; then
-        echo "missing libnullpay_${ARCH}. Cannot proceed without it."
-        exit 1
-    fi
+    # if [ ! -d libindy_${ARCH} ]; then
+    #     echo "missing libindy_${ARCH}. Cannot proceed without it."
+    #     exit 1
+    # fi
+    # if [ ! -d libnullpay_${ARCH} ]; then
+    #     echo "missing libnullpay_${ARCH}. Cannot proceed without it."
+    #     exit 1
+    # fi
 
     pushd ${LIBVCX_PATH}
     mkdir -p toolchains/
     ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} ${PREBUILT_BIN}/openssl_${ARCH} ${PREBUILT_BIN}/libsodium_${ARCH} ${PREBUILT_BIN}/libzmq_${ARCH} ${PREBUILT_BIN}/libindy_${ARCH} ${PREBUILT_BIN}/libnullpay_${ARCH} 
     popd
-    mv ${LIBVCX_PATH}libvcx_${ARCH} .
+    # mv ${LIBVCX_PATH}libvcx_${ARCH} .
 
 }
 
 setup $1
-build_libindy $1
-build_libnullpay $1
+# build_libindy $1
+# build_libnullpay $1
 build_vcx $1
