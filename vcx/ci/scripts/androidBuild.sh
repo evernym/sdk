@@ -2,36 +2,37 @@
 
 setup() {
     echo "Working Directory: ${PWD}"
-    export ARCH=$1
+    exit 1
+    # export ARCH=$1
 
-    export PATH=${HOME}/.cargo/bin:${PATH}
-    export PATH=$PATH:/opt/gradle/gradle-3.4.1/bin
-    export PATH=${PATH}:$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/build-tools/25.0.2/
-    source /etc/profile
-	if [ ! -d runtime_android_build ]; then
-        mkdir runtime_android_build
-    fi
-    cd runtime_android_build
-	retrieve_prebuilt_binaries
-	clone_indy_sdk
-	generate_flags $1
-    if [ ! -d "toolchains" ]; then
-        mkdir toolchains
-    fi
+    # export PATH=${HOME}/.cargo/bin:${PATH}
+    # export PATH=$PATH:/opt/gradle/gradle-3.4.1/bin
+    # export PATH=${PATH}:$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/build-tools/25.0.2/
+    # source /etc/profile
+	# if [ ! -d runtime_android_build ]; then
+    #     mkdir runtime_android_build
+    # fi
+    # cd runtime_android_build
+	# retrieve_prebuilt_binaries
+	# clone_indy_sdk
+	# generate_flags $1
+    # if [ ! -d "toolchains" ]; then
+    #     mkdir toolchains
+    # fi
 
-    # For Jenkins (MAIN)
-    ANDROID_JNI_LIB=../vcx/wrappers/java/vcx/src/main/jniLibs
+    # # For Jenkins (MAIN)
+    # ANDROID_JNI_LIB=../vcx/wrappers/java/vcx/src/main/jniLibs
 
-    # For docker 
-    #ANDROID_JNI_LIB=~/vcx/wrappers/java/vcx/src/main/jniLibs
+    # # For docker 
+    # #ANDROID_JNI_LIB=~/vcx/wrappers/java/vcx/src/main/jniLibs
 
-    mkdir -p ${ANDROID_JNI_LIB}/arm
-    mkdir -p ${ANDROID_JNI_LIB}/x86
-    mkdir -p ${ANDROID_JNI_LIB}/arm64
-     if [ $1 == "arm64" ]; then
-        echo "overwriting .cargo files for arm64"
-        overwrite_cargo_files
-    fi
+    # mkdir -p ${ANDROID_JNI_LIB}/arm
+    # mkdir -p ${ANDROID_JNI_LIB}/x86
+    # mkdir -p ${ANDROID_JNI_LIB}/arm64
+    #  if [ $1 == "arm64" ]; then
+    #     echo "overwriting .cargo files for arm64"
+    #     overwrite_cargo_files
+    # fi
 
 }
 
@@ -170,6 +171,6 @@ build_vcx() {
 }
 
 setup $1
-build_libindy $1
-build_libnullpay $1
-build_vcx $1
+# build_libindy $1
+# build_libnullpay $1
+# build_vcx $1
