@@ -1,7 +1,7 @@
 #!/bin/bash
 
-npm run lint
 npm ci
+npm run lint
 #npm test
 npm pack
 echo "print working directory"
