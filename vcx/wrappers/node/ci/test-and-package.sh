@@ -2,11 +2,14 @@
 
 npm ci
 npm run lint
+npm run compile
 #npm test
 npm pack
 echo "print working directory"
 pwd
 echo "directory listing"
+ls -al
+echo "/sdk/vcx/output directory listing"
 ls /sdk/vcx/output -al
 
 echo "Renaming artifact"
