@@ -40,22 +40,30 @@ def mainUbuntu() {
               
                 // def libindy = docker.build("libindy", "-f vcx/ci/Dockerfile-libindy .")
 
+                // ******* Build the libvcx base image (runs tests and creates debian automatically) ********
                 // def libvcx = docker.build("libvcx", "-f vcx/ci/Dockerfile-libvcx .")
-                sh "docker run --rm -v $volumeName:$volumeInternalDir libvcx"
+                // sh "docker run --rm -v $volumeName:$volumeInternalDir libvcx"
                 
-                def node = docker.build("node", "-f vcx/wrappers/node/ci/Dockerfile-nodejs-wrapper .")
-                sh "docker run --rm -v $volumeName:$volumeInternalDir node"
+                // ******** Builds and tests the Node JS Wrapper *******
+                //def node = docker.build("node", "-f vcx/wrappers/node/ci/Dockerfile-nodejs-wrapper .")
+                //sh "docker run --rm -v $volumeName:$volumeInternalDir node"
 
-                // PUBLISHING
+                // ******** Builds and tests the Python Wrapper *******
+                // def python = docker.build("python", "-f vcx/wrappers/python3/ci/Dockerfile-python-wrapper .")    
+                // sh "docker run --rm -v $volumeName:$volumeInternalDir python"
+
+                // ******** PUBLISHING (artifacts are in a Docker Volume) ********
                 sh "docker build -t publish -f vcx/ci/Dockerfile-publish ."
-                
                 withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
                     def publish = docker.build('publish', "-f vcx/ci/Dockerfile-publish .")
                     publish.inside("--network=host -v $volumeName:$volumeInternalDir") {
-                        sh "/sdk/vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"*.deb\" https://kraken.corp.evernym.com/repo/portal_dev/upload"
-                        sh "/sdk/vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"*.tgz\" https://kraken.corp.evernym.com/repo/npm/upload"
+                        // sh "/sdk/vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"*.deb\" https://kraken.corp.evernym.com/repo/portal_dev/upload"
+                        // sh "/sdk/vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"*.tgz\" https://kraken.corp.evernym.com/repo/npm/upload"
+                        sh "ls $volumeInternalDir/*.tar.gz"
+                        archiveArtifacts allowEmptyArchive: true, artifacts: '${volumeInternalDir}/*.tar.gz'
                     }
                 }
+                
                 // sh 'vcx/ci/scripts/buildAll.sh' $volume_name
                 // rust = build('rust', 'vcx/ci/ubuntu.dockerfile', 'vcx')
 				
@@ -73,7 +81,7 @@ def mainUbuntu() {
 
                 // image used as an intermediary, where the libvcx.so is placed into /usr/lib.
                 // This image must be built after the rust build and tests have been run.
-                // libindy = build('libindy', 'vcx/ci/Dockerfile-libindy', 'vcx')
+                // libindy_old = build('libindy_old', 'vcx/ci/Dockerfile-libindy', 'vcx')
 
                 // test python wrapper, the image must be built after the libindy image build, and must be --no-cache
                 // vcx_python = build('vcx-python', 'vcx/wrappers/python3/ci/Dockerfile-python-wrapper', 'vcx', '--no-cache')
@@ -86,9 +94,7 @@ def mainUbuntu() {
                 // if (env.BRANCH_NAME == "master") {
                     // create the debian of the library (just the libvcx.so file)
                     // createDeb(rust)
-                    // sh 'vcx/ci/scripts/publish.sh' $volumeName deb
-                    // sh 'vcx/ci/scripts/publish.sh' $volumeName npm
-                    // sh 'vcx/ci/scripts/publish.sh' $volumeName python
+                    
                     // create the npm deb
                     // createNpmDeb(rust, "*_amd64.tgz")
                     // renameAndUploadNpmTgz(rust, "vcx")
