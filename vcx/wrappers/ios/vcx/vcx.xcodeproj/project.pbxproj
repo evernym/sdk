@@ -21,6 +21,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		915105F720FCF17600647624 /* libnullpay.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 915105F620FCF17600647624 /* libnullpay.a */; };
 		91E754A820F3DB4200D9CE79 /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = DD858CC420A53DD7004B3CB5 /* libresolv.tbd */; };
 		91E754A920F3DB4D00D9CE79 /* libstdc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = DD858CC220A53DCB004B3CB5 /* libstdc++.tbd */; };
 		91E754AD20F3DC9800D9CE79 /* libvcx.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 91E754AC20F3DC9800D9CE79 /* libvcx.a */; };
@@ -93,6 +94,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		915105F620FCF17600647624 /* libnullpay.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libnullpay.a; path = lib/libnullpay.a; sourceTree = "<group>"; };
 		91E754AC20F3DC9800D9CE79 /* libvcx.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libvcx.a; path = lib/libvcx.a; sourceTree = "<group>"; };
 		DD2566EE209705E3002EBEBA /* vcx.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = vcx.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DD2566F1209705E3002EBEBA /* vcx.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = vcx.h; sourceTree = "<group>"; };
@@ -134,6 +136,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				915105F720FCF17600647624 /* libnullpay.a in Frameworks */,
 				91E754AD20F3DC9800D9CE79 /* libvcx.a in Frameworks */,
 				91E754A920F3DB4D00D9CE79 /* libstdc++.tbd in Frameworks */,
 				91E754A820F3DB4200D9CE79 /* libresolv.tbd in Frameworks */,
@@ -257,6 +260,7 @@
 		DD25682F2098B53C002EBEBA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				915105F620FCF17600647624 /* libnullpay.a */,
 				91E754AC20F3DC9800D9CE79 /* libvcx.a */,
 				DD858CC420A53DD7004B3CB5 /* libresolv.tbd */,
 				DD858CC220A53DCB004B3CB5 /* libstdc++.tbd */,
@@ -735,6 +739,7 @@
 				"OTHER_LDFLAGS[arch=*]" = (
 					"-ObjC",
 					"-lvcx",
+					"-lnullpay",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "co.evernym.vcx-objc.vcx";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -776,6 +781,7 @@
 				"OTHER_LDFLAGS[arch=*]" = (
 					"-ObjC",
 					"-lvcx",
+					"-lnullpay",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "co.evernym.vcx-objc.vcx";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -851,6 +857,7 @@
 				"OTHER_LDFLAGS[arch=*]" = (
 					"-ObjC",
 					"-lvcx",
+					"-lnullpay",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "co.evernym.vcx-objc.vcx-demo";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -879,6 +886,7 @@
 				"OTHER_LDFLAGS[arch=*]" = (
 					"-ObjC",
 					"-lvcx",
+					"-lnullpay",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "co.evernym.vcx-objc.vcx-demo";
 				PRODUCT_NAME = "$(TARGET_NAME)";
