@@ -73,11 +73,9 @@ done
 mv lib/libvcx.a.original lib/libvcx.a
 rm -rf vcx.framework.previousbuild
 
-#cd $VCX_SDK/vcx/wrappers/ios/vcx
-#cp -v lib/libnullpay.a vcx.framework/lib/libnullpay.a
-
 mkdir -p vcx.framework/lib
 cp -v lib/libvcxall.a vcx.framework/lib/libvcx.a
+cp -v lib/libnullpay.a vcx.framework/lib/libnullpay.a
 mkdir -p vcx.framework/Headers
 cp -v ConnectMeVcx.h vcx.framework/Headers
 cp -v include/libvcx.h vcx.framework/Headers

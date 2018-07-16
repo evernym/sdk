@@ -2,6 +2,8 @@
 # findLargeFiles.py - given a folder name, walk through its entire hierarchy
 #                   - print folders and files within each folder
 # python add.trace.statements.to.src.py /Users/iosbuild1/forge/work/code/evernym/sdk/vcx/libvcx/src
+# python add.trace.statements.to.src.py /Users/iosbuild1/forge/work/code/evernym/sdk/.macosbuild/vcx-indy-sdk/libnullpay/src
+# python add.trace.statements.to.src.py /Users/iosbuild1/forge/work/code/evernym/sdk/.macosbuild/vcx-indy-sdk/libindy/src
 
 import os
 import sys
@@ -20,16 +22,156 @@ def recursive_walk(folder):
             f = open(folderName + '/' + filename, "r")
             print(folderName + '/' + filename + ".newrs")
             copy = open(folderName + '/' + filename + ".newrs", "w")
+            previousLine = ""
+            previousTrimmedLine = ""
+            insideExternCurly = 0
+            atTopOfFile = 1
+            waitForSemiColon = 0
+            eatingCurlys = 0
+            eatingLines = 0
+            openCurlys = -1
+            ignoreEnding = 0
             for line in f:
                 trimmedLine = line.strip()
+                
+                if (trimmedLine == "extern {"):
+                    insideExternCurly = 1
+                if (trimmedLine.endswith(",")):
+                    waitForSemiColon = 1
+                if (
+                    not line.startswith("use") and
+                    not line.startswith("extern") and
+                    not line.startswith("type ") and
+                    waitForSemiColon == 0 and
+                    len(trimmedLine) > 0
+                ):
+                    atTopOfFile = 0
+                
+                if (trimmedLine.count("\"") == 1 and trimmedLine.endswith("\"")):
+                    eatingLines = 1
+                
+                if (line.startswith("pub type ") or line.startswith("pub const ") or line.startswith("const ")):
+                    ignoreEnding = 1
+
+                if (trimmedLine.startswith("macro_rules!") or trimmedLine.startswith("impl Node")):
+                    eatingCurlys = 1
+                
+                if (eatingCurlys == 1):
+                    if (openCurlys == -1):
+                        openCurlys = trimmedLine.count('{')
+                    else:
+                        openCurlys += trimmedLine.count('{')
+                    openCurlys -= trimmedLine.count('}')
+
                 if (
                     trimmedLine.endswith(";") and
+                    waitForSemiColon == 0 and
+                    atTopOfFile == 0 and
+                    eatingCurlys == 0 and
+                    eatingLines == 0 and
+                    not filename == "sodium_type.rs" and
+                    not trimmedLine == "};" and
+                    not trimmedLine == "})?;" and
+                    not trimmedLine.startswith(".") and
+                    not trimmedLine.startswith("{") and
+                    not trimmedLine.startswith(").") and
+                    not trimmedLine.startswith("}).") and
+                    not trimmedLine.startswith(");") and
+                    not trimmedLine.startswith("});") and
+                    not trimmedLine.startswith("}));") and
+                    not trimmedLine.startswith("static ref") and
+                    not trimmedLine.startswith("pub static ref") and
+                    not trimmedLine.startswith("pub type ") and
+                    not trimmedLine.startswith("type ") and
+                    not trimmedLine.startswith("fn ") and
                     not trimmedLine.startswith("extern") and
-                    not trimmedLine.startswith("use")
+                    not trimmedLine.startswith("use") and
+                    not trimmedLine.startswith("return") and
+                    not trimmedLine.startswith("pub const") and
+                    not line.startswith("pub mod") and
+                    not line.startswith("sodium_type!") and
+                    not line.startswith("const ") and
+                    not line.startswith("pub static") and
+                    not line.startswith("fn matches") and
+                    not line.startswith("//") and
+                    not line.startswith("}") and
+                    not line.startswith(")") and
+                    not line.startswith("/*") and
+                    not line.startswith("static") and
+                    not line.startswith("mod ") and
+                    not previousTrimmedLine.endswith(",") and
+                    not previousTrimmedLine.endswith(".") and
+                    not previousTrimmedLine.endswith("=") and
+                    not previousTrimmedLine.endswith("?") and
+                    not previousTrimmedLine.endswith(")") and
+                    not previousTrimmedLine.endswith("(") and
+                    not previousTrimmedLine.endswith("|") and
+                    not previousTrimmedLine.endswith("\\") and
+                    not previousTrimmedLine.endswith("}") and
+                    not previousTrimmedLine.startswith("retun") and
+                    not previousLine.startswith("#[cfg") and
+                    not previousLine.startswith("pub trait") and
+                    not previousLine.startswith("impl")
                 ):
                     traceNumber += 1
-                    copy.write("trace!(\"DEBUG TRACE FROM MOBILE TEAM -- " + str(traceNumber) + "\");\n")
+                    copy.write("println!(\"TRACE[" + str(traceNumber) + "]: " + folderName + "/" + filename + "\");\n")
+                
                 copy.write(line)
+
+                if (
+                    trimmedLine.endswith(";") and
+                    atTopOfFile == 0 and
+                    eatingCurlys == 0 and
+                    eatingLines == 0 and
+                    ignoreEnding == 0 and
+                    not filename == "sodium_type.rs" and
+                    not trimmedLine == "};" and
+                    not trimmedLine == "})?;" and
+                    not trimmedLine.startswith("static ref") and
+                    not trimmedLine.startswith("pub static ref") and
+                    not trimmedLine.startswith("pub type ") and
+                    not trimmedLine.startswith("type ") and
+                    not trimmedLine.startswith("r#\"{\"") and
+                    not trimmedLine.startswith("fn ") and
+                    not trimmedLine.startswith("return") and
+                    not trimmedLine.startswith("break") and
+                    not trimmedLine.startswith("continue") and
+                    not trimmedLine.startswith("extern") and
+                    not trimmedLine.startswith("use") and
+                    not trimmedLine.startswith("pub const") and
+                    not line.startswith("pub mod") and
+                    not line.startswith("sodium_type!") and
+                    not line.startswith("const ") and
+                    not line.startswith("pub static") and
+                    not line.startswith("fn matches") and
+                    not line.startswith("//") and
+                    not line.startswith("/*") and
+                    not line.startswith("static") and
+                    not line.startswith("mod ") and
+                    not line.startswith("});") and
+                    insideExternCurly == 0 and
+                    not previousTrimmedLine.startswith("return") and
+                    not previousTrimmedLine.startswith("break") and
+                    not previousTrimmedLine.startswith("continue") and
+                    not previousLine.startswith("pub trait") and
+                    not previousLine.startswith("impl")
+                ):
+                    traceNumber += 1
+                    copy.write("println!(\"TRACE[" + str(traceNumber) + "]: " + folderName + "/" + filename + "\");\n")
+                
+                if ( insideExternCurly == 1 and trimmedLine == "}" ):
+                    insideExternCurly = 0
+                if (trimmedLine.endswith(";")):
+                    waitForSemiColon = 0
+                    ignoreEnding = 0
+                if (openCurlys == 0):
+                    eatingCurlys = 0
+                    openCurlys = -1
+                if (trimmedLine.startswith("\"") and eatingLines == 1):
+                    eatingLines = 0
+
+                previousTrimmedLine = trimmedLine
+                previousLine = line
             f.close()
             copy.close()
             os.rename(folderName + '/' + filename + ".newrs", folderName + '/' + filename)
