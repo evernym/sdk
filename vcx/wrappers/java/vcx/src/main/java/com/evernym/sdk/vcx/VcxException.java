@@ -91,11 +91,7 @@ public class VcxException extends Exception {
      * @param sdkErrorCode The SDK error code to construct the exception from.
      */
     static VcxException fromSdkError(int sdkErrorCode) {
-
-        if (sdkErrorCode == null){
-            String message = String.format("Null value recceived from SDK.");
-            return new VcxException(message, -1);
-        }
+        
         ErrorCode errorCode = ErrorCode.valueOf(sdkErrorCode);
 
         switch (errorCode) {
