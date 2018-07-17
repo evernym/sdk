@@ -236,6 +236,22 @@ class Wallet:
         return result
 
     @staticmethod
+    async def validate_payment_address(address: str) -> None:
+        logger = logging.getLogger(__name__)
+
+        if not hasattr(Wallet.validate_payment_address, "cb"):
+            logger.debug("vcx_wallet_validate_payment_address: Creating callback")
+            Wallet.validate_payment_address.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32))
+
+        c_address = c_char_p(address.encode('utf-8'))
+        result = await do_call('vcx_wallet_validate_payment_address',
+                               c_address,
+                               Wallet.validate_payment_address.cb)
+
+        logger.debug("vcx_wallet_validate_payment_address completed")
+        return result
+
+    @staticmethod
     async def send_tokens(handle: int, tokens: int, address: str) -> str:
         logger = logging.getLogger(__name__)
 
@@ -258,6 +274,13 @@ class Wallet:
 
     @staticmethod
     async def export(path, backup_key):
+        """
+        Exports opened wallet
+        :param path: Path to export wallet to User's File System.
+        :param backupKey: String representing the User's Key for securing (encrypting) the exported Wallet.
+        :return:
+        Error code - success indicates that the wallet was successfully exported.
+        """
         logger = logging.getLogger(__name__)
 
         if not hasattr(Wallet.export, "cb"):
@@ -279,6 +302,14 @@ class Wallet:
 
     @staticmethod
     async def import_wallet(path, backupKey):
+        """
+        Imports wallet from file with given key.
+        Cannot be used if wallet is already opened (Especially if vcx_init has already been used).
+        :param path: Path to file.
+        :param backupKey: String representing the User's Key for securing (encrypting) the exported Wallet.
+        :return:
+        Error code - success indicates that the wallet was successfully imported.
+        """
         logger = logging.getLogger(__name__)
 
         if not hasattr(Wallet.import_wallet, "cb"):
