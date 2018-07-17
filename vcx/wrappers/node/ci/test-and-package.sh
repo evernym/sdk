@@ -3,7 +3,7 @@ OUTPUTDIR=/sdk/vcx/output
 npm ci
 npm run lint
 npm run compile
-#npm test
+npm test
 npm pack
 
 rename \s/vcx-/vcx_/ *.tgz
