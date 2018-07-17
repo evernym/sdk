@@ -38,3 +38,6 @@ __pycache__/
 .linux.libindy
 .macosbuild
 *.zip
+
+# ios wrapper files
+*.xcuserstate
