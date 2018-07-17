@@ -442,6 +442,18 @@ public abstract class LibVcx {
         /** Import an encrypted file back into the wallet */
         public int vcx_wallet_import(int command_handle, String path, String backup_key, Callback cb);
 
+         /**
+        * token object
+        *
+        * Used for sending tokens and getting token related info .
+        */
+
+        /** Gets token Balance and payment addresses info */
+        public int vcx_wallet_get_token_info(int command_handle, int payment_handle, Callback cb);
+
+        /** Sends token to recipient */
+        public int vcx_wallet_send_tokens(int command_handle, int payment_handle, int tokens, int recipient, Callback cb);
+
     }
 
 	/*

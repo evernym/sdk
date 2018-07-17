@@ -580,6 +580,40 @@ completion:(void (^)(NSError *error))completion
    }
 }
 
+- (void)getTokenInfo:(NSInteger)paymentHandle
+                 completion:(void (^)(NSError *error, NSString *state))completion{
+    vcx_error_t ret;
+    vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
+    ret = vcx_wallet_get_token_info(handle, paymentHandle, VcxWrapperCommonStringCallback);
+    
+    if( ret != 0 )
+    {
+        [[VcxCallbacks sharedInstance] deleteCommandHandleFor: handle];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion([NSError errorFromVcxError: ret],nil);
+        });
+    }
+}
+
+- (void)sendTokens:(NSInteger)paymentHandle
+            tokens:(NSInteger)tokens
+         recipient:(NSString *)recipient
+                 completion:(void (^)(NSError *error, NSString *state))completion{
+    vcx_error_t ret;
+    vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
+    ret = vcx_wallet_send_tokens(handle, paymentHandle, tokens, recipient, VcxWrapperCommonStringCallback);
+    
+    if( ret != 0 )
+    {
+        [[VcxCallbacks sharedInstance] deleteCommandHandleFor: handle];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion([NSError errorFromVcxError: ret],nil);
+        });
+    }
+}
+
 
 - (void)exportWallet:(NSString *)exportPath
             encryptWith:(NSString *)encryptionKey
