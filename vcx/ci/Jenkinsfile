@@ -33,7 +33,6 @@ def build(name, file, context='.', customParams = '') {
     return docker.build("$name", "${customParams} --build-arg uid=${getUserUid()} -f $file $context")
 }
 
-
 def mainUbuntu() {
     node('ubuntu') {
         stage('Main Build - Ubuntu') {
@@ -41,8 +40,7 @@ def mainUbuntu() {
             def volumeInternalDir = "/sdk/vcx/output"
             try {
                 checkout scm
-                
-				sh "docker volume rm -f $volumeName"
+                sh "docker volume rm -f $volumeName"
 
                 // ******** Build the libindy base image (pulls down dependent debians from sovrin repo, and installs a majority of the dependencies)
                 def libindy = docker.build("libindy", "-f vcx/ci/Dockerfile-libindy .")
@@ -50,7 +48,7 @@ def mainUbuntu() {
                 // ******** Build the libvcx base image (runs tests and creates debian automatically) ********
                 def libvcx = docker.build("libvcx", "-f vcx/ci/Dockerfile-libvcx .")
                 sh "docker run --rm -v $volumeName:$volumeInternalDir libvcx"
-                
+               
                 // ******** Builds and tests the Node JS Wrapper *******
                 def node = docker.build("node", "-f vcx/wrappers/node/ci/Dockerfile-nodejs-wrapper .")
                 sh "docker run --rm -v $volumeName:$volumeInternalDir node"
@@ -95,7 +93,7 @@ def mainUbuntu() {
                 }
                 echo "$ex error"
             } finally {
-                sh "vcx/ci/scripts/cleanup.sh $volumeName"
+                sh "docker volume rm -f $volumeName"
                 step([$class: 'WsCleanup'])
             }
         }
