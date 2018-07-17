@@ -719,6 +719,10 @@ pub mod tests {
         // Valid add
         assert_eq!(vcx_wallet_add_record(0, xtype.as_ptr(), id.as_ptr(), value.as_ptr(), ptr::null(), Some(indy_generic_no_msg_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
+        
+        // Failure because of duplicate
+        assert_eq!(vcx_wallet_add_record(0, xtype.as_ptr(), id.as_ptr(), value.as_ptr(), ptr::null(), Some(duplicate_record_cb)), error::SUCCESS.code_num);
+        thread::sleep(Duration::from_millis(200));
         delete_wallet(wallet_n).unwrap();
 
     }
@@ -735,9 +739,6 @@ pub mod tests {
 
         init_wallet(wallet_n).unwrap();
         assert_eq!(vcx_wallet_add_record(0, xtype.as_ptr(), id.as_ptr(), value.as_ptr(), tags.as_ptr(), Some(indy_generic_no_msg_cb)), error::SUCCESS.code_num);
-        thread::sleep(Duration::from_millis(200));
-        // Failure because of duplicate
-        assert_eq!(vcx_wallet_add_record(0, xtype.as_ptr(), id.as_ptr(), value.as_ptr(), ptr::null(), Some(duplicate_record_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
         delete_wallet(wallet_n).unwrap();
     }
