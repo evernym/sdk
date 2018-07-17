@@ -75,9 +75,9 @@ cargo lipo --release --verbose --targets="${IOS_TARGETS}"
 #########################################################################################################################
 cd $WORK_DIR/vcx-indy-sdk/libnullpay
 
-if [ "$DEBUG_SYMBOLS" = "debuginfo" ]; then
-    cat $START_DIR/cargo.toml.add.debug.txt >> Cargo.toml
-fi
+# if [ "$DEBUG_SYMBOLS" = "debuginfo" ]; then
+#     cat $START_DIR/cargo.toml.add.debug.txt >> Cargo.toml
+# fi
 
 if [ "$CLEAN_BUILD" = "cleanbuild" ]; then
     cargo clean
