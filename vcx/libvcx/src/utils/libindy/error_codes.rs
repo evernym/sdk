@@ -25,6 +25,7 @@ pub fn map_rust_indy_sdk_error_code(error_code: ErrorCode) -> u32 {
 
     match error_code {
         100 ... 112 => error::INVALID_LIBINDY_PARAM.code_num,
+        114 => error::IOERROR.code_num,
         200 => error::INVALID_WALLET_HANDLE.code_num,
         203 =>  error::WALLET_ALREADY_EXISTS.code_num,
         206 =>  error::WALLET_ALREADY_OPEN.code_num,
