@@ -63,7 +63,7 @@ impl fmt::Display for WalletInfo {
 extern { fn nullpay_init() -> i32; }
 
 #[cfg(feature = "nullpay")]
-fn pay_init() -> i32 { unsafe { 0 } }
+fn pay_init() -> i32 { unsafe { nullpay_init() } }
 
 #[cfg(feature = "nullpay")]
 static PAYMENT_METHOD_NAME: &str = "null";
