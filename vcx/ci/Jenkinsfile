@@ -6,14 +6,12 @@ def libindy
 def vcx_nodejs
 
 // ******** Artifacts Created ********
-// libvcx_<ver>.deb ----> published Debian to https://repo.corp.evernym.com/deb/pool/main/libv/libvcx/
-// vcx_<ver>.tar.gz ----> archived with Jenkins
-// vcx_<ver>.tgz ----> published with Filely to https://repo.corp.evernym.com/filely/npm/
-
-
-// ********* OTHERS ********
-// libvcx.tar.gz (libvcx.so file and provision_agent_keys.py) ----> archived with Jenkins
+// libvcx_<ver>.deb (Debian Installable Library) ----> published Debian to https://repo.corp.evernym.com/deb/pool/main/libv/libvcx/
 // vcx_<ver>.deb (Nodejs Wrapper Debian Package) ----> archived with Jenkins and Published to repo.corp.evernym.com/deb/pool
+// vcx_<ver>.tgz (Nodejs Wrapper Npm Installable Package) ----> published with Filely to https://repo.corp.evernym.com/filely/npm/
+// vcx_<ver>.tar.gz (Python Installable package) ----> archived with Jenkins
+// ********* OTHERS ********
+// DEPRECATED ( NO LONGER PRODUCED ) libvcx.tar.gz (libvcx.so file and provision_agent_keys.py) ----> archived with Jenkins
 
 testing()
 
@@ -35,12 +33,9 @@ def build(name, file, context='.', customParams = '') {
     return docker.build("$name", "${customParams} --build-arg uid=${getUserUid()} -f $file $context")
 }
 
-def buildImage(name, filename, cache='', context='.') {
-    return docker.build(name, "$cache -f $filename $context")
-}
 
 def mainUbuntu() {
-    node('ubuntu-11') {
+    node('ubuntu') {
         stage('Main Build - Ubuntu') {
             def volumeName = "vcx-volume"
             def volumeInternalDir = "/sdk/vcx/output"
@@ -49,9 +44,10 @@ def mainUbuntu() {
                 
 				sh "docker volume rm -f $volumeName"
 
+                // ******** Build the libindy base image (pulls down dependent debians from sovrin repo, and installs a majority of the dependencies)
                 def libindy = docker.build("libindy", "-f vcx/ci/Dockerfile-libindy .")
 
-                // ******* Build the libvcx base image (runs tests and creates debian automatically) ********
+                // ******** Build the libvcx base image (runs tests and creates debian automatically) ********
                 def libvcx = docker.build("libvcx", "-f vcx/ci/Dockerfile-libvcx .")
                 sh "docker run --rm -v $volumeName:$volumeInternalDir libvcx"
                 
@@ -63,21 +59,17 @@ def mainUbuntu() {
                 def python = docker.build("python", "-f vcx/wrappers/python3/ci/Dockerfile-python-wrapper .")    
                 sh "docker run --rm -v $volumeName:$volumeInternalDir python"
                 
-
-                // ******** Creates Npm Debian Installable Package For Node ********
-                
-
-                // if (env.BRANCH_NAME == "master") {
+                if (env.BRANCH_NAME == "master") {
                     // ******** PUBLISHING (artifacts are in a Docker Volume) ********
                     sh "docker build -t publish -f vcx/ci/Dockerfile-publish ."
                     withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
                         def publish = docker.build('publish', "-f vcx/ci/Dockerfile-publish .")
                         publish.inside("--network=host -v $volumeName:$volumeInternalDir") {
-                            // ******** Publish to debian repo ********
+                            // ******** Publish Libvcx Debian to repo ********
                             sh "/sdk/vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"libvcx*.deb\" https://kraken.corp.evernym.com/repo/portal_dev/upload"
                             sh "/sdk/vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"libvcx*.deb\" https://kraken.corp.evernym.com/repo/agency_dev/upload"
                             
-                            // ******** Publish to npm filely repo ********
+                            // ******** Publish Npm Package to filely repo ********
                             sh "/sdk/vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"*.tgz\" https://kraken.corp.evernym.com/repo/npm/upload"
                  
                             // ******** Publish vcx Debian To Repo (NPM PACKAGES) 
@@ -94,7 +86,7 @@ def mainUbuntu() {
 
                         }
                     }
-                // }
+                }
 
             } catch (Exception ex) {
                 currentBuild.result = "FAILED"
@@ -109,7 +101,6 @@ def mainUbuntu() {
         }
     }
 }
-
 
 def android() {
     node('ubuntu') {
@@ -175,99 +166,6 @@ def ios() {
                 step([$class: 'WsCleanup'])
             }
 
-        }
-    }
-}
-
-// Creates the debian package for the library, as well as gzips the libvcx.so.<version> file
-// Publishes both artifacts.
-def createDeb(envn) {
-    envn.inside {
-        CERT_SCRIPT = 'vcx/ci/scripts/getCert.sh'
-        SCRIPT = 'vcx/ci/scripts/gzip_so_file.py'
-        FILES = 'vcx/libvcx/target/debug/libvcx.so.* vcx/libvcx/scripts/provision_agent_keys.py'
-        DEST = 'libvcx.tar.gz'
-
-        // get Evernym Certificate onto machine
-        sh "${CERT_SCRIPT}"
-
-        // build debian
-        sh 'cd vcx/libvcx/; cargo deb --no-build'
-
-
-        if (env.BRANCH_NAME == "master") {
-            // archive debian to Jenkins
-            archiveArtifacts allowEmptyARchive: true, artifacts: "vcx/libvcx/target/debian/libvcx_*_amd64.deb"
-
-            // archive .so file to Jenkins
-            sh "python ${SCRIPT} ${FILES} ${DEST}"
-            archiveArtifacts allowEmptyARchive: true, artifacts: DEST
-
-            // upload debian to Repo
-            withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
-                sh "find vcx/libvcx/target/debian/ -type f -name 'libvcx_*_amd64.deb' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/agency_dev/upload -F file=@{} \\;"
-                sh "find vcx/libvcx/target/debian/ -type f -name 'libvcx_*_amd64.deb' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/portal_dev/upload -F file=@{} \\;"
-            }
-        }
-    }
-}
-
-// Creates the tgz file that can be 'npm install'-ed.
-def testNodeWrapper(envn) {
-    dir('vcx/wrappers/node'){
-        envn.inside() {
-            sh 'npm -v'
-            sh 'npm ci'
-            sh 'npm run lint'
-            sh 'npm test'
-            sh 'npm run compile'
-            sh 'npm pack'
-            archiveArtifacts allowEmptyArchive: true, artifacts: '**/*.tgz'
-        }
-    }
-}
-
-def renameAndUploadNpmTgz(envn, destDir) {
-    envn.inside {
-        sh "pwd"
-        sh "ls"
-        CERT_SCRIPT = 'vcx/ci/scripts/getCert.sh'
-        sh "${CERT_SCRIPT}"
-        filename = 'vcx/wrappers/node/vcx-*.tgz'
-        sh "cp ${filename} vcx"
-        sh "ls vcx"
-        sh "echo ${destDir}"
-
-        withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
-            sh "pwd"
-            sh "cd vcx; rename \"s/\\.tgz\$/_amd64\\.tgz/\" *.tgz"
-            sh "cd vcx; rename \"s/vcx-/vcx_/\" *.tgz"
-            sh 'cd vcx; ls -a'
-            sh "cd vcx; find . -type f -name '*.tgz' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/npm/upload -F 'file=@{}' \\;"
-        }
-    }
-}
-
-// Creates debian that can install through npm.
-def createNpmDeb(app, npmFilename){
-    dir('vcx') {
-        app.inside {
-            CERT_SCRIPT = 'ci/scripts/getCert.sh'
-            sh "${CERT_SCRIPT}"
-            sh 'ls'
-            sh 'python ci/scripts/create_npm_deb.py wrappers/node/vcx-*.tgz'
-            sh 'ls'
-            archiveArtifacts allowEmptyArchive: true, artifacts: 'vcx*.deb'
-
-            withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
-                // upload npm module
-                sh "find wrappers/node/ -type f -name 'vcx-*.tgz' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/agency_dev/upload -F file=@{} \\;"
-                sh "find wrappers/node/ -type f -name 'vcx-*.tgz' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/portal_dev/upload -F file=@{} \\;"
-
-                // upload debian
-                sh "find . -type f -name 'vcx_*_amd64.deb' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/agency_dev/upload -F file=@{} \\;"
-                sh "find . -type f -name 'vcx_*_amd64.deb' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST https://kraken.corp.evernym.com/repo/portal_dev/upload -F file=@{} \\;"
-            }
         }
     }
 }
