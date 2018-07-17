@@ -12,7 +12,6 @@ LOOKUP_DIR="/sdk/vcx/output"
 
 echo "Filename: ${FILENAME}"
 echo "TYPE: ${TYPE}"
-echo "Credentials: $(echo ${CREDENTIALS} | md5sum )"
 echo "URL: $URL"
 
 find $LOOKUP_DIR -type f -name ${FILENAME} -exec curl -u $CREDENTIALS -X POST $URL -F 'file=@{}' \;
