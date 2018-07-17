@@ -61,7 +61,7 @@ public class WalletApi extends VcxJava.API {
     }
 
     private static Callback vcxAddRecordWalletCB = new Callback() {
-        public void callback(int command_handle, int err, int wallet_handle){
+        public void callback(int command_handle, int err){
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
             if(!checkCallback(future,err)) return;
             Integer result = command_handle;
@@ -116,6 +116,9 @@ public class WalletApi extends VcxJava.API {
             CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(command_handle);
             if(!checkCallback(future,err)) return;
             String result = wallet_value;
+            // if nonzero errorcode, ignore wallet_value (null)
+            // if error fail
+            // if error = 0 then send the result
             future.complete(result);
         }
     };
