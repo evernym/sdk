@@ -105,6 +105,7 @@ void VcxWrapperCommonNumberStringCallback(vcx_command_handle_t xcommand_handle,
 - (void)credentialCreateWithOffer:(NSString *)sourceId
                             offer:(NSString *)credentialOffer
                        completion:(void (^)(NSError *error, NSInteger credentailHandle))completion;
+
 - (void)credentialCreateWithMsgid:(NSString *)sourceId
                  connectionHandle:(VcxHandle)connectionHandle
                             msgId:(NSString *)msgId
@@ -128,28 +129,39 @@ void VcxWrapperCommonNumberStringCallback(vcx_command_handle_t xcommand_handle,
 
 - (void)credentialDeserialize:(NSString *)serializedCredential
                    completion:(void (^)(NSError *error, NSInteger credentialHandle))completion;
+
 - (void)generateProof:(NSString *)proofRequestId
          requestedAttrs:(NSString *)requestedAttrs
     requestedPredicates:(NSString *)requestedPredicates
               proofName:(NSString *)proofName
              completion:(void (^)(NSError *error, NSString *proofHandle))completion;
+
 - (void)exportWallet:(NSString *)exportPath
             encryptWith:(NSString *)encryptionKey
            completion:(void (^)(NSError *error, NSInteger exportHandle))completion;
+
 - (void)importWallet:(NSString *)importPath
             encryptWith:(NSString *)encryptionKey
            completion:(void (^)(NSError *error, NSInteger importHandle))completion;
 
--(void)addRecordWallet:(NSString *)recordType
+- (void)addRecordWallet:(NSString *)recordType
             recordId:(NSString *)recordId
             recordValue:(NSString *) recordValue
-           completion:(void (^)(NSError *error, NSInteger walletHandle))completion;
+           completion:(void (^)(NSError *error))completion;
+
+- (void)updateRecordWallet:(NSString *)recordType
+              withRecordId:(NSString *)recordId
+           withRecordValue:(NSString *) recordValue
+            withCompletion:(void (^)(NSError *error))completion;
+
 - (void)getRecordWallet:(NSString *)recordType
-            recordId:(NSString *)recordId
-           completion:(void (^)(NSError *error, NSInteger walletHandle, NSString* walletValue))completion;
+               recordId:(NSString *)recordId
+             completion:(void (^)(NSError *error, NSString *walletValue))completion;
+
 - (void)deleteRecordWallet:(NSString *)recordType
             recordId:(NSString *)recordId
-           completion:(void (^)(NSError *error, NSInteger walletHandle))completion;
+           completion:(void (^)(NSError *error))completion;
+
 @end
 
 #endif /* init_h */
