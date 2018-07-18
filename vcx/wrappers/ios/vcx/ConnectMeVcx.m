@@ -706,8 +706,8 @@ completion:(void (^)(NSError *error))completion
                withCompletion:(void (^)(NSError *error, vcx_proof_handle_t proofHandle, NSString *proofRequest))completion {
     vcx_error_t ret;
     vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
-    const source_id = [sourceId cStringUsingEncoding:NSUTF8StringEncoding];
-    const msg_id = [msgId cStringUsingEncoding:NSUTF8StringEncoding];
+    const char *source_id = [sourceId cStringUsingEncoding:NSUTF8StringEncoding];
+    const char *msg_id = [msgId cStringUsingEncoding:NSUTF8StringEncoding];
     
     ret = vcx_disclosed_proof_create_with_msgid(handle, source_id, connectionHandle, msg_id, VcxWrapperCommonNumberStringCallback);
     
@@ -772,7 +772,7 @@ withConnectionHandle:(vcx_connection_handle_t)connection_handle
         [[VcxCallbacks sharedInstance] deleteCommandHandleFor: handle];
         
         dispatch_async(dispatch_get_main_queue(), ^{
-            completion([NSError errorFromVcxError: ret], nil);
+            completion([NSError errorFromVcxError: ret]);
         });
     }
 }
