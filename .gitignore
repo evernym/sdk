@@ -38,4 +38,6 @@ __pycache__/
 .linux.libindy
 .macosbuild
 *.zip
-vcx/wrappers/java/vcx/local.properties
+
+# ios wrapper files
+*.xcuserstate

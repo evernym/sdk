@@ -535,6 +535,20 @@ pub extern fn vcx_wallet_close_search(command_handle: u32,
     error::SUCCESS.code_num
 }
 
+/// Exports opened wallet
+///
+/// Note this endpoint is EXPERIMENTAL. Function signature and behaviour may change
+/// in the future releases.
+///
+/// #Params:
+/// command_handle: Handle for User's Reference only.
+/// path: Path to export wallet to User's File System.
+/// backup_key: String representing the User's Key for securing (encrypting) the exported Wallet.
+/// cb: Callback that provides the success/failure of the api call.
+/// #Returns
+/// Error code - success indicates that the api call was successfully created and execution
+/// is scheduled to begin in a separate thread.
+
 #[no_mangle]
 pub extern fn vcx_wallet_export(command_handle: u32,
                                 path: *const c_char,
@@ -563,6 +577,19 @@ pub extern fn vcx_wallet_export(command_handle: u32,
     error::SUCCESS.code_num
 }
 
+/// Creates a new secure wallet and then imports its content
+/// according to fields provided in import_config
+/// Cannot be used if wallet is already opened (Especially if vcx_init has already been used).
+///
+/// Note this endpoint is EXPERIMENTAL. Function signature and behaviour may change
+/// in the future releases.
+///
+/// path: Path of the file that contains exported wallet content
+/// backup_key: Key used when creating the backup of the wallet (For encryption/decrption)
+/// cb: Callback that provides the success/failure of the api call.
+/// #Returns
+/// Error code - success indicates that the api call was successfully created and execution
+/// is scheduled to begin in a separate thread.
 #[no_mangle]
 pub extern fn vcx_wallet_import(command_handle: u32,
                                 path: *const c_char,
@@ -587,6 +614,31 @@ pub extern fn vcx_wallet_import(command_handle: u32,
                 cb(command_handle, return_code);
             }
         }
+    });
+    error::SUCCESS.code_num
+}
+
+// Functionality in Libindy for validating an address in NOT there yet
+/// Validates a Payment address
+///
+/// #Params
+///
+/// command_handle: command handle to map callback to user context.
+///
+/// payment_address: value to be validated as a payment address
+///
+/// cb: Callback that any errors
+///
+/// #Returns
+/// Error code as a u32
+#[no_mangle]
+pub  extern fn vcx_wallet_validate_payment_address(command_handle: i32,
+                                                   payment_address: *const c_char,
+                                                   cb: Option<extern fn(command_handle_: i32, err: u32)>) -> u32 {
+    check_useful_c_str!(payment_address,  error::INVALID_OPTION.code_num);
+    check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
+    thread::spawn(move || {
+        cb(command_handle, error::SUCCESS.code_num)
     });
     error::SUCCESS.code_num
 }
@@ -622,7 +674,6 @@ pub mod tests {
     extern "C" fn duplicate_record_cb(command_handle: i32, err: i32) {
         assert_ne!(err as u32, error::DUPLICATE_WALLET_RECORD.code_num);
         println!("successfully called duplicate_record_cb");
-
     }
 
     extern "C" fn record_not_found_msg_cb(command_handle: i32, err: i32, msg: *const c_char) {
@@ -695,7 +746,7 @@ pub mod tests {
         // Valid add
         assert_eq!(vcx_wallet_add_record(0, xtype.as_ptr(), id.as_ptr(), value.as_ptr(), ptr::null(), Some(indy_generic_no_msg_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
-
+        
         // Failure because of duplicate
         assert_eq!(vcx_wallet_add_record(0, xtype.as_ptr(), id.as_ptr(), value.as_ptr(), ptr::null(), Some(duplicate_record_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
