@@ -669,7 +669,7 @@ pub mod tests {
 
     }
 
-    extern "C" fn duplicate_record_cb(command_handle: i32, err: i32) {
+    pub extern "C" fn duplicate_record_cb(command_handle: i32, err: i32) {
         assert_eq!(err as u32, error::INDY_DUPLICATE_WALLET_RECORD.code_num);
         println!("successfully called duplicate_record_cb");
     }

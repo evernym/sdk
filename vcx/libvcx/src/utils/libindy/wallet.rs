@@ -15,10 +15,6 @@ pub fn get_wallet_handle() -> i32 { unsafe { WALLET_HANDLE } }
 
 pub fn create_wallet(wallet_name: &str) -> Result<(), u32> {
     trace!("creating wallet: {}", wallet_name);
-//    let pool_name = match settings::get_config_value(settings::CONFIG_POOL_NAME) {
-//        Ok(x) => x,
-//        Err(x) => settings::DEFAULT_POOL_NAME.to_string(),
-//    };
 
     let config = format!(r#"{{"id":"{}"}}"#, wallet_name);
 
@@ -147,7 +143,6 @@ pub mod tests {
         ::api::wallet::vcx_wallet_add_record(0, xtype.as_ptr(), id.as_ptr(), value.as_ptr(), ptr::null(), Some(::api::wallet::tests::indy_generic_no_msg_cb));
 
         export(handle, &dir, &backup_key).unwrap();
-        println!("dir: {:?}", dir.as_path());
         dir
     }
 
@@ -204,7 +199,9 @@ pub mod tests {
         import(&import_config).unwrap();
         open_wallet(&wallet_name).unwrap();
 
-        ::api::wallet::vcx_wallet_get_record(get_wallet_handle(), xtype.as_ptr(), id.as_ptr(), options.as_ptr(), Some(::api::wallet::tests::indy_generic_msg_cb));
+        // If wallet was successfully imported, there will be an error trying to add this duplicate record
+        ::api::wallet::vcx_wallet_add_record(0, xtype.as_ptr(), id.as_ptr(), value.as_ptr(), ptr::null(), Some(::api::wallet::tests::duplicate_record_cb));
+        thread::sleep(Duration::from_secs(1));
         ::api::vcx::vcx_shutdown(true);
         delete_import_wallet_path(dir);
     }
