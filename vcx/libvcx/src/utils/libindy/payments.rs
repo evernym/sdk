@@ -4,6 +4,7 @@ extern crate serde_json;
 use utils::libindy::wallet::get_wallet_handle;
 use utils::constants::{ SUBMIT_SCHEMA_RESPONSE };
 use utils::libindy::error_codes::map_rust_indy_sdk_error_code;
+#[allow(unused_imports)]
 use utils::libindy::ledger::{libindy_submit_request, libindy_sign_and_submit_request, libindy_sign_request};
 use utils::error;
 use error::payment::PaymentError;
@@ -246,7 +247,6 @@ fn _submit_fees_request(req: &str, inputs: &str, outputs: &str) -> Result<(Strin
                                                                      &inputs,
                                                                      &outputs) {
         Ok((req, payment_method)) => {
-            println!("req: {}", req);
             (libindy_submit_request(&req)?, payment_method)
         },
         Err(x) => return Err(map_rust_indy_sdk_error_code(x)),
