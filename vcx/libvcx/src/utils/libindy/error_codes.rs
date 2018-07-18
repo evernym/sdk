@@ -22,7 +22,6 @@ pub fn map_rust_indy_sdk_error_code(error_code: ErrorCode) -> u32 {
     }
 
     warn!("indy-sdk error code: {}", error_code);
-    println!("indy-sdk error code: {}", error_code);
 
     match error_code {
         100 ... 112 => error::INVALID_LIBINDY_PARAM.code_num,

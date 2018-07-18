@@ -228,7 +228,7 @@ mod tests {
     use super::*;
     use std::time::Duration;
     use std::ptr;
-    use utils::libindy::wallet::{export, import, get_wallet_handle, tests::export_test_wallet, tests::delete_import_wallet_path};
+    use utils::libindy::wallet::{import, tests::export_test_wallet, tests::delete_import_wallet_path};
     use utils::libindy::pool::get_pool_handle;
 
     extern "C" fn init_cb(command_handle: u32, err: u32) {
@@ -589,6 +589,12 @@ mod tests {
         assert_eq!(result,error::INVALID_CONFIGURATION.code_num);
         thread::sleep(Duration::from_secs(1));
         wallet::delete_wallet(settings::DEFAULT_WALLET_NAME).unwrap();
+    }
+
+    #[test]
+    fn test_shutdown_with_no_previous_config() {
+        vcx_shutdown(true);
+        vcx_shutdown(false);
     }
 
     #[test]

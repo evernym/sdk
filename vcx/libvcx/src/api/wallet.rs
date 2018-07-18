@@ -162,7 +162,6 @@ pub extern fn vcx_wallet_add_record(command_handle: i32,
                                     cb: Option<extern fn(xcommand_handle: i32, err: i32)>) -> u32 {
     if settings::test_indy_mode_enabled() {
         check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
-        println!("vcx_wallet_add_record cb");
         cb(command_handle, error::SUCCESS.code_num as i32);
         return error::SUCCESS.code_num
     }
@@ -584,7 +583,7 @@ pub extern fn vcx_wallet_export(command_handle: u32,
 /// Note this endpoint is EXPERIMENTAL. Function signature and behaviour may change
 /// in the future releases.
 ///
-/// config: { wallet_name: "", "wallet_key": "", "exported_wallet_path":"", "backup_key": ""}
+/// config: "{"wallet_name":"","wallet_key":"","exported_wallet_path":"","backup_key":""}"
 /// exported_wallet_path: Path of the file that contains exported wallet content
 /// backup_key: Key used when creating the backup of the wallet (For encryption/decrption)
 /// cb: Callback that provides the success/failure of the api call.
@@ -598,6 +597,7 @@ pub extern fn vcx_wallet_import(command_handle: u32,
                                                      err: u32)>) -> u32 {
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
     check_useful_c_str!(config,  error::INVALID_OPTION.code_num);
+
     thread::spawn(move || {
         info!("vcx_wallet_import(command_handle: {}, config: ****)", command_handle);
         match import(&config) {

@@ -8,7 +8,6 @@ use error::wallet::WalletError;
 use indy::wallet::Wallet;
 use indy::ErrorCode;
 use std::path::Path;
-use serde_json::Value;
 pub static mut WALLET_HANDLE: i32 = 0;
 
 pub fn get_wallet_handle() -> i32 { unsafe { WALLET_HANDLE } }
@@ -122,7 +121,6 @@ pub mod tests {
     use std::ptr;
     use utils::cstring::CStringUtils;
     use utils::devsetup::tests::setup_wallet_env;
-    use indy::wallet::Wallet;
     use std::{fs, env};
 
     pub fn export_test_wallet() -> ::std::path::PathBuf {
