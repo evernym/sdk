@@ -66,6 +66,14 @@ public class VcxApi extends VcxJava.API {
         return future;
     }
 
+    public static int vcxShutdown(Boolean deletePool) throws VcxException {
+        
+
+        int result = LibVcx.api.vcx_shutdown(deletePool);
+        checkResult(result);
+        return result;
+    }
+
     public static String vcxErrorCMessage(int errorCode) {
         Log.d(TAG, "vcxErrorCMessage() called with: errorCode = [" + errorCode + "]");
         return LibVcx.api.vcx_error_c_message(errorCode);
