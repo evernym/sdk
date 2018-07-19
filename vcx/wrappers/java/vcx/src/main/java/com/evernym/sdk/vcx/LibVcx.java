@@ -334,6 +334,21 @@ public abstract class LibVcx {
          */
         public int vcx_disclosed_proof_release(int proof_handle);
 
+        /**
+         * Create proof instance with a message id
+         */
+        public int vcx_disclosed_proof_create_with_msgid(int command_handle, String source_id, int connection_handle, String msd_id, Callback cb);
+
+        /**
+         * Retrieve credentials that matches with the proof request
+         */
+        public int vcx_disclosed_proof_retrieve_credentials(int command_handle, int proof_handle, Callback cb);
+
+        /**
+         * Generate a proof that can be sent later
+         */
+        public int vcx_disclosed_proof_generate_proof(int command_handle, int proof_handle, String selected_credentials, String self_attested_attributes, Callback cb);
+
 /**
  * claim object
  *
@@ -440,7 +455,20 @@ public abstract class LibVcx {
         public int vcx_wallet_export(int command_handle, String path, String backup_key, Callback cb);
 
         /** Import an encrypted file back into the wallet */
-        public int vcx_wallet_import(int command_handle, String path, String backup_key, Callback cb);
+        public int vcx_wallet_import(int command_handle, String config, Callback cb);
+
+        /** Add a record into wallet */
+        public int vcx_wallet_add_record(int command_handle, String recordType, String recordId, String recordValue, String recordTag, Callback cb);
+
+        /** Delete a record from wallet */
+        public int vcx_wallet_delete_record(int command_handle, String recordType, String recordId, Callback cb);
+
+        /** Get a record from wallet */
+        public int vcx_wallet_get_record(int command_handle, String recordType, String recordId, String recordTag, Callback cb);
+
+        /** Update a record in wallet */
+        public int vcx_wallet_update_record_value(int command_handle, String recordType, String recordId, String recordValue, Callback cb);
+
 
     }
 
