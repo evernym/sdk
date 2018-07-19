@@ -31,8 +31,8 @@ RUN apt-get update -y && apt-get install -y \
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - \
     && apt-get install -y nodejs
 
-ARG LIBINDY_VER="1.5.0~619"
-ARG LIBNULL_VER="1.5.0~619"
+ARG LIBINDY_VER="1.5.0~631"
+ARG LIBNULL_VER="1.5.0~631"
 ARG RUST_VER="1.26.0"
 
 # Install libindy
