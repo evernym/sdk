@@ -116,7 +116,7 @@ def recursive_walk(folder):
                     not previousLine.startswith("impl")
                 ):
                     traceNumber += 1
-                    copy.write("println!(\"TRACE_ABOVE_LINE[" + str(traceNumber) + "]: LINE[" + str(fileLineNumber) + "]: " + trimmedLine.replace("\"","\\\"") + " -- FILE: " + folderName + "/" + filename + "\");\n")
+                    copy.write("println!(\"TRACE[" + str(traceNumber) + "]: ABOVE LINE[" + str(fileLineNumber) + "]: " + trimmedLine.replace("\\","\\\\").replace("\"","\\\"").replace("{","{{").replace("}","}}") + " -- FILE: " + folderName + "/" + filename + "\");\n")
                 
                 copy.write(line)
 
@@ -159,7 +159,7 @@ def recursive_walk(folder):
                     not previousLine.startswith("impl")
                 ):
                     traceNumber += 1
-                    copy.write("println!(\"TRACE_BELOW_LINE[" + str(traceNumber) + "]: LINE[" + str(fileLineNumber) + "]: " + trimmedLine.replace("\"","\\\"") + " -- FILE: " + folderName + "/" + filename + "\");\n")
+                    copy.write("println!(\"TRACE[" + str(traceNumber) + "]: BELOW LINE[" + str(fileLineNumber) + "]: " + trimmedLine.replace("\\","\\\\").replace("\"","\\\"").replace("{","{{").replace("}","}}") + " -- FILE: " + folderName + "/" + filename + "\");\n")
                 
                 if ( insideExternCurly == 1 and trimmedLine == "}" ):
                     insideExternCurly = 0
