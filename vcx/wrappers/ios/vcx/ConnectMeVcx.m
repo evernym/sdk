@@ -617,21 +617,9 @@ completion:(void (^)(NSError *error))completion
    }
 }
 
-- (void)vcxShutdown:(BOOL *) deletePool
-         completion:(void (^)(NSError *error))completion {
-   vcx_error_t ret;
-   vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
+- (int)vcxShutdown:(BOOL *) deletePool {
     int delete_pool = deletePool;
-    ret = vcx_shutdown(handle, delete_pool, VcxWrapperCommonCallback);
-
-   if( ret != 0 )
-   {
-       [[VcxCallbacks sharedInstance] deleteCommandHandleFor: handle];
-
-       dispatch_async(dispatch_get_main_queue(), ^{
-           completion([NSError errorFromVcxError: ret]);
-       });
-   }
+    return vcx_shutdown(delete_pool);
 }
 
 @end

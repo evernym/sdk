@@ -296,10 +296,10 @@ vcx_error_t vcx_credential_release(vcx_credential_handle_t credential_handle);
 vcx_error_t vcx_wallet_export(vcx_command_handle_t handle, const char *path, const char *backup_key, void (*cb)(vcx_command_handle_t command_handle, vcx_error_t err));
 
 /** Import an encrypted file back into the wallet */
-vcx_error_t vcx_wallet_import(vcx_command_handle_t handle, const char *path, const char *backup_key, void (*cb)(vcx_command_handle_t command_handle, vcx_error_t err));
+vcx_error_t vcx_wallet_import(vcx_command_handle_t handle, const char *config, void (*cb)(vcx_command_handle_t command_handle, vcx_error_t err));
 
 /** Shutdown vcx wallet */
-vcx_error_t vcx_shutdown(vcx_command_handle_t handle, vcx_bool_t deletePool, void (*cb)(vcx_command_handle_t command_handle, vcx_error_t err));
+vcx_error_t vcx_shutdown(vcx_bool_t deletePool);
 
 /** For testing purposes only */
 void vcx_set_next_agency_response(int);

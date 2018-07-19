@@ -144,8 +144,7 @@ extern void VcxWrapperCommonNumberStringCallback(vcx_command_handle_t xcommand_h
             decryptWith:(NSString *)decryptionKey
            completion:(void (^)(NSError *error, NSInteger importHandle))completion;
 
-- (void)vcxShutdown:(BOOL *)deletePool
-          completion:(void (^)(NSError *error))completion;
+- (int)vcxShutdown:(BOOL *)deletePool;
 
 @end
 
