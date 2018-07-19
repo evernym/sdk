@@ -172,7 +172,7 @@ withSelectedCredentials:(NSString *)selectedCredentials
 withConnectionHandle:(vcx_connection_handle_t)connection_handle
     withCompletion:(void (^)(NSError *error))completion;
 
-- (int)vcxShutdown:(BOOL *)deletePool;
+- (int)vcxShutdown:(BOOL *)deleteWallet;
 
 @end
 

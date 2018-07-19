@@ -66,10 +66,10 @@ public class VcxApi extends VcxJava.API {
         return future;
     }
 
-    public static int vcxShutdown(Boolean deletePool) throws VcxException {
+    public static int vcxShutdown(Boolean deleteWallet) throws VcxException {
         
 
-        int result = LibVcx.api.vcx_shutdown(deletePool);
+        int result = LibVcx.api.vcx_shutdown(deleteWallet);
         checkResult(result);
         return result;
     }
