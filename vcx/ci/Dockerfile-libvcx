@@ -12,13 +12,14 @@ ARG test_flag
 ENV VCX_TEST_FLAG $test_flag
 ENV PATH=${PATH}:/sdk/vcx/ci/scripts
 
+RUN cargo update-version
+
 WORKDIR /sdk/vcx/libvcx
 RUN if [ "$VCX_TEST_FLAG" = "no" ]; \
-	then cargo build --color=never; \
-	else cargo test --color=never -- --test-threads=1; \ 
+	then cargo build --color=never --features "ci"; \
+	else cargo test --color=never --features "ci" -- --test-threads=1; \ 
 	fi
 
-RUN cargo update-version
 RUN cargo update-so
 RUN cargo deb --no-build
 
