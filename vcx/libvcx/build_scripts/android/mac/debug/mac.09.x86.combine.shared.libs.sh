@@ -31,10 +31,7 @@ do
     rm ./libvcx.so
     $NDK_DIR/${ndk_arch}/bin/${cross_compile}-clang -v -shared -o libvcx.so -Wl,--whole-archive \
     libvcx.a \
-    libcrypto.a \
     libsodium.a \
-    libsqlite3.a \
-    libssl.a \
     libzmq.a \
     $NDK_DIR/${ndk_arch}/${cross_compile}/${LIB_FOLDER}/libgnustl_shared.so \
     $NDK_DIR/${ndk_arch}/sysroot/usr/${LIB_FOLDER}/libz.so \
