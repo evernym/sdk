@@ -41,6 +41,7 @@ pub mod tests {
         settings::set_config_value(settings::CONFIG_WALLET_KEY,settings::TEST_WALLET_KEY);
         settings::set_config_value(settings::CONFIG_WALLET_NAME, wallet_name);
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
+        settings::set_config_value(settings::CONFIG_GENESIS_PATH, settings::DEFAULT_GENESIS_PATH);
         pool::tests::open_sandbox_pool();
 
         wallet::init_wallet(wallet_name).unwrap();
