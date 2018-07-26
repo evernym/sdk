@@ -117,7 +117,7 @@ get_libindy() {
     [ -z ${LIBINDY_VERSION} ] && exit 1
 
     wget https://repo.sovrin.org/android/libindy/${LIBINDY_BRANCH}/${LIBINDY_VERSION}/libindy_android_${ARCH}_${LIBINDY_VERSION}.zip
-    unzip libindy_android_${ARCH}_1.5.0.zip
+    unzip libindy_android_${ARCH}_${LIBINDY_VERSION}.zip
 
 }
 
@@ -126,7 +126,7 @@ get_libnullpay() {
     [ -z ${LIBNULLPAY_BRANCH} ] && exit 1
     [ -z ${LIBNULLPAY_VERSION} ] && exit 1
     wget https://repo.sovrin.org/android/libnullpay/${LIBNULLPAY_BRANCH}/${LIBNULLPAY_VERSION}/libnullpay_android_${ARCH}_${LIBNULLPAY_VERSION}.zip
-    unzip libnullpay_android_${ARCH}_1.5.0.zip
+    unzip libnullpay_android_${ARCH}_${LIBNULLPAY_VERSION}.zip
 
 }
 
