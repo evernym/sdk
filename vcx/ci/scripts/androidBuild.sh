@@ -116,7 +116,13 @@ get_libindy() {
     [ -z ${LIBINDY_BRANCH} ] && exit 1
     [ -z ${LIBINDY_VERSION} ] && exit 1
 
-    wget https://repo.sovrin.org/android/libindy/${LIBINDY_BRANCH}/${LIBINDY_VERSION}/libindy_android_${ARCH}_${LIBINDY_VERSION}.zip
+    # Todo: RC has not been tested yet. 1.6 will be the first opportunity to test getting a stable version
+    if [ "$LIBINDY_BRANCH" = "rc" ]; then
+        wget https://repo.sovrin.org/android/libindy/${LIBINDY_BRANCH}/${LIBINDY_VERSION}/libindy_android_${ARCH}_${LIBINDY_VERSION}.zip
+    else 
+        wget https://repo.sovrin.org/android/libindy/${LIBINDY_BRANCH}/${LIBINDY_VERSION}-${LIBINDY_TAG}/libindy_android_${ARCH}_${LIBINDY_VERSION}.zip
+    fi
+
     unzip libindy_android_${ARCH}_${LIBINDY_VERSION}.zip
 
 }
@@ -125,8 +131,15 @@ get_libnullpay() {
     set -xv
     [ -z ${LIBNULLPAY_BRANCH} ] && exit 1
     [ -z ${LIBNULLPAY_VERSION} ] && exit 1
-    wget https://repo.sovrin.org/android/libnullpay/${LIBNULLPAY_BRANCH}/${LIBNULLPAY_VERSION}/libnullpay_android_${ARCH}.${LIBNULLPAY_VERSION}.zip
-    unzip libnullpay_android_${ARCH}.${LIBNULLPAY_VERSION}.zip
+
+    # Todo: RC has not been tested yet. 1.6 will be the first opportunity to test getting a stable version
+    if [ "$LIBINDY_BRANCH" = "rc" ]; then
+        wget https://repo.sovrin.org/android/libnullpay/${LIBNULLPAY_BRANCH}/${LIBNULLPAY_VERSION}/libnullpay_android_${ARCH}_${LIBNULLPAY_VERSION}.zip
+    else 
+        wget https://repo.sovrin.org/android/libnullpay/${LIBNULLPAY_BRANCH}/${LIBNULLPAY_VERSION}-${LIBNULLPAY_TAG}/libnullpay_android_${ARCH}_${LIBNULLPAY_VERSION}.zip
+    fi
+
+    unzip libnullpay_android_${ARCH}_${LIBNULLPAY_VERSION}.zip
 
 }
 

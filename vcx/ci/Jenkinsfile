@@ -20,7 +20,7 @@ def testing() {
         parallel([
             'Main' : { mainUbuntu() },
             'Android': { android() },
-            'iOS' : { ios() }
+            // 'iOS' : { ios() }
         ])
     }
 }
@@ -178,9 +178,11 @@ def fail() {
 def buildAndroid(envn) {
     envn.inside {
         LIBINDY_BRANCH="master"
-        LIBINDY_VERSION="1.5.0-619"
+        LIBINDY_VERSION="1.5.0"
+        LIBINDY_TAG="653"
         LIBNULLPAY_BRANCH="master"
-        LIBNULLPAY_VERSION="1.5.0-619"
+        LIBNULLPAY_VERSION="1.5.0"
+        LIBNULLPAY_TAG="653"
 
         ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
         sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBNULLPAY_BRANCH=${LIBNULLPAY_BRANCH} LIBNULLPAY_VERSION=${LIBNULLPAY_VERSION} ./${ANDROID_SCRIPT_PATH} arm"
