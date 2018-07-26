@@ -125,7 +125,7 @@ get_libnullpay() {
     set -xv
     [ -z ${LIBNULLPAY_BRANCH} ] && exit 1
     [ -z ${LIBNULLPAY_VERSION} ] && exit 1
-    wget https://repo.sovrin.org/android/libnullpay/${LIBNULLPAY_BRANCH}/${LIBNULLPAY_VERSION}/libnullpay_android_${ARCH}_${LIBNULLPAY_VERSION}.zip
+    wget https://repo.sovrin.org/android/libnullpay/${LIBNULLPAY_BRANCH}/${LIBNULLPAY_VERSION}/libnullpay_android_${ARCH}.${LIBNULLPAY_VERSION}.zip
     unzip libnullpay_android_${ARCH}.${LIBNULLPAY_VERSION}.zip
 
 }
