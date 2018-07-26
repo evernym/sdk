@@ -62,9 +62,9 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88 && \
     curl https://repo.corp.evernym.com/repo.corp.evenym.com-sig.key | apt-key add - && \
     apt-get update
 
-ARG LIBINDY_VER="1.5.0~619"
-ARG LIBNULL_VER="1.5.0~619"
-ARG LIBSOVTOKEN_VER="0.7.0+23.49"
+ARG LIBINDY_VER="1.5.0~653"
+ARG LIBNULL_VER="1.5.0~653"
+ARG LIBSOVTOKEN_VER="0.8.0+2.54"
 
 RUN apt-get install -y \
     libsovtoken=${LIBSOVTOKEN_VER} \
