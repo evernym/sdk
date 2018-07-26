@@ -14,7 +14,6 @@ setup() {
     fi
     cd runtime_android_build
 	retrieve_prebuilt_binaries
-	clone_indy_sdk
 	generate_flags $1
     if [ ! -d "toolchains" ]; then
         mkdir toolchains
@@ -102,25 +101,16 @@ generate_flags(){
     fi
 }
 
-clone_indy_sdk() {
-    if [ ! -d "indy-sdk" ]; then
-        echo "cloning indy-sdk"
-        #git clone https://github.com/evernym/indy-sdk.git
-        git clone https://github.com/hyperledger/indy-sdk.git
-    fi
-}
 
-build_libindy() {
+get_libindy() {
     set -xv
+    wget https://transfer.sh/73l3U/libindy_android_x86.zip
+    unzip libindy_android_x86.zip
+    wget https://transfer.sh/cssbl/libindy_android_arm64.zip
+    unzip libindy_android_arm64.zip
+    wget https://transfer.sh/TbH7L/libindy_android_arm.zip
+    unzip libindy_android_arm.zip
 
-    LIBINDY_PATH=indy-sdk/libindy/build_scripts/android
-    PREBUILT_BIN=../../../..
-    pushd ${LIBINDY_PATH}
-    mkdir -p toolchains/
-    ./build.withoutdocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} ${PREBUILT_BIN}/openssl_${ARCH} ${PREBUILT_BIN}/libsodium_${ARCH} ${PREBUILT_BIN}/libzmq_${ARCH}
-    popd
-    mv ${LIBINDY_PATH}/libindy_${ARCH} .
-    mv ${LIBINDY_PATH}/toolchains indy-sdk/libnullpay/build_scripts/android
 }
 
 build_libnullpay() {
@@ -171,6 +161,6 @@ build_vcx() {
 }
 
 setup $1
-build_libindy $1
+get_libindy $1
 build_libnullpay $1
 build_vcx $1
