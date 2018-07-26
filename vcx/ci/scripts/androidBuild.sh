@@ -104,12 +104,8 @@ generate_flags(){
 
 get_libindy() {
     set -xv
-    wget https://transfer.sh/73l3U/libindy_android_x86.zip
-    unzip libindy_android_x86.zip
-    wget https://transfer.sh/cssbl/libindy_android_arm64.zip
-    unzip libindy_android_arm64.zip
-    wget https://transfer.sh/TbH7L/libindy_android_arm.zip
-    unzip libindy_android_arm.zip
+    wget https://transfer.sh/73l3U/libindy_android_${ARCH}.zip
+    unzip libindy_android_${ARCH}.zip
 
 }
 
