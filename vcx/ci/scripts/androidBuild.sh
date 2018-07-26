@@ -113,33 +113,22 @@ clone_indy_sdk() {
 get_libindy() {
     set -xv
     wget https://transfer.sh/73l3U/libindy_android_x86.zip
-    unzip libindy_android_x86.zip
-    wget https://transfer.sh/cssbl/libindy_android_arm64.zip
-    unzip libindy_android_arm64.zip
     wget https://transfer.sh/TbH7L/libindy_android_arm.zip
+    wget https://transfer.sh/cssbl/libindy_android_arm64.zip
+    unzip libindy_android_x86.zip
     unzip libindy_android_arm.zip
+    unzip libindy_android_arm64.zip
 
 }
 
-build_libnullpay() {
-    LIBNULLPAY_PATH=indy-sdk/libnullpay/build_scripts/android
-    LIBINDY_BIN="$(realpath libindy_${ARCH})"
-    if [ ! -d libindy_${ARCH} ]; then
-        echo "missing libindy_${ARCH}. Cannot proceed without it."
-        exit 1
-    fi
-
-    pushd ${LIBNULLPAY_PATH}
-    if [ ! -d toolchains ]; then
-        mkdir toolchains/linux
-    fi
-    ./build.withoutdocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} ${LIBINDY_BIN}
-    popd
-
-    mv ${LIBNULLPAY_PATH}/libnullpay_${ARCH} .
-
-    # This is to prevent side effect in other builds
-    rm -rf ${LIBNULLPAY_PATH}/toolchains/linux
+get_libnullpay() {
+    set -xv
+    wget https://transfer.sh/QujdH/libnullpay_android_x86.zip
+    wget https://transfer.sh/YFSnM/libnullpay_android_arm.zip
+    wget https://transfer.sh/UxDBL/libnullpay_android_arm64.zip
+    unzip libnullpay_android_x86.zip
+    unzip libnullpay_android_arm.zip
+    unzip libnullpay_android_arm64.zip
 }
 
 build_vcx() {
@@ -170,5 +159,5 @@ build_vcx() {
 
 setup $1
 get_libindy $1
-build_libnullpay $1
+get_libnullpay $1
 build_vcx $1
