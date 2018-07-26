@@ -161,8 +161,6 @@ def ios() {
                 }
                 echo "$ex error"
             } finally {
-				sh 'docker system df'
-				sh 'docker system df'
                 step([$class: 'WsCleanup'])
             }
 
