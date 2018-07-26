@@ -117,7 +117,7 @@ get_libindy() {
     [ -z ${LIBINDY_VERSION} ] && exit 1
 
     wget https://repo.sovrin.org/android/libindy/${LIBINDY_BRANCH}/${LIBINDY_VERSION}/libindy_android_${ARCH}_${LIBINDY_VERSION}.zip
-    unzip libindy_android_${ARCH}.${LIBINDY_VERSION}.zip
+    unzip libindy_android_${ARCH}_${LIBINDY_VERSION}.zip
 
 }
 
