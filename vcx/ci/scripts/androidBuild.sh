@@ -111,24 +111,23 @@ clone_indy_sdk() {
 }
 
 get_libindy() {
+
     set -xv
-    wget https://transfer.sh/73l3U/libindy_android_x86.zip
-    wget https://transfer.sh/TbH7L/libindy_android_arm.zip
-    wget https://transfer.sh/cssbl/libindy_android_arm64.zip
-    unzip libindy_android_x86.zip
-    unzip libindy_android_arm.zip
-    unzip libindy_android_arm64.zip
+    [ -z ${LIBINDY_BRANCH} ] && exit 1
+    [ -z ${LIBINDY_VERSION} ] && exit 1
+
+    wget https://repo.sovrin.org/android/libindy/${LIBINDY_BRANCH}/${LIBINDY_VERSION}/libindy_android_${ARCH}_${LIBINDY_VERSION}.zip
+    unzip libindy_android_${ARCH}_1.5.0.zip
 
 }
 
 get_libnullpay() {
     set -xv
-    wget https://transfer.sh/QujdH/libnullpay_android_x86.zip
-    wget https://transfer.sh/YFSnM/libnullpay_android_arm.zip
-    wget https://transfer.sh/UxDBL/libnullpay_android_arm64.zip
-    unzip libnullpay_android_x86.zip
-    unzip libnullpay_android_arm.zip
-    unzip libnullpay_android_arm64.zip
+    [ -z ${LIBNULLPAY_BRANCH} ] && exit 1
+    [ -z ${LIBNULLPAY_VERSION} ] && exit 1
+    wget https://repo.sovrin.org/android/libnullpay/${LIBNULLPAY_BRANCH}/${LIBNULLPAY_VERSION}/libnullpay_android_${ARCH}_${LIBNULLPAY_VERSION}.zip
+    unzip libnullpay_android_${ARCH}_1.5.0.zip
+
 }
 
 build_vcx() {
