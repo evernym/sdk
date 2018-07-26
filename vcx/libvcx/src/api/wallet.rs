@@ -1,8 +1,6 @@
 extern crate libc;
 
 use self::libc::c_char;
-use settings;
-use std::ptr;
 use std::thread;
 use utils::cstring::CStringUtils;
 use utils::error;
@@ -10,6 +8,7 @@ use utils::error::error_string;
 use error::ToErrorCode;
 use utils::libindy::payments::{pay_a_payee, get_wallet_token_info, create_address};
 use utils::libindy::wallet::{export, import, get_wallet_handle};
+use utils::libindy::wallet;
 use std::path::Path;
 
 extern {
@@ -77,7 +76,8 @@ pub extern fn vcx_wallet_get_token_info(command_handle: u32,
                 warn!("vcx_wallet_get_token_info_cb(command_handle: {}, rc: {}, info: {})",
                     command_handle, error_string(x), "null");
 
-                cb(command_handle, x, ptr::null_mut());
+		let msg = CStringUtils::string_to_cstring("".to_string());
+                cb(command_handle, x, msg.as_ptr());
             },
         }
     });
@@ -96,14 +96,22 @@ pub extern fn vcx_wallet_get_token_info(command_handle: u32,
 
 #[no_mangle]
 pub extern fn vcx_wallet_create_payment_address(command_handle: u32,
+                                                seed: *const c_char,
                                                 cb: Option<extern fn(xcommand_handle: u32, err:u32, address: *const c_char)>) -> u32 {
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
+    let seed = if !seed.is_null() {
+        check_useful_opt_c_str!(seed, error::INVALID_OPTION.code_num);
+        seed
+    } else {
+        None
+    };
+
     info!("vcx_wallet_create_payment_address(command_handle: {})",
           command_handle);
 
     thread::spawn(move|| {
-        match create_address() {
+        match create_address(seed) {
             Ok(x) => {
                 info!("vcx_wallet_create_payment_address_cb(command_handle: {}, rc: {}, address: {})",
                     command_handle, error_string(0), x);
@@ -115,7 +123,8 @@ pub extern fn vcx_wallet_create_payment_address(command_handle: u32,
                 warn!("vcx_wallet_create_payment_address_cb(command_handle: {}, rc: {}, address: {})",
                     command_handle, error_string(x), "null");
 
-                cb(command_handle, x, ptr::null_mut());
+		let msg = CStringUtils::string_to_cstring("".to_string());
+                cb(command_handle, x, msg.as_ptr());
             },
         }
     });
@@ -150,24 +159,43 @@ pub extern fn vcx_wallet_create_payment_address(command_handle: u32,
 ///
 /// #Returns
 /// Error code as a u32
-/// Error will be a libindy error code
 ///
 
 #[no_mangle]
-pub extern fn vcx_wallet_add_record(command_handle: i32,
+pub extern fn vcx_wallet_add_record(command_handle: u32,
                                     type_: *const c_char,
                                     id: *const c_char,
                                     value: *const c_char,
                                     tags_json: *const c_char,
-                                    cb: Option<extern fn(xcommand_handle: i32, err: i32)>) -> u32 {
-    if settings::test_indy_mode_enabled() {
-        check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
-        cb(command_handle, error::SUCCESS.code_num as i32);
-        return error::SUCCESS.code_num
-    }
-    unsafe {
-        indy_add_wallet_record(command_handle as i32, get_wallet_handle(), type_, id, value, tags_json, cb) as u32
-    }
+                                    cb: Option<extern fn(xcommand_handle: u32, err: u32)>) -> u32 {
+    check_useful_c_str!(type_, error::INVALID_OPTION.code_num);
+    check_useful_c_str!(id, error::INVALID_OPTION.code_num);
+    check_useful_c_str!(value, error::INVALID_OPTION.code_num);
+    check_useful_c_str!(tags_json, error::INVALID_OPTION.code_num);
+    check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
+
+
+    info!("vcx_wallet_add_record(command_handle: {}, type_: {}, id: {}, value: {}, tags_json: {})",
+          command_handle, type_, id, value, tags_json);
+
+    thread::spawn(move|| {
+        match wallet::add_record(&type_, &id, &value, &tags_json) {
+            Ok(x) => {
+                info!("vcx_wallet_add_record(command_handle: {}, rc: {})",
+                      command_handle, error_string(0));
+
+                cb(command_handle, error::SUCCESS.code_num);
+            },
+            Err(x) => {
+                info!("vcx_wallet_add_record(command_handle: {}, rc: {})",
+                      command_handle, error_string(x));
+
+                cb(command_handle, x);
+            },
+        }
+    });
+
+    error::SUCCESS.code_num
 }
 
 /// Updates the value of a record already in the wallet.
@@ -186,23 +214,40 @@ pub extern fn vcx_wallet_add_record(command_handle: i32,
 ///
 /// #Returns
 /// Error code as a u32
-/// Error will be a libindy error code
 ///
 
 #[no_mangle]
-pub extern fn vcx_wallet_update_record_value(command_handle: i32,
+pub extern fn vcx_wallet_update_record_value(command_handle: u32,
                                              type_: *const c_char,
                                              id: *const c_char,
                                              value: *const c_char,
-                                             cb: Option<extern fn(xcommand_handle: i32, err: i32)>) -> u32 {
-    if settings::test_indy_mode_enabled() {
-        check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
-        cb(command_handle, error::SUCCESS.code_num as i32);
-        return error::SUCCESS.code_num
-    }
-    unsafe {
-        indy_update_wallet_record_value(command_handle, get_wallet_handle(), type_, id, value, cb) as u32
-    }
+                                             cb: Option<extern fn(xcommand_handle: u32, err: u32)>) -> u32 {
+    check_useful_c_str!(type_, error::INVALID_OPTION.code_num);
+    check_useful_c_str!(id, error::INVALID_OPTION.code_num);
+    check_useful_c_str!(value, error::INVALID_OPTION.code_num);
+    check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
+
+    info!("vcx_wallet_update_record_value(command_handle: {}, type_: {}, id: {}, value: {})",
+          command_handle, type_, id, value);
+
+    thread::spawn(move|| {
+        match wallet::update_record_value(&type_, &id, &value) {
+            Ok(x) => {
+                info!("vcx_wallet_update_record_value(command_handle: {}, rc: {})",
+                      command_handle, error_string(0));
+
+                cb(command_handle, error::SUCCESS.code_num);
+            },
+            Err(x) => {
+                info!("vcx_wallet_update_record_value(command_handle: {}, rc: {})",
+                      command_handle, error_string(x));
+
+                cb(command_handle, x);
+            },
+        }
+    });
+
+    error::SUCCESS.code_num
 }
 
 /// Updates the value of a record already in the wallet.
@@ -325,21 +370,41 @@ pub extern fn vcx_wallet_delete_record_tags(command_handle: u32,
 ///
 
 #[no_mangle]
-pub extern fn vcx_wallet_get_record(command_handle: i32,
-                                       type_: *const c_char,
-                                       id: *const c_char,
-                                       options_json: *const c_char,
-                                       cb: Option<extern fn(xcommand_handle: i32, err: i32,
-                                       record_json: *const c_char)>) -> u32 {
-    if settings::test_indy_mode_enabled() {
-        check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
-        let msg = r#"{"id":"123","type":"record type","value":"record value","tags":null}"#.to_string();
-        cb(command_handle, error::SUCCESS.code_num as i32, CStringUtils::string_to_cstring(msg).as_ptr());
-        return error::SUCCESS.code_num
-    }
-    unsafe {
-        indy_get_wallet_record(command_handle, get_wallet_handle(), type_, id, options_json, cb) as u32
-    }
+pub extern fn vcx_wallet_get_record(command_handle: u32,
+                                    type_: *const c_char,
+                                    id: *const c_char,
+                                    options_json: *const c_char,
+                                    cb: Option<extern fn(xcommand_handle: u32, err: u32, record_json: *const c_char)>) -> u32 {
+
+    check_useful_c_str!(type_, error::INVALID_OPTION.code_num);
+    check_useful_c_str!(id, error::INVALID_OPTION.code_num);
+    check_useful_c_str!(options_json, error::INVALID_OPTION.code_num);
+    check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
+
+    info!("vcx_wallet_get_record(command_handle: {}, type_: {}, id: {}, options: {})",
+          command_handle, type_, id, options_json);
+
+    thread::spawn(move|| {
+        match wallet::get_record(&type_, &id, &options_json) {
+            Ok(x) => {
+                info!("vcx_wallet_get_record(command_handle: {}, rc: {}, record_json: {})",
+                      command_handle, error_string(0), x);
+
+                let msg = CStringUtils::string_to_cstring(x);
+
+                cb(command_handle, error::SUCCESS.code_num, msg.as_ptr());
+            },
+            Err(x) => {
+                info!("vcx_wallet_get_record(command_handle: {}, rc: {}, record_json: {})",
+                      command_handle, error_string(x), "null");
+
+                let msg = CStringUtils::string_to_cstring("".to_string());
+                cb(command_handle, x, msg.as_ptr());
+            },
+        }
+    });
+
+    error::SUCCESS.code_num
 }
 
 /// Deletes an existing record.
@@ -360,18 +425,35 @@ pub extern fn vcx_wallet_get_record(command_handle: i32,
 ///
 
 #[no_mangle]
-pub extern fn vcx_wallet_delete_record(command_handle: i32,
+pub extern fn vcx_wallet_delete_record(command_handle: u32,
                                             type_: *const c_char,
                                             id: *const c_char,
-                                            cb: Option<extern fn(xcommand_handle: i32, err: i32)>) -> u32 {
-    if settings::test_indy_mode_enabled() {
-        check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
-        cb(command_handle, error::SUCCESS.code_num as i32);
-        return error::SUCCESS.code_num
-    }
-    unsafe {
-        indy_delete_wallet_record(command_handle, get_wallet_handle(), type_, id, cb) as u32
-    }
+                                            cb: Option<extern fn(xcommand_handle: u32, err: u32)>) -> u32 {
+    check_useful_c_str!(type_, error::INVALID_OPTION.code_num);
+    check_useful_c_str!(id, error::INVALID_OPTION.code_num);
+    check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
+
+    info!("vcx_wallet_delete_record(command_handle: {}, type_: {}, id: {})",
+          command_handle, type_, id);
+
+    thread::spawn(move|| {
+        match wallet::delete_record(&type_, &id) {
+            Ok(x) => {
+                info!("vcx_wallet_delete_record(command_handle: {}, rc: {})",
+                      command_handle, error_string(0));
+
+                cb(command_handle, error::SUCCESS.code_num);
+            },
+            Err(x) => {
+                info!("vcx_wallet_delete_record(command_handle: {}, rc: {})",
+                      command_handle, error_string(x));
+
+                cb(command_handle, x);
+            },
+        }
+    });
+
+    error::SUCCESS.code_num
 }
 
 
@@ -416,7 +498,8 @@ pub extern fn vcx_wallet_send_tokens(command_handle: u32,
             Err(e) => {
                 let msg = "Failed to send tokens".to_string();
                 info!("vcx_wallet_send_tokens_cb(command_handle: {}, rc: {}, reciept: {})", command_handle, e.to_error_code(), msg);
-                cb(command_handle, e.to_error_code(), ptr::null());
+                let msg = CStringUtils::string_to_cstring("".to_string());
+                cb(command_handle, e.to_error_code(), msg.as_ptr());
             },
         }
     });
@@ -646,6 +729,7 @@ pub mod tests {
     extern crate serde_json;
 
     use super::*;
+    use std::ptr;
     use std::ffi::CString;
     use std::time::Duration;
     use settings;
@@ -657,31 +741,31 @@ pub mod tests {
         println!("successfully called callback - {}", msg);
     }
 
-    pub extern "C" fn indy_generic_no_msg_cb(command_handle: i32, err: i32) {
+    pub extern "C" fn generic_no_msg_cb(command_handle: u32, err: u32) {
         assert_eq!(err, 0);
-        println!("successfully called indy_generic_no_msg_cb");
+        println!("successfully called generic_no_msg_cb");
     }
 
-    pub extern "C" fn indy_generic_msg_cb(command_handle: i32, err: i32, msg: *const c_char) {
+    pub extern "C" fn indy_generic_msg_cb(command_handle: u32, err: u32, msg: *const c_char) {
         assert_eq!(err, 0);
         check_useful_c_str!(msg, ());
         println!("successfully called indy_generic_msg_cb - {}", msg);
 
     }
 
-    pub extern "C" fn duplicate_record_cb(command_handle: i32, err: i32) {
-        assert_eq!(err as u32, error::INDY_DUPLICATE_WALLET_RECORD.code_num);
+    pub extern "C" fn duplicate_record_cb(command_handle: u32, err: u32) {
+        assert_eq!(err, error::DUPLICATE_WALLET_RECORD.code_num);
         println!("successfully called duplicate_record_cb");
     }
 
-    extern "C" fn record_not_found_msg_cb(command_handle: i32, err: i32, msg: *const c_char) {
-        assert_eq!(err as u32, error::INDY_WALLET_RECORD_NOT_FOUND.code_num);
+    extern "C" fn record_not_found_msg_cb(command_handle: u32, err: u32, msg: *const c_char) {
+        assert_eq!(err, error::WALLET_RECORD_NOT_FOUND.code_num);
         println!("successfully called record_not_found_msg_cb");
 
     }
 
-    extern "C" fn record_not_found_cb(command_handle: i32, err: i32) {
-        assert_eq!(err as u32, error::INDY_WALLET_RECORD_NOT_FOUND.code_num);
+    extern "C" fn record_not_found_cb(command_handle: u32, err: u32) {
+        assert_eq!(err as u32, error::WALLET_RECORD_NOT_FOUND.code_num);
         println!("successfully called record_not_found_cb");
 
     }
@@ -706,7 +790,7 @@ pub mod tests {
     fn test_create_address() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
-        assert_eq!(vcx_wallet_create_payment_address(0, Some(generic_cb)), error::SUCCESS.code_num);
+        assert_eq!(vcx_wallet_create_payment_address(0, ptr::null_mut(), Some(generic_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
 
@@ -738,15 +822,16 @@ pub mod tests {
         let xtype = CStringUtils::string_to_cstring("record_type".to_string());
         let id = CStringUtils::string_to_cstring("123".to_string());
         let value = CStringUtils::string_to_cstring("Record Value".to_string());
+        let tags = CStringUtils::string_to_cstring("{}".to_string());
 
         init_wallet(wallet_n).unwrap();
 
         // Valid add
-        assert_eq!(vcx_wallet_add_record(0, xtype.as_ptr(), id.as_ptr(), value.as_ptr(), ptr::null(), Some(indy_generic_no_msg_cb)), error::SUCCESS.code_num);
+        assert_eq!(vcx_wallet_add_record(0, xtype.as_ptr(), id.as_ptr(), value.as_ptr(),  tags.as_ptr(), Some(generic_no_msg_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
-        
+
         // Failure because of duplicate
-        assert_eq!(vcx_wallet_add_record(0, xtype.as_ptr(), id.as_ptr(), value.as_ptr(), ptr::null(), Some(duplicate_record_cb)), error::SUCCESS.code_num);
+        assert_eq!(vcx_wallet_add_record(0, xtype.as_ptr(), id.as_ptr(), value.as_ptr(), tags.as_ptr(), Some(duplicate_record_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
         delete_wallet(wallet_n).unwrap();
 
@@ -763,7 +848,7 @@ pub mod tests {
         let tags = CStringUtils::string_to_cstring(r#"{"tagName1":"tag1","tagName2":"tag2"}"#.to_string());
 
         init_wallet(wallet_n).unwrap();
-        assert_eq!(vcx_wallet_add_record(0, xtype.as_ptr(), id.as_ptr(), value.as_ptr(), tags.as_ptr(), Some(indy_generic_no_msg_cb)), error::SUCCESS.code_num);
+        assert_eq!(vcx_wallet_add_record(0, xtype.as_ptr(), id.as_ptr(), value.as_ptr(), tags.as_ptr(), Some(generic_no_msg_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
         delete_wallet(wallet_n).unwrap();
     }
@@ -797,6 +882,7 @@ pub mod tests {
         let xtype = CStringUtils::string_to_cstring("record_type".to_string());
         let id = CStringUtils::string_to_cstring("123".to_string());
         let value = CStringUtils::string_to_cstring("Record Value".to_string());
+        let tags = CStringUtils::string_to_cstring("{}".to_string());
         let options = json!({
             "retrieveType": true,
             "retrieveValue": true,
@@ -807,7 +893,7 @@ pub mod tests {
         init_wallet(wallet_n).unwrap();
 
         // Valid add
-        assert_eq!(vcx_wallet_add_record(0, xtype.as_ptr(), id.as_ptr(), value.as_ptr(), ptr::null(), Some(indy_generic_no_msg_cb)), error::SUCCESS.code_num);
+        assert_eq!(vcx_wallet_add_record(0, xtype.as_ptr(), id.as_ptr(), value.as_ptr(), tags.as_ptr(), Some(generic_no_msg_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
 
         assert_eq!(vcx_wallet_get_record(0, xtype.as_ptr(), id.as_ptr(), options.as_ptr(), Some(indy_generic_msg_cb)), error::SUCCESS.code_num);
@@ -825,6 +911,7 @@ pub mod tests {
         let xtype = CStringUtils::string_to_cstring("record_type".to_string());
         let id = CStringUtils::string_to_cstring("123".to_string());
         let value = CStringUtils::string_to_cstring("Record Value".to_string());
+        let tags = CStringUtils::string_to_cstring("{}".to_string());
         let options = json!({
             "retrieveType": true,
             "retrieveValue": true,
@@ -835,11 +922,11 @@ pub mod tests {
         init_wallet(wallet_n).unwrap();
 
         // Add record
-        assert_eq!(vcx_wallet_add_record(0, xtype.as_ptr(), id.as_ptr(), value.as_ptr(), ptr::null(), Some(indy_generic_no_msg_cb)), error::SUCCESS.code_num);
+        assert_eq!(vcx_wallet_add_record(0, xtype.as_ptr(), id.as_ptr(), value.as_ptr(), tags.as_ptr(), Some(generic_no_msg_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
 
         // Successful deletion
-        assert_eq!(vcx_wallet_delete_record(0, xtype.as_ptr(), id.as_ptr(), Some(indy_generic_no_msg_cb)), error::SUCCESS.code_num);
+        assert_eq!(vcx_wallet_delete_record(0, xtype.as_ptr(), id.as_ptr(), Some(generic_no_msg_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
 
         // Fails with no record
@@ -856,6 +943,7 @@ pub mod tests {
         let xtype = CStringUtils::string_to_cstring("record_type".to_string());
         let id = CStringUtils::string_to_cstring("123".to_string());
         let value = CStringUtils::string_to_cstring("Record Value".to_string());
+        let tags = CStringUtils::string_to_cstring("{}".to_string());
         let options = json!({
             "retrieveType": true,
             "retrieveValue": true,
@@ -868,11 +956,11 @@ pub mod tests {
         assert_eq!(vcx_wallet_update_record_value(0, xtype.as_ptr(), id.as_ptr(), options.as_ptr(), Some(record_not_found_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
 
-        assert_eq!(vcx_wallet_add_record(0, xtype.as_ptr(), id.as_ptr(), value.as_ptr(), ptr::null(), Some(indy_generic_no_msg_cb)), error::SUCCESS.code_num);
+        assert_eq!(vcx_wallet_add_record(0, xtype.as_ptr(), id.as_ptr(), value.as_ptr(), tags.as_ptr(), Some(generic_no_msg_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
 
         // Assert update workds
-        assert_eq!(vcx_wallet_update_record_value(0, xtype.as_ptr(), id.as_ptr(), options.as_ptr(), Some(indy_generic_no_msg_cb)), error::SUCCESS.code_num);
+        assert_eq!(vcx_wallet_update_record_value(0, xtype.as_ptr(), id.as_ptr(), options.as_ptr(), Some(generic_no_msg_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
         delete_wallet(wallet_n).unwrap();
     }
