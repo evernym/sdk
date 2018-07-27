@@ -229,27 +229,6 @@ pub fn pay_for_txn(req: &str, txn_type: &str) -> Result<(PaymentTxn, String), u3
     Ok((payment, txn_response))
 }
 
-#[cfg(feature = "nullpay")]
-fn _submit_fees_request(req: &str, inputs: &str, outputs: &str) -> Result<(String, String), u32> {
-    let did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
-
-    let (response, payment_method) = match Payment::add_request_fees(get_wallet_handle(),
-                                                                     &did,
-                                                                     req,
-                                                                     &inputs,
-                                                                     &outputs,
-                                                                     None) {
-        Ok((req, payment_method)) => (libindy_sign_and_submit_request(&did, &req)?, payment_method),
-        Err(x) => return Err(map_rust_indy_sdk_error_code(x)),
-    };
-
-    let parsed_response = Payment::parse_response_with_fees(&payment_method, &response)
-        .map_err(map_rust_indy_sdk_error_code)?;
-
-    Ok((parsed_response, response))
-}
-
-#[cfg(feature = "sovtoken")]
 fn _submit_fees_request(req: &str, inputs: &str, outputs: &str) -> Result<(String, String), u32> {
     let did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
 
@@ -273,31 +252,6 @@ fn _submit_fees_request(req: &str, inputs: &str, outputs: &str) -> Result<(Strin
     Ok((parsed_response, response))
 }
 
-#[cfg(feature = "nullpay")]
-pub fn pay_a_payee(price: u64, address: &str) -> Result<(PaymentTxn, String), PaymentError> {
-    info!("sending {} tokens to address {}", price, address);
-
-    let (remainder, input) = inputs(price)?;
-    let output = outputs(remainder, Some(address.to_string()), Some(price))?;
-
-    let payment = PaymentTxn::from_parts(&input, &output, price).map_err(|e|PaymentError::CommonError(e))?;
-    let my_did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
-
-    if settings::test_indy_mode_enabled() { return Ok((PaymentTxn::from_parts(r#"["pay:null:9UFgyjuJxi1i1HD"]"#,r#"[{"amount":4,"extra":null,"recipient":"pay:null:xkIsxem0YNtHrRO"}]"#,1).unwrap(), SUBMIT_SCHEMA_RESPONSE.to_string())); }
-
-    match Payment::build_payment_req(get_wallet_handle(), &my_did, &input, &output, None) {
-        Ok((request, payment_method)) => {
-            let result = libindy_sign_and_submit_request(&my_did, &request).map_err(|ec| PaymentError::CommonError(ec))?;
-            Ok((payment, result))
-        },
-        Err(ec) => {
-            error!("error: {:?}", ec);
-            Err(PaymentError::CommonError(ec as u32))
-        },
-    }
-}
-
-#[cfg(feature = "sovtoken")]
 pub fn pay_a_payee(price: u64, address: &str) -> Result<(PaymentTxn, String), PaymentError> {
     info!("sending {} tokens to address {}", price, address);
 
