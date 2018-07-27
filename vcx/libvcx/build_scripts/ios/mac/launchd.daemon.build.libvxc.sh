@@ -6,7 +6,7 @@ echo "START_DIR: ${START_DIR}"
 cd $START_DIR
 cd ../../../../..
 echo "VCX_DIR: $(pwd)"
-#git pull > ./vcx/libvcx/build_scripts/ios/mac/git.pull.out 2>&1
+git pull > ./vcx/libvcx/build_scripts/ios/mac/git.pull.out 2>&1
 # git checkout libindy_refactor
 # git pull
 # git checkout mobile_vcx
