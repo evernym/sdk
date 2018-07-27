@@ -14,12 +14,14 @@ ENV VCX_TEST_FLAG $test_flag
 ENV PATH=${PATH}:/sdk/vcx/ci/scripts
 
 WORKDIR /sdk/vcx/libvcx
+
+RUN cargo update-version
+
 RUN if [ "$VCX_TEST_FLAG" = "no" ]; \
 	then cargo build ${features} --color=never; \
 	else cargo test ${features} --color=never -- --test-threads=1; \ 
 	fi
 
-RUN cargo update-version
 RUN cargo update-so
 RUN cargo deb --no-build
 

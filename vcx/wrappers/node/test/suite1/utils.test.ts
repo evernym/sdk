@@ -3,11 +3,13 @@ import '../module-resolver-helper'
 import { assert } from 'chai'
 import { initVcxTestMode, shouldThrow } from 'helpers/utils'
 import {
+  downloadMessages,
   getLedgerFees,
   getVersion,
   provisionAgent,
   updateAgentInfo,
   updateInstitutionConfigs,
+  updateMessages,
   VCXCode
 } from 'src'
 
@@ -20,6 +22,14 @@ describe('utils:', () => {
   const updateInstitutionConfigsData = {
     logoUrl: 'https://google.com',
     name: 'New Name'
+  }
+  const downloadMessagesData = {
+    pairwiseDids: 'asdf',
+    status: 'MS-104',
+    uids: 'asdf'
+  }
+  const updateMessagesData = {
+    msgJson: '[{"pairwiseDID":"QSrw8hebcvQxiwBETmAaRs","uids":["mgrmngq"]}]'
   }
 
   describe('provisionAgent:', () => {
@@ -76,6 +86,19 @@ describe('utils:', () => {
     it('success', async () => {
       const fees = await getLedgerFees()
       assert.ok(fees)
+    })
+  })
+
+  describe('downloadMessages:', () => {
+    it('success', async () => {
+      const messages = await downloadMessages(downloadMessagesData)
+      assert.ok(messages)
+    })
+  })
+
+  describe('updateMessages:', () => {
+    it('success', async () => {
+      await updateMessages(updateMessagesData)
     })
   })
 })

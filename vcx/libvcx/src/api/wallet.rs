@@ -1,7 +1,6 @@
 extern crate libc;
 
 use self::libc::c_char;
-use std::ptr;
 use std::thread;
 use utils::cstring::CStringUtils;
 use utils::error;
@@ -77,7 +76,8 @@ pub extern fn vcx_wallet_get_token_info(command_handle: u32,
                 warn!("vcx_wallet_get_token_info_cb(command_handle: {}, rc: {}, info: {})",
                     command_handle, error_string(x), "null");
 
-                cb(command_handle, x, ptr::null_mut());
+		let msg = CStringUtils::string_to_cstring("".to_string());
+                cb(command_handle, x, msg.as_ptr());
             },
         }
     });
@@ -96,14 +96,22 @@ pub extern fn vcx_wallet_get_token_info(command_handle: u32,
 
 #[no_mangle]
 pub extern fn vcx_wallet_create_payment_address(command_handle: u32,
+                                                seed: *const c_char,
                                                 cb: Option<extern fn(xcommand_handle: u32, err:u32, address: *const c_char)>) -> u32 {
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
+    let seed = if !seed.is_null() {
+        check_useful_opt_c_str!(seed, error::INVALID_OPTION.code_num);
+        seed
+    } else {
+        None
+    };
+
     info!("vcx_wallet_create_payment_address(command_handle: {})",
           command_handle);
 
     thread::spawn(move|| {
-        match create_address() {
+        match create_address(seed) {
             Ok(x) => {
                 info!("vcx_wallet_create_payment_address_cb(command_handle: {}, rc: {}, address: {})",
                     command_handle, error_string(0), x);
@@ -115,7 +123,8 @@ pub extern fn vcx_wallet_create_payment_address(command_handle: u32,
                 warn!("vcx_wallet_create_payment_address_cb(command_handle: {}, rc: {}, address: {})",
                     command_handle, error_string(x), "null");
 
-                cb(command_handle, x, ptr::null_mut());
+		let msg = CStringUtils::string_to_cstring("".to_string());
+                cb(command_handle, x, msg.as_ptr());
             },
         }
     });
@@ -389,7 +398,8 @@ pub extern fn vcx_wallet_get_record(command_handle: u32,
                 info!("vcx_wallet_get_record(command_handle: {}, rc: {}, record_json: {})",
                       command_handle, error_string(x), "null");
 
-                cb(command_handle, x, ptr::null());
+                let msg = CStringUtils::string_to_cstring("".to_string());
+                cb(command_handle, x, msg.as_ptr());
             },
         }
     });
@@ -488,7 +498,8 @@ pub extern fn vcx_wallet_send_tokens(command_handle: u32,
             Err(e) => {
                 let msg = "Failed to send tokens".to_string();
                 info!("vcx_wallet_send_tokens_cb(command_handle: {}, rc: {}, reciept: {})", command_handle, e.to_error_code(), msg);
-                cb(command_handle, e.to_error_code(), ptr::null());
+                let msg = CStringUtils::string_to_cstring("".to_string());
+                cb(command_handle, e.to_error_code(), msg.as_ptr());
             },
         }
     });
@@ -718,6 +729,7 @@ pub mod tests {
     extern crate serde_json;
 
     use super::*;
+    use std::ptr;
     use std::ffi::CString;
     use std::time::Duration;
     use settings;
@@ -778,7 +790,7 @@ pub mod tests {
     fn test_create_address() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
-        assert_eq!(vcx_wallet_create_payment_address(0, Some(generic_cb)), error::SUCCESS.code_num);
+        assert_eq!(vcx_wallet_create_payment_address(0, ptr::null_mut(), Some(generic_cb)), error::SUCCESS.code_num);
         thread::sleep(Duration::from_millis(200));
     }
 
