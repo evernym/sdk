@@ -161,8 +161,6 @@ def ios() {
                 }
                 echo "$ex error"
             } finally {
-				sh 'docker system df'
-				sh 'docker system df'
                 step([$class: 'WsCleanup'])
             }
 
@@ -179,10 +177,18 @@ def fail() {
 
 def buildAndroid(envn) {
     envn.inside {
+        LIBINDY_BRANCH="stable"
+        LIBINDY_VERSION="1.6.0"
+        LIBINDY_TAG=""
+        LIBNULLPAY_BRANCH="stable"
+        LIBNULLPAY_VERSION="1.6.0"
+        LIBNULLPAY_TAG=""
+
         ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
-        sh "./${ANDROID_SCRIPT_PATH} arm"
-        sh "./${ANDROID_SCRIPT_PATH} x86"
-        //sh "./${ANDROID_SCRIPT_PATH} arm64"
+        sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBNULLPAY_BRANCH=${LIBNULLPAY_BRANCH} LIBNULLPAY_VERSION=${LIBNULLPAY_VERSION} ./${ANDROID_SCRIPT_PATH} arm64"
+        sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBNULLPAY_BRANCH=${LIBNULLPAY_BRANCH} LIBNULLPAY_VERSION=${LIBNULLPAY_VERSION} ./${ANDROID_SCRIPT_PATH} arm"
+        sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBNULLPAY_BRANCH=${LIBNULLPAY_BRANCH} LIBNULLPAY_VERSION=${LIBNULLPAY_VERSION} ./${ANDROID_SCRIPT_PATH} x86"
+//        sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBNULLPAY_BRANCH=${LIBNULLPAY_BRANCH} LIBNULLPAY_VERSION=${LIBNULLPAY_VERSION} ./${ANDROID_SCRIPT_PATH} arm64"
         //Todo: get parallel processing to work. Currently it fails on Jenkins. It must share files or something
         // parallel([
         //     'arm': { sh "./${ANDROID_SCRIPT_PATH} arm"},
@@ -202,11 +208,11 @@ def packageAndroid(envn) {
 
 def publishAndroid(envn) {
     envn.inside {
-        CERT_SCRIPT = 'vcx/ci/scripts/getCert.sh'
-        sh "${CERT_SCRIPT}"
-        withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
-            sh "echo before publishing"
-            sh "find vcx/wrappers/java/vcx/build/outputs/aar/ -type f -name 'com.evernym-vcx_*-release.aar' -exec curl --cacert /tmp/cert/ca.crt -u \"${KRAKEN_CREDENTIALS}\" -X POST  https://kraken.corp.evernym.com/repo/android/upload -F 'file=@{}' \\;"
+        withCredentials([file(credentialsId: 'cloudrepo-artifactory-settings-libvcx', variable: 'settingsFile')]) {
+            sh 'cp $settingsFile .'
+            ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidPublish.sh'
+            sh "chmod +x ${ANDROID_SCRIPT_PATH}"
+            sh "./${ANDROID_SCRIPT_PATH}"
         }
     }
 }
