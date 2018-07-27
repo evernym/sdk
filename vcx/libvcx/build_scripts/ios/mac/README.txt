@@ -44,9 +44,9 @@ You must comment out the lines 68 to 85 that look like this, then rerun the scri
         println!("cargo:rustc-link-lib=static=crypto");
         println!("cargo:rustc-link-lib=static=ssl");
 18) Run the script ./mac.11.copy.static.libs.to.app.sh
-19) Run the script ./mac.12.combine.static.libs.sh libvcxall
-20) Now you should be able to open up the file sdk/vcx/wrappers/ios/vcx/vcx.xcodeproj
-in Xcode and build and run the iphone app in the simulator
+19) Run the script ./mac.12.combine.static.libs.sh libvcxall delete nodebug
+20) Run the script ./mac.upload.ios.build.files.sh
+21) Now you finally have a cocoapod located at sdk/vcx/wrappers/ios/vcx/tmp
 
 
 
