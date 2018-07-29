@@ -13,8 +13,8 @@ TEST_WORKSPACE=testlibvcx.xcworkspace
 TEST_SCHEME=testlibvcxTests
 
 cd $TEST_WORKSPACE_ROOT
-#pod install
+pod install
 
-#xcodebuild -workspace ${TEST_WORKSPACE} -scheme ${TEST_SCHEME} build-for-testing
+xcodebuild -workspace ${TEST_WORKSPACE} -scheme ${TEST_SCHEME} build-for-testing
 ## Need to do: brew install xctool
 xctool -workspace ${TEST_WORKSPACE} -scheme ${TEST_SCHEME} run-tests -sdk iphonesimulator
