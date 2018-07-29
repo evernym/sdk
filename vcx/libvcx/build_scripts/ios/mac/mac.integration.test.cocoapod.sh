@@ -8,7 +8,7 @@ VCX_SDK=$(abspath "$VCX_SDK")
 WORK_DIR=$VCX_SDK/.macosbuild
 WORK_DIR=$(abspath "$WORK_DIR")
 
-TEST_WORKSPACE_ROOT=/Users/norm/forge/work/code/evernym/test-libvcx/ios/testlibvcx
+TEST_WORKSPACE_ROOT=/Users/norm/forge/work/code/evernym/testlibvcx
 TEST_WORKSPACE=testlibvcx.xcworkspace
 TEST_SCHEME=testlibvcxTests
 
