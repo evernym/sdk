@@ -38,6 +38,8 @@ else
     git checkout -- libnullpay/Cargo.toml
 fi
 
+git log -1 > $WORK_DIR/hyperledger.indy-sdk.git.commit.log
+
 DEBUG_SYMBOLS="debuginfo"
 if [ ! -z "$1" ]; then
     DEBUG_SYMBOLS=$1
@@ -69,8 +71,8 @@ fi
 #cargo build
 # To build for iOS
 #echo "cargo lipo --release --verbose --targets=${IOS_TARGETS}"
-cargo lipo --release --verbose --targets="${IOS_TARGETS}"
-# cargo lipo --release --targets="${IOS_TARGETS}"
+# cargo lipo --release --verbose --targets="${IOS_TARGETS}"
+cargo lipo --release --targets="${IOS_TARGETS}"
 #cargo lipo
 
 #########################################################################################################################
@@ -97,6 +99,6 @@ fi
 #cargo build
 # To build for iOS
 #echo "cargo lipo --release --verbose --targets=${IOS_TARGETS}"
-cargo lipo --release --verbose --targets="${IOS_TARGETS}"
-# cargo lipo --release --targets="${IOS_TARGETS}"
+# cargo lipo --release --verbose --targets="${IOS_TARGETS}"
+cargo lipo --release --targets="${IOS_TARGETS}"
 #cargo lipo
