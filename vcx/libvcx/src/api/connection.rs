@@ -111,6 +111,7 @@ pub extern fn vcx_connection_create_with_invite(command_handle: u32,
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
     check_useful_c_str!(source_id, error::INVALID_OPTION.code_num);
     check_useful_c_str!(invite_details, error::INVALID_OPTION.code_num);
+    debug!("CONNECTION TEST: Exiting Verity-UI, Entering Libvcx");
     info!("vcx_connection_create_with_invite(command_handle: {}, source_id: {})", command_handle, source_id);
     thread::spawn(move|| {
         match build_connection_with_invite(&source_id, &invite_details) {
@@ -122,6 +123,7 @@ pub extern fn vcx_connection_create_with_invite(command_handle: u32,
             Err(x) => {
                 warn!("vcx_connection_create_with_invite_cb(command_handle: {}, rc: {}, handle: {})",
                       command_handle, x.to_string(), 0);
+                debug!("CONNECTION TEST: Exiting Libvcx, Entering Verity-UI");
                 cb(command_handle, x.to_error_code(), 0)
             },
         };
@@ -152,7 +154,7 @@ pub extern fn vcx_connection_connect(command_handle:u32,
                                      cb: Option<extern fn(xcommand_handle: u32, err: u32, invite_details: *const c_char)>) -> u32 {
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
-
+    debug!("CONNECTION TEST: Exiting Verity-UI, Entering Libvcx");
     if !is_valid_handle(connection_handle) {
         error!("vcx_connection_get_state - invalid handle");
         return error::INVALID_CONNECTION_HANDLE.code_num;
@@ -175,6 +177,7 @@ pub extern fn vcx_connection_connect(command_handle:u32,
             Ok(_) => {
                 match get_invite_details(connection_handle,true) {
                     Ok(x) => {
+                        debug!("CONNECTION TEST: Exiting Libvcx, Entering Verity-UI");
                         info!("vcx_connection_connect_cb(command_handle: {}, connection_handle: {}, rc: {}, details: {}), source_id: {:?}",
                               command_handle, connection_handle, error_string(0), x, source_id);
                         let msg = CStringUtils::string_to_cstring(x);

@@ -80,6 +80,7 @@ impl Connection {
                 }
             }
         };
+        debug!("CONNECTION TEST: Exiting Libvcx, Entering Agency");
         match messages::send_invite()
             .to(&self.pw_did)
             .to_vk(&self.pw_verkey)
@@ -93,6 +94,7 @@ impl Connection {
                 return Err(ConnectionError::CommonError(ec))
             },
             Ok(response) => {
+                debug!("CONNECTION TEST: Exiting Agency, Entering Libvcx");
                 self.state = VcxStateType::VcxStateOfferSent;
                 self.invite_detail = match parse_invite_detail(&response[0]) {
                     Ok(x) => Some(x),

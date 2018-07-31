@@ -396,7 +396,7 @@ pub mod tests {
 
     pub fn token_setup(number_of_addresses: Option<u32>, tokens_per_address: Option<u32>) {
         init_payments().unwrap();
-        mint_tokens_and_set_fees(number_of_addresses, tokens_per_address, None, false).unwrap();
+//        mint_tokens_and_set_fees(number_of_addresses, tokens_per_address, None, false).unwrap();
     }
 
     pub fn create_throwaway_address() -> String {

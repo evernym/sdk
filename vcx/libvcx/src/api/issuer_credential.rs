@@ -51,6 +51,7 @@ pub extern fn vcx_issuer_create_credential(command_handle: u32,
                                       price: u64,
                                       cb: Option<extern fn(xcommand_handle: u32, err: u32, credential_handle: u32)>) -> u32 {
 
+    debug!("vcx_issuer_create_credential: Entering Libvcx TESTING OFFER LIBVCX");
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
     check_useful_c_str!(credential_data, error::INVALID_OPTION.code_num);
     check_useful_c_str!(credential_name, error::INVALID_OPTION.code_num);
@@ -88,7 +89,7 @@ pub extern fn vcx_issuer_create_credential(command_handle: u32,
                 (x.to_error_code(), 0)
             },
         };
-
+        debug!("vcx_issuer_create_credential: Exiting Libvcx TESTING OFFER LIBVCX");
         cb(command_handle, rc, handle);
     });
 
@@ -115,6 +116,7 @@ pub extern fn vcx_issuer_send_credential_offer(command_handle: u32,
                                           cb: Option<extern fn(xcommand_handle: u32, err: u32)>) -> u32 {
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
+    debug!("vcx_issuer_send_credential_offer: Entering Libvcx TESTING LIBVCX");
 
     let source_id = issuer_credential::get_source_id(credential_handle).unwrap_or_default();
     info!("vcx_issuer_send_credential(command_handle: {}, credential_handle: {}, connection_handle: {}), source_id: {:?}",
@@ -142,6 +144,7 @@ pub extern fn vcx_issuer_send_credential_offer(command_handle: u32,
             },
         };
 
+        debug!("vcx_issuer_send_credential_offer: Exiting Libvcx TESTING LIBVCX");
         cb(command_handle,err);
     });
 

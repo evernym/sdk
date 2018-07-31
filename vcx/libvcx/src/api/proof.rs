@@ -44,7 +44,7 @@ pub extern fn vcx_proof_create(command_handle: u32,
     check_useful_c_str!(name, error::INVALID_OPTION.code_num);
     check_useful_c_str!(source_id, error::INVALID_OPTION.code_num);
 
-    info!("vcx_proof_create(command_handle: {}, source_id: {}, requested_attrs: {}, requested_predicates: {}, name: {})",
+    info!("vcx_proof_create(command_handle: {}, source_id: {}, requested_attrs: {}, requested_predicates: {}, name: {}) TESTING PROOF ENTERING LIBVCX",
           command_handle, source_id, requested_attrs, requested_predicates, name);
 
     thread::spawn( move|| {
@@ -60,6 +60,7 @@ pub extern fn vcx_proof_create(command_handle: u32,
                 (x.to_error_code(), 0)
             },
         };
+        info!("vcx_proof_create: TESTING PROOF EXITING LIBVCX");
         cb(command_handle, rc, handle);
     });
 
@@ -267,7 +268,7 @@ pub extern fn vcx_proof_send_request(command_handle: u32,
 
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
 
-    info!("vcx_proof_send_request(command_handle: {}, proof_handle: {}, connection_handle: {})", command_handle, proof_handle, connection_handle);
+    info!("vcx_proof_send_request(command_handle: {}, proof_handle: {}, connection_handle: {} TESTING PROOF ENTERING LIBVCX)", command_handle, proof_handle, connection_handle);
     if !proof::is_valid_handle(proof_handle) {
         return error::INVALID_PROOF_HANDLE.code_num;
     }
@@ -288,6 +289,7 @@ pub extern fn vcx_proof_send_request(command_handle: u32,
             },
         };
 
+        info!("vcx_proof_send_request: TESTING PROOF EXITING LIBVCX)");
         cb(command_handle,err);
     });
 

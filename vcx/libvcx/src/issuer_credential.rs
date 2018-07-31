@@ -139,7 +139,7 @@ impl IssuerCredential {
 
         let data = connection::generate_encrypted_payload(&self.issued_vk, &self.remote_vk, &payload, "CRED_OFFER")
             .map_err(|e| IssuerCredError::CommonError(e.to_error_code()))?;
-
+        debug!("send_credential_offer: Entered sending secure message to agency TESTING OFFER AGENCY");
         match messages::send_message().to(&self.issued_did)
             .to_vk(&self.issued_vk)
             .msg_type("credOffer")
@@ -157,6 +157,7 @@ impl IssuerCredential {
                 self.state = VcxStateType::VcxStateOfferSent;
                 self.credential_offer = Some(credential_offer);
                 debug!("sent credential offer for: {}", self.source_id);
+                debug!("vcx_send_secure: Exited sending secure message to agency TESTING OFFER AGENCY");
                 return Ok(error::SUCCESS.code_num);
             }
         }
@@ -205,6 +206,7 @@ impl IssuerCredential {
                 self.msg_uid = parse_msg_uid(&response[0]).map_err(|ec| IssuerCredError::CommonError(ec))?;
                 self.state = VcxStateType::VcxStateAccepted;
                 debug!("issued credential: {}", self.source_id);
+                debug!("vcx_send_secure: Exited sending secure message to agency");
                 return Ok(error::SUCCESS.code_num);
             }
         }
@@ -269,7 +271,7 @@ impl IssuerCredential {
             None,
             None)
             .map_err(|x| IssuerCredError::CommonError(x))?;
-
+        debug!("EXIT INDY create_credential TESTING");
         Ok(CredentialMessage {
             claim_offer_id: self.msg_uid.clone(),
             from_did: String::from(did),
@@ -285,8 +287,11 @@ impl IssuerCredential {
     fn generate_credential_offer(&self, to_did: &str) -> Result<CredentialOffer, IssuerCredError> {
         let attr_map = convert_to_map(&self.credential_attributes)?;
         //Todo: make a cred_def_offer error
+        debug!("creating_credential_offer: Entering Libindy TESTING OFFER LIBINDY");
         let libindy_offer = libindy_issuer_create_credential_offer(&self.cred_def_id)
             .map_err(|err| IssuerCredError::CommonError(err))?;
+        debug!("creating_credential_offer: Exiting Libindy TESTING OFFER LIBINDY");
+
         Ok(CredentialOffer {
             msg_type: String::from("CRED_OFFER"),
             version: String::from("0.1"),

@@ -15,6 +15,7 @@ pub fn libindy_verifier_verify_proof(proof_req_json: &str,
                                      rev_reg_defs_json: &str,
                                      rev_regs_json: &str)  -> Result<bool, u32> {
 
+    debug!("libindy_verifier_verify_proof: TESTING OFFER ENTERINING LIBINDY");
     Verifier::verify_proof_timeout(proof_req_json,
                                    proof_json,
                                    schemas_json,
@@ -30,7 +31,7 @@ pub fn libindy_create_and_store_credential_def(issuer_did: &str,
                                                tag: &str,
                                                sig_type: Option<&str>,
                                                config_json: &str)  -> Result<(String, String), u32>  {
-
+    debug!("libnidy_issuer_create_and_store_credential_def: TESTING OFFER ENTERINING LIBINDY");
     Issuer::create_and_store_credential_def(get_wallet_handle(),
                                             issuer_did,
                                             schema_json,
@@ -46,6 +47,7 @@ pub fn libindy_issuer_create_credential_offer(cred_def_id: &str) -> Result<Strin
         if rc != 0 { return Err(rc) };
         return Ok(LIBINDY_CRED_OFFER.to_string());
     }
+    debug!("libnidy_issuer_create_credential_offer TESTING OFFER ENTERINING LIBINDY");
     Issuer::create_credential_offer(get_wallet_handle(),
                                     cred_def_id)
         .map_err(map_rust_indy_sdk_error_code)
@@ -58,7 +60,7 @@ pub fn libindy_issuer_create_credential(cred_offer_json: &str,
                                         blob_storage_reader_handle: Option<i32>) -> Result<(String, Option<String>, Option<String>), u32>{
 
     let blob_storage_reader_handle = blob_storage_reader_handle.unwrap_or(-1);
-
+    debug!("libnidy_issuer_create_credential TESTING OFFER ENTERINING LIBINDY");
     Issuer::create_credential(get_wallet_handle(),
                               cred_offer_json,
                               cred_req_json,
@@ -75,6 +77,7 @@ pub fn libindy_prover_create_proof(proof_req_json: &str,
                                    credential_defs_json: &str,
                                    revoc_states_json: Option<&str>) -> Result<String, u32> {
     let revoc_states_json = revoc_states_json.unwrap_or("{}");
+    debug!("libindy_prover_create_proof: TESTING PROOF ENTERING LIBINDY");
     Prover::create_proof(get_wallet_handle(),
                          proof_req_json,
                          requested_credentials_json,
@@ -87,6 +90,7 @@ pub fn libindy_prover_create_proof(proof_req_json: &str,
 
 pub fn libindy_prover_get_credentials_for_proof_req(proof_req: &str) -> Result<String, u32> {
 
+    debug!("libindy_issuer_create_credential TESTING PROOFREQ ENTERINING LIBINDY");
     Prover::get_credentials_for_proof_req(get_wallet_handle(),
                                           proof_req)
         .map_err(map_rust_indy_sdk_error_code)
@@ -98,6 +102,7 @@ pub fn libindy_prover_create_credential_req(prover_did: &str,
     if settings::test_indy_mode_enabled() { return Ok((::utils::constants::CREDENTIAL_REQ_STRING.to_owned(), String::new())); }
 
     let master_secret_name = settings::DEFAULT_LINK_SECRET_ALIAS;
+    debug!("libindy_prover_create_credential_req: TESTING PROOF ENTERING LIBINDY");
     Prover::create_credential_req(get_wallet_handle(),
                                   prover_did,
                                   credential_offer_json,
@@ -113,6 +118,7 @@ pub fn libindy_prover_store_credential(cred_id: Option<&str>,
                                        rev_reg_def_json: Option<&str>) -> Result<String, u32> {
     if settings::test_indy_mode_enabled() { return Ok("cred_id".to_string()); }
 
+    debug!("libindy_prover_store_credential: TESTING OFFER ENTERINING LIBINDY");
     Prover::store_credential(get_wallet_handle(),
                              cred_id,
                              cred_req_meta,
@@ -125,6 +131,7 @@ pub fn libindy_prover_store_credential(cred_id: Option<&str>,
 pub fn libindy_prover_create_master_secret(master_secret_id: &str) -> Result<String, u32> {
     if settings::test_indy_mode_enabled() { return Ok(settings::DEFAULT_LINK_SECRET_ALIAS.to_string()); }
 
+    debug!("libindy_prover_create_master_secret: TESTING OFFER ENTERINING LIBINDY");
     Prover::create_master_secret(get_wallet_handle(),
                                  Some(master_secret_id))
         .map_err(map_rust_indy_sdk_error_code)
@@ -135,6 +142,7 @@ pub fn libindy_issuer_create_schema(issuer_did: &str,
                                     version: &str,
                                     attrs: &str) -> Result<(String, String), u32>{
 
+    debug!("libindy_issuer_create_schema: TESTING OFFER ENTERINING LIBINDY");
     Issuer::create_schema(issuer_did,
                           name,
                           version,

@@ -218,6 +218,7 @@ impl Proof {
         if settings::test_agency_mode_enabled() { httpclient::set_next_u8_response(SEND_MESSAGE_RESPONSE.to_vec()); }
         let title = format!("{} wants you to share {}", settings::get_config_value(settings::CONFIG_INSTITUTION_NAME).unwrap(), self.name);
 
+        debug!("send_proof_request: TESTING PROOF REQ ENTERING AGENCY");
         match messages::send_message().to(&self.prover_did)
             .to_vk(&self.prover_vk)
             .msg_type("proofReq")
@@ -230,6 +231,7 @@ impl Proof {
             Ok(response) => {
                 self.msg_uid = get_proof_details(&response[0])?;
                 self.state = VcxStateType::VcxStateOfferSent;
+                debug!("send_proof_request: TESTING PROOF REQ EXITED AGENCY");
                 return Ok(error::SUCCESS.code_num)
             },
             Err(x) => {
