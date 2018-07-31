@@ -181,6 +181,10 @@ pub struct SendMessageResponse {
 fn parse_send_message_response(response: Vec<u8>) -> Result<String, u32> {
     let data = unbundle_from_agency(response)?;
 
+    if data.len() <= 1 {
+        return Err(error::INVALID_HTTP_RESPONSE.code_num);
+    }
+
     let mut de = Deserializer::new(&data[1][..]);
     let response: SendMessageResponse = match Deserialize::deserialize(&mut de) {
         Ok(x) => x,
