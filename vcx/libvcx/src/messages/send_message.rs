@@ -264,6 +264,14 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_send_message_bad_response() {
+        settings::set_defaults();
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "true");
+        let result = parse_send_message_response(::utils::constants::UPDATE_PROFILE_RESPONSE.to_vec());
+        assert!(result.is_err());
+    }
+
+    #[test]
     fn test_parse_msg_uid() {
 
         let test_val = "devin";
