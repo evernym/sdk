@@ -67,7 +67,7 @@ public enum ErrorCode {
     INVALID_CREDENTIAL_JSON(1054),
     CREATE_CREDENTIAL_REQUEST_ERROR(1055),
     CREATE_PROOF_ERROR(1056),
-    UNIDENTIFIED_ERROR_CODE(9999);
+    UNIDENTIFIED_ERROR_CODE(9999); //Wrapper expects to never receive 9999 from libindy. If libindy ever reaches this number in error codes, please increment number in UNIDENTIFIED_ERROR_CODE(<new bigger number>)
 
     private int value;
     private static Map<Integer, ErrorCode> map = new HashMap<Integer, ErrorCode>();
