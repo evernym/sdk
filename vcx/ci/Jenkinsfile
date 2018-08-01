@@ -51,7 +51,7 @@ def mainUbuntu() {
                 def libindy = docker.build("libindy", "-f ${libindyDockerfile} .")
 
                 // ******** Build the libvcx base image (runs tests and creates debian automatically) ********
-                def libvcx = docker.build("libvcx", "-f ${libindyDockerfile} .")
+                def libvcx = docker.build("libvcx", "-f ${libvcxDockerfile} .")
                 sh "docker run --rm libvcx"
                
                 // ******** Builds and tests the Node JS Wrapper *******
