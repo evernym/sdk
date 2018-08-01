@@ -33,7 +33,7 @@ export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_armv7/lib
 export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_armv7/lib
 export LIBINDY_DIR=$WORK_DIR/vcx-indy-sdk/libindy/target/armv7-linux-androideabi/release
 # export LIBNULLPAY_DIR=$WORK_DIR/vcx-indy-sdk/libnullpay/target/armv7-linux-androideabi/release
-export LIBSOVTOKEN_DIR=$WORK_DIR/libsovtoken-android/armv7-linux-androideabi
+export LIBSOVTOKEN_DIR=$WORK_DIR/libsovtoken-android/libsovtoken/armv7-linux-androideabi
 cargo build --target armv7-linux-androideabi --release
 
 # export PATH=$WORK_DIR/NDK/arm64/bin:$ORIGINAL_PATH
@@ -50,7 +50,7 @@ export ANDROID_SODIUM_LIB=$WORK_DIR/libzmq-android/libsodium/libsodium_x86/lib
 export ANDROID_ZMQ_LIB=$WORK_DIR/libzmq-android/zmq/libzmq_x86/lib
 export LIBINDY_DIR=$WORK_DIR/vcx-indy-sdk/libindy/target/i686-linux-android/release
 # export LIBNULLPAY_DIR=$WORK_DIR/vcx-indy-sdk/libnullpay/target/i686-linux-android/release
-export LIBSOVTOKEN_DIR=$WORK_DIR/libsovtoken-android/i686-linux-android
+export LIBSOVTOKEN_DIR=$WORK_DIR/libsovtoken-android/libsovtoken/i686-linux-android
 cargo build --target i686-linux-android --release
 
 # export PATH=$WORK_DIR/NDK/x86_64/bin:$ORIGINAL_PATH

@@ -87,6 +87,7 @@ else
     cd $WORK_DIR/libsovtoken-ios
     curl -o libsovtoken-ios.zip $LIBNULLPAY_IOS_BUILD_URL
     unzip libsovtoken-ios.zip
-    # Deletes extra folder that is hidden but we don't need it
+    # Deletes extra folders that we don't need
     rm -rf __MACOSX
+    rm libsovtoken-ios.zip
 fi

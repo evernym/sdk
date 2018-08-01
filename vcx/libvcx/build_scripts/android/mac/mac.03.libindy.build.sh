@@ -173,7 +173,8 @@ else
     cd $WORK_DIR/libsovtoken-android
     curl -o libsovtoken-android.zip $LIBSOVTOKEN_ANDROID_BUILD_URL
     unzip libsovtoken-android.zip
-    # Deletes extra folder that is hidden but we don't need it
+    # Deletes extra folders we don't need
+    rm libsovtoken-android.zip
     rm -rf __MACOSX
 fi
 

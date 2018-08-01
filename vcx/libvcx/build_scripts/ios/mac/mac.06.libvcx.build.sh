@@ -70,7 +70,7 @@ do
     export IOS_ZMQ_LIB=$WORK_DIR/libzmq-ios/dist/ios/lib/${target_arch}
     export LIBINDY_DIR=$WORK_DIR/vcx-indy-sdk/libindy/target/${target}/release
     #export LIBNULLPAY_DIR=$WORK_DIR/vcx-indy-sdk/libnullpay/target/${target}/release
-    export LIBSOVTOKEN_DIR=$WORK_DIR/libsovtoken-ios/${target}
+    export LIBSOVTOKEN_DIR=$WORK_DIR/libsovtoken-ios/libsovtoken/${target}
 
     # To build for macos
     #cargo build
