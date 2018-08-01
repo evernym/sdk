@@ -85,7 +85,7 @@ if [ -d $WORK_DIR/libsovtoken-ios ]; then
 else
     mkdir -p $WORK_DIR/libsovtoken-ios
     cd $WORK_DIR/libsovtoken-ios
-    curl -o libsovtoken-ios.zip $LIBNULLPAY_IOS_BUILD_URL
+    curl -o libsovtoken-ios.zip $LIBSOVTOKEN_IOS_BUILD_URL
     unzip libsovtoken-ios.zip
     # Deletes extra folders that we don't need
     rm -rf __MACOSX
