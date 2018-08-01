@@ -4,7 +4,8 @@ def rust
 def vcx_python
 def libindy
 def vcx_nodejs
-
+def containerNames = ['libvcx', 'python', 'nodejs']
+            
 // ******** Artifacts Created ********
 // libvcx_<ver>.deb (Debian Installable Library) ----> published Debian to https://repo.corp.evernym.com/deb/pool/main/libv/libvcx/
 // vcx_<ver>.deb (Nodejs Wrapper Debian Package) ----> archived with Jenkins and Published to repo.corp.evernym.com/deb/pool
@@ -36,7 +37,6 @@ def build(name, file, context='.', customParams = '') {
 def mainUbuntu() {
     node('ubuntu') {
         stage('Main Build - Ubuntu') {
-
             sh "mkdir -p vcx/output"
             def volumeInternalDir = "/sdk/vcx/output"
             def libindyDockerfile = "vcx/ci/libindy.dockerfile"
@@ -44,7 +44,6 @@ def mainUbuntu() {
             def pythonDockerfile = "vcx/wrappers/python3/ci/python.dockerfile"
             def nodeDockerfile = "vcx/wrappers/node/ci/node.dockerfile"
             def publishDockerfile = "vcx/ci/publish.dockerfile"
-            def containerNames = ['libvcx', 'python', 'nodejs']
             try {
                 checkout scm
                 
@@ -97,6 +96,9 @@ def mainUbuntu() {
                 echo "$ex error"
             } finally {
 				sh 'docker system df'
+                sh "docker rm ${containerNames[0]}"
+                sh "docker rm ${containerNames[1]}"
+                sh "docker rm ${containerNames[2]}"
                 step([$class: 'WsCleanup'])
             }
         }
