@@ -97,9 +97,6 @@ def mainUbuntu() {
                 echo "$ex error"
             } finally {
 				sh 'docker system df'
-                sh "docker rm ${containerNames[0]}"
-                sh "docker rm ${containerNames[1]}"
-                sh "docker rm ${containerNames[2]}"
                 step([$class: 'WsCleanup'])
             }
         }
