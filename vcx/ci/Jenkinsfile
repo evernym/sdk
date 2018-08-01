@@ -36,7 +36,7 @@ def build(name, file, context='.', customParams = '') {
 def mainUbuntu() {
     node('ubuntu') {
         stage('Main Build - Ubuntu') {
-            // def volumeName = "vcx-volume"
+
             sh "mkdir -p vcx/output"
             def volumeInternalDir = "/sdk/vcx/output"
             def libindyDockerfile = "vcx/ci/libindy.dockerfile"
@@ -44,6 +44,7 @@ def mainUbuntu() {
             def pythonDockerfile = "vcx/wrappers/python3/ci/python.dockerfile"
             def nodeDockerfile = "vcx/wrappers/node/ci/node.dockerfile"
             def publishDockerfile = "vcx/ci/publish.dockerfile"
+            def containerNames = ['libvcx', 'python', 'nodejs']
             try {
                 checkout scm
                 
@@ -52,15 +53,15 @@ def mainUbuntu() {
 
                 // ******** Build the libvcx base image (runs tests and creates debian automatically) ********
                 def libvcx = docker.build("libvcx", "-f ${libvcxDockerfile} .")
-                sh "docker run --rm libvcx"
+                sh "docker run --name ${containerNames[0]} --rm libvcx"
                
                 // ******** Builds and tests the Node JS Wrapper *******
                 def node = docker.build("node", "-f ${nodeDockerfile} .")
-                sh "docker run --rm node"
+                sh "docker run --name ${containerNames[2]} --rm node"
                 
                 // ******** Builds and tests the Python Wrapper *******
                 def python = docker.build("python", "-f ${pythonDockerfile} .")    
-                sh "docker run --rm python"
+                sh "docker run --name ${containerNames[1]} --rm python"
                 
                 if (env.BRANCH_NAME == "master") {
                     // ******** PUBLISHING (artifacts are in a Docker Volume) ********
