@@ -1,6 +1,8 @@
 package com.evernym.sdk.vcx;
 
 
+import android.util.Log;
+
 import com.evernym.sdk.vcx.connection.ConnectionErrorException;
 import com.evernym.sdk.vcx.connection.InvalidConnectionHandleException;
 import com.evernym.sdk.vcx.connection.InvalidInviteDetailsException;
@@ -65,6 +67,7 @@ import com.evernym.sdk.vcx.vcx.WalletItemAlreadyExistsException;
  */
 public class VcxException extends Exception {
 
+    private static String TAG = "JAVA_WRAPPER::VCX_API ";
     private static final long serialVersionUID = 2650355290834266234L;
     private int sdkErrorCode;
 
@@ -93,8 +96,13 @@ public class VcxException extends Exception {
      * @param sdkErrorCode The SDK error code to construct the exception from.
      */
     static VcxException fromSdkError(int sdkErrorCode) {
-
-        ErrorCode errorCode = ErrorCode.valueOf(sdkErrorCode);
+        ErrorCode errorCode = ErrorCode.UNKNOWN_ERROR;
+        try {
+            errorCode = ErrorCode.valueOf(sdkErrorCode);
+            if (errorCode == null) {
+                errorCode = ErrorCode.UNKNOWN_ERROR;
+            }
+        } catch(Exception e) {}
 
         switch (errorCode) {
             case UNKNOWN_ERROR:
@@ -213,9 +221,12 @@ public class VcxException extends Exception {
                 return new CreateCredentialRequestErrorException();
             case CREATE_PROOF_ERROR:
                 return new CreateProofErrorException();
-            default:
+            case UNIDENTIFIED_ERROR_CODE:
                 String message = String.format("An unmapped error with the code '%s' was returned by the SDK.", sdkErrorCode);
                 return new VcxException(message, sdkErrorCode);
+            default:
+                String err_message = String.format("An unmapped error with the code '%s' was returned by the SDK.", sdkErrorCode);
+                return new VcxException(err_message, sdkErrorCode);
         }
     }
 }

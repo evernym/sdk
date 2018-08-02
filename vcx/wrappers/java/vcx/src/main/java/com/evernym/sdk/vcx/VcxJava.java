@@ -20,7 +20,7 @@ import java9.util.concurrent.CompletableFuture;
  * by the Java wrapper of libvcx.
  */
 public class VcxJava {
-	static String TAG ="JAVA_WRAPPER:VCX_JAVA ";
+	static String TAG ="JAVA_WRAPPER::VCX_JAVA ";
 	/*
 	 * API
 	 */
@@ -85,12 +85,23 @@ public class VcxJava {
 		 * 
 		 * @param future The future.
 		 * @param err The error value to check.
-		 * @return true if the error code indeicated SUCCESS, otherwise false.
+		 * @return true if the error code indicate SUCCESS, otherwise false.
 		 */
 		protected static boolean checkCallback(CompletableFuture<?> future, int err) {
+			ErrorCode errorCode = ErrorCode.UNKNOWN_ERROR;
 
-			ErrorCode errorCode = ErrorCode.valueOf(err);
-			if (! ErrorCode.SUCCESS.equals(errorCode)) { future.completeExceptionally(VcxException.fromSdkError(err)); return false; }
+			try {
+				errorCode = ErrorCode.valueOf(err);
+				if (errorCode == null) {
+					errorCode = ErrorCode.UNKNOWN_ERROR;
+				}
+			} catch(Exception e) {}
+
+			if (! ErrorCode.SUCCESS.equals(errorCode)) {
+				future.completeExceptionally(VcxException.fromSdkError(err));
+
+				return false;
+			}
 
 			return true;
 		}
