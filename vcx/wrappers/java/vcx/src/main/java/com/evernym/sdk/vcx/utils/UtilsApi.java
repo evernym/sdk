@@ -90,9 +90,9 @@ public class UtilsApi extends VcxJava.API {
 
     public static CompletableFuture<String> vcxGetMessages(String messageStatus, String uids, String pwdids) throws VcxException{
         Log.d(TAG, "vcxGetMessage() called with: message_status = [" + messageStatus + "], uids =[" + uids + "], pw_dids = ["+ pwdids +"]");
-        ParamGuard.notNull(messageStatus, "messageStatus" );
+        ParamGuard.notNullOrWhiteSpace(messageStatus, "messageStatus" );
         CompletableFuture<String> future = new CompletableFuture<String>();
-        int commandHanlde = addFuture(future);
+        int commandHandle = addFuture(future);
 
         int result = LibVcx.api.vcx_messages_download(
                 commandHanlde,
@@ -116,12 +116,13 @@ public class UtilsApi extends VcxJava.API {
     }
 
     public static CompletableFuture<Integer> vcxUpdateMessages(String messageStatus, String msgJson) throws VcxException {
-        Log.d(TAG, "vcxUpdateAgentInfo() called with: messageStatus = [" + messageStatus + "], msgJson = [" + msgJson + "]");
+        Log.d(TAG, "vcxUpdateMessages() called with: messageStatus = [" + messageStatus + "], msgJson = [" + msgJson + "]");
         ParamGuard.notNullOrWhiteSpace(messageStatus, "messageStatus");
+        ParamGuard.notNull(msgJson, "msgJson");
         CompletableFuture<Integer> future = new CompletableFuture<Integer>();
         int commandHandle = addFuture(future);
 
-        int result = LibVcx.api.vcx_agent_update_info(
+        int result = LibVcx.api.vcx_messages_update_status(
                 commandHandle,
                 messageStatus,
                 msgJson,

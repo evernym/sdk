@@ -189,7 +189,7 @@ withConnectionHandle:(vcx_connection_handle_t)connection_handle
     withCompletion:(void (^)(NSError *error, NSString *recipient))completion;
 
 - (void)downloadMessages:(NSString *)messageStatus
-                    uids:(NSString *)uids
+                    uid_s:(NSString *)uid_s
                   pwdids:(NSString *)pwdids
               completion:(void (^)(NSError *error, NSString* messages))completion;
 
