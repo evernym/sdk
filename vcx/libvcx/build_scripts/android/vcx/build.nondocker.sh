@@ -83,22 +83,6 @@ if [ -z "${LIBINDY_DIR}" ] ; then
     fi
 fi
 
-# if [ -z "${LIBNULLPAY_DIR}" ] ; then
-#     LIBNULLPAY_DIR="libnullpay_${TARGET_ARCH}"
-#     if [ -d "${LIBNULLPAY_DIR}" ] ; then
-#         echo "Found ${LIBNULLPAY_DIR}"
-#     elif [ -z "$8" ] ; then
-#         echo STDERR "Missing LIBNULLPAY_DIR argument and environment variable"
-#         echo STDERR "e.g. set LIBNULLPAY_DIR=<path> for environment or libnullpay_${TARGET_ARCH}"
-#         exit 1
-#     else
-#         LIBNULLPAY_DIR=$8
-#     fi
-#     if [ -d "${LIBNULLPAY_DIR}/lib" ] ; then
-#             LIBNULLPAY_DIR="${LIBNULLPAY_DIR}/lib"
-#     fi
-# fi
-
 if [ -z "${LIBSOVTOKEN_DIR}" ] ; then
     LIBSOVTOKEN_DIR="libsovtoken"
     if [ -d "${LIBSOVTOKEN_DIR}" ] ; then

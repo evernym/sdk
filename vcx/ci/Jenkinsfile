@@ -110,7 +110,7 @@ def android() {
 
                 //Build android docker image
                 def libvcxAndroidFile = "vcx/ci/android.dockerfile"
-                def android = docker.build("andriod", "-f ${libvcxAndroidFile} .")
+                def android = docker.build('andriod', '${libvcxAndroidFile}', 'vcx')
                 
                 //Build .so files for arm64, x86, and arm
                 buildAndroid(android)

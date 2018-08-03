@@ -1,9 +1,7 @@
 #!/bin/bash
 
 setup() {
-    echo "ls ~"
     echo "Working Directory: ${PWD}"
-    ls /.cargo
     set -e
     export ARCH=$1
 
