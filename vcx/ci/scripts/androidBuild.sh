@@ -130,6 +130,9 @@ get_libsovtoken() {
         wget ${EVERNYM_REPO}/${LIBSOVTOKEN_ZIP}
         unzip ${LIBSOVTOKEN_ZIP}
     fi
+    # change libvcx to use libsovtoken feature
+    LIBVCX_PATH=../vcx/libvcx
+    sed -i .bak 's/"nullpay"/"sovtoken"/' ${LIBVCX_PATH}/Cargo.toml
 }
 
 build_vcx() {
