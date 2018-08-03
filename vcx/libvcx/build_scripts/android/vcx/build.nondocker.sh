@@ -5,23 +5,6 @@ TARGET_ARCH=$1
 TARGET_API=$2
 CROSS_COMPILE=$3
 
-echo -----------------------------
-echo
-echo
-echo
-echo
-echo ${PATH}
-echo
-echo
-echo
-echo
-echo
-ls ${HOME}/.cargo
-echo
-echo
-echo
-echo
-echo -----------------------------
 if [ -z "${TARGET_ARCH}" ]; then
     echo STDERR "Missing TARGET_ARCH argument"
     echo STDERR "e.g. x86 or arm"
@@ -177,13 +160,13 @@ export CARGO_INCREMENTAL=1
 export RUST_LOG=indy=trace
 export RUST_TEST_THREADS=1
 export RUST_BACKTRACE=1
-export OPENSSL_DIR=${WORKDIR}/${OPENSSL_DIR}
-export SODIUM_LIB_DIR=${WORKDIR}/${SODIUM_DIR}/lib
-export SODIUM_INCLUDE_DIR=${WORKDIR}/${SODIUM_DIR}/include
-export LIBZMQ_LIB_DIR=${WORKDIR}/${LIBZMQ_DIR}/lib
-export LIBZMQ_INCLUDE_DIR=${WORKDIR}/${LIBZMQ_DIR}/include
-export LIBINDY_DIR=${WORKDIR}/${LIBINDY_DIR}
-export LIBSOVTOKEN_DIR=${WORKDIR}/${LIBSOVTOKEN_DIR}
+export OPENSSL_DIR=${OPENSSL_DIR}
+export SODIUM_LIB_DIR=${SODIUM_DIR}/lib
+export SODIUM_INCLUDE_DIR=${SODIUM_DIR}/include
+export LIBZMQ_LIB_DIR=${LIBZMQ_DIR}/lib
+export LIBZMQ_INCLUDE_DIR=${LIBZMQ_DIR}/include
+export LIBINDY_DIR=${LIBINDY_DIR}
+export LIBSOVTOKEN_DIR=${LIBSOVTOKEN_DIR}
 # export LIBNULLPAY_DIR=${WORKDIR}/${LIBNULLPAY_DIR}
 export TOOLCHAIN_DIR=${TOOLCHAIN_PREFIX}/${TARGET_ARCH}
 export PATH=${TOOLCHAIN_DIR}/bin:${PATH}

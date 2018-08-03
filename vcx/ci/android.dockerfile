@@ -25,7 +25,7 @@ RUN unzip -d /opt/gradle gradle-3.4.1-bin.zip
 
 # VCX USER 
 RUN useradd -ms /bin/bash -u $uid vcx
-RUN usermod -aG sudo vcx
+RUN usermod -aG vcx
 
 # Install Android SDK and NDK 
 RUN mkdir -m 777 /home/vcx/android-sdk-linux
@@ -36,8 +36,6 @@ RUN yes | .//home/vcx/android-sdk-linux/tools/android update sdk --no-ui
 RUN yes | .//home/vcx/android-sdk-linux/tools/bin/sdkmanager "ndk-bundle"
 
 # Add Evernym Certificate
-RUN ls
-RUN pwd
 COPY ./vcx/ci/scripts/installCert.sh /tmp
 RUN /tmp/installCert.sh
 

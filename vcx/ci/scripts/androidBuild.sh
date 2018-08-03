@@ -1,14 +1,19 @@
 #!/bin/bash
 
 setup() {
+    echo "ls ~"
     echo "Working Directory: ${PWD}"
+    ls /.cargo
     set -e
     export ARCH=$1
 
     export PATH=$PATH:/opt/gradle/gradle-3.4.1/bin
     export PATH=${PATH}:$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/build-tools/25.0.2/
     export PATH=${HOME}/.cargo/bin:${PATH}
-    echo ${PATH}
+    export VCX_BASE=$(realpath ../vcx)
+    # For docker
+    # export VCX_BASE=${HOME}/vcx
+
     source /etc/profile
 	if [ ! -d runtime_android_build ]; then
         mkdir runtime_android_build
@@ -20,11 +25,7 @@ setup() {
         mkdir toolchains
     fi
 
-    # For Jenkins (MAIN)
-    ANDROID_JNI_LIB=../vcx/wrappers/java/vcx/src/main/jniLibs
-
-    # For docker 
-    #ANDROID_JNI_LIB=~/vcx/wrappers/java/vcx/src/main/jniLibs
+    ANDROID_JNI_LIB=${VCX_BASE}/wrappers/java/vcx/src/main/jniLibs
 
     mkdir -p ${ANDROID_JNI_LIB}/arm
     mkdir -p ${ANDROID_JNI_LIB}/x86
@@ -106,21 +107,6 @@ get_libindy() {
 
 }
 
-get_libnullpay() {
-    set -xv
-    [ -z ${LIBNULLPAY_BRANCH} ] && exit 1
-    [ -z ${LIBNULLPAY_VERSION} ] && exit 1
-
-    if [ "$LIBINDY_BRANCH" = "stable" ]; then
-        wget https://repo.sovrin.org/android/libnullpay/${LIBNULLPAY_BRANCH}/${LIBNULLPAY_VERSION}/libnullpay_android_${ARCH}_${LIBNULLPAY_VERSION}.zip
-    else 
-        wget https://repo.sovrin.org/android/libnullpay/${LIBNULLPAY_BRANCH}/${LIBNULLPAY_VERSION}-${LIBNULLPAY_TAG}/libnullpay_android_${ARCH}_${LIBNULLPAY_VERSION}.zip
-    fi
-
-    unzip libnullpay_android_${ARCH}_${LIBNULLPAY_VERSION}.zip
-
-}
-
 get_libsovtoken() {
     set -xv
     # Todo: This artifact was manually uploaded to this repo. Eventually, the file format will change. That is why it is hardcoded
@@ -131,19 +117,13 @@ get_libsovtoken() {
         wget ${EVERNYM_REPO}/${LIBSOVTOKEN_ZIP}
         unzip ${LIBSOVTOKEN_ZIP}
     fi
-    # change libvcx to use libsovtoken feature
-    LIBVCX_PATH=../vcx/libvcx
-    sed -i 's/"nullpay"/"sovtoken"/' ${LIBVCX_PATH}/Cargo.toml
+    sed -i 's/"nullpay"/"sovtoken"/' ${VCX_BASE}/libvcx/Cargo.toml
 }
 
 build_vcx() {
     # For Jenkins
-    LIBVCX_PATH=../vcx/libvcx/build_scripts/android/vcx/
-    PREBUILT_BIN=../../../../../runtime_android_build
-
-    # For Docker when vcx is in home dir
-    #LIBVCX_PATH=~/vcx/libvcx/build_scripts/android/vcx/
-    #PREBUILT_BIN=../../../../ci/scripts/runtime_android_build
+    LIBVCX_PATH=${VCX_BASE}/libvcx/build_scripts/android/vcx/
+    PREBUILT_BIN=$(realpath ${VCX_BASE}/ci/scripts/runtime_android_build)
 
     if [ ! -d libindy_${ARCH} ]; then
         echo "missing libindy_${ARCH}. Cannot proceed without it."
@@ -156,7 +136,6 @@ build_vcx() {
 
     pushd ${LIBVCX_PATH}
     mkdir -p toolchains/
-    # ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} ${PREBUILT_BIN}/openssl_${ARCH} ${PREBUILT_BIN}/libsodium_${ARCH} ${PREBUILT_BIN}/libzmq_${ARCH} ${PREBUILT_BIN}/libindy_${ARCH} ${PREBUILT_BIN}/libnullpay_${ARCH} 
     ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} ${PREBUILT_BIN}/openssl_${ARCH} ${PREBUILT_BIN}/libsodium_${ARCH} ${PREBUILT_BIN}/libzmq_${ARCH} ${PREBUILT_BIN}/libindy_${ARCH} ${PREBUILT_BIN}/libsovtoken/${TRIPLET} 
     popd
     mv ${LIBVCX_PATH}libvcx_${ARCH} .
