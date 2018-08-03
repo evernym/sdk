@@ -78,4 +78,57 @@ public class UtilsApi extends VcxJava.API {
         return future;
     }
 
+    private static Callback vcxGetMessagesCB = new Callback(){
+        public void callback(int command_handle, int err, String messages){
+            Log.d(TAG, "vcxGetMessagesCB() called with command_handle = [" + command_handle + "], err = [" + err + "]");
+            CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(command_handle);
+            if (!checkCallback(future,err)) return;
+            String result = messages;
+            future.complete(result);
+        }
+    }
+
+    public static CompletableFuture<String> vcxGetMessages(String messageStatus, String uids, String pwdids) throws VcxException{
+        Log.d(TAG, "vcxGetMessage() called with: message_status = [" + messageStatus + "], uids =[" + uids + "], pw_dids = ["+ pwdids +"]");
+        ParamGuard.notNull(messageStatus, "messageStatus" );
+        CompletableFuture<String> future = new CompletableFuture<String>();
+        int commandHanlde = addFuture(future);
+
+        int result = LibVcx.api.vcx_messages_download(
+                commandHanlde,
+                messageStatus,
+                uids,
+                pwdids,
+                vcxGetMessagesCB
+        );
+        checkResults(result);
+        return future;
+    }
+
+    private static Callback vcxUpdateMessagesCB = new Callback() {
+        public void callback(int command_handle, int err){
+            Log.d(TAG, "vcxUpdateMessageCB() called with: command_handle = [" + command_handle + "], err = [" + err + "]");
+            CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
+            if (!checkCallback(future,err)) return;
+            Integer result = command_handle;
+            future.complete(result);
+        }
+    }
+
+    public static CompletableFuture<Integer> vcxUpdateMessages(String messageStatus, String msgJson) throws VcxException {
+        Log.d(TAG, "vcxUpdateAgentInfo() called with: messageStatus = [" + messageStatus + "], msgJson = [" + msgJson + "]");
+        ParamGuard.notNullOrWhiteSpace(messageStatus, "messageStatus");
+        CompletableFuture<Integer> future = new CompletableFuture<Integer>();
+        int commandHandle = addFuture(future);
+
+        int result = LibVcx.api.vcx_agent_update_info(
+                commandHandle,
+                messageStatus,
+                msgJson,
+                vcxUpdateMessagesCB
+        );
+        checkResult(result);
+        return future;
+    }
+
 }

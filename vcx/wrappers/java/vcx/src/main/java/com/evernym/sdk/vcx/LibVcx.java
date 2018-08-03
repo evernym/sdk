@@ -489,6 +489,18 @@ public abstract class LibVcx {
         /** Create a payment address and returns it */
         public int vcx_wallet_create_payment_address(int command_handle, String seed, Callback cb);
 
+        /**
+         * message object
+         *
+         * Used for getting and updating messages
+         */
+
+        /** Get messages for given uids or pairwise did from agency endpoint */
+        public int vcx_messages_download(int command_handle, String messageStatus, String uids, String pwdids, Callback cb);
+
+        /** Update message status for a object of uids */
+        public int vcx_messages_update_status(int command_handle, String messageStatus, String msgJson, Callback cb);
+
     }
 
 	/*
