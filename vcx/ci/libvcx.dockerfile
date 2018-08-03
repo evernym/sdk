@@ -2,7 +2,8 @@ FROM libindy
 #
 # cargo deb for debian packaging of libvcx
 RUN cargo install cargo-deb --color=never
-
+ARG uid
+RUN useradd -ms /bin/bash -u $uid vcx
 COPY . /sdk
 
 # where debian will be copied to
