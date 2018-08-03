@@ -86,7 +86,7 @@ public class UtilsApi extends VcxJava.API {
             String result = messages;
             future.complete(result);
         }
-    }
+    };
 
     public static CompletableFuture<String> vcxGetMessages(String messageStatus, String uids, String pwdids) throws VcxException{
         Log.d(TAG, "vcxGetMessage() called with: message_status = [" + messageStatus + "], uids =[" + uids + "], pw_dids = ["+ pwdids +"]");
@@ -95,13 +95,13 @@ public class UtilsApi extends VcxJava.API {
         int commandHandle = addFuture(future);
 
         int result = LibVcx.api.vcx_messages_download(
-                commandHanlde,
+                commandHandle,
                 messageStatus,
                 uids,
                 pwdids,
                 vcxGetMessagesCB
         );
-        checkResults(result);
+        checkResult(result);
         return future;
     }
 
@@ -113,7 +113,7 @@ public class UtilsApi extends VcxJava.API {
             Integer result = command_handle;
             future.complete(result);
         }
-    }
+    };
 
     public static CompletableFuture<Integer> vcxUpdateMessages(String messageStatus, String msgJson) throws VcxException {
         Log.d(TAG, "vcxUpdateMessages() called with: messageStatus = [" + messageStatus + "], msgJson = [" + msgJson + "]");
