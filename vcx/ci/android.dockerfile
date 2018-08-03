@@ -35,11 +35,6 @@ RUN ls -al /home/vcx/android-sdk-linux
 RUN yes | .//home/vcx/android-sdk-linux/tools/android update sdk --no-ui
 RUN yes | .//home/vcx/android-sdk-linux/tools/bin/sdkmanager "ndk-bundle"
 
-# Add Evernym Certificate
-RUN ls ./home/vcx
-COPY ./home/vcx/vcx/ci/scripts/installCert.sh /tmp
-RUN /tmp/installCert.sh
-
 USER vcx 
 # cargo deb for debian packaging of libvcx
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
