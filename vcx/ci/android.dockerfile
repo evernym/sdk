@@ -25,7 +25,7 @@ RUN unzip -d /opt/gradle gradle-3.4.1-bin.zip
 
 # VCX USER 
 RUN useradd -ms /bin/bash -u $uid vcx
-RUN usermod -aG vcx
+RUN usermod -aG sudo vcx
 
 # Install Android SDK and NDK 
 RUN mkdir -m 777 /home/vcx/android-sdk-linux
