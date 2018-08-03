@@ -6,7 +6,7 @@ RUN cargo install cargo-deb --color=never
 COPY . /sdk
 
 # where debian will be copied to
-RUN mkdir -p /sdk/vcx/output
+RUN mkdir /sdk/vcx/output
 
 ARG test_flag
 ENV VCX_TEST_FLAG $test_flag
@@ -21,5 +21,4 @@ RUN cargo deb --no-build
 RUN find -type f -name "libvcx*.deb" -exec dpkg -i {} \;
 
 CMD ["sh", "-c", "cp `find /sdk/vcx/libvcx/target/debian -type f -name \"*.deb\"` /sdk/vcx/output"]
-
 
