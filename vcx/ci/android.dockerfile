@@ -36,7 +36,7 @@ RUN yes | .//home/vcx/android-sdk-linux/tools/android update sdk --no-ui
 RUN yes | .//home/vcx/android-sdk-linux/tools/bin/sdkmanager "ndk-bundle"
 
 # Add Evernym Certificate
-COPY ./scripts/installCert.sh /tmp
+COPY ./vcx/ci/scripts/installCert.sh /tmp
 RUN /tmp/installCert.sh
 
 USER vcx 
