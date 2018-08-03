@@ -110,7 +110,7 @@ def android() {
 
                 //Build android docker image
                 sh 'ls'
-                android = build('android', 'vcx/ci/android.dockerfile', 'vcx')
+                android = build('android', '-f vcx/ci/android.dockerfile .')
                 
                 //Build .so files for arm64, x86, and arm
                 buildAndroid(android)
@@ -181,6 +181,7 @@ def fail() {
 
 def buildAndroid(envn) {
     envn.inside {
+        sh 'sudo ./vcx/ci/scripts/installCert.sh'
         LIBINDY_BRANCH="stable"
         LIBINDY_VERSION="1.6.1"
         LIBINDY_TAG=""

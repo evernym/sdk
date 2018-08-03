@@ -39,7 +39,7 @@ RUN ls
 RUN ls /home
 RUN ls /home/vcx
 
-#COPY ./home/vcx/vcx/ci/scripts/installCert.sh /tmp
+#COPY ./vcx/ci/scripts/installCert.sh /tmp
 #RUN /tmp/installCert.sh
 
 USER vcx 
