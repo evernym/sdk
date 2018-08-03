@@ -109,17 +109,18 @@ def android() {
                 checkout scm
 
                 //Build android docker image
-                rust = build('rust', 'vcx/ci/android.dockerfile', 'vcx')
+                def libvcxAndroidFile = "vcx/ci/android.dockerfile"
+                def android = docker.build("andriod", "-f ${libvcxAndroidFile} .")
                 
                 //Build .so files for arm64, x86, and arm
-                buildAndroid(rust)
+                buildAndroid(android)
 
                 //Package .so files into .aar 
-                packageAndroid(rust)
+                packageAndroid(android)
 
                 if (env.BRANCH_NAME == "master") {
                     //Publish package on aptly
-                    publishAndroid(rust)
+                    publishAndroid(android)
                 }
             } catch (Exception ex) {
                 // We currently do not fail the main build if the android and ios builds fai
