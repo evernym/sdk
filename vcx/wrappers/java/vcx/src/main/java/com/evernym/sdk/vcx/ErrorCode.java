@@ -98,7 +98,6 @@ public enum ErrorCode {
             return UNIDENTIFIED_ERROR_CODE;
         }
 
-
     }
 
     /**
