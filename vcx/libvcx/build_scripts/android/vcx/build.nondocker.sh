@@ -5,6 +5,23 @@ TARGET_ARCH=$1
 TARGET_API=$2
 CROSS_COMPILE=$3
 
+echo -----------------------------
+echo
+echo
+echo
+echo
+echo ${PATH}
+echo
+echo
+echo
+echo
+echo
+ls ${HOME}/.cargo
+echo
+echo
+echo
+echo
+echo -----------------------------
 if [ -z "${TARGET_ARCH}" ]; then
     echo STDERR "Missing TARGET_ARCH argument"
     echo STDERR "e.g. x86 or arm"

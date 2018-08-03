@@ -5,9 +5,10 @@ setup() {
     set -e
     export ARCH=$1
 
-    export PATH=${HOME}/.cargo/bin:${PATH}
     export PATH=$PATH:/opt/gradle/gradle-3.4.1/bin
     export PATH=${PATH}:$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/build-tools/25.0.2/
+    export PATH=${HOME}/.cargo/bin:${PATH}
+    echo ${PATH}
     source /etc/profile
 	if [ ! -d runtime_android_build ]; then
         mkdir runtime_android_build
