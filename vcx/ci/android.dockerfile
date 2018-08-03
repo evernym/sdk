@@ -37,10 +37,11 @@ RUN yes | .//home/vcx/android-sdk-linux/tools/bin/sdkmanager "ndk-bundle"
 
 # Add Evernym Certificate
 RUN ls
+RUN ls home
 RUN pwd
-RUN ls ./ci/scripts
-COPY ./ci/scripts/installCert.sh /tmp
-RUN /tmp/installCert.sh
+# RUN ls ./ci/scripts
+# COPY ./ci/scripts/installCert.sh /tmp
+# RUN /tmp/installCert.sh
 
 USER vcx 
 # cargo deb for debian packaging of libvcx
