@@ -109,6 +109,7 @@ def android() {
                 checkout scm
 
                 //Build android docker image
+                sh 'ls'
                 android = build('android', 'vcx/ci/android.dockerfile', 'vcx')
                 
                 //Build .so files for arm64, x86, and arm
