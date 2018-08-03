@@ -132,7 +132,7 @@ get_libsovtoken() {
     fi
     # change libvcx to use libsovtoken feature
     LIBVCX_PATH=../vcx/libvcx
-    sed -i .bak 's/"nullpay"/"sovtoken"/' ${LIBVCX_PATH}/Cargo.toml
+    sed -i 's/"nullpay"/"sovtoken"/' ${LIBVCX_PATH}/Cargo.toml
 }
 
 build_vcx() {
