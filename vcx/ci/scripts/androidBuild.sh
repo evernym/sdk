@@ -144,6 +144,5 @@ build_vcx() {
 
 setup $1
 get_libindy $1
-get_libnullpay $1
 get_libsovtoken
 build_vcx $1
