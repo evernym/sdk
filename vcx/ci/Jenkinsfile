@@ -66,11 +66,14 @@ def mainUbuntu() {
 
                 // ******** Build the libvcx base image (runs tests and creates debian automatically) ********
                 def libvcx = docker.build("libvcx", "-f ${libvcxDockerfile} .")
-                // def libvcx = docker.image('libvcx')
-                def node = docker.image('node')
-                node.inside("-w ${getCurDir()}") {
-                    sh 'cd vcx/wrappers/node/ && ls -al && npm run compile && npm test'
+                libvcx.inside() {
+                    sh 'vcx/ci/scripts/package.sh'
+                    sh 'ls -al vcx/libvcx/target/debian'
                 }
+                // def node = docker.image('node')
+                // node.inside("-w ${getCurDir()}") {
+                //     sh 'cd vcx/wrappers/node/ && ls -al && npm run compile && npm test'
+                // }
             }
 
             // stage('Build Node Image, Test, Copy Package to Volume') {
