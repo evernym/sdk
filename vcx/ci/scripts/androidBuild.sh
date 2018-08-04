@@ -8,8 +8,8 @@ setup() {
     export PATH=$PATH:/opt/gradle/gradle-3.4.1/bin
     export PATH=${PATH}:$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/build-tools/25.0.2/
     export PATH=${HOME}/.cargo/bin:${PATH}
-    # export VCX_BASE=$(realpath ../vcx)
-    export VCX_BASE=../vcx
+    export VCX_BASE=$(realpath ../vcx)
+    # export VCX_BASE=../vcx
     # For docker
     # export VCX_BASE=${HOME}/vcx
 
@@ -122,8 +122,8 @@ get_libsovtoken() {
 build_vcx() {
     # For Jenkins
     LIBVCX_PATH=${VCX_BASE}/libvcx/build_scripts/android/vcx/
-    PREBUILT_BIN=../../../../../runtime_android_build
-    # PREBUILT_BIN=$(realpath ${VCX_BASE}/ci/scripts/runtime_android_build)
+    # PREBUILT_BIN=../../../../../runtime_android_build
+    PREBUILT_BIN=$(realpath ${VCX_BASE}/ci/scripts/runtime_android_build)
 
     if [ ! -d libindy_${ARCH} ]; then
         echo "missing libindy_${ARCH}. Cannot proceed without it."
