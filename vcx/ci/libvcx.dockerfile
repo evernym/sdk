@@ -15,4 +15,8 @@ RUN cargo update-version && \
     cargo deb --no-build && \ 
     find -type f -name "libvcx*.deb" -exec dpkg -i {} \;
 
+WORKDIR /sdk/vcx/wrappers/node/
 
+RUN npm ci
+
+WORKDIR /sdk/vcx/libvcx

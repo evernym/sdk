@@ -39,6 +39,10 @@ def getRevNumber() {
     return sh(returnStdout: true, script: 'git log --pretty=format:%h -n 1')
 }
 
+def getCurDir() {
+    return sh(returnStdout: true, script: 'pwd')
+}
+
 def mainUbuntu() {
     node('ubuntu-14') {
  
@@ -58,28 +62,33 @@ def mainUbuntu() {
                 def libindy = docker.build("libindy", "-f ${libindyDockerfile} .")
             }
             
-            stage('Build Libvcx Image, Test, Copy Debian to Volume') {
+            stage('Build Libvcx Image, Tests Rust Code') {
 
                 // ******** Build the libvcx base image (runs tests and creates debian automatically) ********
                 def libvcx = docker.build("libvcx", "-f ${libvcxDockerfile} .")
+                // def libvcx = docker.image('libvcx')
+                def node = docker.image('node')
+                node.inside("-w ${getCurDir()}") {
+                    sh 'cd vcx/wrappers/node/ && ls -al && npm run compile && npm test'
+                }
             }
 
-            stage('Build Node Image, Test, Copy Package to Volume') {
-                // ******** Builds and tests the Node JS Wrapper *******
-                def node = docker.build("node", "-f ${nodeDockerfile}  .")
-                node.inside( {
-                    sh "vcx/wrappers/node/ci/test.sh"
-                }
+            // stage('Build Node Image, Test, Copy Package to Volume') {
+            //     // ******** Builds and tests the Node JS Wrapper *******
+            //     def node = docker.build("node", "-f ${nodeDockerfile}  .")
+            //     node.inside() {
+            //         sh "vcx/wrappers/node/ci/test.sh"
+            //     }
                 
-            }
+            // }
 
-            stage('Build Python Image, Test, Copy Package to Volume') {
-                // ******** Builds and tests the Python Wrapper *******
-                def python = docker.build("python", "-f ${pythonDockerfile} .")
-                python.inside() {
-                    sh "/sdk/vcx/wrappers/python3/ci/test.sh"
-                }
-            }
+            // stage('Build Python Image, Test, Copy Package to Volume') {
+            //     // ******** Builds and tests the Python Wrapper *******
+            //     def python = docker.build("python", "-f ${pythonDockerfile} .")
+            //     python.inside() {
+            //         sh "/sdk/vcx/wrappers/python3/ci/test.sh"
+            //     }
+            // }
 
             // sh "docker run --rm -v $volumeName:$volumeInternalDir ubuntu:16.04 sh -c \'ls ${volumeInternalDir}\''
             if (env.BRANCH_NAME == "master") {
