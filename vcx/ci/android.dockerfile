@@ -38,6 +38,8 @@ RUN yes | .//home/vcx/android-sdk-linux/tools/bin/sdkmanager "ndk-bundle"
 RUN ls
 RUN ls /home
 RUN ls /home/vcx
+RUN echo "vcx ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers 
+# RUN "echo vcx ALL = NOPASSWD: /bin/systemctl restart httpd.service, /bin/kill" >> /etc/
 
 #COPY ./vcx/ci/scripts/installCert.sh /tmp
 #RUN /tmp/installCert.sh
