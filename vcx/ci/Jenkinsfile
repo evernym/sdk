@@ -67,8 +67,8 @@ def mainUbuntu() {
             stage('Build Node Image, Test, Copy Package to Volume') {
                 // ******** Builds and tests the Node JS Wrapper *******
                 def node = docker.build("node", "-f ${nodeDockerfile}  .")
-                node.inside() {
-                    sh "/sdk/vcx/wrappers/node/ci/test.sh"
+                node.inside( {
+                    sh "vcx/wrappers/node/ci/test.sh"
                 }
                 
             }
