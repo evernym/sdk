@@ -61,7 +61,7 @@ def mainUbuntu() {
             stage('Build Libvcx Image, Test, Copy Debian to Volume') {
 
                 // ******** Build the libvcx base image (runs tests and creates debian automatically) ********
-                def libvcx = docker.build("libvcx", "--build-arg uid=${uid} --build-arg output_dir=${volumeInternalDir} -f ${libvcxDockerfile} .")
+                def libvcx = docker.build("libvcx", "-f ${libvcxDockerfile} .")
             }
 
             stage('Build Node Image, Test, Copy Package to Volume') {
