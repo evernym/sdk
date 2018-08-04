@@ -18,12 +18,10 @@ ENV OUTPUTDIR=$output_dir
 
 WORKDIR /sdk/vcx/libvcx
 
-RUN cargo update-version
-# RUN cargo test --color=never --no-default-features --features "ci sovtoken" -- --test-threads=1
-RUN cargo build --no-default-features --features "ci sovtoken"
-RUN cargo update-so
-RUN cargo deb --no-build
-RUN find -type f -name "libvcx*.deb" -exec dpkg -i {} \;
+RUN cargo update-version && \
+    cargo test --color=never --no-default-features --features "ci sovtoken" -- --test-threads=1 && \
+    cargo update-so && \
+    cargo deb --no-build && \ 
+    find -type f -name "libvcx*.deb" -exec dpkg -i {} \;
 
-CMD ["sh", "-c", "cp `find target/debian -type f -name \"*.deb\"` $OUTPUTDIR"]
 
