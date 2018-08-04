@@ -16,5 +16,5 @@ RUN find . -name \*.pyc -delete
 # for testing, remove for production
 COPY vcx/wrappers/python3/ci/test-and-package.sh /sdk/vcx/wrappers/python3/ci/
 
-CMD [ "/sdk/vcx/wrappers/python3/ci/test-and-package.sh" ]
+CMD [ "/sdk/vcx/wrappers/python3/ci/test.sh" ]
 
