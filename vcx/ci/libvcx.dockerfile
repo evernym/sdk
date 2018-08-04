@@ -17,6 +17,3 @@ RUN cargo update-version && \
 
 WORKDIR /sdk/vcx/wrappers/node/
 
-RUN npm ci
-
-WORKDIR /sdk/vcx/libvcx
