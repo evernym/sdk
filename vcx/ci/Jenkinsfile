@@ -55,43 +55,46 @@ def mainUbuntu() {
         def libvcxDockerfile = 'vcx/ci/libvcx.dockerfile'
         def pythonDockerfile = 'vcx/wrappers/python3/ci/python.dockerfile'
         def nodeDockerfile = 'vcx/wrappers/node/ci/node.dockerfile'
-
+        def uid= sh(returnStdout: true, script: 'id -u').trim()
+        def libvcx
+        def python
+        def node
         try {
             stage('Build Libindy Image') {
                 // ******** Build the libindy base image (pulls down dependent debians from sovrin repo, and installs a majority of the dependencies)
-                def libindy = docker.build("libindy", "-f ${libindyDockerfile} .")
+                libindy = docker.build("libindy", "-f ${libindyDockerfile} .")
             }
-            
+            sh 'mkdir output'
             stage('Build Libvcx Image, Tests Rust Code') {
-
-                // ******** Build the libvcx base image (runs tests and creates debian automatically) ********
                 
-                def uid= sh(returnStdout: true, script: 'id -u').trim()
-                def libvcx = docker.build("libvcx", "--build-arg uid=${uid} -f ${libvcxDockerfile} .")
+                libvcx = docker.build("libvcx", "--build-arg uid=${uid} -f ${libvcxDockerfile} .")
                 libvcx.inside() {
                     sh 'vcx/ci/scripts/package.sh'
                 }
             }
             stage('Test Node Wrapper') {
-                def node = docker.build('node', "--build-arg uid=${uid} -f ${nodeDockerfile} .")
+                node = docker.build('node', "--build-arg uid=${uid} -f ${nodeDockerfile} .")
                 node.inside() {
                     sh 'vcx/wrappers/node/ci/test.sh'
                 }
             }
             stage('Test Python Wrapper'){
-                def python = docker.build("python", "--build-arg uid=${uid} -f ${pythonDockerfile} .")
+                python = docker.build("python", "--build-arg uid=${uid} -f ${pythonDockerfile} .")
                 python.inside() {
                     sh 'vcx/wrappers/python3/ci/test.sh'
                 }
             }
-            sh 'mkdir output'
-            stage('Publish Python Wrapper') {
-                python.inside() {
-                    sh 'vcx/wrappers/python3/ci/package.sh'
-                    sh 'ls output'
+            stage('Package Node Wrapper') {
+                node.inside() {
+                    sh '/vcx/wrappers/node/ci/package.sh'
                 }
             }
-
+            stage('Package Python Wrapper') {
+                python.inside() {
+                    sh 'vcx/wrappers/python3/ci/package.sh'
+                }
+            }
+            sh 'ls -al output'
             
             // stage('Build Node Image, Test, Copy Package to Volume') {
             //     // ******** Builds and tests the Node JS Wrapper *******
