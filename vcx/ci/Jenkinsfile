@@ -86,7 +86,7 @@ def mainUbuntu() {
             }
             stage('Package Node Wrapper') {
                 node.inside() {
-                    sh '/vcx/wrappers/node/ci/package.sh'
+                    sh 'vcx/wrappers/node/ci/package.sh'
                 }
             }
             stage('Package Python Wrapper') {
