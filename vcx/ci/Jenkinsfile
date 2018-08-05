@@ -94,6 +94,7 @@ def mainUbuntu() {
                     sh 'vcx/wrappers/python3/ci/package.sh'
                 }
             }
+            
             sh 'ls -al output'
             
             // stage('Build Node Image, Test, Copy Package to Volume') {
