@@ -1,6 +1,6 @@
 # Development 
-FROM libindy
-
+FROM libvcx
+USER vcx
 # Update environment 
 # JRE installation and gcc 
 RUN apt-get update -y && apt-get install -y ca-certificates \ 
