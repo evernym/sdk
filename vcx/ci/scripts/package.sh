@@ -8,4 +8,4 @@ cargo test --no-default-features --features "ci sovtoken" -- --test-threads=1
 cargo build --no-default-features --features "ci sovtoken"
 cargo update-so
 cargo deb --no-build
-cp target/debian/*.deb $CURDIR/$OUTPUT
+cp target/debian/*.deb $CURDIR/$OUTPUTDIR
