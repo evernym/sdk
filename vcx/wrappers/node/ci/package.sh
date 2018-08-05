@@ -13,7 +13,6 @@ rename \s/\\.tgz\$/_amd64\\.tgz/ *.tgz
 find . -type f -name 'vcx_*.tgz' -exec create_npm_deb.py {} \;
 
 popd
-
-find $DIR -type f -name 'vcx*.tgz' -exec cp {} $OUTPUTDIR \;
-find $DIR -type f -name 'vcx_*.deb' -exec cp {} $OUTPUTDIR \;
+cp $DIR/vcx*.tgz $OUTPUTDIR
+cp $DIR/vcx_*.deb $OUTPUTDIR
 
