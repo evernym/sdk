@@ -1,12 +1,6 @@
 # Development 
 FROM libvcx
 USER vcx
-# Update environment 
-# JRE installation and gcc 
-RUN apt-get update -y && apt-get install -y ca-certificates \ 
-    debhelper \ 
-    curl  
-
 
 # Install Nodejs  
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - \ 
