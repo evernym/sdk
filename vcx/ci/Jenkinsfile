@@ -70,18 +70,29 @@ def mainUbuntu() {
                 def libvcx = docker.build("libvcx", "--build-arg uid=${uid} -f ${libvcxDockerfile} .")
                 libvcx.inside() {
                     sh 'vcx/ci/scripts/package.sh'
-                    sh 'ls -al vcx/libvcx/target/debian'
                 }
+            }
+            stage('Test Node Wrapper') {
                 def node = docker.build('node', "--build-arg uid=${uid} -f ${nodeDockerfile} .")
                 node.inside() {
                     sh 'vcx/wrappers/node/ci/test.sh'
                 }
+            }
+            stage('Test Python Wrapper'){
                 def python = docker.build("python", "--build-arg uid=${uid} -f ${pythonDockerfile} .")
                 python.inside() {
                     sh 'vcx/wrappers/python3/ci/test.sh'
                 }
             }
+            sh 'mkdir output'
+            stage('Publish Python Wrapper') {
+                python.inside() {
+                    sh 'vcx/wrappers/python3/ci/package.sh'
+                    sh 'ls output'
+                }
+            }
 
+            
             // stage('Build Node Image, Test, Copy Package to Volume') {
             //     // ******** Builds and tests the Node JS Wrapper *******
             //     def node = docker.build("node", "-f ${nodeDockerfile}  .")
