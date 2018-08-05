@@ -74,7 +74,7 @@ def mainUbuntu() {
                 // }
                 def node = docker.build('node', "--build-arg uid=${uid} -f ${nodeDockerfile} .")
                 node.inside() {
-                    sh 'cd vcx/wrappers/node/ci/test.sh'
+                    sh 'vcx/wrappers/node/ci/test.sh'
                 }
             }
 
@@ -214,7 +214,7 @@ def fail() {
     slackSend message
 }
 
-def buildAndroid(envn) {
+def buildAndroid(envn) {    
     envn.inside {
         LIBINDY_BRANCH="stable"
         LIBINDY_VERSION="1.6.1"
