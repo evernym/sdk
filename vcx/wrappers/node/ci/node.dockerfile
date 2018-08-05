@@ -1,6 +1,5 @@
 # Development 
-FROM libvcx
-
+FROM libindy
 
 # Update environment 
 # JRE installation and gcc 
