@@ -1,8 +1,8 @@
 export PATH=${PATH}:$(pwd)/vcx/ci/scripts
 OUTPUTDIR=output
 DIR=vcx/wrappers/node
-
-pushd $DIR
+CURDIR=$(pwd)
+cd $DIR
 npm i
 npm run compile
 npm pack
@@ -12,7 +12,7 @@ rename \s/\\.tgz\$/_amd64\\.tgz/ *.tgz
 
 find . -type f -name 'vcx_*.tgz' -exec create_npm_deb.py {} \;
 
-popd
+cd $CURDIR
 cp $DIR/vcx*.tgz $OUTPUTDIR
 cp $DIR/vcx_*.deb $OUTPUTDIR
 
