@@ -68,13 +68,17 @@ def mainUbuntu() {
                 
                 def uid= sh(returnStdout: true, script: 'id -u').trim()
                 def libvcx = docker.build("libvcx", "--build-arg uid=${uid} -f ${libvcxDockerfile} .")
-                // libvcx.inside() {
-                //     sh 'vcx/ci/scripts/package.sh'
-                //     sh 'ls -al vcx/libvcx/target/debian'
-                // }
+                libvcx.inside() {
+                    sh 'vcx/ci/scripts/package.sh'
+                    sh 'ls -al vcx/libvcx/target/debian'
+                }
                 def node = docker.build('node', "--build-arg uid=${uid} -f ${nodeDockerfile} .")
                 node.inside() {
                     sh 'vcx/wrappers/node/ci/test.sh'
+                }
+                def python = docker.build("python", "--build-arg uid=${uid} -f ${pythonDockerfile} .")
+                python.inside() {
+                    sh 'vcx/wrappers/python3/ci/test.sh'
                 }
             }
 

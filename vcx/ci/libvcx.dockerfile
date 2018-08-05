@@ -1,7 +1,6 @@
 FROM libindy
 ARG uid=1000
 
-
 RUN useradd -ms /bin/bash -u $uid vcx
 USER vcx
 
