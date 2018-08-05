@@ -8,7 +8,7 @@ fi
 CREDENTIALS=$1
 FILENAME=$2
 URL=$3
-LOOKUP_DIR="/sdk/vcx/output"
+LOOKUP_DIR="output"
 
 echo "Filename: ${FILENAME}"
 echo "TYPE: ${TYPE}"

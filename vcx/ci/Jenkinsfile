@@ -97,34 +97,15 @@ def mainUbuntu() {
             
             sh 'ls -al output'
             
-            // stage('Build Node Image, Test, Copy Package to Volume') {
-            //     // ******** Builds and tests the Node JS Wrapper *******
-            //     def node = docker.build("node", "-f ${nodeDockerfile}  .")
-            //     node.inside() {
-            //         sh "vcx/wrappers/node/ci/test.sh"
-            //     }
-                
-            // }
-
-            // stage('Build Python Image, Test, Copy Package to Volume') {
-            //     // ******** Builds and tests the Python Wrapper *******
-            //     def python = docker.build("python", "-f ${pythonDockerfile} .")
-            //     python.inside() {
-            //         sh "/sdk/vcx/wrappers/python3/ci/test.sh"
-            //     }
-            // }
-
-            // sh "docker run --rm -v $volumeName:$volumeInternalDir ubuntu:16.04 sh -c \'ls ${volumeInternalDir}\''
-            if (env.BRANCH_NAME == "master") {
-                // stage('Publish') {
+            // if (env.BRANCH_NAME == "master") {
+                stage('Publish') {
                 //     // ******** PUBLISHING (artifacts are in a Docker Volume) ********
                 //     sh "docker build -t publish -f vcx/ci/Dockerfile-publish ."
-                //     withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
-                //         def publish = docker.build('publish', "-f vcx/ci/Dockerfile-publish .")
-                //         publish.inside("--network=host -v $volumeName:$volumeInternalDir") {
+                    withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
+                        libvcx.inside("--network=host") {
                 //             // ******** Publish Libvcx Debian to repo ********
-                //             sh "/sdk/vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"libvcx*.deb\" https://kraken.corp.evernym.com/repo/portal_dev/upload"
-                //             sh "/sdk/vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"libvcx*.deb\" https://kraken.corp.evernym.com/repo/agency_dev/upload"
+                            sh "vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"libvcx*.deb\" https://kraken.corp.evernym.com/repo/portal_dev/upload"
+                            sh "/sdk/vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"libvcx*.deb\" https://kraken.corp.evernym.com/repo/agency_dev/upload"
                             
                 //             // ******** Publish Npm Package to filely repo ********
                 //             sh "/sdk/vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"*.tgz\" https://kraken.corp.evernym.com/repo/npm/upload"
@@ -140,9 +121,9 @@ def mainUbuntu() {
                 //             archiveArtifacts allowEmptyArchive: true, artifacts: 'vcx/output/*'
 
                 //         }
-                //     }
-                // }
-            }
+                    }
+                }
+            // }
         } catch (Exception ex) {
             currentBuild.result = "FAILED"
             if (env.BRANCH_NAME == "master") {
