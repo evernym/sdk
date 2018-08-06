@@ -14,5 +14,10 @@ echo "Filename: ${FILENAME}"
 echo "TYPE: ${TYPE}"
 echo "URL: $URL"
 
-find $LOOKUP_DIR -type f -name ${FILENAME} -exec curl -u $CREDENTIALS -X POST $URL -F 'file=@{}' \;
+echo 'info:'
+pwd
+ls -al
+echo 'end info'
+
+find "./output" -type f -name ${FILENAME} -exec curl -u $CREDENTIALS -X POST $URL -F 'file=@{}' \;
 
