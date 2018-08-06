@@ -111,10 +111,10 @@ get_libsovtoken() {
 build_vcx() {
     # For Jenkins
     LIBVCX_PATH=${VCX_BASE}/libvcx/build_scripts/android/vcx/
-    PREBUILT_BIN=../../../../../runtime_android_build
+    # PREBUILT_BIN=../../../../../runtime_android_build
     # For Docker when vcx is in home dir
     #PREBUILT_BIN=../../../../ci/scripts/runtime_android_build
-    # PREBUILT_BIN=$(realpath ${VCX_BASE}/ci/scripts/runtime_android_build)
+    PREBUILT_BIN=$(realpath ${VCX_BASE}/ci/scripts/runtime_android_build)
 
     if [ ! -d libindy_${ARCH} ]; then
         echo "missing libindy_${ARCH}. Cannot proceed without it."
