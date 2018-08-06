@@ -9,7 +9,8 @@ setup() {
     export PATH=${PATH}:$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/build-tools/25.0.2/
     export PATH=${HOME}/.cargo/bin:${PATH}
     export EVERNYM_REPO=https://repo.corp.evernym.com/filely/android
-    export VCX_BASE=../vcx
+    # export VCX_BASE=../vcx
+    export VCX_BASE=$(realpath ../vcx)
     # For docker
     # export VCX_BASE=${HOME}/vcx
 
@@ -26,9 +27,9 @@ setup() {
 
     ANDROID_JNI_LIB=${VCX_BASE}/wrappers/java/vcx/src/main/jniLibs
 
-    mkdir -p ${ANDROID_JNI_LIB}/arm
-    mkdir -p ${ANDROID_JNI_LIB}/x86
-    mkdir -p ${ANDROID_JNI_LIB}/arm64
+    sudo mkdir -p ${ANDROID_JNI_LIB}/arm
+    sudo mkdir -p ${ANDROID_JNI_LIB}/x86
+    sudo mkdir -p ${ANDROID_JNI_LIB}/arm64
 }
 
 
