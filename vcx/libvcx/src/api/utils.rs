@@ -107,7 +107,7 @@ pub extern fn vcx_agent_provision_async(command_handle : u32,
                                                                 &my_config.wallet_key, None, None, None) {
             Err(e) => {
                 error!("vcx_agent_provision_async_cb(command_handle: {}, rc: {}, config: NULL", command_handle, error_string(e));
-                cb(command_handle, 0, ptr::null_mut());
+                cb(command_handle, e, ptr::null_mut());
             },
             Ok(s) => {
                 info!("vcx_agent_provision_async_cb(command_handle: {}, rc: {}, config: {})",
@@ -318,7 +318,7 @@ pub extern fn vcx_messages_download(command_handle: u32,
 ///
 /// message_status: updated status
 ///
-/// uids: messages to update
+/// msg_json: messages to update: [{"pairwiseDID":"QSrw8hebcvQxiwBETmAaRs","uids":["mgrmngq"]},...]
 ///
 /// cb: Callback that provides success or failure of request
 ///
