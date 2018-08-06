@@ -85,6 +85,7 @@ fi
 
 if [ -z "${LIBSOVTOKEN_DIR}" ] ; then
     LIBSOVTOKEN_DIR="libsovtoken"
+    PAYMENT_PLUGIN="sovtoken"
     if [ -d "${LIBSOVTOKEN_DIR}" ] ; then
         echo "Found ${LIBSOVTOKEN_DIR}"
     elif [ -z "$8" ] ; then
@@ -144,13 +145,14 @@ export CARGO_INCREMENTAL=1
 export RUST_LOG=indy=trace
 export RUST_TEST_THREADS=1
 export RUST_BACKTRACE=1
-export OPENSSL_DIR=${WORKDIR}/${OPENSSL_DIR}
-export SODIUM_LIB_DIR=${WORKDIR}/${SODIUM_DIR}/lib
-export SODIUM_INCLUDE_DIR=${WORKDIR}/${SODIUM_DIR}/include
-export LIBZMQ_LIB_DIR=${WORKDIR}/${LIBZMQ_DIR}/lib
-export LIBZMQ_INCLUDE_DIR=${WORKDIR}/${LIBZMQ_DIR}/include
-export LIBINDY_DIR=${WORKDIR}/${LIBINDY_DIR}
-export LIBSOVTOKEN_DIR=${WORKDIR}/${LIBSOVTOKEN_DIR}
+export OPENSSL_DIR=${OPENSSL_DIR}
+export OPENSSL_LIB_DIR=${OPENSSL_DIR}/lib
+export SODIUM_LIB_DIR=${SODIUM_DIR}/lib
+export SODIUM_INCLUDE_DIR=${SODIUM_DIR}/include
+export LIBZMQ_LIB_DIR=${LIBZMQ_DIR}/lib
+export LIBZMQ_INCLUDE_DIR=${LIBZMQ_DIR}/include
+export LIBINDY_DIR=${LIBINDY_DIR}
+export LIBSOVTOKEN_DIR=${LIBSOVTOKEN_DIR}
 export TOOLCHAIN_DIR=${TOOLCHAIN_PREFIX}/${TARGET_ARCH}
 export PATH=${TOOLCHAIN_DIR}/bin:${PATH}
 export PKG_CONFIG_ALLOW_CROSS=1
@@ -175,7 +177,7 @@ rustup target add ${CROSS_COMPILE}
 pushd $LIBVCX
 export OPENSSL_STATIC=1
 cargo clean
-cargo build --release --target=${CROSS_COMPILE}
+cargo build --release --no-default-features --features "ci ${PAYMENT_PLUGIN}" --target=${CROSS_COMPILE}
 popd
 
 LIBVCX_BUILDS=${WORKDIR}/libvcx_${TARGET_ARCH}
