@@ -238,16 +238,6 @@ mod tests {
     use utils::libindy::wallet::{import, tests::export_test_wallet, tests::delete_import_wallet_path};
     use utils::libindy::{ pool::get_pool_handle, return_types_u32 };
 
-//    extern "C" fn init_cb(command_handle: u32, err: u32) {
-//        if err != 0 {panic!("create_cb failed: {}", err)}
-//        println!("Successfully called init_cb");
-//    }
-//
-//    extern "C" fn init_inconsistent_config_cb(command_handle: u32, err: u32) {
-//        assert_eq!(err, error::WALLET_NOT_FOUND.code_num);
-//        println!("Successfully called init_inconsistent_config_cb");
-//    }
-
     fn create_config_util(wallet_name: &str, wallet_key: &str ) -> String {
         json!({"wallet_name":wallet_name,
                         "agency_did" : "72x8p4HubxzUK1dwxcc5FU",
