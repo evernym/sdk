@@ -44,7 +44,7 @@ def getCurDir() {
 }
 
 def mainUbuntu() {
-    node('ubuntu-14') {
+    node('ubuntu') {
  
         checkout scm
 
