@@ -416,7 +416,7 @@ mod tests {
         wallet::close_wallet().unwrap();
         pool::close().unwrap();
 
-        let content = format!(r#"{{"wallet_name":{}}}"#, wallet_name);
+        let content = format!(r#"{{"wallet_name":"{}"}}"#, wallet_name);
 
         let cb = return_types_u32::Return_U32::new().unwrap();
         assert_eq!(vcx_init_with_config(cb.command_handle,
