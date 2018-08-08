@@ -184,9 +184,18 @@ withConnectionHandle:(vcx_connection_handle_t)connection_handle
       withCompletion:(void (^)(NSError *error, NSString *tokenInfo))completion;
 
 - (void)sendTokens:(vcx_payment_handle_t)payment_handle
-        withTokens:(NSInteger)tokens
-     withRecipient:(NSString*)recipient
+        withTokens:(NSString *)tokens
+     withRecipient:(NSString *)recipient
     withCompletion:(void (^)(NSError *error, NSString *recipient))completion;
+
+- (void)downloadMessages:(NSString *)messageStatus
+                    uid_s:(NSString *)uid_s
+                  pwdids:(NSString *)pwdids
+              completion:(void (^)(NSError *error, NSString* messages))completion;
+
+- (void)updateMessages:(NSString *)messageStatus
+            pwdidsJson:(NSString *)pwdidsJson
+            completion:(void (^)(NSError *error))completion;
 
 @end
 
