@@ -8,7 +8,7 @@ VCX_SDK=$(abspath "$VCX_SDK")
 WORK_DIR=$VCX_SDK/.macosbuild
 WORK_DIR=$(abspath "$WORK_DIR")
 
-COCOAPOD_BUILD_FOLDER=/Users/iosbuild1/forge/work/code/evernym/sdk/vcx/wrappers/ios/vcx/tmp
+COCOAPOD_BUILD_FOLDER=/Users/norm/forge/work/code/evernym/sdk-evernym/vcx/wrappers/ios/vcx/tmp
 PODSERVER_DOCROOT=/Users/norm/forge/work/code/evernym/podserver/public
 CONNECTME_IOS=/Users/norm/forge/work/code/evernym/ConnectMe/ios
 COCOAPOD_SPEC=/Users/norm/.cocoapods/repos/evernym-1/Specs/vcx/0.0.22/vcx.podspec
