@@ -70,7 +70,8 @@ cp $WORK_DIR/evernym.vcx-sdk.git.commit.log $VCX_SDK/vcx/wrappers/ios/vcx/tmp/vc
 cp $WORK_DIR/hyperledger.indy-sdk.git.commit.log $VCX_SDK/vcx/wrappers/ios/vcx/tmp/vcx/
 
 zip -r vcx.${COMBINED_LIB}_${DATETIME}_universal.zip vcx
-cp $VCX_SDK/vcx/wrappers/ios/vcx/tmp/vcx.${COMBINED_LIB}_${DATETIME}_universal.zip ~/IOSBuilds/vcx.${COMBINED_LIB}_${DATETIME}_universal.zip
+mkdir -p ~/IOSBuilds/${COMBINED_LIB}
+cp $VCX_SDK/vcx/wrappers/ios/vcx/tmp/vcx.${COMBINED_LIB}_${DATETIME}_universal.zip ~/IOSBuilds/${COMBINED_LIB}
 
 #curl --insecure -u normjarvis -X POST -F file=@./vcx.${COMBINED_LIB}_${DATETIME}_universal.zip https://kraken.corp.evernym.com/repo/ios/upload
 # Download the file at https://repo.corp.evernym.com/filely/ios/vcx.${COMBINED_LIB}_${DATETIME}_universal.zip
