@@ -112,7 +112,7 @@ impl GetMessages{
 
         self.payload.msg_type.name = "GET_MSGS_BY_CONNS".to_string();
         let data = encode::to_vec_named(&self.payload).unwrap();
-        trace!("get_message content: {:?}", data);
+        println!("get_message content: {:?}", data);
 
         let msg = Bundled::create(data).encode()?;
 
@@ -146,7 +146,7 @@ impl GeneralMessage for GetMessages{
         }
 
         let data = encode::to_vec_named(&self.payload).unwrap();
-        trace!("get_message content: {:?}", data);
+        println!("get_message content: {:?}", data);
 
         let msg = Bundled::create(data).encode()?;
 
@@ -241,12 +241,12 @@ pub struct GetMessagesResponse {
 fn parse_get_messages_response(response: Vec<u8>) -> Result<Vec<Message>, u32> {
     let data = unbundle_from_agency(response)?;
 
-    trace!("get_message response: {:?}", data[0]);
+    println!("get_message response: {:?}", data[0]);
     let mut de = Deserializer::new(&data[0][..]);
     let response: GetMessagesResponse = match Deserialize::deserialize(&mut de) {
         Ok(x) => x,
         Err(x) => {
-            error!("Could not parse messagepack: {}", x);
+            println!("Could not parse messagepack: ");
 
             return Err(error::INVALID_MSGPACK.code_num)
         },
@@ -273,12 +273,12 @@ pub struct ConnectionMessages {
 fn parse_get_connection_messages_response(response: Vec<u8>) -> Result<Vec<ConnectionMessages>, u32> {
     let data = unbundle_from_agency(response)?;
 
-    trace!("parse_get_connection_message response: {:?}", data[0]);
+    println!("parse_get_connection_message response: {:?}", data[0]);
     let mut de = Deserializer::new(&data[0][..]);
     let response: GetConnectionMessagesResponse = match Deserialize::deserialize(&mut de) {
         Ok(x) => x,
         Err(x) => {
-            error!("Could not parse messagepack: {}", x);
+            printlnl!("Could not parse messagepack: ");
 
             return Err(error::INVALID_MSGPACK.code_num)
         },
@@ -300,7 +300,7 @@ fn parse_get_connection_messages_response(response: Vec<u8>) -> Result<Vec<Conne
 }
 
 pub fn get_connection_messages(pw_did: &str, pw_vk: &str, agent_did: &str, agent_vk: &str, msg_uid: Option<Vec<String>>) -> Result<Vec<Message>, u32> {
-
+    println!("in side get_connection_messages");
     match get_messages()
         .to(&pw_did)
         .to_vk(&pw_vk)
@@ -309,14 +309,15 @@ pub fn get_connection_messages(pw_did: &str, pw_vk: &str, agent_did: &str, agent
         .uid(msg_uid)
         .send_secure() {
         Err(x) => {
-            error!("could not post get_messages: {}", x);
+            println!("could not post get_messages: {}", x);
             Err(error::POST_MSG_FAILURE.code_num)
         },
         Ok(response) => {
             if response.len() == 0 {
+		 println!("post msg failure");
                 Err(error::POST_MSG_FAILURE.code_num)
             } else {
-                trace!("message returned: {:?}", response[0]);
+                println!("message returned: {:?}", response[0]);
                 Ok(response)
             }
         },
@@ -325,18 +326,19 @@ pub fn get_connection_messages(pw_did: &str, pw_vk: &str, agent_did: &str, agent
 
 pub fn get_ref_msg(msg_id: &str, pw_did: &str, pw_vk: &str, agent_did: &str, agent_vk: &str) -> Result<Vec<u8>, u32> {
     let message = get_connection_messages(pw_did, pw_vk, agent_did, agent_vk, Some(vec![msg_id.to_string()]))?;
-    trace!("checking for ref_msg: {:?}", message);
+    println!("checking for ref_msg: {:?}", message);
     let msg_id;
     if message[0].status_code == MessageAccepted.as_string() && !message[0].ref_msg_id.is_none() {
         msg_id = message[0].ref_msg_id.clone().unwrap()
     }
     else {
+	    println!("not ready");
         return Err(error::NOT_READY.code_num);
     }
 
     let message = get_connection_messages(pw_did, pw_vk, agent_did, agent_vk, Some(vec![msg_id.to_string()]))?;
 
-    trace!("checking for pending message: {:?}", message);
+    prrintln!("checking for pending message: {:?}", message);
 
     // this will work for both credReq and proof types
     if message[0].status_code == MessagePending.as_string() && !message[0].payload.is_none() {
@@ -346,12 +348,13 @@ pub fn get_ref_msg(msg_id: &str, pw_did: &str, pw_vk: &str, agent_did: &str, age
 	Ok(msg)
     }
     else {
+	println!("invalid http response");
         Err(error::INVALID_HTTP_RESPONSE.code_num)
     }
 }
 
 pub fn download_messages(pairwise_dids: Option<Vec<String>>, status_codes: Option<Vec<String>>, uids: Option<Vec<String>>) -> Result<Vec<ConnectionMessages>, u32> {
-
+    println!("in side download_messages");
     if settings::test_agency_mode_enabled() {
         ::utils::httpclient::set_next_u8_response(::utils::constants::GET_ALL_MESSAGES_RESPONSE.to_vec());
     }
@@ -362,14 +365,15 @@ pub fn download_messages(pairwise_dids: Option<Vec<String>>, status_codes: Optio
         .pairwise_dids(pairwise_dids)
         .download_messages() {
         Err(x) => {
-            error!("could not post get_messages: {}", x);
+            println!("could not post get_messages: {}", x);
             Err(error::POST_MSG_FAILURE.code_num)
         },
         Ok(response) => {
             if response.len() == 0 {
+		println!("post msg failure");
                 Err(error::POST_MSG_FAILURE.code_num)
             } else {
-                trace!("message returned: {:?}", response[0]);
+                println!("message returned: {:?}", response[0]);
                 Ok(response)
             }
         },
