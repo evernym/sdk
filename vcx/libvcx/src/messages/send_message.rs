@@ -107,7 +107,7 @@ impl SendMessage{
             Err(x) => return Err(x),
         };
 
-        let mut result: Vec<String> = Vec::new();
+        let mut result = Vec::new();
         debug!("sending secure message to agency");
         if settings::test_agency_mode_enabled() {
             result.push(parse_send_message_response(::utils::constants::SEND_MESSAGE_RESPONSE.to_vec())?);
