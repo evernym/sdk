@@ -67,7 +67,7 @@ impl LoggerUtils {
             if cfg!(target_os = "android") {
                 #[cfg(target_os = "android")]
                 let log_filter = match env::var("RUST_LOG") {
-                    Ok(val) => match level.to_lowercase().as_ref(){
+                    Ok(val) => match val.to_lowercase().as_ref(){
                         "error" => Filter::default().with_min_level(log::Level::Error),
                         "warn" => Filter::default().with_min_level(log::Level::Warn),
                         "info" => Filter::default().with_min_level(log::Level::Info),
