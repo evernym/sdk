@@ -84,7 +84,10 @@ class ErrorCode(IntEnum):
     MissingWalletName = 1076,
     MissingExportedWalletPath = 1077,
     MissingBackupKey = 1078,
-    WalletNotFound = 1079
+    WalletNotFound = 1079,
+    InvalidState = 1080,
+    DidAlreadyExistsInWallet = 1081,
+    DuplicateMasterSecret = 1082
 
 class VcxError(Exception):
     # error_code: ErrorCode
