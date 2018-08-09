@@ -67,8 +67,11 @@ void VcxWrapperCommonStringCallback(vcx_command_handle_t xcommand_handle,
     [[VcxCallbacks sharedInstance] deleteCommandHandleFor:xcommand_handle];
 
     void (^completion)(NSError *, NSString *) = (void (^)(NSError *, NSString *arg1)) block;
-    NSString *sarg1 = [NSString stringWithUTF8String:arg1];
-
+    NSString *sarg1 = nil;
+    if (arg1) {
+        sarg1 = [NSString stringWithUTF8String:arg1];
+    }
+    
     if (completion) {
         dispatch_async(dispatch_get_main_queue(), ^{
             NSError *error = [NSError errorFromVcxError:err];
@@ -102,8 +105,14 @@ void VcxWrapperCommonStringStringCallback(vcx_command_handle_t xcommand_handle,
 
     void (^completion)(NSError *, NSString *arg1, NSString *arg2) = (void (^)(NSError *, NSString *arg1, NSString *arg2)) block;
 
-    NSString *sarg1 = [NSString stringWithUTF8String:arg1];
-    NSString *sarg2 = [NSString stringWithUTF8String:arg2];
+    NSString *sarg1 = nil;
+    if (arg1) {
+        sarg1 = [NSString stringWithUTF8String:arg1];
+    }
+    NSString *sarg2 = nil;
+    if (arg2) {
+        sarg2 = [NSString stringWithUTF8String:arg2];
+    }
 
     if (completion) {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -122,9 +131,12 @@ void VcxWrapperCommonStringOptStringCallback(vcx_command_handle_t xcommand_handl
 
     void (^completion)(NSError *, NSString *arg1, NSString *arg2) = (void (^)(NSError *, NSString *arg1, NSString *arg2)) block;
 
-    NSString *sarg1 = [NSString stringWithUTF8String:arg1];
-    NSString *sarg2 = nil;
+    NSString *sarg1 = nil;
     if (arg1) {
+        sarg1 = [NSString stringWithUTF8String:arg1];
+    }
+    NSString *sarg2 = nil;
+    if (arg2) {
         sarg2 = [NSString stringWithUTF8String:arg2];
     }
 
@@ -146,7 +158,10 @@ void VcxWrapperCommonStringOptStringOptStringCallback(vcx_command_handle_t xcomm
 
     void (^completion)(NSError *, NSString *arg1, NSString *arg2, NSString *arg3) = (void (^)(NSError *, NSString *arg1, NSString *arg2, NSString *arg3)) block;
 
-    NSString *sarg1 = [NSString stringWithUTF8String:arg1];
+    NSString *sarg1 = nil;
+    if (arg1) {
+        sarg1 = [NSString stringWithUTF8String:arg1];
+    }
     NSString *sarg2 = nil;
     if (arg2) {
         sarg2 = [NSString stringWithUTF8String:arg2];
@@ -174,9 +189,18 @@ void VcxWrapperCommonStringStringStringCallback(vcx_command_handle_t xcommand_ha
 
     void (^completion)(NSError *, NSString *arg1, NSString *arg2, NSString *arg3) = (void (^)(NSError *, NSString *arg1, NSString *arg2, NSString *arg3)) block;
 
-    NSString *sarg1 = [NSString stringWithUTF8String:arg1];
-    NSString *sarg2 = [NSString stringWithUTF8String:arg2];
-    NSString *sarg3 = [NSString stringWithUTF8String:arg3];
+    NSString *sarg1 = nil;
+    if (arg1) {
+        sarg1 = [NSString stringWithUTF8String:arg1];
+    }
+    NSString *sarg2 = nil;
+    if (arg2) {
+        sarg2 = [NSString stringWithUTF8String:arg2];
+    }
+    NSString *sarg3 = nil;
+    if (arg3) {
+        sarg3 = [NSString stringWithUTF8String:arg3];
+    }
 
     if (completion) {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -220,7 +244,10 @@ void VcxWrapperCommonStringDataCallback(vcx_command_handle_t xcommand_handle,
     if (arg1) {
         sarg1 = [NSString stringWithUTF8String:arg1];
     }
-    NSData *sarg2 = [NSData dataWithBytes:arg2 length:arg3];
+    NSData *sarg2 = nil;
+    if (arg2) {
+        sarg2 = [NSData dataWithBytes:arg2 length:arg3];
+    }
 
     if (completion) {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -239,8 +266,14 @@ void VcxWrapperCommonStringStringLongCallback(vcx_command_handle_t xcommand_hand
     [[VcxCallbacks sharedInstance] deleteCommandHandleFor:xcommand_handle];
 
     void (^completion)(NSError *, NSString *, NSString *, NSNumber *) = (void (^)(NSError *, NSString *arg1, NSString *arg2, NSNumber *arg3)) block;
-    NSString *sarg1 = [NSString stringWithUTF8String:arg1];
-    NSString *sarg2 = [NSString stringWithUTF8String:arg2];
+    NSString *sarg1 = nil;
+    if (arg1) {
+        sarg1 = [NSString stringWithUTF8String:arg1];
+    }
+    NSString *sarg2 = nil;
+    if (arg2) {
+        sarg2 = [NSString stringWithUTF8String:arg2];
+    }
     NSNumber *sarg3 = [NSNumber numberWithInt:arg3];
 
 
@@ -262,7 +295,10 @@ void VcxWrapperCommonNumberStringCallback(vcx_command_handle_t xcommand_handle,
 
     void (^completion)(NSError *, vcx_command_handle_t arg1, NSString *arg2) = (void (^)(NSError *, vcx_command_handle_t arg1, NSString *arg2)) block;
 
-    NSString *sarg2 = [NSString stringWithUTF8String:arg2];
+    NSString *sarg2 = nil;
+    if (arg2) {
+        sarg2 = [NSString stringWithUTF8String:arg2];
+    }
 
     if (completion) {
         dispatch_async(dispatch_get_main_queue(), ^{
@@ -835,16 +871,17 @@ withConnectionHandle:(vcx_connection_handle_t)connection_handle
 }
 
 - (void)sendTokens:(vcx_payment_handle_t)payment_handle
-        withTokens:(NSInteger)tokens
-     withRecipient:(NSString*)recipient
+        withTokens:(NSString *)tokens
+     withRecipient:(NSString *)recipient
     withCompletion:(void (^)(NSError *error, NSString *recipient))completion
 {
     vcx_error_t ret;
     vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
     
     const char* c_recipient = [recipient cStringUsingEncoding:NSUTF8StringEncoding];
+    const char* c_tokens = [tokens cStringUsingEncoding:NSUTF8StringEncoding];
     
-    ret = vcx_wallet_send_tokens(handle, payment_handle, tokens, c_recipient, VcxWrapperCommonStringCallback);
+    ret = vcx_wallet_send_tokens(handle, payment_handle, c_tokens, c_recipient, VcxWrapperCommonStringCallback);
     
     if ( ret != 0 )
     {
@@ -852,6 +889,46 @@ withConnectionHandle:(vcx_connection_handle_t)connection_handle
         
         dispatch_async(dispatch_get_main_queue(), ^{
             completion([NSError errorFromVcxError: ret], nil);
+        });
+    }
+}
+
+- (void)downloadMessages:(NSString *)messageStatus
+                    uid_s:(NSString *)uid_s
+                  pwdids:(NSString *)pwdids
+              completion:(void (^)(NSError *error, NSString* messages))completion{
+    vcx_error_t ret;
+    vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
+    const char * message_status = [messageStatus cString];
+    const char * uids = [uid_s cString];
+    const char * pw_dids = [pwdids cString];
+    ret = vcx_messages_download(handle, message_status, uids, pw_dids, VcxWrapperCommonStringCallback);
+    
+    if( ret != 0 )
+    {
+        [[VcxCallbacks sharedInstance] deleteCommandHandleFor: handle];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion([NSError errorFromVcxError: ret], nil);
+        });
+    }
+}
+
+- (void)updateMessages:(NSString *)messageStatus
+                 pwdidsJson:(NSString *)pwdidsJson
+              completion:(void (^)(NSError *error))completion{
+    vcx_error_t ret;
+    vcx_command_handle_t handle = [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
+    const char * message_status = [messageStatus cString];
+    const char * msg_json = [pwdidsJson cString];
+    ret = vcx_messages_update_status(handle, message_status, msg_json, VcxWrapperCommonCallback);
+    
+    if( ret != 0 )
+    {
+        [[VcxCallbacks sharedInstance] deleteCommandHandleFor: handle];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion([NSError errorFromVcxError: ret]);
         });
     }
 }
