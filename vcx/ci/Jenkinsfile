@@ -19,8 +19,8 @@ testing()
 def testing() {
     stage('Testing') {
         parallel([
-            'Xenial' : { mainUbuntu() },
-            'Android': { android() },
+            // 'Xenial' : { mainUbuntu() },
+            // 'Android': { android() },
             'iOS' : { ios() }
         ])
     }
@@ -170,7 +170,7 @@ def android() {
 }
 
 def ios() {
-    node('macos-vcx') {
+    node('macos-vcx-wip') {
         stage('iOS Build') {
             try {
                 checkout scm
