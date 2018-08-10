@@ -5,9 +5,14 @@ setup() {
     set -e
     export ARCH=$1
 
-    export PATH=${HOME}/.cargo/bin:${PATH}
     export PATH=$PATH:/opt/gradle/gradle-3.4.1/bin
     export PATH=${PATH}:$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/build-tools/25.0.2/
+    export PATH=${HOME}/.cargo/bin:${PATH}
+    export EVERNYM_REPO=https://repo.corp.evernym.com/filely/android
+    export VCX_BASE=../vcx
+    # For docker
+    # export VCX_BASE=${HOME}/vcx
+
     source /etc/profile
 	if [ ! -d runtime_android_build ]; then
         mkdir runtime_android_build
@@ -19,46 +24,33 @@ setup() {
         mkdir toolchains
     fi
 
-    # For Jenkins (MAIN)
-    ANDROID_JNI_LIB=../vcx/wrappers/java/vcx/src/main/jniLibs
-
-    # For docker 
-    #ANDROID_JNI_LIB=~/vcx/wrappers/java/vcx/src/main/jniLibs
+    ANDROID_JNI_LIB=${VCX_BASE}/wrappers/java/vcx/src/main/jniLibs
 
     mkdir -p ${ANDROID_JNI_LIB}/arm
     mkdir -p ${ANDROID_JNI_LIB}/x86
     mkdir -p ${ANDROID_JNI_LIB}/arm64
 }
 
-copy_dependencies() {
-    PATH_TO_CP=$1
-    if [ ! -d ${PATH_TO_CP}/toolchains/linux ]; then
-        cp -rf toolchains ${PATH_TO_CP}
-    fi
-    cp -rf openssl_${ARCH} ${PATH_TO_CP}
-    cp -rf libsodium_${ARCH} ${PATH_TO_CP}
-    cp -rf libzmq_${ARCH} ${PATH_TO_CP}
-}
 
 retrieve_prebuilt_binaries() {
-    PREBUILT_LINK=https://github.com/faisal00813/indy-android-dependencies/raw/master/prebuilt
+    OPENSSL_PREBUILT_ZIP=openssl_1.1.0h-201807251800_r17b.zip
+    SODIUM_PREBUILT_ZIP=sodium_1.0.14-201807251900_r17b.zip
+    ZMQ_PREBUILT_ZIP=zmq_4.2.5-201807252000_r17b.zip
 
-    if [ ! -d "openssl_${ARCH}" ]; then
+    if [ ! -d "openssl_prebuilt" ]; then
         echo "retrieving openssl prebuilt library"
-        wget -q ${PREBUILT_LINK}/openssl/openssl_${ARCH}.zip
-        unzip -qq openssl_${ARCH}.zip
+        wget -q ${EVERNYM_REPO}/${OPENSSL_PREBUILT_ZIP}
+        unzip -qq ${OPENSSL_PREBUILT_ZIP}
     fi
-
-    if [ ! -d "libsodium_${ARCH}" ]; then
-        echo "retrieving libsodium prebuilt library"
-        wget -q ${PREBUILT_LINK}/sodium/libsodium_${ARCH}.zip
-        unzip -qq libsodium_${ARCH}.zip
+    if [ ! -d "sodium_prebuilt" ]; then
+        echo "retrieving openssl prebuilt library"
+        wget -q ${EVERNYM_REPO}/${SODIUM_PREBUILT_ZIP}
+        unzip -qq ${SODIUM_PREBUILT_ZIP}
     fi
-
-    if [ ! -d "libzmq_${ARCH}" ]; then
-        echo "retrieving libzmq prebuilt library"
-        wget -q ${PREBUILT_LINK}/zmq/libzmq_${ARCH}.zip
-        unzip -qq libzmq_${ARCH}.zip
+    if [ ! -d "zmq_prebuilt" ]; then
+        echo "retrieving openssl prebuilt library"
+        wget -q ${EVERNYM_REPO}/${ZMQ_PREBUILT_ZIP}
+        unzip -qq ${ZMQ_PREBUILT_ZIP}
     fi
 }
 
@@ -90,57 +82,52 @@ generate_flags(){
 }
 
 get_libindy() {
-
     set -xv
     [ -z ${LIBINDY_BRANCH} ] && exit 1
     [ -z ${LIBINDY_VERSION} ] && exit 1
 
-    if [ "$LIBINDY_BRANCH" = "stable" ]; then
-        wget https://repo.sovrin.org/android/libindy/${LIBINDY_BRANCH}/${LIBINDY_VERSION}/libindy_android_${ARCH}_${LIBINDY_VERSION}.zip
-    else 
-        wget https://repo.sovrin.org/android/libindy/${LIBINDY_BRANCH}/${LIBINDY_VERSION}-${LIBINDY_TAG}/libindy_android_${ARCH}_${LIBINDY_VERSION}.zip
+    if [ ! -d "libindy_${ARCH}" ]; then
+        if [ "$LIBINDY_BRANCH" = "stable" ]; then
+            wget https://repo.sovrin.org/android/libindy/${LIBINDY_BRANCH}/${LIBINDY_VERSION}/libindy_android_${ARCH}_${LIBINDY_VERSION}.zip
+        else 
+            wget https://repo.sovrin.org/android/libindy/${LIBINDY_BRANCH}/${LIBINDY_VERSION}-${LIBINDY_TAG}/libindy_android_${ARCH}_${LIBINDY_VERSION}.zip
+        fi
+
+        unzip libindy_android_${ARCH}_${LIBINDY_VERSION}.zip
     fi
-
-    unzip libindy_android_${ARCH}_${LIBINDY_VERSION}.zip
-
 }
 
-get_libnullpay() {
+get_libsovtoken() {
     set -xv
-    [ -z ${LIBNULLPAY_BRANCH} ] && exit 1
-    [ -z ${LIBNULLPAY_VERSION} ] && exit 1
-
-    if [ "$LIBINDY_BRANCH" = "stable" ]; then
-        wget https://repo.sovrin.org/android/libnullpay/${LIBNULLPAY_BRANCH}/${LIBNULLPAY_VERSION}/libnullpay_android_${ARCH}_${LIBNULLPAY_VERSION}.zip
-    else 
-        wget https://repo.sovrin.org/android/libnullpay/${LIBNULLPAY_BRANCH}/${LIBNULLPAY_VERSION}-${LIBNULLPAY_TAG}/libnullpay_android_${ARCH}_${LIBNULLPAY_VERSION}.zip
+    # Todo: This artifact was manually uploaded to this repo. Eventually, the file format will change. That is why it is hardcoded
+    LIBSOVTOKEN_ZIP=libsovtoken_0.8.1-201807262112-cbb1520_all.zip
+    if [ ! -d "libsovtoken" ]; then
+        echo "retrieving libsovtoken prebuilt library"
+        wget ${EVERNYM_REPO}/${LIBSOVTOKEN_ZIP}
+        unzip ${LIBSOVTOKEN_ZIP}
     fi
-
-    unzip libnullpay_android_${ARCH}_${LIBNULLPAY_VERSION}.zip
-
 }
 
 build_vcx() {
     # For Jenkins
-    LIBVCX_PATH=../vcx/libvcx/build_scripts/android/vcx/
+    LIBVCX_PATH=${VCX_BASE}/libvcx/build_scripts/android/vcx/
     PREBUILT_BIN=../../../../../runtime_android_build
-
     # For Docker when vcx is in home dir
-    #LIBVCX_PATH=~/vcx/libvcx/build_scripts/android/vcx/
     #PREBUILT_BIN=../../../../ci/scripts/runtime_android_build
+    # PREBUILT_BIN=$(realpath ${VCX_BASE}/ci/scripts/runtime_android_build)
 
     if [ ! -d libindy_${ARCH} ]; then
         echo "missing libindy_${ARCH}. Cannot proceed without it."
         exit 1
     fi
-    if [ ! -d libnullpay_${ARCH} ]; then
-        echo "missing libnullpay_${ARCH}. Cannot proceed without it."
+    if [ ! -d libsovtoken ]; then
+        echo "missing libsovtoken. Cannot proceed without it."
         exit 1
     fi
 
     pushd ${LIBVCX_PATH}
     mkdir -p toolchains/
-    ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} ${PREBUILT_BIN}/openssl_${ARCH} ${PREBUILT_BIN}/libsodium_${ARCH} ${PREBUILT_BIN}/libzmq_${ARCH} ${PREBUILT_BIN}/libindy_${ARCH} ${PREBUILT_BIN}/libnullpay_${ARCH} 
+    ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} ${PREBUILT_BIN}/openssl_prebuilt/${ARCH} ${PREBUILT_BIN}/sodium_prebuilt/${ARCH} ${PREBUILT_BIN}/zmq_prebuilt/${ARCH} ${PREBUILT_BIN}/libindy_${ARCH} ${PREBUILT_BIN}/libsovtoken/${TRIPLET} 
     popd
     mv ${LIBVCX_PATH}libvcx_${ARCH} .
 
@@ -148,5 +135,5 @@ build_vcx() {
 
 setup $1
 get_libindy $1
-get_libnullpay $1
+get_libsovtoken
 build_vcx $1

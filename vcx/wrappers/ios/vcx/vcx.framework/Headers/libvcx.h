@@ -330,10 +330,16 @@ vcx_error_t vcx_wallet_create_payment_address(vcx_command_handle_t chandle, cons
 vcx_error_t vcx_wallet_get_token_info(vcx_command_handle_t chandle, vcx_payment_handle_t payment_handle, void (*cb)(vcx_command_handle_t xhandle, vcx_error_t err, const char *token_info));
 
 /** Send tokens from wallet to a recipient address */
-vcx_error_t vcx_wallet_send_tokens(vcx_command_handle_t chandle, vcx_payment_handle_t payment_handle, long tokens, const char* recipient, void (*cb)(vcx_command_handle_t xhandle, vcx_error_t err, const char *recipient));
+vcx_error_t vcx_wallet_send_tokens(vcx_command_handle_t chandle, vcx_payment_handle_t payment_handle, const char* tokens, const char* recipient, void (*cb)(vcx_command_handle_t xhandle, vcx_error_t err, const char *recipient));
 
 /** Shutdown vcx wallet */
 vcx_error_t vcx_shutdown(vcx_bool_t deleteWallet);
+
+/** Get Messages of given status */
+vcx_error_t vcx_messages_download( vcx_command_handle_t command_handle, const char *message_status, const char *uids, const char *pw_dids, void(*cb)(vcx_command_handle_t xhandle, vcx_error_t err, const char *messages));
+
+/** Update Message status */
+vcx_error_t vcx_messages_update_status( vcx_command_handle_t command_handle, const char *message_status, const char *msg_json, void(*cb)(vcx_command_handle_t xhandle, vcx_error_t err));
 
 /** For testing purposes only */
 void vcx_set_next_agency_response(int);
