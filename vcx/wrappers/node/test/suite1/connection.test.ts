@@ -155,6 +155,7 @@ describe('Connection:', () => {
         VCXMock.setVcxMock(VCXMockMessage.GetMessages)
         await sleep(sleepTime)
       }
+      connectionsWithTimers.forEach(({ timer }) => clearInterval(timer))
     })
   })
 
