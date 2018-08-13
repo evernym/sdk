@@ -87,6 +87,7 @@ export interface IProofPredicate {
  * Class representing a Proof
  */
 export class Proof extends VCXBaseWithState<IProofData> {
+  public static async create ({ sourceId, ...createDataRest }: IProofCreateData): Promise<Proof> {
   /**
    * Builds a generic proof object
    *
@@ -102,7 +103,6 @@ export class Proof extends VCXBaseWithState<IProofData> {
    * proof1 = await Proof.create(data)
    * ```
    */
-  public static async create ({ sourceId, ...createDataRest }: IProofCreateData): Promise<Proof> {
     try {
       const proof = new Proof(sourceId, createDataRest)
       const commandHandle = 0
