@@ -33,10 +33,10 @@ if [ ! -z "$3" ]; then
     CLEAN_BUILD=$3
 fi
 
-if [ "$CLEAN_BUILD" = "cleanbuild" ]; then
+#if [ "$CLEAN_BUILD" = "cleanbuild" ]; then
     #cargo clean
     # cargo update
-fi
+#fi
 
 git log -1 > $WORK_DIR/evernym.vcx-sdk.git.commit.log
 
