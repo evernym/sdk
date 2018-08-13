@@ -180,8 +180,6 @@ export class Connection extends VCXBaseWithState<IConnectionData> {
   }
 
   /**
-   * @memberof Connection
-   * @description
    * Gets the details of the invitation that was returned from the Agent Service.
    *
    * Example:
@@ -191,9 +189,6 @@ export class Connection extends VCXBaseWithState<IConnectionData> {
    * inviteDetails = await connection.connect({phone: phoneNumber})
    * inivteDetailsAgain = await connection.inviteDetails()
    * ```
-   * @async
-   * @function inviteDetails
-   * @returns {Promise<string>} - String with the details
    */
   public async inviteDetails (abbr: boolean = false): Promise<IConnectionInvite> {
     try {
