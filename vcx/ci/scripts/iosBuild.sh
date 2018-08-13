@@ -11,7 +11,7 @@ IOS_ARCHS="arm64,armv7,armv7s,i386,x86_64"
 ls
 cd ${SCRIPTS_PATH}
 ./mac.02.libindy.env.sh
-./mac.03.libindy.build.sh nodebug "${IOS_TARGETS}" cleanbuild
+./mac.03.libindy.build.sh
 ./mac.04.libvcx.setup.sh
 source ./mac.05.libvcx.env.sh
 cp -rf ~/OpenSSL-for-iPhone ${BASE_DIR}/.macosbuild
@@ -37,5 +37,5 @@ if [ ! -z "$(ls -A /Users/jenkins/IOSBuilds/libvcxall/)" ]; then
    rm /Users/jenkins/IOSBuilds/libvcxall/*
 fi
 
-./mac.13.build.cocopod.sh libvcxpartial IOS_ARCHS
-./mac.13.build.cocopod.sh libvcxall
+./mac.13.build.cocoapod.sh libvcxpartial IOS_ARCHS
+./mac.13.build.cocoapod.sh libvcxall
