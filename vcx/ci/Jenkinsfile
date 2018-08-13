@@ -145,8 +145,8 @@ def android() {
                 
                 //Build .so files for arm64, x86, and arm
                 parallel([
-                    "x86" : { buildAndroid(android, 'x86') }
-                    "arm" : { buildAndroid(android, 'arm') }
+                    "x86" : { buildAndroid(android, 'x86') },
+                    "arm" : { buildAndroid(android, 'arm') },
                     "arm64" : { buildAndroid(android, 'arm64') }
                 ])
 
