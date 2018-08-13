@@ -20,8 +20,8 @@ def testing() {
     stage('Testing') {
         parallel([
             //'Xenial' : { mainUbuntu() },
-            //'Android': { android() },
-            'iOS' : { ios() }
+            'Android': { android() },
+            //'iOS' : { ios() }
         ])
     }
 }
@@ -141,14 +141,17 @@ def android() {
                 checkout scm
 
                 //Build android docker image
-                sh 'ls'
                 android = build('android', 'vcx/ci/android.dockerfile', 'vcx')
                 
                 //Build .so files for arm64, x86, and arm
-                buildAndroid(android)
+                parallel([
+                    "x86" : { buildAndroid(android, 'x86') }
+                    "arm" : { buildAndroid(android, 'arm') }
+                    "arm64" : { buildAndroid(android, 'arm64') }
+                ])
 
                 //Package .so files into .aar 
-                packageAndroid(android)
+                //packageAndroid(android)
 
                 if (env.BRANCH_NAME == "master") {
                     //Publish package on aptly
@@ -209,7 +212,21 @@ def fail() {
     slackSend message
 }
 
-def buildAndroid(envn) {    
+// def buildAndroid(envn) {    
+//     envn.inside {
+//         ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
+//         LIBINDY_BRANCH="stable"
+//         LIBINDY_VERSION="1.6.1"
+//         LIBINDY_TAG=""
+
+//         sh 'sudo ./vcx/ci/scripts/installCert.sh'
+//         sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} arm64"
+//         sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} arm"
+//         sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} x86"
+//    }
+// }
+
+def buildAndroid(envn, arch) {    
     envn.inside {
         ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
         LIBINDY_BRANCH="stable"
@@ -217,9 +234,7 @@ def buildAndroid(envn) {
         LIBINDY_TAG=""
 
         sh 'sudo ./vcx/ci/scripts/installCert.sh'
-        sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} arm64"
-        sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} arm"
-        sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} x86"
+        sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} ${arch}"
    }
 }
 
@@ -241,3 +256,4 @@ def publishAndroid(envn) {
         }
     }
 }
+H6H
