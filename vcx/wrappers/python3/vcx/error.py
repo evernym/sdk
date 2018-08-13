@@ -85,9 +85,12 @@ class ErrorCode(IntEnum):
     MissingExportedWalletPath = 1077,
     MissingBackupKey = 1078,
     WalletNotFound = 1079,
-    InvalidState = 1080,
-    DidAlreadyExistsInWallet = 1081,
-    DuplicateMasterSecret = 1082
+    LibindyInvalidStructure = 1080,
+    InvalidState = 1081,
+    InvalidLedgerResponse = 1082,
+    DidAlreadyExistsInWallet = 1083,
+    DuplicateMasterSecret = 1084
+
 
 class VcxError(Exception):
     # error_code: ErrorCode
