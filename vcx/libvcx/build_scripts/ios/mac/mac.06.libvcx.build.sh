@@ -34,14 +34,11 @@ if [ ! -z "$3" ]; then
 fi
 
 if [ "$CLEAN_BUILD" = "cleanbuild" ]; then
-    cargo clean
+    #cargo clean
     # cargo update
 fi
 
 git log -1 > $WORK_DIR/evernym.vcx-sdk.git.commit.log
-
-# change libvcx to use libsovtoken feature
-sed -i .bak 's/"nullpay"/"sovtoken"/' Cargo.toml
 
 export OPENSSL_LIB_DIR_DARWIN=$OPENSSL_LIB_DIR
 
@@ -97,7 +94,7 @@ do
 
     #rm ./target/universal/release/libvcx.a
     #cargo lipo --release --verbose --targets="${target}"
-    cargo build --target "${target}" --release
+    cargo build --release --no-default-features --features "ci sovtoken" --target "${target}" --release
     # cargo build --release --target "${target}"
 
     # if [ -f "./libvcx.previous.a" ]; then
