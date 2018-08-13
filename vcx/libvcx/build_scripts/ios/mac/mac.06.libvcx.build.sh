@@ -94,7 +94,7 @@ do
 
     #rm ./target/universal/release/libvcx.a
     #cargo lipo --release --verbose --targets="${target}"
-    cargo build --release --no-default-features --features "ci sovtoken" --target "${target}" --release
+    cargo build --release --no-default-features --features "ci sovtoken" --target "${target}"
     # cargo build --release --target "${target}"
 
     # if [ -f "./libvcx.previous.a" ]; then
