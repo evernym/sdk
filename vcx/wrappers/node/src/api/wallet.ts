@@ -194,7 +194,7 @@ export class Wallet {
    *     payment: 0,
    *     recipient: address,
    *     tokens: 1
-   * }
+   * })
    */
   public static async sendTokens ({ payment, tokens, recipient }: ISendTokens): Promise<string> {
     try {
@@ -229,7 +229,8 @@ export class Wallet {
    *    id: 'RecordId',
    *    tags: {},
    *    type_: 'TestType',
-   *    value: 'RecordValue'})
+   *    value: 'RecordValue'
+   * })
    * ```
    * @async
    * @param {Record} record
@@ -273,11 +274,13 @@ export class Wallet {
    *    id: 'RecordId',
    *    tags: {},
    *    type_: 'TestType',
-   *    value: 'RecordValue'})
+   *    value: 'RecordValue'
+   * })
    * await Wallet.updateRecordValue({
    *   id: 'RecordId',
    *   type_: 'TestType',
-   *   value: 'RecordValueNew'})
+   *   value: 'RecordValueNew'
+   * })
    * ```
    */
   public static async updateRecordValue (record: IRecordUpdate): Promise<void> {
@@ -315,15 +318,18 @@ export class Wallet {
    * Example:
    * ```
    * await Wallet.addRecord({
-   *    id: 'RecordId',
-   *    tags: {},
-   *    type_: 'TestType',
-   *    value: 'RecordValue'})
-   *
-   * updateRecordTags({  id: 'RecordId',
+   *     id: 'RecordId',
    *     tags: {},
    *     type_: 'TestType',
-   *     value: ''})
+   *     value: 'RecordValue'
+   * })
+   *
+   * updateRecordTags({
+   *     id: 'RecordId',
+   *     tags: {},
+   *     type_: 'TestType',
+   *     value: ''
+   * })
    * ```
    */
   public static async updateRecordTags (record: IRecord): Promise<void> {
@@ -362,15 +368,21 @@ export class Wallet {
    * Example:
    * ```
    * await Wallet.addRecord({
-   *    id: 'RecordId',
-   *    tags: {},
-   *    type_: 'TestType',
-   *    value: 'RecordValue'})
+   *     id: 'RecordId',
+   *     tags: {},
+   *     type_: 'TestType',
+   *     value: 'RecordValue'
+   * })
    *
    * addRecordTags({  id: 'RecordId',
-   *     tags: { "tagName1": "tag value 1", "~tagName2": "tag value 2 unencrypted", "tagName3", 1},
+   *     tags: { 
+   *          "tagName1": "tag value 1",
+   *          "~tagName2": "tag value 2 unencrypted",
+   *           "tagName3", 1
+   *     },
    *     type_: 'TestType',
-   *     value: ''})
+   *     value: ''
+   * })
    * ```
    */
   public static async addRecordTags (record: IRecord): Promise<void> {
@@ -410,18 +422,23 @@ export class Wallet {
    * ```
    * await Wallet.addRecord({
    *    id: 'RecordId',
-   *    tags: { "foo": "bar",
-   *            "~fizz": "buzz",
-   *            "unencyrptedStringTag": "tag value 1",
-   *            "~encryptedStringTag": "tag value 2 unencrypted",
-   *            "unencyrptedIntTag": 1},
+   *    tags: { 
+   *        "foo": "bar",
+   *        "~fizz": "buzz",
+   *        "unencyrptedStringTag": "tag value 1",
+   *        "~encryptedStringTag": "tag value 2 unencrypted",
+   *        "unencyrptedIntTag": 1
+   *    },
    *    type_: 'TestType',
-   *    value: 'RecordValue'})
+   *    value: 'RecordValue'
+   * })
    *
-   * deleteRecordTags({  id: 'RecordId',
+   * deleteRecordTags({ 
+   *     id: 'RecordId',
    *     tags: { tagList: [ "foo", "buzz", "~encryptedStringTag" ] }
    *     type_: 'TestType',
-   *     value: ''})
+   *     value: ''
+   * })
    * ```
    */
   public static async deleteRecordTags (record: IRecord, { tagList }: IDeleteRecordTagsOptions): Promise<void> {
@@ -461,13 +478,16 @@ export class Wallet {
    * ```
    * await Wallet.addRecord({
    *    id: 'RecordId',
-   *    tags: { "foo": "bar",
-   *            "~fizz": "buzz",
-   *            "unencyrptedStringTag": "tag value 1",
-   *            "~encryptedStringTag": "tag value 2 unencrypted",
-   *            "unencyrptedIntTag": 1},
+   *    tags: {
+   *        "foo": "bar",
+   *        "~fizz": "buzz",
+   *        "unencyrptedStringTag": "tag value 1",
+   *        "~encryptedStringTag": "tag value 2 unencrypted",
+   *        "unencyrptedIntTag": 1
+   *    },
    *    type_: 'TestType',
-   *    value: 'RecordValue'})
+   *    value: 'RecordValue'
+   * })
    *
    * await Wallet.deleteRecord({
    *    id: 'RecordId',
@@ -511,13 +531,16 @@ export class Wallet {
    * ```
    * await Wallet.addRecord({
    *    id: 'RecordId',
-   *    tags: { "foo": "bar",
-   *            "~fizz": "buzz",
-   *            "unencyrptedStringTag": "tag value 1",
-   *            "~encryptedStringTag": "tag value 2 unencrypted",
-   *            "unencyrptedIntTag": 1},
+   *    tags: { 
+   *        "foo": "bar",
+   *        "~fizz": "buzz",
+   *        "unencyrptedStringTag": "tag value 1",
+   *        "~encryptedStringTag": "tag value 2 unencrypted",
+   *        "unencyrptedIntTag": 1
+   *    },
    *    type_: 'TestType',
-   *    value: 'RecordValue'})
+   *    value: 'RecordValue'
+   * })
    *
    * record = await Wallet.getReocrd({ type: 'TestType', id: 'RecordId'})
    * ```
@@ -672,8 +695,13 @@ export class Wallet {
    *
    * Example:
    * ```
-   * config: '{"wallet_name":"","wallet_key":"","exported_wallet_path":"","backup_key":""}'
-   * await Wallet.import(config)
+   * config = {
+   *     "wallet_name":"",
+   *     "wallet_key":"",
+   *     "exported_wallet_path":"",
+   *     "backup_key":""
+   * }
+   * await Wallet.import(JSON.stringify(config))
    * ```
    */
   public static async import (config: string): Promise<void> {
