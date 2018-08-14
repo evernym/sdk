@@ -37,11 +37,11 @@ public class ConnectionApi extends VcxJava.API{
     private static Callback vcxConnectionCreateCB = new Callback() {
         // TODO: This callback and jna definition needs to be fixed for this API
         // it should accept connection handle as well
-        public void callback(int command_handle, int err){
-            Log.d(TAG, "callback() called with: command_handle = [" + command_handle + "], err = [" + err + "]");
+        public void callback(int command_handle, int err, int connection_handle){
+            Log.d(TAG, "callback() called with: command_handle = [" + command_handle + "], err = [" + err + "], connection_handle = [" + connection_handle + "]");
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
             if (!checkCallback(future,err)) return;
-            Integer result = command_handle;
+            Integer result = connection_handle;
             future.complete(result);
         }
     };
