@@ -515,8 +515,8 @@ public abstract class LibVcx {
 
             init();
         } catch (UnsatisfiedLinkError ex) {
-
-            Log.e(TAG, "static initializer: ", ex );
+            System.out.println(ex.getMessage());
+//            Log.e(TAG, "static initializer: ", ex );
             // Library could not be found in standard OS locations.
             // Call init(File file) explicitly with absolute library path.
         }
