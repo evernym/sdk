@@ -87,7 +87,13 @@ fn main() {
         println!("cargo:rustc-link-lib=static=ssl");
         if cfg!(feature = "nullpay") {
             let libnullpay_lib_path = match env::var("LIBNULLPAY_DIR") {
-                Ok(val) => val,
+                Ok(val) => {
+                    if Path::new(format!("{}/lib",val)).exists() {
+                        return format!("{}/lib",val)
+                    }else{
+                        return val
+                    }
+                },
                 Err(..) => panic!("Missing required environment variable LIBNULLPAY_DIR")
             };
 

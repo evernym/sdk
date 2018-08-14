@@ -84,11 +84,11 @@ if [ -z "${LIBINDY_DIR}" ] ; then
     else
         LIBINDY_DIR=$7
     fi
-
-    if [ -d "${LIBINDY_DIR}/lib" ] ; then
-            LIBINDY_DIR="${LIBINDY_DIR}/lib"
-    fi
     export LIBINDY_DIR=${LIBINDY_DIR}
+fi
+
+if [ -d "${LIBINDY_DIR}/lib" ] ; then
+            LIBINDY_DIR="${LIBINDY_DIR}/lib"
 fi
 
 if [ -z "${LIBSOVTOKEN_DIR}" ] ; then
@@ -107,6 +107,9 @@ if [ -z "${LIBSOVTOKEN_DIR}" ] ; then
         LIBSOVTOKEN_DIR=${LIBSOVTOKEN_DIR}/${CROSS_COMPILE}
     fi
     export LIBSOVTOKEN_DIR=${LIBSOVTOKEN_DIR}
+fi
+if [ -d "${LIBSOVTOKEN_DIR}/lib" ] ; then
+            LIBSOVTOKEN_DIR="${LIBSOVTOKEN_DIR}/lib"
 fi
 
 
