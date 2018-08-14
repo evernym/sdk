@@ -130,6 +130,8 @@ build_vcx() {
     ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} ${PREBUILT_BIN}/openssl_prebuilt/${ARCH} ${PREBUILT_BIN}/sodium_prebuilt/${ARCH} ${PREBUILT_BIN}/zmq_prebuilt/${ARCH} ${PREBUILT_BIN}/libindy_${ARCH} ${PREBUILT_BIN}/libsovtoken/${TRIPLET} 
     popd
     mv ${LIBVCX_PATH}libvcx_${ARCH} .
+    pwd
+    ls
 
 }
 
