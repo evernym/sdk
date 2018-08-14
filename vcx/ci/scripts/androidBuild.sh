@@ -100,8 +100,9 @@ get_libindy() {
             fi
 
             unzip libindy_android_${ARCH}_${LIBINDY_VERSION}.zip
-            export LIBINDY_DIR="${PWD}/libindy_${ARCH}"
+
         fi
+        export LIBINDY_DIR="${PWD}/libindy_${ARCH}"
     fi
 
 }
