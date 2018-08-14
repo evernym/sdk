@@ -53,9 +53,9 @@ if [ -z "${SODIUM_DIR}" ] ; then
         SODIUM_DIR=$5
     fi
 
-    export SODIUM_LIB_DIR=${SODIUM_DIR}/lib
-    export SODIUM_INCLUDE_DIR=${SODIUM_DIR}/include
+
 fi
+
 
 if [ -z "${LIBZMQ_DIR}" ] ; then
     LIBZMQ_DIR="libzmq_${TARGET_ARCH}"
@@ -69,9 +69,8 @@ if [ -z "${LIBZMQ_DIR}" ] ; then
         LIBZMQ_DIR=$6
     fi
 
-    export LIBZMQ_LIB_DIR=${LIBZMQ_DIR}/lib
-    export LIBZMQ_INCLUDE_DIR=${LIBZMQ_DIR}/include
 fi
+
 
 if [ -z "${LIBINDY_DIR}" ] ; then
     LIBINDY_DIR="libindy_${TARGET_ARCH}"
@@ -93,7 +92,6 @@ fi
 
 if [ -z "${LIBSOVTOKEN_DIR}" ] ; then
     LIBSOVTOKEN_DIR="libsovtoken"
-    PAYMENT_PLUGIN="sovtoken"
     if [ -d "${LIBSOVTOKEN_DIR}" ] ; then
         echo "Found ${LIBSOVTOKEN_DIR}"
     elif [ -z "$8" ] ; then
@@ -111,6 +109,7 @@ fi
 if [ -d "${LIBSOVTOKEN_DIR}/lib" ] ; then
             LIBSOVTOKEN_DIR="${LIBSOVTOKEN_DIR}/lib"
 fi
+
 
 
 
@@ -152,6 +151,11 @@ fi
 #cp -rf ./../../../../../vcx/libvcx/Cargo.toml ${LIBVCX}
 LIBVCX=../../../
 
+export PAYMENT_PLUGIN="sovtoken"
+export SODIUM_LIB_DIR=${SODIUM_DIR}/lib
+export SODIUM_INCLUDE_DIR=${SODIUM_DIR}/include
+export LIBZMQ_LIB_DIR=${LIBZMQ_DIR}/lib
+export LIBZMQ_INCLUDE_DIR=${LIBZMQ_DIR}/include
 export PKG_CONFIG_ALLOW_CROSS=1
 export CARGO_INCREMENTAL=1
 export RUST_LOG=indy=trace
