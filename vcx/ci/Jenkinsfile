@@ -151,7 +151,7 @@ def android() {
                 ])
 
                 android.inside {
-                    sh "ls vcx/ci/scripts/runtime_android_build"
+                    sh "ls /home/vcx/artifacts"
                 }
 
                 //Package .so files into .aar 
@@ -232,6 +232,7 @@ def fail() {
 
 def buildAndroid(envn, arch) {    
     node('ubuntu') {
+        checkout scm
         envn.inside {
             ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
             LIBINDY_BRANCH="stable"
@@ -240,6 +241,8 @@ def buildAndroid(envn, arch) {
 
             sh 'sudo ./vcx/ci/scripts/installCert.sh'
             sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} ${arch}"
+            sh "ls vcx/ci/scripts"
+            sh "ls vcx/ci/scripts/runtime_android_build"
         }
    }
 }

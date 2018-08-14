@@ -137,3 +137,4 @@ setup $1
 get_libindy $1
 get_libsovtoken
 #build_vcx $1
+ls vcx/ci/scripts/runtime_android_build
