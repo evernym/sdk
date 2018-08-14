@@ -129,12 +129,12 @@ build_vcx() {
     #PREBUILT_BIN=../../../../ci/scripts/runtime_android_build
     # PREBUILT_BIN=$(realpath ${VCX_BASE}/ci/scripts/runtime_android_build)
 
-    if [ ! -d libindy_${ARCH} ]; then
-        echo "missing libindy_${ARCH}. Cannot proceed without it."
+    if [ ! -d ${LIBINDY_DIR} ]; then
+        echo "missing libindy_${ARCH} directory. Cannot proceed without it."
         exit 1
     fi
-    if [ ! -d libsovtoken ]; then
-        echo "missing libsovtoken. Cannot proceed without it."
+    if [ ! -d ${LIBSOVTOKEN_DIR} ]; then
+        echo "missing libsovtoken directory. Cannot proceed without it."
         exit 1
     fi
 

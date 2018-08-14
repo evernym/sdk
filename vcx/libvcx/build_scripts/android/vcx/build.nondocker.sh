@@ -38,6 +38,7 @@ if [ -z "${OPENSSL_DIR}" ]; then
     else
         OPENSSL_DIR=$4
     fi
+    export OPENSSL_DIR=${OPENSSL_DIR}
 fi
 
 if [ -z "${SODIUM_DIR}" ] ; then
@@ -51,6 +52,9 @@ if [ -z "${SODIUM_DIR}" ] ; then
     else
         SODIUM_DIR=$5
     fi
+
+    export SODIUM_LIB_DIR=${SODIUM_DIR}/lib
+    export SODIUM_INCLUDE_DIR=${SODIUM_DIR}/include
 fi
 
 if [ -z "${LIBZMQ_DIR}" ] ; then
@@ -64,6 +68,9 @@ if [ -z "${LIBZMQ_DIR}" ] ; then
     else
         LIBZMQ_DIR=$6
     fi
+
+    export LIBZMQ_LIB_DIR=${LIBZMQ_DIR}/lib
+    export LIBZMQ_INCLUDE_DIR=${LIBZMQ_DIR}/include
 fi
 
 if [ -z "${LIBINDY_DIR}" ] ; then
@@ -81,6 +88,7 @@ if [ -z "${LIBINDY_DIR}" ] ; then
     if [ -d "${LIBINDY_DIR}/lib" ] ; then
             LIBINDY_DIR="${LIBINDY_DIR}/lib"
     fi
+    export LIBINDY_DIR=${LIBINDY_DIR}
 fi
 
 if [ -z "${LIBSOVTOKEN_DIR}" ] ; then
@@ -98,6 +106,7 @@ if [ -z "${LIBSOVTOKEN_DIR}" ] ; then
     if [ -d "${LIBSOVTOKEN_DIR}/${CROSS_COMPILE}" ] ; then
         LIBSOVTOKEN_DIR=${LIBSOVTOKEN_DIR}/${CROSS_COMPILE}
     fi
+    export LIBSOVTOKEN_DIR=${LIBSOVTOKEN_DIR}
 fi
 
 
@@ -145,13 +154,6 @@ export CARGO_INCREMENTAL=1
 export RUST_LOG=indy=trace
 export RUST_TEST_THREADS=1
 export RUST_BACKTRACE=1
-export OPENSSL_DIR=${WORKDIR}/${OPENSSL_DIR}
-export SODIUM_LIB_DIR=${WORKDIR}/${SODIUM_DIR}/lib
-export SODIUM_INCLUDE_DIR=${WORKDIR}/${SODIUM_DIR}/include
-export LIBZMQ_LIB_DIR=${WORKDIR}/${LIBZMQ_DIR}/lib
-export LIBZMQ_INCLUDE_DIR=${WORKDIR}/${LIBZMQ_DIR}/include
-export LIBINDY_DIR=${WORKDIR}/${LIBINDY_DIR}
-export LIBSOVTOKEN_DIR=${WORKDIR}/${LIBSOVTOKEN_DIR}
 export TOOLCHAIN_DIR=${TOOLCHAIN_PREFIX}/${TARGET_ARCH}
 export PATH=${TOOLCHAIN_DIR}/bin:${PATH}
 export PKG_CONFIG_ALLOW_CROSS=1
