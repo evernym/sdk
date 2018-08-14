@@ -28,6 +28,7 @@ RUN useradd -ms /bin/bash -u $uid vcx
 RUN usermod -aG sudo vcx
 
 # Install Android SDK and NDK 
+RUN mkdir /home/vcx/artifacts
 RUN mkdir -m 777 /home/vcx/android-sdk-linux
 RUN wget https://dl.google.com/android/repository/tools_r25.2.3-linux.zip -P /home/vcx/android-sdk-linux
 RUN unzip /home/vcx/android-sdk-linux/tools_r25.2.3-linux.zip -d /home/vcx/android-sdk-linux
