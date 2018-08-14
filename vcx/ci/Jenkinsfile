@@ -241,8 +241,7 @@ def buildAndroid(envn, arch) {
 
             sh 'sudo ./vcx/ci/scripts/installCert.sh'
             sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} ${arch}"
-            sh "ls vcx/ci/scripts"
-            sh "ls vcx/ci/scripts/runtime_android_build"
+            sh "ls runtime_android_build || true"
         }
    }
 }
