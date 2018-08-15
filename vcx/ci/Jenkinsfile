@@ -156,7 +156,7 @@ def android() {
                     // "arm64" : { buildAndroid(android, 'arm64') }
                 ])
 
-                sh "ls ${workDir}"
+                sh "ls ${sharedFolder}"
                 // android.inside {
                 //     sh "ls runtime_android_build"
                 // }
@@ -240,15 +240,15 @@ def fail() {
 def buildAndroid(android, arch, sharedFolder) {    
     node('ubuntu') {
         checkout scm
-        android.inside('-v ${sharedFolder}:/home/vcx/artifacts') {
-            sh "mkdir /home/vcx/artifacts/${arch}"
-            // ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
-            // LIBINDY_BRANCH="stable"
-            // LIBINDY_VERSION="1.6.2"
-            // LIBINDY_TAG=""
+        android.inside("-v ${sharedFolder}:/home/vcx/artifacts") {
+            ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
+            LIBINDY_BRANCH="stable"
+            LIBINDY_VERSION="1.6.2"
+            LIBINDY_TAG=""
 
-            // sh 'sudo ./vcx/ci/scripts/installCert.sh'
-            // sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} ${arch}"
+            sh 'sudo ./vcx/ci/scripts/installCert.sh'
+            sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} ${arch}"
+            sh "sudo cp -rf vcx/ci/scripts/runtime_android_build/libvcx_${arch} /home/vcx/artifacts"
         }
    }
 }
