@@ -239,8 +239,8 @@ def fail() {
 // }
 
 def buildAndroid(android, arch, sharedFolder) {    
-    node('ubuntu') {
-        checkout scm
+    // node('ubuntu') {
+        // checkout scm
         containerFolder='/home/vcx/artifacts'
         android.inside("-v ${sharedFolder}:${containerFolder}") {
             ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
@@ -250,11 +250,11 @@ def buildAndroid(android, arch, sharedFolder) {
 
             sh 'sudo ./vcx/ci/scripts/installCert.sh'
             sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} ${arch}"
-            // sh "sudo cp -rf runtime_android_build/libvcx_${arch} ${containerFolder}"
-            sh "sudo cp -rf runtime_android_build/openssl_${arch} ${containerFolder}"
+            sh "sudo cp -rf runtime_android_build/libvcx_${arch} ${containerFolder}||true"
+            // sh "sudo cp -rf runtime_android_build/openssl_${arch} ${containerFolder}"
         }
         sh "ls ${sharedFolder}"
-   }
+//    }
 }
 
 def packageAndroid(android) {
