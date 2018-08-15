@@ -136,51 +136,55 @@ def mainUbuntu() {
 
 def android() {
     node('ubuntu') {
-        stage('Android Build') {
-            try {
-                checkout scm
+        try {
+            checkout scm
 
-                //Build android docker image
-                android = build('android', 'vcx/ci/android.dockerfile', 'vcx')
-                
-                //Build .so files for arm64, x86, and arm
-                //workDir will be used to share .so's from different containers
-                workDir = pwd()
-                sharedFolder = "${workDir}/artifacts"
-                sh "ls ${workDir}"
-                sh "mkdir -p ${sharedFolder}"
-                sh "ls ${workDir}"
-                parallel([
-                    "x86" : { buildAndroid(android, 'x86', sharedFolder) },
-                    "arm" : { buildAndroid(android, 'arm', sharedFolder) },
-                    // "arm64" : { buildAndroid(android, 'arm64') }
-                ])
-                sh "ls ${sharedFolder}"
-                
+            //Build android docker image
+            android = build('android', 'vcx/ci/android.dockerfile', 'vcx')
+            workDir = pwd()
+            sharedFolder = "${workDir}/artifacts"
+            sh "ls ${workDir}"
+            sh "mkdir -p ${sharedFolder}"
+            sh "ls ${workDir}"
+                    
+            stage('Android Build') {
+                    //Build .so files for arm64, x86, and arm
+                    //workDir will be used to share .so's from different containers
+                    parallel([
+                        "x86" : { buildAndroid(android, 'x86', sharedFolder) },
+                        "arm" : { buildAndroid(android, 'arm', sharedFolder) },
+                        // "arm64" : { buildAndroid(android, 'arm64') }
+                    ])
+                    
 
-                // android.inside {
-                //     sh "ls runtime_android_build"
-                // }
+                    // android.inside {
+                    //     sh "ls runtime_android_build"
+                    // }
 
-                //Package .so files into .aar 
-                //packageAndroid(android)
+                    //Package .so files into .aar 
+                    //packageAndroid(android)
 
-                if (env.BRANCH_NAME == "master") {
-                    //Publish package on aptly
-                    publishAndroid(android)
-                }
-            } catch (Exception ex) {
-                currentBuild.result = "FAILED"
-                if (env.BRANCH_NAME == "master") {
-                    fail()
-                }
-                echo "$ex error"
-            } finally {
-				sh 'docker system df'
-                step([$class: 'WsCleanup'])
+                    if (env.BRANCH_NAME == "master") {
+                        //Publish package on aptly
+                        publishAndroid(android)
+                    }
             }
 
+            stage('Android Packaging') {
+                sh "ls ${sharedFolder}"
+
+            }
+        } catch (Exception ex) {
+            currentBuild.result = "FAILED"
+            if (env.BRANCH_NAME == "master") {
+                fail()
+            }
+            echo "$ex error"
+        } finally {
+            sh 'docker system df'
+            step([$class: 'WsCleanup'])
         }
+
     }
 }
 
