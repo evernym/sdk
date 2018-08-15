@@ -249,9 +249,7 @@ def buildAndroid(android, arch, sharedFolder) {
             sh 'sudo ./vcx/ci/scripts/installCert.sh'
             sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} ${arch}"
             // sh "sudo cp -rf vcx/ci/scripts/runtime_android_build/libvcx_${arch} /home/vcx/artifacts"
-            sh "ls"
-            sh "vcx"
-            sh "sudo cp -rf vcx/ci/scripts/runtime_android_build/libsovtoken /home/vcx/artifacts"
+            sh "sudo cp -rf runtime_android_build/openssle_${arch}/ ${sharedFolder}"
         }
    }
 }
