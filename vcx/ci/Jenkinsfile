@@ -143,9 +143,9 @@ def android() {
             android = build('android', 'vcx/ci/android.dockerfile', 'vcx')
             workDir = pwd()
             sharedFolder = "${workDir}/artifacts"
-            sh "ls ${workDir}"
-            sh "mkdir -p ${sharedFolder}"
-            sh "ls ${workDir}"
+            // sh "ls ${workDir}"
+            // sh "mkdir -p ${sharedFolder}"
+            // sh "ls ${workDir}"
                     
             stage('Android Build') {
                     //Build .so files for arm64, x86, and arm
@@ -157,22 +157,18 @@ def android() {
                     ])
                     
 
-                    // android.inside {
-                    //     sh "ls runtime_android_build"
-                    // }
-
-                    //Package .so files into .aar 
-                    //packageAndroid(android)
-
-                    if (env.BRANCH_NAME == "master") {
-                        //Publish package on aptly
-                        publishAndroid(android)
-                    }
             }
 
             stage('Android Packaging') {
                 sh "ls ${sharedFolder}"
 
+                //Package .so files into .aar 
+                // packageAndroid(android)
+
+                if (env.BRANCH_NAME == "master") {
+                    //Publish package on aptly
+                    publishAndroid(android)
+                }
             }
         } catch (Exception ex) {
             currentBuild.result = "FAILED"
@@ -254,17 +250,15 @@ def buildAndroid(android, arch, sharedFolder) {
 
             sh 'sudo ./vcx/ci/scripts/installCert.sh'
             sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} ${arch}"
-            // sh "sudo cp -rf vcx/ci/scripts/runtime_android_build/libvcx_${arch} /home/vcx/artifacts"
-            sh "ls runtime_android_build"
-            sh "sudo cp -rf runtime_android_build/openssl_${arch}/ ${containerFolder}"
-            sh "ls ${containerFolder}"
+            sh "sudo cp -rf runtime_android_build/libvcx_${arch} ${containerFolder}"
         }
-        sh "ls ${sharedFolder}"
 //    }
 }
 
-def packageAndroid(envn) {
-    envn.inside {
+def packageAndroid(android) {
+    android.inside("-v ${sharedFolder}:${containerFolder}") {
+        sh "mkdir -p vcx/ci/scripts/runtime_android_build"
+        sh "cp -rf libvcx_* "
         ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidPackage.sh'
         sh "chmod +x ${ANDROID_SCRIPT_PATH}"
         sh "./${ANDROID_SCRIPT_PATH}"
