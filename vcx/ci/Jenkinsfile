@@ -150,13 +150,18 @@ def android() {
                 sh "ls ${workDir}"
                 sh "mkdir -p ${sharedFolder}"
                 sh "ls ${workDir}"
-                parallel([
-                    "x86" : { buildAndroid(android, 'x86', sharedFolder) },
-                    "arm" : { buildAndroid(android, 'arm', sharedFolder) },
-                    // "arm64" : { buildAndroid(android, 'arm64') }
-                ])
+                steps {
+                    parallel([
+                        "x86" : { buildAndroid(android, 'x86', sharedFolder) },
+                        "arm" : { buildAndroid(android, 'arm', sharedFolder) },
+                        // "arm64" : { buildAndroid(android, 'arm64') }
+                    ])
+                }
+                post {
+                    sh "ls ${sharedFolder}"
+                }
+                
 
-                sh "ls ${sharedFolder}"
                 // android.inside {
                 //     sh "ls runtime_android_build"
                 // }
