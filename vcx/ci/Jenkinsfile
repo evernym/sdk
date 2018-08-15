@@ -148,7 +148,7 @@ def android() {
                 workDir = pwd()
                 sharedFolder = "${workDir}/artifacts"
                 sh "ls ${workDir}"
-                sh "mkdir ${sharedFolder}"
+                sh "mkdir -p ${sharedFolder}"
                 sh "ls ${workDir}"
                 parallel([
                     "x86" : { buildAndroid(android, 'x86', sharedFolder) },
