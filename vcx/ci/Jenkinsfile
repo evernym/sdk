@@ -144,15 +144,21 @@ def android() {
                 android = build('android', 'vcx/ci/android.dockerfile', 'vcx')
                 
                 //Build .so files for arm64, x86, and arm
+                //workDir will be used to share .so's from different containers
+                workDir = System.getProperty("user.dir")
+                sharedFolder = "${workDir}/artifacts"
+                sh 'ls ${workDir}'
+                sh 'mkdir ${sharedFolder}'
+                sh 'ls ${workDir}'
                 parallel([
-                    "x86" : { buildAndroid(android, 'x86') },
-                    "arm" : { buildAndroid(android, 'arm') },
+                    "x86" : { buildAndroid(android, 'x86', sharedFolder) },
+                    "arm" : { buildAndroid(android, 'arm', sharedFolder) },
                     // "arm64" : { buildAndroid(android, 'arm64') }
                 ])
 
-                android.inside {
-                    sh "ls runtime_android_build"
-                }
+                // android.inside {
+                //     sh "ls runtime_android_build"
+                // }
 
                 //Package .so files into .aar 
                 //packageAndroid(android)
@@ -230,17 +236,18 @@ def fail() {
 //    }
 // }
 
-def buildAndroid(envn, arch) {    
+def buildAndroid(android, arch, sharedFolder) {    
     node('ubuntu') {
         checkout scm
-        envn.inside {
-            ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
-            LIBINDY_BRANCH="stable"
-            LIBINDY_VERSION="1.6.2"
-            LIBINDY_TAG=""
+        android.inside('-v ${sharedFolder}:/home/vcx/artifacts') {
+            sh "mkdir /home/vcx/artifacts/${arch}"
+            // ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
+            // LIBINDY_BRANCH="stable"
+            // LIBINDY_VERSION="1.6.2"
+            // LIBINDY_TAG=""
 
-            sh 'sudo ./vcx/ci/scripts/installCert.sh'
-            sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} ${arch}"
+            // sh 'sudo ./vcx/ci/scripts/installCert.sh'
+            // sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} ${arch}"
         }
    }
 }
