@@ -116,8 +116,8 @@ get_libsovtoken() {
             echo "retrieving libsovtoken prebuilt library"
             wget ${EVERNYM_REPO}/${LIBSOVTOKEN_ZIP}
             unzip ${LIBSOVTOKEN_ZIP}
-            export LIBSOVTOKEN_DIR="${PWD}/libsovtoken/${TRIPLET}"
         fi
+        export LIBSOVTOKEN_DIR="${PWD}/libsovtoken/${TRIPLET}"
     fi
 
 }
