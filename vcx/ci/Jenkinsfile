@@ -150,16 +150,12 @@ def android() {
                 sh "ls ${workDir}"
                 sh "mkdir -p ${sharedFolder}"
                 sh "ls ${workDir}"
-                steps {
-                    parallel([
-                        "x86" : { buildAndroid(android, 'x86', sharedFolder) },
-                        "arm" : { buildAndroid(android, 'arm', sharedFolder) },
-                        // "arm64" : { buildAndroid(android, 'arm64') }
-                    ])
-                }
-                post {
-                    sh "ls ${sharedFolder}"
-                }
+                parallel([
+                    "x86" : { buildAndroid(android, 'x86', sharedFolder) },
+                    "arm" : { buildAndroid(android, 'arm', sharedFolder) },
+                    // "arm64" : { buildAndroid(android, 'arm64') }
+                ])
+                sh "ls ${sharedFolder}"
                 
 
                 // android.inside {
@@ -243,8 +239,8 @@ def fail() {
 // }
 
 def buildAndroid(android, arch, sharedFolder) {    
-    node('ubuntu') {
-        checkout scm
+    // node('ubuntu') {
+        // checkout scm
         containerFolder='/home/vcx/artifacts'
         android.inside("-v ${sharedFolder}:${containerFolder}") {
             ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
@@ -260,7 +256,7 @@ def buildAndroid(android, arch, sharedFolder) {
             sh "ls ${containerFolder}"
         }
         sh "ls ${sharedFolder}"
-   }
+//    }
 }
 
 def packageAndroid(envn) {
