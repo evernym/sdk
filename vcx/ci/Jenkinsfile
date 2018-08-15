@@ -253,6 +253,7 @@ def buildAndroid(android, arch, sharedFolder) {
             // sh "sudo cp -rf runtime_android_build/libvcx_${arch} ${containerFolder}"
             sh "sudo cp -rf runtime_android_build/openssl_${arch} ${containerFolder}"
         }
+        sh "ls ${sharedFolder}"
    }
 }
 
