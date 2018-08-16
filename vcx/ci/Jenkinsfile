@@ -135,7 +135,7 @@ def mainUbuntu() {
 
 
 def android() {
-    try {
+    // try {
         stage('Android Build') {
             parallel([
                 "x86" : { buildAndroid('x86') },
@@ -177,22 +177,22 @@ def android() {
             //Package .so files into .aar 
             // packageAndroid(android)
 
-            if (env.BRANCH_NAME == "master") {
-                //Publish package on aptly
-                publishAndroid(android)
-            }
+            // if (env.BRANCH_NAME == "master") {
+            //     //Publish package on aptly
+            //     publishAndroid(android)
+            // }
         }
 
-    } catch (Exception ex) {
-        currentBuild.result = "FAILED"
-        if (env.BRANCH_NAME == "master") {
-            fail()
-        }
-        echo "$ex error"
-    } finally {
-        // sh 'docker system df'
-        step([$class: 'WsCleanup'])
-    }
+    // } catch (Exception ex) {
+    //     currentBuild.result = "FAILED"
+    //     if (env.BRANCH_NAME == "master") {
+    //         fail()
+    //     }
+    //     echo "$ex error"
+    // } finally {
+    //     // sh 'docker system df'
+    //     step([$class: 'WsCleanup'])
+    // }
 }
 
 def ios() {
