@@ -135,72 +135,61 @@ def mainUbuntu() {
 
 
 def android() {
-    node('ubuntu') {
-        try {
-            checkout scm
-
-            //Build android docker image
-            android = build('android', 'vcx/ci/android.dockerfile', 'vcx')
-            workDir = pwd()
-            sharedFolder = "${workDir}/artifacts"
-                    
-            stage('Android Build') {
-                    //Build .so files for arm64, x86, and arm
-                    //workDir will be used to share .so's from different containers
-                    parallel([
-                        "x86" : { buildAndroid(android, 'x86', sharedFolder) },
-                        "arm" : { buildAndroid(android, 'arm', sharedFolder) },
-                        // "arm64" : { buildAndroid(android, 'arm64') }
-                    ])
-                    
-
-            }
-
-            stage('Android Packaging') {
-                // sh "ls ${sharedFolder}"
-
+    try {
+        stage('Android Build') {
+            parallel([
+                "x86" : { buildAndroid(android, 'x86', sharedFolder) },
+                "arm" : { buildAndroid(android, 'arm', sharedFolder) },
+                // "arm64" : { buildAndroid(android, 'arm64') }
+            ])
+        }
+        stage('Android Packaging') {
+            node('ubuntu') {
                 sh "ls" 
                 unstash name: "libindy_arm"
                 sh "ls"
-                // sh "mkdir -p libindy_arm"
-                // sh "ls libindy_arm"
-                // sh "mv libindy.so libindy_arm"
-                // sh "ls libindy_arm"
-                // sh "ls"
-                // unstash name: "libindy_x86"
-                // sh "mkdir -p libindy_x86"
-                // sh "ls libindy_x86"
-                // sh "mv libindy.so libindy_x86"
-                // sh "ls libindy_x86"
-                // sh "ls" 
-                //---------------------
-                // unstash name: "libvcx_arm"
-                // // unstash name: "libvcx_arm64"
-                // unstash name: "libvcx_x86"
-                // sh "mkdir -p runtime_android_build"
-                // sh "mv libvcx_arm runtime_android_build"
-                // // sh "mv libvcx_arm64 runtime_android_build"
-                // sh "mv libvcx_x86 runtime_android_build"
-
-                //Package .so files into .aar 
-                packageAndroid(android)
-
-                if (env.BRANCH_NAME == "master") {
-                    //Publish package on aptly
-                    publishAndroid(android)
-                }
             }
-        } catch (Exception ex) {
-            currentBuild.result = "FAILED"
+            // sh "ls ${sharedFolder}"
+
+            
+            // sh "mkdir -p libindy_arm"
+            // sh "ls libindy_arm"
+            // sh "mv libindy.so libindy_arm"
+            // sh "ls libindy_arm"
+            // sh "ls"
+            // unstash name: "libindy_x86"
+            // sh "mkdir -p libindy_x86"
+            // sh "ls libindy_x86"
+            // sh "mv libindy.so libindy_x86"
+            // sh "ls libindy_x86"
+            // sh "ls" 
+            //---------------------
+            // unstash name: "libvcx_arm"
+            // // unstash name: "libvcx_arm64"
+            // unstash name: "libvcx_x86"
+            // sh "mkdir -p runtime_android_build"
+            // sh "mv libvcx_arm runtime_android_build"
+            // // sh "mv libvcx_arm64 runtime_android_build"
+            // sh "mv libvcx_x86 runtime_android_build"
+
+            //Package .so files into .aar 
+            // packageAndroid(android)
+
             if (env.BRANCH_NAME == "master") {
-                fail()
+                //Publish package on aptly
+                publishAndroid(android)
             }
-            echo "$ex error"
-        } finally {
-            sh 'docker system df'
-            step([$class: 'WsCleanup'])
         }
 
+    } catch (Exception ex) {
+        currentBuild.result = "FAILED"
+        if (env.BRANCH_NAME == "master") {
+            fail()
+        }
+        echo "$ex error"
+    } finally {
+        sh 'docker system df'
+        step([$class: 'WsCleanup'])
     }
 }
 
@@ -260,6 +249,7 @@ def fail() {
 
 def buildAndroid(android, arch, sharedFolder) {    
     node('ubuntu') {
+        android = build('android', 'vcx/ci/android.dockerfile', 'vcx')
         checkout scm
         // containerFolder='/home/vcx/artifacts'
         // android.inside("-v ${sharedFolder}:${containerFolder}") {
@@ -273,8 +263,11 @@ def buildAndroid(android, arch, sharedFolder) {
             sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} ${arch}"
 
         }
-        stash includes: "runtime_android_build/libindy_android_${arch}_1.6.2.zip", name: "libindy_${arch}"
-        // stash includes: "runtime_android_build/libindy_${arch}/lib/libindy.so", name: "libindy_${arch}"
+        sh "ls"
+        sh "pwd"
+        sh "ls runtime_android_build/libindy_${arch}/lib || true"
+        stash includes: "runtime_android_build/libindy_${arch}/lib/libindy.so", name: "libindy_${arch}"
+        sh "libindy_${arch}"
    }
 }
 
