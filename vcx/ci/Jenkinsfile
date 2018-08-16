@@ -148,19 +148,9 @@ def android() {
                 checkout scm
                 android = build('android', 'vcx/ci/android.dockerfile', 'vcx')
 
-                all_archs = ["arm", "x86"]
-                for (arch in all_archs) {
-                    dir("runtime_android_build/libvcx_${arch}") {
-                        unstash name: "libvcx_${arch}"
-                    }
-                }
-                sh "ls runtime_android_build"
-                sh "ls runtime_android_build/libvcx_arm"
-                sh "ls runtime_android_build/libvcx_x86"
 
                 //Package .so files into .aar 
                 packageAndroid(android)
-                
                 
             }
 
@@ -240,7 +230,7 @@ def buildAndroid(arch) {
     node('ubuntu') {
         try {
             sh "touch libvcx_${arch}.so"
-            stash includes: "libvcx_${arch}.so", name: "libvcx_${arch}"
+            stash includes: "libvcx.so", name: "libvcx_${arch}"
 
             // checkout scm
             // android = build('android', 'vcx/ci/android.dockerfile', 'vcx')
@@ -272,7 +262,19 @@ def buildAndroid(arch) {
 }
 
 def packageAndroid(android) {
+    all_archs = ["arm", "x86"]
+    for (arch in all_archs) {
+        dir("runtime_android_build/libvcx_${arch}") {
+            unstash name: "libvcx_${arch}"
+        }
+    }
+    sh "ls runtime_android_build"
+    sh "ls runtime_android_build/libvcx_arm"
+    sh "ls runtime_android_build/libvcx_x86"
+    sh "pwd"
     android.inside {
+        sh "ehco ------------------"
+        sh "pwd"
         sh "ls"
         sh "ls runtime_android_build || true"
         ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidPackage.sh'
