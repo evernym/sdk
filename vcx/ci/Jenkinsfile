@@ -273,7 +273,8 @@ def buildAndroid(android, arch, sharedFolder) {
             sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} ${arch}"
 
         }
-        stash includes: "runtime_android_build/libindy_${arch}/lib/libindy.so", name: "libindy_${arch}"
+        stash includes: "runtime_android_build/libindy_android_${arch}_1.6.2.zip", name: "libindy_${arch}"
+        // stash includes: "runtime_android_build/libindy_${arch}/lib/libindy.so", name: "libindy_${arch}"
    }
 }
 
