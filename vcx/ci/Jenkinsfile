@@ -162,16 +162,13 @@ def android() {
             stage('Android Packaging') {
                 // sh "ls ${sharedFolder}"
 
-                sh "mkdir -p arm"
-                sh "cd arm"
-                unstash name: "arm"
-                sh "cd .."
-                sh "mkdir -p x86"
-                sh "cd x86" 
-                unstash name: "x86"
-                sh "cd .."
-                sh "ls -al arm"
-                sh "ls -al x86"
+                sh "ls"
+                unstash name: "libindy_arm"
+                sh "ls"
+                sh "ls libindy_arm/lib || true"
+                unstash name: "libindy_x86"
+                sh "ls"
+                sh "ls libindy_x86/lib || true"
 
                 //Package .so files into .aar 
                 // packageAndroid(android)
@@ -263,10 +260,12 @@ def buildAndroid(android, arch, sharedFolder) {
             sh 'sudo ./vcx/ci/scripts/installCert.sh'
             sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} ${arch}"
 
-            stash includes: "runtime_android_build/openssl_${arch}/lib/libcrypto.a', name: ${arch}"
             // sh "sudo cp -rf runtime_android_build/libvcx_${arch} ${containerFolder}||true"
             // sh "sudo cp -rf runtime_android_build/openssl_${arch} ${containerFolder}"
         }
+            sh "ls"
+            sh "ls runtime_android_build || true"
+            stash includes: "runtime_android_build/libindy_${arch}", name: "libindy_${arch}"
         // sh "ls ${sharedFolder}"
    }
 }
