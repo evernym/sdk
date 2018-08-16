@@ -147,8 +147,8 @@ def android() {
             node('ubuntu') {
                 sh "ls" 
                 // unstash name: "libindy_arm"
-                unstash name: "test_arm"
-                unstash name: "test_x86"
+                unstash name: "libindy_arm"
+                unstash name: "libindy_x86"
                 sh "ls"
             }
             // sh "ls ${sharedFolder}"
@@ -251,23 +251,34 @@ def fail() {
 
 def buildAndroid(arch) {    
     node('ubuntu') {
-        sh "touch test_${arch}"
-        stash includes: "test_${arch}", name: "test_${arch}"
+        try {
+            sh "touch test_${arch}"
+            stash includes: "test_${arch}", name: "test_${arch}"
 
-        // checkout scm
-        // android = build('android', 'vcx/ci/android.dockerfile', 'vcx')
-        // android.inside {
-        //     ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
-        //     LIBINDY_BRANCH="stable"
-        //     LIBINDY_VERSION="1.6.2"
-        //     LIBINDY_TAG=""
+            checkout scm
+            android = build('android', 'vcx/ci/android.dockerfile', 'vcx')
+            android.inside {
+                ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
+                LIBINDY_BRANCH="stable"
+                LIBINDY_VERSION="1.6.2"
+                LIBINDY_TAG=""
 
-        //     sh 'sudo ./vcx/ci/scripts/installCert.sh'
-        //     sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} ${arch}"
+                sh 'sudo ./vcx/ci/scripts/installCert.sh'
+                sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} ${arch}"
 
-        // }
-        // sh "ls runtime_android_build/libindy_${arch}/lib || true"
-        // stash includes: "runtime_android_build/libindy_${arch}/lib/libindy.so", name: "libindy_${arch}"
+            }
+            sh "ls runtime_android_build/libindy_${arch}/lib || true"
+            stash includes: "runtime_android_build/libindy_${arch}/lib/libindy.so", name: "libindy_${arch}"
+        } catch (Exception ex) {
+            currentBuild.result = "FAILED"
+            if (env.BRANCH_NAME == "master") {
+                fail()
+            }
+            echo "$ex error" 
+        } finally {
+            // sh 'docker system df'
+            step([$class: 'WsCleanup'])
+        }
    }
 }
 
