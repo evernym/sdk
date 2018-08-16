@@ -162,6 +162,7 @@ fn create_path_and_file_name() -> std::path::PathBuf {
     fs::remove_file(path.clone()).unwrap_or(());
     path
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
