@@ -140,7 +140,7 @@ def android() {
             parallel([
                 "x86" : { buildAndroid('x86') },
                 "arm" : { buildAndroid('arm') },
-                "arm64" : { buildAndroid(android, 'arm64') }
+                "arm64" : { buildAndroid('arm64') }
             ])
         }
         stage('Android Packaging') {
@@ -229,25 +229,24 @@ def fail() {
 def buildAndroid(arch) {    
     node('ubuntu') {
         try {
-            sh "touch libvcx.so"
-            stash includes: "libvcx.so", name: "libvcx_${arch}"
+            // sh "touch libvcx.so"
+            // stash includes: "libvcx.so", name: "libvcx_${arch}"
 
-            // checkout scm
-            // android = build('android', 'vcx/ci/android.dockerfile', 'vcx')
-            // android.inside {
-            //     ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
-            //     LIBINDY_BRANCH="stable"
-            //     LIBINDY_VERSION="1.6.2"
-            //     LIBINDY_TAG=""
+            checkout scm
+            android = build('android', 'vcx/ci/android.dockerfile', 'vcx')
+            android.inside {
+                ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
+                LIBINDY_BRANCH="stable"
+                LIBINDY_VERSION="1.6.2"
+                LIBINDY_TAG=""
 
-            //     sh 'sudo ./vcx/ci/scripts/installCert.sh'
-            //     sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} ${arch}"
+                sh 'sudo ./vcx/ci/scripts/installCert.sh'
+                sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} ${arch}"
 
-            // }
-            // sh "ls runtime_android_build/libvcx_${arch} || true"
-            // dir("runtime_android_build/libvcx_${arch}") {
-            //     stash includes: "libvcx.so", name: "libvcx_${arch}"
-            // }
+            }
+            dir("runtime_android_build/libvcx_${arch}") {
+                stash includes: "libvcx.so", name: "libvcx_${arch}"
+            }
         } catch (Exception ex) {
             currentBuild.result = "FAILED"
             if (env.BRANCH_NAME == "master") {
@@ -262,7 +261,7 @@ def buildAndroid(arch) {
 }
 
 def packageAndroid(android) {
-    all_archs = ["arm", "x86"]
+    all_archs = ["arm", "arm64", "x86"]
     for (arch in all_archs) {
         dir("runtime_android_build/libvcx_${arch}") {
             unstash name: "libvcx_${arch}"
