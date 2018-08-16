@@ -268,7 +268,9 @@ def buildAndroid(arch) {
 
             }
             sh "ls runtime_android_build/libindy_${arch}/lib || true"
-            stash includes: "runtime_android_build/libindy_${arch}/lib/libindy.so", name: "libindy_${arch}"
+            dir("runtime_android_build/libindy_${arch}/lib/") {
+                stash includes: "libindy.so", name: "libindy_${arch}"
+            }
         } catch (Exception ex) {
             currentBuild.result = "FAILED"
             if (env.BRANCH_NAME == "master") {
