@@ -34,14 +34,11 @@ if [ ! -z "$3" ]; then
 fi
 
 if [ "$CLEAN_BUILD" = "cleanbuild" ]; then
-    cargo clean
-    # cargo update
+   cargo clean
+   # cargo update
 fi
 
 git log -1 > $WORK_DIR/evernym.vcx-sdk.git.commit.log
-
-# change libvcx to use libsovtoken feature
-sed -i .bak 's/"nullpay"/"sovtoken"/' Cargo.toml
 
 export OPENSSL_LIB_DIR_DARWIN=$OPENSSL_LIB_DIR
 
@@ -80,41 +77,14 @@ do
     export IOS_SODIUM_LIB=$WORK_DIR/libzmq-ios/libsodium-ios/dist/ios/lib/${target_arch}
     export IOS_ZMQ_LIB=$WORK_DIR/libzmq-ios/dist/ios/lib/${target_arch}
     export LIBINDY_DIR=$WORK_DIR/libindy/${target_arch}
-    #export LIBNULLPAY_DIR=$WORK_DIR/vcx-indy-sdk/libnullpay/target/${target}/release
     export LIBSOVTOKEN_DIR=$WORK_DIR/libsovtoken-ios/libsovtoken/${target}
 
-    # To build for macos
-    #cargo build
-    #export LIBINDY_DIR=/usr/local/lib
-    #export RUST_BACKTRACE=1
-    # To build for iOS
-    #LIBINDY_DIR=/usr/local/lib RUST_BACKTRACE=1 cargo lipo --release
-    #cargo lipo --release --verbose --targets="${IOS_TARGETS}"
-    
-    # if [ -f "./target/universal/release/libvcx.a" ]; then
-    #     mv ./target/universal/release/libvcx.a ./libvcx.previous.a
-    # fi
+    cargo build --release --no-default-features --features "ci sovtoken" --target "${target}"
 
-    #rm ./target/universal/release/libvcx.a
-    #cargo lipo --release --verbose --targets="${target}"
-    cargo build --target "${target}" --release
-    # cargo build --release --target "${target}"
-
-    # if [ -f "./libvcx.previous.a" ]; then
-    #     lipo -create -output ./combined.ios.libvcx.a ./target/universal/release/libvcx.a ./libvcx.previous.a
-    #     mv ./combined.ios.libvcx.a ./target/universal/release/libvcx.a
-    #     rm ./libvcx.previous.a
-    # fi
     to_combine="${to_combine} ./target/${target}/release/libvcx.a"
 
 done
-#rm ./target/universal/release/libvcx.a
 mkdir -p ./target/universal/release
 lipo -create $to_combine -o ./target/universal/release/libvcx.a
-#lipo -create -output ./combined.ios.libvcx.a ./target/universal/release/libvcx.a ./libvcx.previous.a
 
 export OPENSSL_LIB_DIR=$OPENSSL_LIB_DIR_DARWIN
-
-#cargo test
-
-#lipo -info 
