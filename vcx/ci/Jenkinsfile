@@ -146,51 +146,28 @@ def android() {
         stage('Android Packaging') {
             node('ubuntu') {
                 checkout scm
+                android = build('android', 'vcx/ci/android.dockerfile', 'vcx')
+
                 all_archs = ["arm", "x86"]
-                for (arch in archs) {
+                for (arch in all_archs) {
                     dir("runtime_android_build/libvcx_${arch}") {
-                        sh "ls" 
-                        sh "pwd" 
-                        // unstash name: "libindy_arm"
                         unstash name: "libvcx_${arch}"
                     }
                 }
                 sh "ls runtime_android_build"
                 sh "ls runtime_android_build/libvcx_arm"
                 sh "ls runtime_android_build/libvcx_x86"
+
+                //Package .so files into .aar 
+                packageAndroid(android)
                 
                 
             }
-            // sh "ls ${sharedFolder}"
 
-            
-            // sh "mkdir -p libindy_arm"
-            // sh "ls libindy_arm"
-            // sh "mv libindy.so libindy_arm"
-            // sh "ls libindy_arm"
-            // sh "ls"
-            // unstash name: "libindy_x86"
-            // sh "mkdir -p libindy_x86"
-            // sh "ls libindy_x86"
-            // sh "mv libindy.so libindy_x86"
-            // sh "ls libindy_x86"
-            // sh "ls" 
-            //---------------------
-            // unstash name: "libvcx_arm"
-            // // unstash name: "libvcx_arm64"
-            // unstash name: "libvcx_x86"
-            // sh "mkdir -p runtime_android_build"
-            // sh "mv libvcx_arm runtime_android_build"
-            // // sh "mv libvcx_arm64 runtime_android_build"
-            // sh "mv libvcx_x86 runtime_android_build"
-
-            //Package .so files into .aar 
-            // packageAndroid(android)
-
-            // if (env.BRANCH_NAME == "master") {
-            //     //Publish package on aptly
-            //     publishAndroid(android)
-            // }
+            if (env.BRANCH_NAME == "master") {
+                //Publish package on aptly
+                publishAndroid(android)
+            }
         }
 
     // } catch (Exception ex) {
