@@ -160,7 +160,18 @@ def android() {
             }
 
             stage('Android Packaging') {
-                sh "ls ${sharedFolder}"
+                // sh "ls ${sharedFolder}"
+
+                sh "mkdir -p arm"
+                sh "cd arm"
+                unstash name: "arm"
+                sh "cd .."
+                sh "mkdir -p x86"
+                sh "cd x86" 
+                unstash name: "x86"
+                sh "cd .."
+                sh "ls -al arm"
+                sh "ls -al x86"
 
                 //Package .so files into .aar 
                 // packageAndroid(android)
@@ -239,10 +250,11 @@ def fail() {
 // }
 
 def buildAndroid(android, arch, sharedFolder) {    
-    // node('ubuntu') {
-        // checkout scm
+    node('ubuntu') {
+        checkout scm
         containerFolder='/home/vcx/artifacts'
-        android.inside("-v ${sharedFolder}:${containerFolder}") {
+        // android.inside("-v ${sharedFolder}:${containerFolder}") {
+        android.inside {
             ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
             LIBINDY_BRANCH="stable"
             LIBINDY_VERSION="1.6.2"
@@ -250,11 +262,13 @@ def buildAndroid(android, arch, sharedFolder) {
 
             sh 'sudo ./vcx/ci/scripts/installCert.sh'
             sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} ${arch}"
-            sh "sudo cp -rf runtime_android_build/libvcx_${arch} ${containerFolder}||true"
+
+            stash includes: "runtime_android_build/openssl_${arch}/lib/libcrypto.a', name: ${arch}"
+            // sh "sudo cp -rf runtime_android_build/libvcx_${arch} ${containerFolder}||true"
             // sh "sudo cp -rf runtime_android_build/openssl_${arch} ${containerFolder}"
         }
-        sh "ls ${sharedFolder}"
-//    }
+        // sh "ls ${sharedFolder}"
+   }
 }
 
 def packageAndroid(android) {
