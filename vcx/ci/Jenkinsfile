@@ -140,7 +140,7 @@ def android() {
             parallel([
                 "x86" : { buildAndroid('x86') },
                 "arm" : { buildAndroid('arm') },
-                // "arm64" : { buildAndroid(android, 'arm64') }
+                "arm64" : { buildAndroid(android, 'arm64') }
             ])
         }
         stage('Android Packaging') {
@@ -229,7 +229,7 @@ def fail() {
 def buildAndroid(arch) {    
     node('ubuntu') {
         try {
-            sh "touch libvcx_${arch}.so"
+            sh "touch libvcx.so"
             stash includes: "libvcx.so", name: "libvcx_${arch}"
 
             // checkout scm
@@ -268,15 +268,7 @@ def packageAndroid(android) {
             unstash name: "libvcx_${arch}"
         }
     }
-    sh "ls runtime_android_build"
-    sh "ls runtime_android_build/libvcx_arm"
-    sh "ls runtime_android_build/libvcx_x86"
-    sh "pwd"
     android.inside {
-        sh "ehco ------------------"
-        sh "pwd"
-        sh "ls"
-        sh "ls runtime_android_build || true"
         ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidPackage.sh'
         sh "chmod +x ${ANDROID_SCRIPT_PATH}"
         sh "./${ANDROID_SCRIPT_PATH}"
