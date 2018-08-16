@@ -181,6 +181,7 @@ mod tests {
         init_vcx(&vcx_config).unwrap();
         vcx_shutdown(false);
         assert_eq!(provision_agent().err(), Some(error::DID_ALREADY_EXISTS_IN_WALLET.code_num));
+        vcx_shutdown(true);
     }
 
     #[test]
