@@ -138,15 +138,17 @@ def android() {
     try {
         stage('Android Build') {
             parallel([
-                "x86" : { buildAndroid(android, 'x86', sharedFolder) },
-                "arm" : { buildAndroid(android, 'arm', sharedFolder) },
+                "x86" : { buildAndroid('x86') },
+                "arm" : { buildAndroid('arm') },
                 // "arm64" : { buildAndroid(android, 'arm64') }
             ])
         }
         stage('Android Packaging') {
             node('ubuntu') {
                 sh "ls" 
-                unstash name: "libindy_arm"
+                // unstash name: "libindy_arm"
+                unstash name: "test_arm"
+                unstash name: "test_x86"
                 sh "ls"
             }
             // sh "ls ${sharedFolder}"
@@ -188,7 +190,7 @@ def android() {
         }
         echo "$ex error"
     } finally {
-        sh 'docker system df'
+        // sh 'docker system df'
         step([$class: 'WsCleanup'])
     }
 }
@@ -247,27 +249,25 @@ def fail() {
 //    }
 // }
 
-def buildAndroid(android, arch, sharedFolder) {    
+def buildAndroid(arch) {    
     node('ubuntu') {
-        android = build('android', 'vcx/ci/android.dockerfile', 'vcx')
-        checkout scm
-        // containerFolder='/home/vcx/artifacts'
-        // android.inside("-v ${sharedFolder}:${containerFolder}") {
-        android.inside {
-            ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
-            LIBINDY_BRANCH="stable"
-            LIBINDY_VERSION="1.6.2"
-            LIBINDY_TAG=""
+        sh "touch test_${arch}"
+        stash includes: "test_${arch}", name: "test_${arch}"
 
-            sh 'sudo ./vcx/ci/scripts/installCert.sh'
-            sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} ${arch}"
+        // checkout scm
+        // android = build('android', 'vcx/ci/android.dockerfile', 'vcx')
+        // android.inside {
+        //     ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
+        //     LIBINDY_BRANCH="stable"
+        //     LIBINDY_VERSION="1.6.2"
+        //     LIBINDY_TAG=""
 
-        }
-        sh "ls"
-        sh "pwd"
-        sh "ls runtime_android_build/libindy_${arch}/lib || true"
-        stash includes: "runtime_android_build/libindy_${arch}/lib/libindy.so", name: "libindy_${arch}"
-        sh "libindy_${arch}"
+        //     sh 'sudo ./vcx/ci/scripts/installCert.sh'
+        //     sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} ${arch}"
+
+        // }
+        // sh "ls runtime_android_build/libindy_${arch}/lib || true"
+        // stash includes: "runtime_android_build/libindy_${arch}/lib/libindy.so", name: "libindy_${arch}"
    }
 }
 
@@ -291,4 +291,3 @@ def publishAndroid(envn) {
         }
     }
 }
-H6H
