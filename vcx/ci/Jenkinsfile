@@ -145,11 +145,21 @@ def android() {
         }
         stage('Android Packaging') {
             node('ubuntu') {
-                sh "ls" 
-                // unstash name: "libindy_arm"
-                unstash name: "libindy_arm"
-                unstash name: "libindy_x86"
-                sh "ls"
+                checkout scm
+                all_archs = ["arm", "x86"]
+                for (arch in archs) {
+                    dir("runtime_android_build/libvcx_${arch}") {
+                        sh "ls" 
+                        sh "pwd" 
+                        // unstash name: "libindy_arm"
+                        unstash name: "libvcx_${arch}"
+                    }
+                }
+                sh "ls runtime_android_build"
+                sh "ls runtime_android_build/libvcx_arm"
+                sh "ls runtime_android_build/libvcx_x86"
+                
+                
             }
             // sh "ls ${sharedFolder}"
 
@@ -252,25 +262,25 @@ def fail() {
 def buildAndroid(arch) {    
     node('ubuntu') {
         try {
-            sh "touch test_${arch}"
-            stash includes: "test_${arch}", name: "test_${arch}"
+            sh "touch libvcx_${arch}.so"
+            stash includes: "libvcx_${arch}.so", name: "libvcx_${arch}"
 
-            checkout scm
-            android = build('android', 'vcx/ci/android.dockerfile', 'vcx')
-            android.inside {
-                ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
-                LIBINDY_BRANCH="stable"
-                LIBINDY_VERSION="1.6.2"
-                LIBINDY_TAG=""
+            // checkout scm
+            // android = build('android', 'vcx/ci/android.dockerfile', 'vcx')
+            // android.inside {
+            //     ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
+            //     LIBINDY_BRANCH="stable"
+            //     LIBINDY_VERSION="1.6.2"
+            //     LIBINDY_TAG=""
 
-                sh 'sudo ./vcx/ci/scripts/installCert.sh'
-                sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} ${arch}"
+            //     sh 'sudo ./vcx/ci/scripts/installCert.sh'
+            //     sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} ${arch}"
 
-            }
-            sh "ls runtime_android_build/libindy_${arch}/lib || true"
-            dir("runtime_android_build/libindy_${arch}/lib/") {
-                stash includes: "libindy.so", name: "libindy_${arch}"
-            }
+            // }
+            // sh "ls runtime_android_build/libvcx_${arch} || true"
+            // dir("runtime_android_build/libvcx_${arch}") {
+            //     stash includes: "libvcx.so", name: "libvcx_${arch}"
+            // }
         } catch (Exception ex) {
             currentBuild.result = "FAILED"
             if (env.BRANCH_NAME == "master") {
