@@ -142,7 +142,7 @@ def android() {
             //Build android docker image
             android = build('android', 'vcx/ci/android.dockerfile', 'vcx')
             workDir = pwd()
-            // sharedFolder = "${workDir}/artifacts"
+            sharedFolder = "${workDir}/artifacts"
                     
             stage('Android Build') {
                     //Build .so files for arm64, x86, and arm
@@ -159,8 +159,17 @@ def android() {
             stage('Android Packaging') {
                 // sh "ls ${sharedFolder}"
 
-                // unstash name: "libindy_arm"
-                // unstash name: "libindy_x86"
+                sh "ls" 
+                unstash name: "libindy_arm"
+                unstash name: "libindy_x86"
+                sh "ls" 
+                // unstash name: "libvcx_arm"
+                // // unstash name: "libvcx_arm64"
+                // unstash name: "libvcx_x86"
+                // sh "mkdir -p runtime_android_build"
+                // sh "mv libvcx_arm runtime_android_build"
+                // // sh "mv libvcx_arm64 runtime_android_build"
+                // sh "mv libvcx_x86 runtime_android_build"
 
                 //Package .so files into .aar 
                 packageAndroid(android)
@@ -253,12 +262,14 @@ def buildAndroid(android, arch, sharedFolder) {
             sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} ${arch}"
 
         }
-            // stash includes: "runtime_android_build/libindy_${arch}", name: "libindy_${arch}"
+        stash includes: "runtime_android_build/libindy_${arch}", name: "libindy_${arch}"
    }
 }
 
 def packageAndroid(android) {
     android.inside {
+        sh "ls"
+        sh "ls runtime_android_build || true"
         ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidPackage.sh'
         sh "chmod +x ${ANDROID_SCRIPT_PATH}"
         sh "./${ANDROID_SCRIPT_PATH}"
