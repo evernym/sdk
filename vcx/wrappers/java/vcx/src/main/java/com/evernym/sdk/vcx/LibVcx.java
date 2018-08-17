@@ -11,6 +11,16 @@ import com.sun.jna.NativeLibrary;
 import java.io.File;
 
 public abstract class LibVcx {
+    public enum State {
+        None,
+        initialized,
+        offer_sent,
+        request_received,
+        accepted,
+        unfulfilled,
+        expired,
+        revoked,
+    }
 
     private static final String LIBRARY_NAME = "vcx";
     private static final String TAG ="VCX_ANDROID_WRAPPER::";
@@ -302,7 +312,7 @@ public abstract class LibVcx {
         /**
          * Creates a disclosed_proof object.  Populates a handle to the new disclosed_proof.
          */
-        public int vcx_disclosed_proof_create(int command_handle, String source_id, String requested_attrs, String requested_predicates, String name, Callback cb);
+        public int vcx_disclosed_proof_create_with_request(int command_handle, String source_id, String requested_attrs, String requested_predicates, String name, Callback cb);
 
         /**
          * Asynchronously send a proof to the connection.
