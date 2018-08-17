@@ -192,65 +192,44 @@ public abstract class LibVcx {
 
 
 /**
- * claim issuer object
+ * credential issuer object
  *
- * Used for offering and managing a claim with an identity owner.
+ * Used for offering and managing a credential with an identity owner.
  */
 
-        /**
-         * Creates a claim object from the specified claimdef handle. Populates a handle the new claim.
-         */
-        public int vcx_issuer_create_claim(int command_handle, String source_id, int schema_seq_no, String issuer_did, String claim_data, String claim_name, Callback cb);
+        /** Creates a credential object from the specified credentialdef handle. Populates a handle the new credential. */
+        public int vcx_issuer_create_credential(int command_handle, String source_id, String cred_def_id, String issuer_did, String credential_data, String credential_name, long price, Callback cb);
 
-        /**
-         * Asynchronously sends the claim offer to the connection.
-         */
-        public int vcx_issuer_send_claim_offer(int command_handle, int claim_handle, int connection_handle, Callback cb);
+        /** Asynchronously sends the credential offer to the connection. */
+        public int vcx_issuer_send_credential_offer(int command_handle, int credential_handle, int connection_handle, Callback cb);
 
-        /**
-         * Updates the State of the claim from the agency.
-         */
-        public int vcx_issuer_claim_update_state(int command_handle, int claim_handle, Callback cb);
+        /** Updates the state of the credential from the agency. */
+        public int vcx_issuer_credential_update_state(int command_handle, int credential_handle, Callback cb);
 
-        /**
-         * Retrieves the State of the issuer_claim.
-         */
-        public int vcx_issuer_claim_get_state(int command_handle, int claim_handle, Callback cb);
+        /** Retrieves the state of the issuer_credential. */
+        public int vcx_issuer_credential_get_state(int command_handle, int credential_handle, Callback cb);
 
-        /**
-         * Asynchronously send the claim to the connection. Populates a handle to the new transaction.
-         */
-        public int vcx_issuer_send_claim(int command_handle, int claim_handle, int connection_handle, Callback cb);
+        /** Asynchronously send the credential to the connection. Populates a handle to the new transaction. */
+        public int vcx_issuer_send_credential(int command_handle, int credential_handle, int connection_handle, Callback cb);
 
-        /**
-         * Populates status with the current State of this claim.
-         */
-        public int vcx_issuer_claim_serialize(int command_handle, int claim_handle, Callback cb);
+        /** Populates status with the current state of this credential. */
+        public int vcx_issuer_credential_serialize(int command_handle, int credential_handle, Callback cb);
 
-        /**
-         * Re-creates a claim object from the specified serialization.
-         */
-        public int vcx_issuer_claim_deserialize(int command_handle , String serialized_claim, Callback cb);
+        /** Re-creates a credential object from the specified serialization. */
+        public int vcx_issuer_credential_deserialize(int command_handle, String serialized_credential, Callback cb);
 
-        /**
-         * Terminates a claim for the specified reason.
-         */
-        public int vcx_issuer_terminate_claim(int command_handle, int claim_handle, vcx_state state_type, String msg);
+        /** Terminates a credential for the specified reason. */
+        public int vcx_issuer_terminate_credential(int command_handle, int credential_handle, int state_type, String msg);
 
-        /**
-         * Releases the claim from memory.
-         */
-        public int vcx_issuer_claim_release(int claim_handle);
+        /** Releases the credential from memory. */
+        public int vcx_issuer_credential_release(int credential_handle);
 
-        /**
-         * Populates claim_request with the latest claim request received. (not in MVP)
-         */
-        public int vcx_issuer_get_claim_request(int claim_handle, String claim_request);
+        /** Populates credential_request with the latest credential request received. (not in MVP) */
+        public int vcx_issuer_get_credential_request(int credential_handle, char credential_request);
 
-        /**
-         * Sets the claim request in an accepted State. (not in MVP)
-         */
-        public int vcx_issuer_accept_claim(int claim_handle);
+        /** Sets the credential request in an accepted state. (not in MVP) */
+        public int vcx_issuer_accept_credential(int credential_handle);
+
 
 /**
  * proof object
@@ -363,52 +342,7 @@ public abstract class LibVcx {
          * Generate a proof that can be sent later
          */
         public int vcx_disclosed_proof_generate_proof(int command_handle, int proof_handle, String selected_credentials, String self_attested_attributes, Callback cb);
-
-/**
- * claim object
- *
- * Used for accepting and requesting a claim with an identity owner.
- */
-
-        /**
-         * Creates a claim object from the specified claimdef handle. Populates a handle the new claim.
-         */
-        public int vcx_claim_create_with_offer(int command_handle, String source_id, String claim_offer, Callback cb);
-
-        /**
-         * Asynchronously sends the claim request to the connection.
-         */
-        public int vcx_claim_send_request(int command_handle, int claim_handle, int connection_handle, Callback cb);
-
-        /**
-         * Check for any claim offers from the connection.
-         */
-        public int vcx_claim_get_offers(int command_handle, int connection_handle, Callback cb);
-
-        /**
-         * Updates the State of the claim from the agency.
-         */
-        public int vcx_claim_update_state(int command_handle, int claim_handle, Callback cb);
-
-        /**
-         * Retrieves the State of the claim - including storing the claim if it has been sent.
-         */
-        public int vcx_claim_get_state(int command_handle, int claim_handle, Callback cb);
-
-        /**
-         * Populates status with the current State of this claim.
-         */
-        public int vcx_claim_serialize(int command_handle, int claim_handle, Callback cb);
-
-        /**
-         * Re-creates a claim from the specified serialization.
-         */
-        public int vcx_claim_deserialize(int command_handle, String serialized_claim, Callback cb);
-
-        /**
-         * Releases the claim from memory.
-         */
-        public int vcx_claim_release(int claim_handle);
+        
 
         /**
          * UtilsApi object
@@ -510,6 +444,29 @@ public abstract class LibVcx {
 
         /** Update message status for a object of uids */
         public int vcx_messages_update_status(int command_handle, String messageStatus, String msgJson, Callback cb);
+
+        /**
+         * credentialdef object
+         *
+         * For creating, validating and committing a credential definition to the sovrin ledger.
+         */
+
+        /** Creates a credential definition from the given schema.  Populates a handle to the new credentialdef. */
+        int vcx_credentialdef_create(int command_handle, String source_id, String credentialdef_name, String schema_id, String issuer_did, String tag,  String config, int payment_handle, Callback cb);
+
+
+        /** Populates status with the current state of this credential. */
+        int vcx_credentialdef_serialize(int command_handle, int credentialdef_handle, Callback cb);
+
+        /** Re-creates a credential object from the specified serialization. */
+        int vcx_credentialdef_deserialize(int command_handle, String serialized_credentialdef, Callback cb);
+
+        /** Release memory associated with credentialdef object. */
+        int vcx_credentialdef_release(int handle);
+
+        /** Retrieves cred_def_id from credentialdef object. */
+        int vcx_credentialdef_get_cred_def_id(int command_handle, int cred_def_handle, Callback cb);
+
 
     }
 
