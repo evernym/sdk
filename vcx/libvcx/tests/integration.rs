@@ -182,6 +182,8 @@ mod tests {
         vcx_shutdown(true);
     }
 
+    #[cfg(feature = "sovtoken")]
+    #[cfg(feature = "pool_tests")]
     #[test]
     fn test_token_balance() {
         delete_indy_client();
