@@ -165,10 +165,9 @@ fn create_path_and_file_name() -> std::path::PathBuf {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use vcx::utils::error;
 
-    #[cfg(feature = "sovtoken")]
+    #[cfg(feature = "agency")]
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_error_codes() {
@@ -184,10 +183,12 @@ mod tests {
         vcx_shutdown(true);
     }
 
+    #[cfg(feature = "agency")]
+    #[cfg(feature = "sovtoken")]
+    #[cfg(feature = "pool_tests")]
     #[test]
     fn test_token_balance() {
         use vcx::api::vcx::vcx_mint_tokens;
-
 
         delete_indy_client();
         create_genesis_txn_file();
