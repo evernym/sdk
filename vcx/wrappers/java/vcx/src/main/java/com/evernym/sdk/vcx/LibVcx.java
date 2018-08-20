@@ -88,7 +88,7 @@ public abstract class LibVcx {
         /**
          * Populates sequence_no with the actual sequence number of the schema on the sovrin ledger.
          */
-        public int vcx_schema_get_sequence_no(int command_handle, int schema_handle, Callback cb);
+        public int vcx_schema_get_schema_id(int command_handle, int schema_handle, Callback cb);
 
         /**
          * Release memory associated with schema object.
@@ -355,8 +355,6 @@ public abstract class LibVcx {
         public int vcx_agent_update_info(int command_handle,String json,Callback cb);
 
         public int vcx_ledger_get_fees(int command_handle, Callback cb);
-
-        public void vcx_set_next_agency_response(int message_index);
 
         /**
          * credential object

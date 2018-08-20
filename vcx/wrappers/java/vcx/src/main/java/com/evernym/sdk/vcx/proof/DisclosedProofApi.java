@@ -11,12 +11,14 @@ import java9.util.concurrent.CompletableFuture;
 
 public class DisclosedProofApi extends VcxJava.API {
 
-    private DisclosedProofApi (){}
+    private DisclosedProofApi() {
+    }
 
     private static Callback vcxProofCreateCB = new Callback() {
-        public void callback(int command_handle, int err, int proof_handle){
+        @SuppressWarnings({"unused", "unchecked"})
+        public void callback(int command_handle, int err, int proof_handle) {
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
-            if(!checkCallback(future, err)) return;
+            if (!checkCallback(future, err)) return;
             int result = proof_handle;
             future.complete(result);
         }
@@ -35,16 +37,17 @@ public class DisclosedProofApi extends VcxJava.API {
         CompletableFuture<CreateProofMsgIdResult> future = new CompletableFuture<CreateProofMsgIdResult>();
         int commandHandle = addFuture(future);
 
-        int result = LibVcx.api.vcx_disclosed_proof_create_with_request(commandHandle, sourceId, requestedAttributes, requestedPredicates,name, vcxProofCreateCB);
+        int result = LibVcx.api.vcx_disclosed_proof_create_with_request(commandHandle, sourceId, requestedAttributes, requestedPredicates, name, vcxProofCreateCB);
         checkResult(result);
 
         return future;
     }
 
     private static Callback vcxProofCreateWithMsgIdCB = new Callback() {
-        public void callback(int command_handle, int err, int proof_handle, String proof_request){
+        @SuppressWarnings({"unused", "unchecked"})
+        public void callback(int command_handle, int err, int proof_handle, String proof_request) {
             CompletableFuture<CreateProofMsgIdResult> future = (CompletableFuture<CreateProofMsgIdResult>) removeFuture(command_handle);
-            if(!checkCallback(future, err)) return;
+            if (!checkCallback(future, err)) return;
             CreateProofMsgIdResult result = new CreateProofMsgIdResult(proof_handle, proof_request);
             future.complete(result);
         }
@@ -67,9 +70,10 @@ public class DisclosedProofApi extends VcxJava.API {
     }
 
     private static Callback vcxProofUpdateStateCB = new Callback() {
-        public void callback(int command_handle, int err, int proof_handle, LibVcx.State state){
+        @SuppressWarnings({"unused", "unchecked"})
+        public void callback(int command_handle, int err, int proof_handle, LibVcx.State state) {
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
-            if(!checkCallback(future, err)) return;
+            if (!checkCallback(future, err)) return;
             future.complete(state.ordinal());
         }
     };
@@ -87,9 +91,10 @@ public class DisclosedProofApi extends VcxJava.API {
     }
 
     private static Callback proofGetRequestsCB = new Callback() {
-        public void callback(int command_handle, int err, String proof_requests){
+        @SuppressWarnings({"unused", "unchecked"})
+        public void callback(int command_handle, int err, String proof_requests) {
             CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(command_handle);
-            if(!checkCallback(future, err)) return;
+            if (!checkCallback(future, err)) return;
             String result = proof_requests;
             future.complete(result);
         }
@@ -101,16 +106,17 @@ public class DisclosedProofApi extends VcxJava.API {
         CompletableFuture<String> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
 
-        int result = LibVcx.api.vcx_disclosed_proof_get_requests(commandHandle,  connectionHandle, proofGetRequestsCB);
+        int result = LibVcx.api.vcx_disclosed_proof_get_requests(commandHandle, connectionHandle, proofGetRequestsCB);
         checkResult(result);
 
         return future;
     }
 
     private static Callback vcxProofGetStateCB = new Callback() {
-        public void callback(int command_handle, int err, int proof_handle, LibVcx.State state){
+        @SuppressWarnings({"unused", "unchecked"})
+        public void callback(int command_handle, int err, int proof_handle, LibVcx.State state) {
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
-            if(!checkCallback(future, err)) return;
+            if (!checkCallback(future, err)) return;
             future.complete(state.ordinal());
         }
     };
@@ -128,9 +134,10 @@ public class DisclosedProofApi extends VcxJava.API {
     }
 
     private static Callback vcxProofSerializeCB = new Callback() {
-        public void callback(int command_handle, int err, int proof_handle, String data){
+        @SuppressWarnings({"unused", "unchecked"})
+        public void callback(int command_handle, int err, int proof_handle, String data) {
             CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(command_handle);
-            if(!checkCallback(future, err)) return;
+            if (!checkCallback(future, err)) return;
             future.complete(data);
         }
     };
@@ -148,9 +155,10 @@ public class DisclosedProofApi extends VcxJava.API {
     }
 
     private static Callback proofDeserializeCB = new Callback() {
-        public void callback(int command_handle, int err, int proof_handle){
+        @SuppressWarnings({"unused", "unchecked"})
+        public void callback(int command_handle, int err, int proof_handle) {
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
-            if(!checkCallback(future,err)) return;
+            if (!checkCallback(future, err)) return;
             Integer result = proof_handle;
             future.complete(result);
         }
@@ -182,9 +190,10 @@ public class DisclosedProofApi extends VcxJava.API {
     }
 
     private static Callback vcxProofRetrieveCredentialsCB = new Callback() {
-        public void callback(int command_handle, int err, String matching_credentials){
+        @SuppressWarnings({"unused", "unchecked"})
+        public void callback(int command_handle, int err, String matching_credentials) {
             CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(command_handle);
-            if(!checkCallback(future, err)) return;
+            if (!checkCallback(future, err)) return;
             String result = matching_credentials;
             future.complete(result);
         }
@@ -204,9 +213,10 @@ public class DisclosedProofApi extends VcxJava.API {
 
 
     private static Callback vcxProofGenerateCB = new Callback() {
+        @SuppressWarnings({"unused", "unchecked"})
         public void callback(int command_handle, int err) {
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
-            if(!checkCallback(future, err)) return;
+            if (!checkCallback(future, err)) return;
             // resolving with no error
             Integer result = 0;
             future.complete(result);
@@ -229,9 +239,10 @@ public class DisclosedProofApi extends VcxJava.API {
 
 
     private static Callback vcxProofSendCB = new Callback() {
+        @SuppressWarnings({"unused", "unchecked"})
         public void callback(int command_handle, int err) {
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
-            if(!checkCallback(future, err)) return;
+            if (!checkCallback(future, err)) return;
             // resolving with no error
             Integer result = 0;
             future.complete(result);

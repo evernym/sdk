@@ -13,12 +13,14 @@ import java9.util.concurrent.CompletableFuture;
 public class WalletApi extends VcxJava.API {
     private static String TAG = "JAVA_WRAPPER::API_VCX::WALLET";
 
-    private WalletApi(){}
+    private WalletApi() {
+    }
 
     private static Callback vcxExportWalletCB = new Callback() {
-        public void callback(int command_handle, int err, int export_handle){
+        @SuppressWarnings({"unused", "unchecked"})
+        public void callback(int command_handle, int err, int export_handle) {
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
-            if(!checkCallback(future,err)) return;
+            if (!checkCallback(future, err)) return;
             Integer result = export_handle;
             future.complete(result);
         }
@@ -40,9 +42,10 @@ public class WalletApi extends VcxJava.API {
     }
 
     private static Callback vcxImportWalletCB = new Callback() {
-        public void callback(int command_handle, int err, int import_handle){
+        @SuppressWarnings({"unused", "unchecked"})
+        public void callback(int command_handle, int err, int import_handle) {
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
-            if(!checkCallback(future,err)) return;
+            if (!checkCallback(future, err)) return;
             Integer result = import_handle;
             future.complete(result);
         }
@@ -62,9 +65,10 @@ public class WalletApi extends VcxJava.API {
     }
 
     private static Callback vcxAddRecordWalletCB = new Callback() {
-        public void callback(int command_handle, int err){
+        @SuppressWarnings({"unused", "unchecked"})
+        public void callback(int command_handle, int err) {
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
-            if(!checkCallback(future,err)) return;
+            if (!checkCallback(future, err)) return;
             Integer result = command_handle;
             future.complete(result);
         }
@@ -82,16 +86,17 @@ public class WalletApi extends VcxJava.API {
         int commandHandle = addFuture(future);
         String recordTag = "{}";
 
-        int result = LibVcx.api.vcx_wallet_add_record( commandHandle, recordType, recordId, recordValue, recordTag, vcxAddRecordWalletCB);
+        int result = LibVcx.api.vcx_wallet_add_record(commandHandle, recordType, recordId, recordValue, recordTag, vcxAddRecordWalletCB);
         checkResult(result);
 
         return future;
     }
 
     private static Callback vcxDeleteRecordWalletCB = new Callback() {
-        public void callback(int command_handle, int err){
+        @SuppressWarnings({"unused", "unchecked"})
+        public void callback(int command_handle, int err) {
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
-            if(!checkCallback(future,err)) return;
+            if (!checkCallback(future, err)) return;
             Integer result = command_handle;
             future.complete(result);
         }
@@ -106,16 +111,17 @@ public class WalletApi extends VcxJava.API {
         CompletableFuture<Integer> future = new CompletableFuture<Integer>();
         int commandHandle = addFuture(future);
 
-        int result = LibVcx.api.vcx_wallet_delete_record( commandHandle, recordType, recordId, vcxDeleteRecordWalletCB);
+        int result = LibVcx.api.vcx_wallet_delete_record(commandHandle, recordType, recordId, vcxDeleteRecordWalletCB);
         checkResult(result);
 
         return future;
     }
 
     private static Callback vcxGetRecordWalletCB = new Callback() {
-        public void callback(int command_handle, int err, String wallet_value){
+        @SuppressWarnings({"unused", "unchecked"})
+        public void callback(int command_handle, int err, String wallet_value) {
             CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(command_handle);
-            if(!checkCallback(future,err)) return;
+            if (!checkCallback(future, err)) return;
             String result = wallet_value;
             // if nonzero errorcode, ignore wallet_value (null)
             // if error fail
@@ -136,16 +142,17 @@ public class WalletApi extends VcxJava.API {
         int commandHandle = addFuture(future);
         String recordTag = "{}";
 
-        int result = LibVcx.api.vcx_wallet_get_record( commandHandle, recordType, recordId, recordTag, vcxGetRecordWalletCB);
+        int result = LibVcx.api.vcx_wallet_get_record(commandHandle, recordType, recordId, recordTag, vcxGetRecordWalletCB);
         checkResult(result);
 
         return future;
     }
 
     private static Callback vcxUpdateRecordWalletCB = new Callback() {
-        public void callback(int command_handle, int err){
+        @SuppressWarnings({"unused", "unchecked"})
+        public void callback(int command_handle, int err) {
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
-            if(!checkCallback(future,err)) return;
+            if (!checkCallback(future, err)) return;
             Integer result = command_handle;
             future.complete(result);
         }
@@ -162,7 +169,7 @@ public class WalletApi extends VcxJava.API {
         CompletableFuture<Integer> future = new CompletableFuture<Integer>();
         int commandHandle = addFuture(future);
 
-        int result = LibVcx.api.vcx_wallet_update_record_value( commandHandle, recordType, recordId, recordValue, vcxUpdateRecordWalletCB);
+        int result = LibVcx.api.vcx_wallet_update_record_value(commandHandle, recordType, recordId, recordValue, vcxUpdateRecordWalletCB);
         checkResult(result);
 
         return future;
