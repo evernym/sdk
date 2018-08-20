@@ -8,7 +8,6 @@ extern crate serde_json;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vcx::api::vcx::vcx_mint_tokens;
     use rand::Rng;
     use vcx::utils::cstring::CStringUtils;
     use std::ffi::CString;
