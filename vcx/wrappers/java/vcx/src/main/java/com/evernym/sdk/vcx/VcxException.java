@@ -100,7 +100,9 @@ public class VcxException extends Exception {
             if (errorCode == null) {
                 errorCode = ErrorCode.UNKNOWN_ERROR;
             }
-        } catch(Exception e) {}
+        } catch(Exception e) {
+            //TODO: Log exception to logger
+        }
 
         switch (errorCode) {
             case UNKNOWN_ERROR:
