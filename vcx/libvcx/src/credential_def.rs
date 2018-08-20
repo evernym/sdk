@@ -245,6 +245,7 @@ pub mod tests {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         assert!(retrieve_credential_def(CRED_DEF_ID).is_err());
     }
+    
     #[cfg(feature = "agency")]
     #[cfg(feature = "pool_tests")]
     #[test]
