@@ -58,7 +58,7 @@ public class CredentialApi extends VcxJava.API {
     public static CompletableFuture<String> credentialSendRequest(
             int credentialHandle,
             int connectionHandle,
-            int payment_handle
+            int paymentHandle
     ) throws VcxException {
         CompletableFuture<String> future = new CompletableFuture<String>();
         int commandHandle = addFuture(future);
@@ -67,7 +67,7 @@ public class CredentialApi extends VcxJava.API {
                 commandHandle,
                 credentialHandle,
                 connectionHandle,
-                payment_handle,
+                paymentHandle,
                 vcxCredentialSendRequestCB);
         checkResult(result);
 
@@ -80,8 +80,7 @@ public class CredentialApi extends VcxJava.API {
         public void callback(int command_handle, int err, String serializedCredential) {
             CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(command_handle);
             if (!checkCallback(future, err)) return;
-            String result = serializedCredential;
-            future.complete(result);
+            future.complete(serializedCredential);
         }
     };
 
@@ -131,8 +130,7 @@ public class CredentialApi extends VcxJava.API {
         public void callback(int command_handle, int err, String credential) {
             CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(command_handle);
             if (!checkCallback(future, err)) return;
-            String result = credential;
-            future.complete(result);
+            future.complete(credential);
         }
     };
 
@@ -212,8 +210,7 @@ public class CredentialApi extends VcxJava.API {
         public void callback(int command_handle, int err, String credential_offers) {
             CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(command_handle);
             if (!checkCallback(future, err)) return;
-            String result = credential_offers;
-            future.complete(result);
+            future.complete(credential_offers);
         }
     };
 

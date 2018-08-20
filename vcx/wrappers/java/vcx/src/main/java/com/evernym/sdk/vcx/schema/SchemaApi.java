@@ -16,26 +16,28 @@ public class SchemaApi extends VcxJava.API {
         // TODO: This callback and jna definition needs to be fixed for this API
         // it should accept connection handle as well
         @SuppressWarnings({"unused", "unchecked"})
-        public void callback(int command_handle, int err, int schema_handle) {
-            CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(command_handle);
+        public void callback(int commandHandle, int err, int schemaHandle) {
+            CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
-            Integer result = schema_handle;
+            Integer result = schemaHandle;
             future.complete(result);
         }
     };
 
-    public static CompletableFuture<Integer> schemaCreate(String SourceId,String SchemaName, String SchemaDate) throws VcxException {
-        ParamGuard.notNullOrWhiteSpace(SourceId, "SourceId");
-        ParamGuard.notNullOrWhiteSpace(SourceId, "SchemaName");
-        ParamGuard.notNullOrWhiteSpace(SourceId, "SchemaDate");
+    public static CompletableFuture<Integer> schemaCreate(String sourceId,
+                                                          String schemaName,
+                                                          String schemaDate) throws VcxException {
+        ParamGuard.notNullOrWhiteSpace(sourceId, "sourceId");
+        ParamGuard.notNullOrWhiteSpace(sourceId, "schemaName");
+        ParamGuard.notNullOrWhiteSpace(sourceId, "schemaDate");
         CompletableFuture<Integer> future = new CompletableFuture<Integer>();
         int commandHandle = addFuture(future);
 
         int result = LibVcx.api.vcx_schema_create(
                 commandHandle,
-                SourceId,
-                SchemaName,
-                SchemaDate,
+                sourceId,
+                schemaName,
+                schemaDate,
                 schemaCreateCB
         );
         checkResult(result);
@@ -44,8 +46,8 @@ public class SchemaApi extends VcxJava.API {
 
     private static Callback schemaSerializeHandle = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
-        public void callback(int command_handle, int err, String serialized_data) {
-            CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(command_handle);
+        public void callback(int commandHandle, int err, String serializedData) {
+            CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             // TODO complete with exception if we find error
 //            if (err != 0) {
@@ -53,14 +55,14 @@ public class SchemaApi extends VcxJava.API {
 //            } else {
 //
 //            }
-            String result = serialized_data;
+            String result = serializedData;
             future.complete(result);
         }
     };
 
     public static CompletableFuture<String> schemaSerialize(int schemaHandle) throws VcxException {
         ParamGuard.notNull(schemaHandle, "schemaHandle");
-        CompletableFuture<String> future = new CompletableFuture<String>();
+        CompletableFuture<String> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
 
         int result = LibVcx.api.vcx_schema_serialize(
@@ -74,8 +76,8 @@ public class SchemaApi extends VcxJava.API {
 
     private static Callback schemaDeserializeCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
-        public void callback(int command_handle, int err, long schemaHandle) {
-            CompletableFuture<Long> future = (CompletableFuture<Long>) removeFuture(command_handle);
+        public void callback(int commandHandle, int err, long schemaHandle) {
+            CompletableFuture<Long> future = (CompletableFuture<Long>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             // TODO complete with exception if we find error
 //            if (err != 0) {
@@ -104,26 +106,26 @@ public class SchemaApi extends VcxJava.API {
 
     private static Callback schemaGetAttributesCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
-        public void callback(int command_handle, int err, String schemaAttributes) {
-            CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(command_handle);
+        public void callback(int commandHandle, int err, String schemaAttributes) {
+            CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             future.complete(schemaAttributes);
         }
     };
 
-    public static CompletableFuture<String> schemaGetAttributes( String SourceId, int SequenceNo) throws VcxException {
-        ParamGuard.notNullOrWhiteSpace(SourceId, "SourceId");
+    public static CompletableFuture<String> schemaGetAttributes( String sourceId, int sequenceNo) throws VcxException {
+        ParamGuard.notNullOrWhiteSpace(sourceId, "sourceId");
         CompletableFuture<String> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
-        int result = LibVcx.api.vcx_schema_get_attributes(commandHandle, SourceId,SequenceNo, schemaGetSchemaID);
+        int result = LibVcx.api.vcx_schema_get_attributes(commandHandle, sourceId,sequenceNo, schemaGetSchemaID);
         checkResult(result);
         return future;
     }
 
     private static Callback schemaGetSchemaID = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
-        public void callback(int command_handle, int err, String schemaId) {
-            CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(command_handle);
+        public void callback(int commandHandle, int err, String schemaId) {
+            CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             future.complete(schemaId);
         }

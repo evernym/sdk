@@ -1,8 +1,6 @@
 package com.evernym.sdk.vcx;
 
 
-import android.util.Log;
-
 import com.sun.jna.Callback;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
@@ -11,8 +9,9 @@ import com.sun.jna.NativeLibrary;
 import java.io.File;
 
 public abstract class LibVcx {
+    // TODO: We should assign explicit numbers to each state
     public enum State {
-        None,
+        none,
         initialized,
         offer_sent,
         request_received,
@@ -27,17 +26,6 @@ public abstract class LibVcx {
     /*
      * Native library interface
      */
-
-    public enum vcx_state {
-        none,
-        initialized,
-        offer_sent,
-        request_received,
-        accepted,
-        unfulfilled,
-        expired,
-        revoked
-    }
 
     public enum vcx_proof_state {
         undefined,

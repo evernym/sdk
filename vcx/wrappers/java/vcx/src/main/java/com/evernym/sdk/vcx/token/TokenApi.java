@@ -18,8 +18,8 @@ public class TokenApi extends VcxJava.API {
 
     private static Callback vcxTokenCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
-        public void callback(int command_handle, int err, String tokenInfo) {
-            CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(command_handle);
+        public void callback(int commandHandle, int err, String tokenInfo) {
+            CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
 
             future.complete(tokenInfo);
