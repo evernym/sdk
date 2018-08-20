@@ -1,3 +1,27 @@
+Build android libvcx.a from source code
+===============================================================
+download https://gradle.org/next-steps/?version=3.4.1&format=bin
+extract the zip to /Users/norm/forge/tools/
+sudo mkdir /opt/gradle
+sudo ln -s /Users/norm/forge/tools/gradle-3.4.1 /opt/gradle/gradle-3.4.1
+cd /Users/norm/forge/work/code/evernym/sdk-evernym
+vi ./vcx/ci/scripts/androidBuild.sh
+and then change "wget" to "wget --no-check-certificate" and save the file
+also you may need to change "curl" to "curl --insecure" and save the file
+OR
+run sudo ./vcx/ci/scripts/installCert.sh
+LIBINDY_VERSION="1.6.2" LIBINDY_BRANCH="stable" ./vcx/ci/scripts/androidBuild.sh x86
+LIBINDY_VERSION="1.6.2" LIBINDY_BRANCH="stable" ./vcx/ci/scripts/androidBuild.sh arm
+LIBINDY_VERSION="1.6.2" LIBINDY_BRANCH="stable" ./vcx/ci/scripts/androidBuild.sh arm64
+chmod a+x ./vcx/ci/scripts/androidPackage.sh
+vi ./vcx/ci/scripts/androidPackage.sh
+and then change /home/vcx/android-sdk-linux
+to /Users/norm/Library/Android/sdk and save the file
+./vcx/ci/scripts/androidPackage.sh
+When it is successful then the .aar file is located at ./vcx/wrappers/java/vcx/build/outputs/aar
+
+
+
 Steps to build libindy.so and libvcx.so for android
 when you have NOT built them before on this machine
 ---------------------------------------------------------------------------
