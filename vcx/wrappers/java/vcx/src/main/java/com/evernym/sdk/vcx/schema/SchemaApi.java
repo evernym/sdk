@@ -24,7 +24,7 @@ public class SchemaApi extends VcxJava.API {
         }
     };
 
-    public static CompletableFuture<Integer> schemmaCreate(String SourceId,String SchemaName, String SchemaDate) throws VcxException {
+    public static CompletableFuture<Integer> schemaCreate(String SourceId,String SchemaName, String SchemaDate) throws VcxException {
         ParamGuard.notNullOrWhiteSpace(SourceId, "SourceId");
         ParamGuard.notNullOrWhiteSpace(SourceId, "SchemaName");
         ParamGuard.notNullOrWhiteSpace(SourceId, "SchemaDate");
@@ -74,7 +74,7 @@ public class SchemaApi extends VcxJava.API {
 
     private static Callback schemaDeserializeCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
-        public void callback(int command_handle, int err, long connection_handle) {
+        public void callback(int command_handle, int err, long schemaHandle) {
             CompletableFuture<Long> future = (CompletableFuture<Long>) removeFuture(command_handle);
             if (!checkCallback(future, err)) return;
             // TODO complete with exception if we find error
@@ -83,7 +83,7 @@ public class SchemaApi extends VcxJava.API {
 //            } else {
 //
 //            }
-            Long result = connection_handle;
+            Long result = schemaHandle;
             future.complete(result);
         }
     };
@@ -111,7 +111,7 @@ public class SchemaApi extends VcxJava.API {
         }
     };
 
-    public static CompletableFuture<String> schemaGetAttributes(int connectionHandle, String SourceId, int SequenceNo) throws VcxException {
+    public static CompletableFuture<String> schemaGetAttributes( String SourceId, int SequenceNo) throws VcxException {
         ParamGuard.notNullOrWhiteSpace(SourceId, "SourceId");
         CompletableFuture<String> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
@@ -129,7 +129,7 @@ public class SchemaApi extends VcxJava.API {
         }
     };
 
-    public static CompletableFuture<String> schemaGetSchemaId(int connectionHandle, int schemaHandle) throws VcxException {
+    public static CompletableFuture<String> schemaGetSchemaId( int schemaHandle) throws VcxException {
         ParamGuard.notNull(schemaHandle, "SchemaHandle");
         CompletableFuture<String> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
