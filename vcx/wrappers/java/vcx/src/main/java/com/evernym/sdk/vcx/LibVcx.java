@@ -96,41 +96,6 @@ public abstract class LibVcx {
         public int vcx_schema_release(int handle);
 
 
-/**
- * claimdef object
- *
- * For creating, validating and committing a claim definition to the sovrin ledger.
- */
-
-        /**
-         * Creates a claim definition from the given schema.  Populates a handle to the new claimdef.
-         */
-        public int vcx_claimdef_create(int command_handle, String source_id, String claimdef_name, int schema_seq_no, int revocation, Callback cb);
-
-        /**
-         * Populates status with the current State of this claim.
-         */
-        public int vcx_claimdef_serialize(int command_handle, int claimdef_handle, Callback cb);
-
-        /**
-         * Re-creates a claim object from the specified serialization.
-         */
-        public int vcx_claimdef_deserialize(int command_handle, String serialized_claimdef, Callback cb);
-
-        /**
-         * Asynchronously commits the claimdef to the ledger.
-         */
-        public int vcx_claimdef_commit(int claimdef_handle);
-
-        /**
-         * Populates sequence_no with the actual sequence number of the claimdef on the sovrin ledger.
-         */
-        public int vcx_claimdef_get_sequence_no(int claimdef_handle, int sequence_no);
-
-        /**
-         * Populates data with the contents of the claimdef handle.
-         */
-        public int vcx_claimdef_get(int claimdef_handle, String data);
 
 
 /**
@@ -225,7 +190,7 @@ public abstract class LibVcx {
         public int vcx_issuer_credential_release(int credential_handle);
 
         /** Populates credential_request with the latest credential request received. (not in MVP) */
-        public int vcx_issuer_get_credential_request(int credential_handle, char credential_request);
+        public int vcx_issuer_get_credential_request(int credential_handle, String credential_request);
 
         /** Sets the credential request in an accepted state. (not in MVP) */
         public int vcx_issuer_accept_credential(int credential_handle);
