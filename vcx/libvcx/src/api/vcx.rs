@@ -100,29 +100,29 @@ fn _finish_init(command_handle: u32, cb: extern fn(xcommand_handle: u32, err: u3
 
     settings::log_settings();
 
-   if wallet::get_wallet_handle() > 0 {
-       error!("Library was already initialized");
-       return error::ALREADY_INITIALIZED.code_num;
-   }
+    if wallet::get_wallet_handle() > 0 {
+        error!("Library was already initialized");
+        return error::ALREADY_INITIALIZED.code_num;
+    }
     // Wallet name was already validated
-   let wallet_name = match settings::get_config_value(settings::CONFIG_WALLET_NAME) {
-       Ok(x) => x,
-       Err(_) => {
-           info!("Using default wallet: {}", settings::DEFAULT_WALLET_NAME.to_string());
-           settings::set_config_value(settings::CONFIG_WALLET_NAME, settings::DEFAULT_WALLET_NAME);
-           settings::DEFAULT_WALLET_NAME.to_string()
-       }
-   };
+    let wallet_name = match settings::get_config_value(settings::CONFIG_WALLET_NAME) {
+        Ok(x) => x,
+        Err(_) => {
+            info!("Using default wallet: {}", settings::DEFAULT_WALLET_NAME.to_string());
+            settings::set_config_value(settings::CONFIG_WALLET_NAME, settings::DEFAULT_WALLET_NAME);
+            settings::DEFAULT_WALLET_NAME.to_string()
+        }
+    };
 
     info!("libvcx version: {}{}", version_constants::VERSION, version_constants::REVISION);
 
-    thread::spawn(move|| {
+    match thread::Builder::new().name(command_handle.to_string()).spawn(move|| {
         if settings::get_config_value(settings::CONFIG_GENESIS_PATH).is_ok() {
             match ::utils::libindy::init_pool() {
                 Ok(_) => (),
                 Err(e) => {
                     error!("Init Pool Error {}.", e);
-                    cb(command_handle, e)
+                    return cb(command_handle, e)
                 },
             }
         }
@@ -137,9 +137,10 @@ fn _finish_init(command_handle: u32, cb: extern fn(xcommand_handle: u32, err: u3
                 cb(command_handle, e);
             }
         }
-    });
-
-    error::SUCCESS.code_num
+    }) {
+        Ok(_) => error::SUCCESS.code_num,
+        Err(x) => error::THREAD_ERROR.code_num,
+    }
 }
 
 lazy_static!{
@@ -293,6 +294,38 @@ mod tests {
         // Assert pool was initialized
         assert_ne!(get_pool_handle().unwrap(), 0);
         ::utils::devsetup::tests::cleanup_dev_env(wallet_name);
+    }
+
+    #[cfg(feature = "pool_tests")]
+    #[test]
+    fn test_init_fails_when_open_pool_fails() {
+        use std::fs;
+        use std::io::Write;
+        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"false");
+        settings::set_config_value(settings::CONFIG_WALLET_KEY,settings::TEST_WALLET_KEY);
+
+        // Write invalid genesis.txn
+        let mut f = fs::File::create(::utils::constants::GENESIS_PATH).unwrap();
+        f.write_all("{}".as_bytes()).unwrap();
+        f.flush().unwrap();
+        f.sync_all().unwrap();
+
+        let wallet_name = "test_init_fails_when_open_pool_fails";
+        wallet::create_wallet(wallet_name).unwrap();
+
+        let content = create_config_util(wallet_name, settings::TEST_WALLET_KEY);
+
+        let cb = return_types_u32::Return_U32::new().unwrap();
+        assert_eq!(vcx_init_with_config(cb.command_handle,
+                                        CString::new(content).unwrap().into_raw(),
+                                        Some(cb.get_callback())),
+                   error::SUCCESS.code_num);
+        let rc = cb.receive(Some(Duration::from_secs(10)));
+        thread::sleep(Duration::from_secs(1));
+        assert!(rc.is_err());
+        assert_eq!(get_pool_handle(), Err(error::NO_POOL_OPEN.code_num));
+        assert_eq!(wallet::get_wallet_handle(), 0);
+        wallet::delete_wallet(wallet_name).unwrap();
     }
 
     #[test]
