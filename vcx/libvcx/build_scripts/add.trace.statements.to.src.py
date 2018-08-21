@@ -47,8 +47,6 @@ def recursive_walk(folder):
 
                 if (line.startswith("use") and not trimmedLine.endswith(';')):
                     insideUseStatement = 1
-                if (insideUseStatement == 1 and trimmedLine.endswith(';')):
-                    insideUseStatement = 0
 
                 if (trimmedLine == "extern {"):
                     insideExternCurly = 1
@@ -195,6 +193,8 @@ def recursive_walk(folder):
                     openCurlys = -1
                 if (trimmedLine.startswith("\"") and eatingLines == 1):
                     eatingLines = 0
+                if (insideUseStatement == 1 and trimmedLine.endswith(';')):
+                    insideUseStatement = 0
 
                 previousTrimmedLine = trimmedLine
                 previousLine = line
