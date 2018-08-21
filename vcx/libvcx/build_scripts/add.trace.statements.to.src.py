@@ -35,7 +35,7 @@ def recursive_walk(folder):
             for line in f:
                 fileLineNumber += 1
                 trimmedLine = line.strip()
-                
+
                 if (trimmedLine == "extern {"):
                     insideExternCurly = 1
                 if (trimmedLine.endswith(",")):
@@ -48,16 +48,16 @@ def recursive_walk(folder):
                     len(trimmedLine) > 0
                 ):
                     atTopOfFile = 0
-                
+
                 if (trimmedLine.count("\"") == 1 and trimmedLine.endswith("\"")):
                     eatingLines = 1
-                
+
                 if (line.startswith("pub type ") or line.startswith("pub const ") or line.startswith("const ")):
                     ignoreEnding = 1
 
                 if (trimmedLine.startswith("macro_rules!") or trimmedLine.startswith("impl Node")):
                     eatingCurlys = 1
-                
+
                 if (eatingCurlys == 1):
                     if (openCurlys == -1):
                         openCurlys = trimmedLine.count('{')
@@ -101,6 +101,7 @@ def recursive_walk(folder):
                     not line.startswith("/*") and
                     not line.startswith("static") and
                     not line.startswith("mod ") and
+                    not line.startswith("#[macro_use") and
                     not previousTrimmedLine.endswith(",") and
                     not previousTrimmedLine.endswith(".") and
                     not previousTrimmedLine.endswith("=") and
@@ -153,6 +154,7 @@ def recursive_walk(folder):
                     not line.startswith("static") and
                     not line.startswith("mod ") and
                     not line.startswith("});") and
+                    not line.startswith("#[macro_use") and
                     insideExternCurly == 0 and
                     not previousTrimmedLine.startswith("return") and
                     not previousTrimmedLine.startswith("break") and
@@ -163,7 +165,7 @@ def recursive_walk(folder):
                     traceNumber += 1
                     copy.write("println!(\"TRACE[" + str(traceNumber) + "]: BELOW LINE[" + str(fileLineNumber) + "]: " + trimmedLine.replace("\\","\\\\").replace("\"","\\\"").replace("{","{{").replace("}","}}") + " -- FILE: " + folderName + "/" + filename + "\");\n")
                     #copy.write("match std::env::var(\"MOBILE_TRACE\") {Ok(val) => {println!(\"TRACE[" + str(traceNumber) + "]: BELOW LINE[" + str(fileLineNumber) + "]: " + trimmedLine.replace("\\","\\\\").replace("\"","\\\"").replace("{","{{").replace("}","}}") + " -- FILE: " + folderName + "/" + filename + "\")}, Err(e) => {},}\n")
-                
+
                 if ( insideExternCurly == 1 and trimmedLine == "}" ):
                     insideExternCurly = 0
                 if (trimmedLine.endswith(";")):
