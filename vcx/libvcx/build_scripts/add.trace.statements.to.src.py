@@ -162,6 +162,7 @@ def recursive_walk(folder):
                     not previousTrimmedLine.startswith("break") and
                     not previousTrimmedLine.startswith("continue") and
                     not previousLine.startswith("use logic") and
+                    fileLineNumber > 13 and
                     not previousLine.startswith("pub trait") and
                     not previousLine.startswith("impl")
                 ):
