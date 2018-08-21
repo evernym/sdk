@@ -76,8 +76,8 @@ public class SchemaApi extends VcxJava.API {
 
     private static Callback schemaDeserializeCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
-        public void callback(int commandHandle, int err, long schemaHandle) {
-            CompletableFuture<Long> future = (CompletableFuture<Long>) removeFuture(commandHandle);
+        public void callback(int commandHandle, int err, int schemaHandle) {
+            CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             // TODO complete with exception if we find error
 //            if (err != 0) {
@@ -85,14 +85,14 @@ public class SchemaApi extends VcxJava.API {
 //            } else {
 //
 //            }
-            Long result = schemaHandle;
+            Integer result = schemaHandle;
             future.complete(result);
         }
     };
 
-    public static CompletableFuture<Long> schemaDeserialize(String schemaData) throws VcxException {
+    public static CompletableFuture<Integer> schemaDeserialize(String schemaData) throws VcxException {
         ParamGuard.notNull(schemaData, "schemaData");
-        CompletableFuture<Long> future = new CompletableFuture<>();
+        CompletableFuture<Integer> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
 
         int result = LibVcx.api.vcx_schema_deserialize(

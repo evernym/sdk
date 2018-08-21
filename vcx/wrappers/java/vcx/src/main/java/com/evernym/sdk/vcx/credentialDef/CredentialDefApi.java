@@ -85,8 +85,8 @@ public class CredentialDefApi extends VcxJava.API {
 
     private static Callback credentialDefDeserialize = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
-        public void callback(int commandHandle, int err, long credntialDefHandle) {
-            CompletableFuture<Long> future = (CompletableFuture<Long>) removeFuture(commandHandle);
+        public void callback(int commandHandle, int err, int credntialDefHandle) {
+            CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             // TODO complete with exception if we find error
 //            if (err != 0) {
@@ -94,14 +94,14 @@ public class CredentialDefApi extends VcxJava.API {
 //            } else {
 //
 //            }
-            Long result = credntialDefHandle;
+            Integer result = credntialDefHandle;
             future.complete(result);
         }
     };
 
-    public static CompletableFuture<Long> credentialDefSerialize(String credentialDefData) throws VcxException {
+    public static CompletableFuture<Integer> credentialDefSerialize(String credentialDefData) throws VcxException {
         ParamGuard.notNull(credentialDefData, "credentialDefData");
-        CompletableFuture<Long> future = new CompletableFuture<>();
+        CompletableFuture<Integer> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
 
         int result = LibVcx.api.vcx_credentialdef_deserialize(

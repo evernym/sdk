@@ -175,8 +175,8 @@ public class IssuerApi extends VcxJava.API {
 
     private static Callback issuerCredentialDeserializeCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
-        public void callback(int commandHandle, int err, long handle) {
-            CompletableFuture<Long> future = (CompletableFuture<Long>) removeFuture(commandHandle);
+        public void callback(int commandHandle, int err, int handle) {
+            CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             // TODO complete with exception if we find error
 //            if (err != 0) {
@@ -184,14 +184,14 @@ public class IssuerApi extends VcxJava.API {
 //            } else {
 //
 //            }
-            Long result = handle;
+            Integer result = handle;
             future.complete(result);
         }
     };
 
-    public static CompletableFuture<Long> issuerCredentialDeserialize(String serializedData) throws VcxException {
+    public static CompletableFuture<Integer> issuerCredentialDeserialize(String serializedData) throws VcxException {
         ParamGuard.notNull(serializedData, "serializedData");
-        CompletableFuture<Long> future = new CompletableFuture<>();
+        CompletableFuture<Integer> future = new CompletableFuture<>();
         int issue = addFuture(future);
 
         int result = LibVcx.api.vcx_issuer_credential_deserialize(
