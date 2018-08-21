@@ -18,6 +18,9 @@ def recursive_walk(folder):
                 recursive_walk(subfolder)
         print('\nFolder: ' + folderName)
         for filename in filenames:
+            if (filename.endswith(".newrs")):
+                continue
+
             print(folderName + '/' + filename)
             f = open(folderName + '/' + filename, "r")
             print(folderName + '/' + filename + ".newrs")
