@@ -33,12 +33,18 @@ def recursive_walk(folder):
             openCurlys = -1
             ignoreEnding = 0
             foundFirstOpeningCurl = 0
+            insideUseStatement = 0
             for line in f:
                 fileLineNumber += 1
                 trimmedLine = line.strip()
 
                 if (foundFirstOpeningCurl == 0 and trimmedLine.count('{') > 0):
                     foundFirstOpeningCurl = 1
+
+                if (line.startsWith("use") and not trimmedLine.endswith(';')):
+                    insideUseStatement = 1
+                if (insideUseStatement == 1 and trimmedLine.endswith(';')):
+                    insideUseStatement = 0
 
                 if (trimmedLine == "extern {"):
                     insideExternCurly = 1
@@ -167,6 +173,7 @@ def recursive_walk(folder):
                     not previousTrimmedLine.startswith("continue") and
                     not previousLine.startswith("use logic") and
                     foundFirstOpeningCurl == 1 and
+                    insideUseStatement == 0 and
                     not previousLine.startswith("pub trait") and
                     not previousLine.startswith("impl")
                 ):
