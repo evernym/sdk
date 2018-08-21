@@ -94,6 +94,7 @@ def recursive_walk(folder):
                     not line.startswith("sodium_type!") and
                     not line.startswith("const ") and
                     not line.startswith("pub static") and
+                    not line.startswith("pub struct") and
                     not line.startswith("fn matches") and
                     not line.startswith("//") and
                     not line.startswith("}") and
@@ -148,6 +149,7 @@ def recursive_walk(folder):
                     not line.startswith("sodium_type!") and
                     not line.startswith("const ") and
                     not line.startswith("pub static") and
+                    not line.startswith("pub struct") and
                     not line.startswith("fn matches") and
                     not line.startswith("//") and
                     not line.startswith("/*") and
