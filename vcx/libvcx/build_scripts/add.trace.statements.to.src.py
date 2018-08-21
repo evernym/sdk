@@ -41,7 +41,7 @@ def recursive_walk(folder):
                 if (foundFirstOpeningCurl == 0 and trimmedLine.count('{') > 0):
                     foundFirstOpeningCurl = 1
 
-                if (line.startsWith("use") and not trimmedLine.endswith(';')):
+                if (line.startswith("use") and not trimmedLine.endswith(';')):
                     insideUseStatement = 1
                 if (insideUseStatement == 1 and trimmedLine.endswith(';')):
                     insideUseStatement = 0
