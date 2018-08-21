@@ -19,6 +19,13 @@ and then change /home/vcx/android-sdk-linux
 to /Users/norm/Library/Android/sdk and save the file
 ./vcx/ci/scripts/androidPackage.sh
 When it is successful then the .aar file is located at ./vcx/wrappers/java/vcx/build/outputs/aar
+cd ./vcx/wrappers/java/vcx/build/outputs/aar
+mvn install:install-file -Dfile=com.evernym-vcx_[new_version]_x86-armv7-release.aar -DgroupId=com.evernym -DartifactId=vcx -Dversion=[new_version] -Dpackaging=aar
+change new_version to something like, i.e. 1.0.0-20-08-2018T19-32
+now you can cd to the checked out connectme source code and change the android/app/build.gradle
+to have the line -- compile 'com.evernym:vcx:[new_version]@aar'
+Now do a make clean;make cleancache;make pre-run
+Now do a make run-android to launch the connectme app in the android emulator
 
 
 
