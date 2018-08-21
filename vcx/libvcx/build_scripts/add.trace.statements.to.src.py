@@ -32,9 +32,13 @@ def recursive_walk(folder):
             eatingLines = 0
             openCurlys = -1
             ignoreEnding = 0
+            foundFirstOpeningCurl = 0
             for line in f:
                 fileLineNumber += 1
                 trimmedLine = line.strip()
+
+                if (foundFirstOpeningCurl == 0 and trimmedLine.count('{') > 0):
+                    foundFirstOpeningCurl = 1
 
                 if (trimmedLine == "extern {"):
                     insideExternCurly = 1
@@ -162,7 +166,7 @@ def recursive_walk(folder):
                     not previousTrimmedLine.startswith("break") and
                     not previousTrimmedLine.startswith("continue") and
                     not previousLine.startswith("use logic") and
-                    fileLineNumber > 13 and
+                    foundFirstOpeningCurl == 1 and
                     not previousLine.startswith("pub trait") and
                     not previousLine.startswith("impl")
                 ):
