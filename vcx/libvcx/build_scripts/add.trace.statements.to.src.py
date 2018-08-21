@@ -19,11 +19,12 @@ def recursive_walk(folder):
         print('\nFolder: ' + folderName)
         for filename in filenames:
             if (filename.endswith(".newrs")):
+                print("Ignoring file: " + folderName + '/' + filename)
                 continue
 
-            print(folderName + '/' + filename)
+            print("Found file: " + folderName + '/' + filename)
             f = open(folderName + '/' + filename, "r")
-            print(folderName + '/' + filename + ".newrs")
+            print("Copying to file: " + folderName + '/' + filename + ".newrs")
             copy = open(folderName + '/' + filename + ".newrs", "w")
             fileLineNumber = 0
             previousLine = ""
