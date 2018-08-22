@@ -164,7 +164,7 @@ async def test_send_credential():
     data['data']['credential_request'] = req
     issuer_credential2 = await issuer_credential.deserialize(data)
     await issuer_credential2.send_credential(connection)
-    # assert await issuer_credential2.get_state() == State.Accepted
+    assert await issuer_credential2.get_state() == State.Accepted
 
 
 @pytest.mark.asyncio
