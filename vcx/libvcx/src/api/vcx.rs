@@ -224,10 +224,25 @@ pub extern fn vcx_update_institution_info(name: *const c_char, logo_url: *const 
 }
 
 #[no_mangle]
-pub extern fn vcx_mint_tokens(number_of_addresses: u32, tokens_per_address: u32) {
-    let ledger_fees = r#"{"101":2, "102":3}"#;
-    info!("vcx_mint_tokens(number_of_addresses: {}, tokens_per_address: {})", number_of_addresses, tokens_per_address);
-    ::utils::libindy::payments::mint_tokens_and_set_fees(Some(number_of_addresses), Some(tokens_per_address), Some(ledger_fees), false).unwrap_or_default();
+pub extern fn vcx_mint_tokens(seed: *const c_char, fees: *const c_char) {
+
+    let seed = if !seed.is_null() {
+        check_useful_opt_c_str!(seed, ());
+        seed.to_owned()
+    }
+    else {
+        None
+    };
+
+    let fees = if !fees.is_null() {
+        check_useful_opt_c_str!(fees, ());
+        fees.to_owned()
+    }
+    else {
+        None
+    };
+
+    ::utils::libindy::payments::mint_tokens_and_set_fees(None, None, fees, seed).unwrap_or_default();
 }
 
 #[cfg(test)]
@@ -252,6 +267,7 @@ mod tests {
                         "wallet_key": wallet_key}).to_string()
     }
 
+    #[cfg(feature = "agency")]
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_init_with_file() {
@@ -275,6 +291,7 @@ mod tests {
         ::utils::devsetup::tests::cleanup_dev_env(wallet_name);
     }
 
+    #[cfg(feature = "agency")]
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_init_with_config() {
@@ -414,6 +431,7 @@ mod tests {
         wallet::delete_wallet(wallet_name).unwrap();
     }
 
+    #[cfg(feature = "agency")]
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_vcx_init_called_twice_fails() {
@@ -441,6 +459,7 @@ mod tests {
         wallet::delete_wallet(wallet_name).unwrap();
     }
 
+    #[cfg(feature = "agency")]
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_vcx_init_called_twice_passes_after_shutdown() {
@@ -479,6 +498,7 @@ mod tests {
         vcx_shutdown(true);
     }
 
+    #[cfg(feature = "agency")]
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_init_fails_with_open_wallet() {
