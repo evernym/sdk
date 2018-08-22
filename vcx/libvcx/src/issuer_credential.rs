@@ -182,7 +182,8 @@ impl IssuerCredential {
 
         debug!("credential data: {}", data);
 
-        let cred_req_msg_id = self.credential_request.as_ref().unwrap().msg_ref_id.as_ref().ok_or(IssuerCredError::InvalidCredRequest())?;
+        let cred_req_msg_id = self.credential_request.as_ref().ok_or(IssuerCredError::InvalidCredRequest())?
+            .msg_ref_id.as_ref().ok_or(IssuerCredError::InvalidCredRequest())?;
         let data = connection::generate_encrypted_payload(&self.issued_vk, &self.remote_vk, &data, "CRED")
             .map_err(|e| IssuerCredError::CommonError(e.to_error_code()))?;
 
