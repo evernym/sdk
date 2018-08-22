@@ -42,3 +42,4 @@ __pycache__/
 # ios wrapper files
 *.xcuserstate
 vcx/wrappers/ios/vcx/vcx.framework/vcx
+runtime_android_build
