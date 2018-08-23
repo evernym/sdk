@@ -137,11 +137,11 @@ def mainUbuntu() {
 def android() {
         stage('Android Build') {
             parallel([
-                "x86" : { buildAndroid('x86') },
-                "x86_64" : { buildAndroid('x86_64') },
-                "arm" : { buildAndroid('arm') },
-                "arm64" : { buildAndroid('arm64') }
-                "armv7" : { buildAndroid('armv7') }
+                "x86" : { buildAndroid("x86") },
+                "x86_64" : { buildAndroid("x86_64") },
+                "arm" : { buildAndroid("arm") },
+                "arm64" : { buildAndroid("arm64") },
+                "armv7" : { buildAndroid("armv7") }
             ])
         }
         node('ubuntu') {
