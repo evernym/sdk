@@ -8,7 +8,6 @@ extern crate serde_json;
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vcx::api::vcx::vcx_mint_tokens;
     use rand::Rng;
     use vcx::utils::cstring::CStringUtils;
     use std::ffi::CString;
@@ -16,6 +15,7 @@ mod tests {
     use std::fs;
     use std::path::PathBuf;
     use std::io::Write;
+    use std::ptr;
     use std::time::Duration;
     use vcx::settings;
     use vcx::utils::constants::GENESIS_PATH;
@@ -166,7 +166,7 @@ mod tests {
         path
     }
 
-    #[cfg(feature = "sovtoken")]
+    #[cfg(feature = "agency")]
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_error_codes() {
@@ -182,15 +182,17 @@ mod tests {
         vcx_shutdown(true);
     }
 
+    #[cfg(feature = "agency")]
     #[cfg(feature = "sovtoken")]
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_token_balance() {
+        use vcx::api::vcx::vcx_mint_tokens;
         delete_indy_client();
         create_genesis_txn_file();
         let vcx_config = provision_agent().unwrap();
         init_vcx(&vcx_config).unwrap();
-        vcx_mint_tokens(2,1000);
+        vcx_mint_tokens(ptr::null_mut(),ptr::null_mut());
         send_tokens(1500);
         let token_info2 = get_token_info();
         let path = create_path_and_file_name();

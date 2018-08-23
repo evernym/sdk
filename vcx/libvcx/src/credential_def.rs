@@ -246,6 +246,7 @@ pub mod tests {
         assert!(retrieve_credential_def(CRED_DEF_ID).is_err());
     }
 
+    #[cfg(feature = "agency")]
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_get_credential_def() {
@@ -263,6 +264,7 @@ pub mod tests {
         assert_eq!(def1, def2);
     }
 
+    #[cfg(feature = "agency")]
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_create_credential_def_real() {
@@ -287,13 +289,14 @@ pub mod tests {
         ::utils::devsetup::tests::cleanup_dev_env(wallet_name);
     }
 
+    #[cfg(feature = "agency")]
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_create_credential_def_no_fees_real() {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         let wallet_name = "test_create_credential_def_real";
         ::utils::devsetup::tests::setup_ledger_env(wallet_name);
-        ::utils::libindy::payments::mint_tokens_and_set_fees(Some(0),Some(0),Some(r#"{"101":0, "102":0}"#), false).unwrap();
+        ::utils::libindy::payments::mint_tokens_and_set_fees(Some(0),Some(0),Some(r#"{"101":0, "102":0}"#.to_string()), None).unwrap();
 
         let data = r#"["address1","address2","zip","city","state"]"#.to_string();
         let (schema_id, _) = ::utils::libindy::anoncreds::tests::create_and_write_test_schema();
@@ -320,6 +323,7 @@ pub mod tests {
         assert_eq!(id, CRED_DEF_ID);
     }
 
+    #[cfg(feature = "agency")]
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_create_credential_def_fails_when_already_created() {
