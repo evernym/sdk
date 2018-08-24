@@ -671,7 +671,6 @@ mod tests {
         ::utils::devsetup::tests::cleanup_dev_env(wallet_name);
     }
 
-    #[cfg(feature = "agency")]
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_case_for_proof_req_doesnt_matter_for_retrieve_creds() {
@@ -779,7 +778,6 @@ mod tests {
         assert_eq!(creds, vec![cred1, cred2]);
     }
 
-    #[cfg(feature = "agency")]
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_generate_proof() {
@@ -868,7 +866,6 @@ mod tests {
         assert!(generated_proof.is_ok());
     }
 
-    #[cfg(feature = "agency")]
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_generate_self_attested_proof() {
