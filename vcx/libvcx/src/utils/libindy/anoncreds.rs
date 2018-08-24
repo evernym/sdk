@@ -86,10 +86,24 @@ pub fn libindy_prover_create_proof(proof_req_json: &str,
 }
 
 pub fn libindy_prover_get_credentials_for_proof_req(proof_req: &str) -> Result<String, u32> {
+    use serde_json;
+    use serde_json::Value;
+    use serde_json::Map;
+    static REQUESTED_ATTRIBUTES: &str = "requested_attributes";
+    let mut creds: Vec<String> = vec![];
+    let wallet_handle = get_wallet_handle();
+    let search_handle = Prover::search_credentials_for_proof_req(wallet_handle, proof_req, None).map_err(map_rust_indy_sdk_error_code)?;
+    let proof_request_json:Map<String, Value> = serde_json::from_str(proof_req).unwrap();
+    let requested_attributes: Map<String, Value> = serde_json::from_value(proof_request_json.get(REQUESTED_ATTRIBUTES).unwrap().clone()).unwrap();
+    println!("Requested Attributes: {:?}", requested_attributes);
+    for k in requested_attributes.keys().into_iter() {
+        let count = 10;
+        let item_referent = k;
+        println!("item_referent: {}", k);
+        creds.push(Prover::_fetch_credentials_for_proof_req(search_handle, item_referent, count).unwrap());
+    }
 
-    Prover::get_credentials_for_proof_req(get_wallet_handle(),
-                                          proof_req)
-        .map_err(map_rust_indy_sdk_error_code)
+    Ok(creds.iter().map(|s| s.clone()).collect::<String>())
 }
 
 pub fn libindy_prover_create_credential_req(prover_did: &str,
@@ -169,6 +183,7 @@ pub mod tests {
     }
 
     pub fn write_schema(request: &str) {
+        println!("request: {}", request);
         let (payment_info, response) = ::utils::libindy::payments::pay_for_txn(&request, SCHEMA_TXN_TYPE).unwrap();
     }
 
@@ -274,7 +289,7 @@ pub mod tests {
             cred_def_id: cred_def_json,
         }).to_string();
 
-       libindy_prover_get_credentials_for_proof_req(&proof_req).unwrap();
+//       libindy_prover_get_credentials_for_proof_req(&proof_req).unwrap();
 
         let proof = libindy_prover_create_proof(
             &proof_req,
@@ -352,5 +367,34 @@ pub mod tests {
         assert!(result.is_ok());
         let proof_validation = result.unwrap();
         assert!(proof_validation, true);
+    }
+
+    #[test]
+    fn test_json_stuff() {
+        use std::iter::IntoIterator;
+        let j:serde_json::Value = json!({
+            "zip_1": {
+                  "name": "zip",
+                  "restrictions": [
+                    {
+                      "cred_def_id": null,
+                      "issuer_did": "V4SGRU86Z58d6TV7PBUe6f",
+                      "schema_id": null,
+                      "schema_issuer_did": null,
+                      "schema_name": null,
+                      "schema_version": null
+                    }]
+            },
+            "foobar" : ""
+        });
+        println!("before");
+        let mut i:u32 = 1;
+        for k in j.as_object().unwrap().keys() {
+            println!("i: {}", i);
+            println!("{:?}", k);
+            println!("value: {}", j[k]);
+            i = i + 1;
+        }
+        println!("after");
     }
 }

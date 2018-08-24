@@ -127,7 +127,6 @@ impl DisclosedProof {
         let proof_req = self.proof_request.as_ref().ok_or(ProofError::ProofNotReadyError())?;
         let indy_proof_req = serde_json::to_string(&proof_req.proof_request_data)
             .or(Err(ProofError::CommonError(error::INVALID_JSON.code_num)))?;
-
         anoncreds::libindy_prover_get_credentials_for_proof_req(&indy_proof_req)
             .map_err(|err| ProofError::CommonError(err))
     }
@@ -496,6 +495,11 @@ mod tests {
     use utils::constants::{ ADDRESS_CRED_ID, LICENCE_CRED_ID, ADDRESS_SCHEMA_ID, ADDRESS_CRED_DEF_ID, CRED_DEF_ID, SCHEMA_ID };
     use serde_json::Value;
 
+    fn pretty_json(s: &str) -> String {
+        let v: Value = serde_json::from_str(&s).unwrap();
+        serde_json::to_string_pretty(&v).unwrap()
+    }
+
     #[test]
     fn test_create_proof() {
         settings::set_defaults();
@@ -644,7 +648,6 @@ mod tests {
         assert!(request.len() > 50);
     }
 
-    #[cfg(feature = "agency")]
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_retrieve_credentials() {
@@ -652,17 +655,17 @@ mod tests {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         let wallet_name = "test_retrieve_credentials";
         ::utils::devsetup::tests::setup_ledger_env(wallet_name);
-        ::utils::libindy::payments::mint_tokens_and_set_fees(None, Some(10000000), None, None).unwrap();
         ::utils::libindy::anoncreds::tests::create_and_store_credential();
-        let did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
         let (_, _, req, _) = ::utils::libindy::anoncreds::tests::create_proof();
 
         let mut proof_req = ProofRequestMessage::create();
         let mut proof: DisclosedProof = Default::default();
+        println!("req: {}", pretty_json(&req));
         proof_req.proof_request_data = serde_json::from_str(&req).unwrap();
         proof.proof_request = Some(proof_req);
 
         let retrieved_creds = proof.retrieve_credentials().unwrap();
+//        println!("retrieved creds: {}", pretty_json(&retrieved_creds));
         assert!(retrieved_creds.len() > 500);
 
         ::utils::devsetup::tests::cleanup_dev_env(wallet_name);
@@ -698,6 +701,7 @@ mod tests {
         proof.proof_request = Some(proof_req.clone());
 
         // All lower case
+        println!("{}", pretty_json(&serde_json::to_string(&proof_req.proof_request_data).unwrap()));
         let retrieved_creds = proof.retrieve_credentials().unwrap();
         assert!(retrieved_creds.contains(r#""zip":"84000""#));
 
@@ -718,7 +722,7 @@ mod tests {
     }
 
     #[test]
-    fn test_retrieve_credentials_fails_with_no_proof_req() {
+    fn test_fail_retrieve_credentials_with_no_proof_req() {
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         let wallet_name = "retrieve_credentials_fails_with_no_proof_req";
