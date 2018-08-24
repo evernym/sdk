@@ -1,6 +1,5 @@
 package com.evernym.sdk.vcx.vcx;
 
-import android.util.Log;
 
 import com.evernym.sdk.vcx.LibVcx;
 import com.evernym.sdk.vcx.ParamGuard;
@@ -19,7 +18,6 @@ public class VcxApi extends VcxJava.API {
     private static Callback vcxIniWithConfigCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
         public void callback(int commandHandle, int err) {
-            Log.d(TAG, "vcxIniWithConfigCB() called with: commandHandle = [" + commandHandle + "], err = [" + err + "]");
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             Integer result = commandHandle;
@@ -32,7 +30,6 @@ public class VcxApi extends VcxJava.API {
 
         @SuppressWarnings({"unused", "unchecked"})
         public void callback(int xcommandHandle, int err) {
-            Log.d(TAG, "callback() called with: xcommandHandle = [" + xcommandHandle + "], err = [" + err + "]");
             CompletableFuture<Void> future = (CompletableFuture<Void>) removeFuture(xcommandHandle);
             if (!checkCallback(future, err)) return;
             Void result = null;
@@ -42,7 +39,6 @@ public class VcxApi extends VcxJava.API {
     };
 
     public static CompletableFuture<Integer> vcxInitWithConfig(String configJson) throws VcxException {
-        Log.d(TAG, "vcxInitWithConfig() called with: configJson = [" + configJson + "]");
         ParamGuard.notNullOrWhiteSpace(configJson, "config");
         CompletableFuture<Integer> future = new CompletableFuture<Integer>();
         int commandHandle = addFuture(future);
@@ -58,7 +54,6 @@ public class VcxApi extends VcxJava.API {
     }
 
     public static CompletableFuture<Integer> vcxInit(String configPath) throws VcxException {
-        Log.d(TAG, "vcxInit() called with: configPath = [" + configPath + "]");
         ParamGuard.notNullOrWhiteSpace(configPath, "configPath");
         CompletableFuture<Integer> future = new CompletableFuture<Integer>();
         int commandHandle = addFuture(future);
@@ -79,7 +74,6 @@ public class VcxApi extends VcxJava.API {
     }
 
     public static String vcxErrorCMessage(int errorCode) {
-        Log.d(TAG, "vcxErrorCMessage() called with: errorCode = [" + errorCode + "]");
         return LibVcx.api.vcx_error_c_message(errorCode);
 
 

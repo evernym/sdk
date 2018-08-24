@@ -1,6 +1,5 @@
 package com.evernym.sdk.vcx.token;
 
-import android.util.Log;
 
 import com.evernym.sdk.vcx.LibVcx;
 import com.evernym.sdk.vcx.VcxException;
@@ -29,7 +28,6 @@ public class TokenApi extends VcxJava.API {
     public static CompletableFuture<String> getTokenInfo(
             int paymentHandle
     ) throws VcxException {
-        Log.d(TAG, "getTokenInfo, called with paymentHandle=[" + paymentHandle + "]");
         CompletableFuture<String> future = new CompletableFuture<String>();
         int commandHandle = addFuture(future);
         int result = LibVcx.api.vcx_wallet_get_token_info(commandHandle, paymentHandle, vcxTokenCB);
@@ -54,7 +52,6 @@ public class TokenApi extends VcxJava.API {
             String tokens,
             String recipient
     ) throws VcxException {
-        Log.d(TAG, "sendTokens, called with paymentHandle=[" + paymentHandle + "] tokens=[" + tokens + "]");
         CompletableFuture<String> future = new CompletableFuture<String>();
         int commandHandle = addFuture(future);
         int result = LibVcx.api.vcx_wallet_send_tokens(commandHandle, paymentHandle, tokens, recipient, vcxSendTokensCB);
@@ -77,7 +74,6 @@ public class TokenApi extends VcxJava.API {
     public static CompletableFuture<String> createPaymentAddress(
             String seed
     ) throws VcxException {
-        Log.d(TAG, "createPaymentAddress, called with seed=[__]");
         CompletableFuture<String> future = new CompletableFuture<String>();
         int commandHandle = addFuture(future);
         int result = LibVcx.api.vcx_wallet_create_payment_address(commandHandle, seed, vcxCreatePaymentAddressCB);
