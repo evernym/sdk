@@ -76,7 +76,9 @@ mod tests {
     #[test]
     fn test_real_proof() {
         use ::utils::devsetup::tests::setup_local_env;
+        use ::utils::devsetup::tests::delete_indy_client_wallet_files;
         settings::set_defaults();
+        delete_indy_client_wallet_files();
 	    setup_local_env("test_real_proof");
         let institution_did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
         let (faber, alice) = ::connection::tests::create_connected_connections();
@@ -185,6 +187,10 @@ mod tests {
         println!("retrieving matching credentials");
         let retrieved_credentials = disclosed_proof::retrieve_credentials(proof_handle).unwrap();
         let matching_credentials: Value = serde_json::from_str(&retrieved_credentials).unwrap();
+        println!("Matching Credentials[0]:\n********\n{:?}", matching_credentials[0]);
+        let matching_credentials: Value = serde_json::from_str(&retrieved_credentials).unwrap();
+
+        println!("Matching Credentials:\n{}", serde_json::to_string_pretty(&matching_credentials).unwrap());
         let selected_credentials : Value = json!({
                "attrs":{
                   address1:matching_credentials["attrs"][address1][0],
@@ -196,6 +202,7 @@ mod tests {
                "predicates":{
                }
             });
+        println!("Selected Credentials:\n{}", serde_json::to_string_pretty(&selected_credentials).unwrap());
         disclosed_proof::generate_proof(proof_handle, selected_credentials.to_string(), "{}".to_string()).unwrap();
         println!("sending proof");
         disclosed_proof::send_proof(proof_handle, faber).unwrap();

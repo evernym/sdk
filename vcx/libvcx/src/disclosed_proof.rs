@@ -227,6 +227,7 @@ impl DisclosedProof {
                                                           &credential_defs_json,
                                                           revoc_regs_json).map_err(|ec| ProofError::CommonError(ec))?;
 
+        println!("PROOF\n********\n{}\n********", proof);
         let mut proof_msg = ProofMessage::new();
         proof_msg.libindy_proof = proof;
         self.proof = Some(proof_msg);

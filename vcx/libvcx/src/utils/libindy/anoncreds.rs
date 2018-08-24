@@ -75,6 +75,8 @@ pub fn libindy_prover_create_proof(proof_req_json: &str,
                                    credential_defs_json: &str,
                                    revoc_states_json: Option<&str>) -> Result<String, u32> {
     let revoc_states_json = revoc_states_json.unwrap_or("{}");
+    println!("Proof Req Json\n{}", proof_req_json);
+    println!("Requested Credentials Json\n{}", requested_credentials_json);
     Prover::create_proof(get_wallet_handle(),
                          proof_req_json,
                          requested_credentials_json,
@@ -102,8 +104,10 @@ pub fn libindy_prover_get_credentials_for_proof_req(proof_req: &str) -> Result<S
         println!("item_referent: {}", k);
         creds.push(Prover::_fetch_credentials_for_proof_req(search_handle, item_referent, count).unwrap());
     }
-
-    Ok(creds.iter().map(|s| s.clone()).collect::<String>())
+    println!("Creds:\n {:?}", creds);
+    let c = creds.iter().map(|s| s.clone()).collect::<Value>();
+    println!("Collected Creds:\n {}", c);
+    Ok(serde_json::to_string(&c).unwrap())
 }
 
 pub fn libindy_prover_create_credential_req(prover_did: &str,
