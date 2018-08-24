@@ -1,7 +1,7 @@
 
 [profile.release]
 debug = false
-panic = 'abort'
+panic = 'unwind'
 incremental = false
 lto = true
 rpath = false
