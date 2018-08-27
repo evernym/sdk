@@ -6,9 +6,13 @@ import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.NativeLibrary;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 
 public abstract class LibVcx {
+    private static final Logger logger = LoggerFactory.getLogger("LibVcx");
     // TODO: We should assign explicit numbers to each state
     public enum State {
         none,
@@ -436,10 +440,10 @@ public abstract class LibVcx {
 
         try {
 
+            logger.info("static initializer: initializing libvcx binary.");
             init();
         } catch (UnsatisfiedLinkError ex) {
-            System.out.println(ex.getMessage());
-//            Log.e(TAG, "static initializer: ", ex );
+            logger.error("static initializer: ", ex.getMessage());
             // Library could not be found in standard OS locations.
             // Call init(File file) explicitly with absolute library path.
         }

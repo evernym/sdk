@@ -6,13 +6,18 @@ import com.evernym.sdk.vcx.VcxException;
 import com.evernym.sdk.vcx.VcxJava;
 import com.sun.jna.Callback;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java9.util.concurrent.CompletableFuture;
 
 public class ProofApi extends VcxJava.API {
     private ProofApi(){}
 
+    private static final Logger logger = LoggerFactory.getLogger("ProofApi");
     private static Callback vcxProofCreateCB = new Callback() {
         public void callback(int commandHandle, int err, int proofHandle){
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "], proofHandle = [" + proofHandle + "]");
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(commandHandle);
             if(!checkCallback(future,err)) return;
             Integer result = proofHandle;
@@ -30,6 +35,7 @@ public class ProofApi extends VcxJava.API {
         ParamGuard.notNull(requestedAttrs, "requestedAttrs");
         ParamGuard.notNull(requestedPredicates, "requestedPredicates");
         ParamGuard.notNull(name, "name");
+        logger.debug("proofCreate() called with: sourceId = [" + sourceId + "], requestedAttrs = [" + requestedAttrs + "], requestedPredicates = [" + requestedPredicates + "], name = [" + name + "]");
         CompletableFuture<Integer> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
 
@@ -41,6 +47,7 @@ public class ProofApi extends VcxJava.API {
 
     private static Callback vcxProofSendRequestCB = new Callback() {
         public void callback(int commandHandle, int err){
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "]");
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(commandHandle);
             if(!checkCallback(future,err)) return;
             Integer result = commandHandle;
@@ -54,6 +61,7 @@ public class ProofApi extends VcxJava.API {
     ) throws VcxException {
         ParamGuard.notNull(proofHandle, "proofHandle");
         ParamGuard.notNull(connectionHandle, "connectionHandle");
+        logger.debug("proofSendRequest() called with: proofHandle = [" + proofHandle + "], connectionHandle = [" + connectionHandle + "]");
         CompletableFuture<Integer> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
 
@@ -65,6 +73,7 @@ public class ProofApi extends VcxJava.API {
 
     private static Callback vcxGetProofCB = new Callback() {
         public void callback(int commandHandle, int err, int proofState, String responseData){
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "], proofState = [" + proofState + "], responseData = [" + responseData + "]");
             CompletableFuture<GetProofResult> future = (CompletableFuture<GetProofResult>) removeFuture(commandHandle);
             if(!checkCallback(future,err)) return;
             GetProofResult result = new GetProofResult(proofState,responseData);
@@ -78,6 +87,7 @@ public class ProofApi extends VcxJava.API {
     ) throws VcxException {
         ParamGuard.notNull(proofHandle, "proofHandle");
         ParamGuard.notNull(connectionHandle, "connectionHandle");
+        logger.debug("getProof() called with: proofHandle = [" + proofHandle + "], connectionHandle = [" + connectionHandle + "]");
         CompletableFuture<GetProofResult> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
 
@@ -94,6 +104,7 @@ public class ProofApi extends VcxJava.API {
     ) throws VcxException {
         ParamGuard.notNull(proofHandle, "proofHandle");
         ParamGuard.notNull(responseData, "responseData");
+        logger.debug("proofAccepted() called with: proofHandle = [" + proofHandle + "], responseData = [" + responseData + "]");
         CompletableFuture<Integer> future = new CompletableFuture<>();
 
         int result = LibVcx.api.vcx_proof_accepted(proofHandle, responseData);
@@ -104,6 +115,7 @@ public class ProofApi extends VcxJava.API {
 
     private static Callback vcxProofUpdateStateCB = new Callback() {
         public void callback(int commandHandle, int err, int state){
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "], state = [" + state + "]");
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(commandHandle);
             if(!checkCallback(future,err)) return;
             Integer result = state;
@@ -115,6 +127,7 @@ public class ProofApi extends VcxJava.API {
             int proofHandle
     ) throws VcxException {
         ParamGuard.notNull(proofHandle, "proofHandle");
+        logger.debug("proofUpdateState() called with: proofHandle = [" + proofHandle + "]");
         CompletableFuture<Integer> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
 
@@ -126,6 +139,7 @@ public class ProofApi extends VcxJava.API {
 
     private static Callback vcxProofGetStateCB = new Callback() {
         public void callback(int commandHandle, int err, int state){
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "], state = [" + state + "]");
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(commandHandle);
             if(!checkCallback(future,err)) return;
             Integer result = state;
@@ -137,6 +151,7 @@ public class ProofApi extends VcxJava.API {
             int proofHandle
     ) throws VcxException {
         ParamGuard.notNull(proofHandle, "proofHandle");
+        logger.debug("proofGetState() called with: proofHandle = [" + proofHandle + "]");
         CompletableFuture<Integer> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
 
@@ -148,6 +163,7 @@ public class ProofApi extends VcxJava.API {
 
     private static Callback vcxProofSerializeCB = new Callback() {
         public void callback(int commandHandle, int err, String proofState){
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "], proofState = [" + proofState + "]");
             CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(commandHandle);
             if(!checkCallback(future,err)) return;
             future.complete(proofState);
@@ -158,6 +174,7 @@ public class ProofApi extends VcxJava.API {
             int proofHandle
     ) throws VcxException {
         ParamGuard.notNull(proofHandle, "proofHandle");
+        logger.debug("proofSerialize() called with: proofHandle = [" + proofHandle + "]");
         CompletableFuture<Integer> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
 
@@ -169,6 +186,7 @@ public class ProofApi extends VcxJava.API {
 
     private static Callback vcxProofDeserializeCB = new Callback() {
         public void callback(int commandHandle, int err, int proofHandle){
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "], proofHandle = [" + proofHandle + "]");
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(commandHandle);
             if(!checkCallback(future,err)) return;
             Integer result = proofHandle;
@@ -180,6 +198,7 @@ public class ProofApi extends VcxJava.API {
             String serializedProof
     ) throws VcxException {
         ParamGuard.notNull(serializedProof, "serializedProof");
+        logger.debug("proofDeserialize() called with: serializedProof = [" + serializedProof + "]");
         CompletableFuture<Integer> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
 
@@ -193,6 +212,7 @@ public class ProofApi extends VcxJava.API {
             int proofHandle
     ) throws VcxException {
         ParamGuard.notNull(proofHandle, "proofHandle");
+        logger.debug("proofRelease() called with: proofHandle = [" + proofHandle + "]");
         CompletableFuture<Integer> future = new CompletableFuture<>();
 
         int result = LibVcx.api.vcx_proof_release(proofHandle);

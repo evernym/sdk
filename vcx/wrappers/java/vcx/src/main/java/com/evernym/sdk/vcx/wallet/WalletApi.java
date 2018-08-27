@@ -6,10 +6,13 @@ import com.evernym.sdk.vcx.VcxException;
 import com.evernym.sdk.vcx.VcxJava;
 import com.sun.jna.Callback;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java9.util.concurrent.CompletableFuture;
 
 public class WalletApi extends VcxJava.API {
-    private static String TAG = "JAVA_WRAPPER::API_VCX::WALLET";
+    private static final Logger logger = LoggerFactory.getLogger("WalletApi");
 
     private WalletApi() {
     }
@@ -17,6 +20,7 @@ public class WalletApi extends VcxJava.API {
     private static Callback vcxExportWalletCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
         public void callback(int commandHandle, int err, int exportHandle) {
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "], exportHandle = [" + exportHandle + "]");
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             Integer result = exportHandle;
@@ -30,6 +34,7 @@ public class WalletApi extends VcxJava.API {
     ) throws VcxException {
         ParamGuard.notNull(exportPath, "exportPath");
         ParamGuard.notNull(encryptionKey, "encryptionKey");
+        logger.debug("exportWallet() called with: exportPath = [" + exportPath + "], encryptionKey = [" + encryptionKey + "]");
         CompletableFuture<Integer> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
 
@@ -42,6 +47,7 @@ public class WalletApi extends VcxJava.API {
     private static Callback vcxImportWalletCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
         public void callback(int commandHandle, int err, int importHandle) {
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "], importHandle = [" + importHandle + "]");
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             Integer result = importHandle;
@@ -53,6 +59,7 @@ public class WalletApi extends VcxJava.API {
             String config
     ) throws VcxException {
         ParamGuard.notNull(config, "config");
+        logger.debug("importWallet() called with: config = [" + config + "]");
         CompletableFuture<Integer> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
 
@@ -65,6 +72,7 @@ public class WalletApi extends VcxJava.API {
     private static Callback vcxAddRecordWalletCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
         public void callback(int commandHandle, int err) {
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "]");
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             Integer result = commandHandle;
@@ -80,6 +88,7 @@ public class WalletApi extends VcxJava.API {
         ParamGuard.notNull(recordType, "recordType");
         ParamGuard.notNull(recordId, "recordId");
         ParamGuard.notNull(recordValue, "recordValue");
+        logger.debug("addRecordWallet() called with: recordType = [" + recordType + "], recordId = [" + recordId + "], recordValue = [" + recordValue + "]");
         CompletableFuture<Integer> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
         String recordTag = "{}";
@@ -93,6 +102,7 @@ public class WalletApi extends VcxJava.API {
     private static Callback vcxDeleteRecordWalletCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
         public void callback(int commandHandle, int err) {
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "]");
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             Integer result = commandHandle;
@@ -106,6 +116,7 @@ public class WalletApi extends VcxJava.API {
     ) throws VcxException {
         ParamGuard.notNull(recordType, "recordType");
         ParamGuard.notNull(recordId, "recordId");
+        logger.debug("deleteRecordWallet() called with: recordType = [" + recordType + "], recordId = [" + recordId + "]");
         CompletableFuture<Integer> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
 
@@ -135,6 +146,7 @@ public class WalletApi extends VcxJava.API {
         ParamGuard.notNull(recordType, "recordType");
         ParamGuard.notNull(recordId, "recordId");
         ParamGuard.notNull(recordValue, "recordValue");
+        logger.debug("getRecordWallet() called with: recordType = [" + recordType + "], recordId = [" + recordId + "], recordValue = [" + recordValue + "]");
         CompletableFuture<String> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
         String recordTag = "{}";
@@ -163,6 +175,7 @@ public class WalletApi extends VcxJava.API {
         ParamGuard.notNull(recordType, "recordType");
         ParamGuard.notNull(recordId, "recordId");
         ParamGuard.notNull(recordValue, "recordValue");
+        logger.debug("updateRecordWallet() called with: recordType = [" + recordType + "], recordId = [" + recordId + "], recordValue = [" + recordValue + "]");
         CompletableFuture<Integer> future = new CompletableFuture<Integer>();
         int commandHandle = addFuture(future);
 

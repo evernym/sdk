@@ -60,12 +60,15 @@ import com.evernym.sdk.vcx.vcx.WalletAlreadyExistsException;
 import com.evernym.sdk.vcx.vcx.WalletItemAlreadyExistsException;
 import com.evernym.sdk.vcx.vcx.WalletItemNotFoundException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Thrown when an Indy specific error has occurred.
  */
 public class VcxException extends Exception {
 
-    private static String TAG = "JAVA_WRAPPER::VCX_API ";
+    private static final Logger logger = LoggerFactory.getLogger("VcxException");
     private static final long serialVersionUID = 2650355290834266234L;
     private int sdkErrorCode;
 
@@ -94,6 +97,7 @@ public class VcxException extends Exception {
      * @param sdkErrorCode The SDK error code to construct the exception from.
      */
     static VcxException fromSdkError(int sdkErrorCode) {
+        logger.debug("fromSdkError() called with: sdkErrorCode = [" + sdkErrorCode + "]");
         ErrorCode errorCode = ErrorCode.UNKNOWN_ERROR;
         try {
             errorCode = ErrorCode.valueOf(sdkErrorCode);

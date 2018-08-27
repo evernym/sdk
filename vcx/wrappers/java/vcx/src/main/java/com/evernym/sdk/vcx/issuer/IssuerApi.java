@@ -6,17 +6,20 @@ import com.evernym.sdk.vcx.VcxException;
 import com.evernym.sdk.vcx.VcxJava;
 import com.sun.jna.Callback;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java9.util.concurrent.CompletableFuture;
 
 public class IssuerApi extends VcxJava.API {
 
-    static String TAG = "JAVA_WRAPPER:IssuerApi ";
-
+    private static final Logger logger = LoggerFactory.getLogger("IssuerApi");
     private static final Callback issuerCreateCredentialCB = new Callback() {
         // TODO: This callback and jna definition needs to be fixed for this API
         // it should accept connection handle as well
         @SuppressWarnings({"unused", "unchecked"})
         public void callback(int commandHandle, int err, int credntialHandle) {
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "], credntialHandle = [" + credntialHandle + "]");
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             Integer result = credntialHandle;
@@ -33,6 +36,7 @@ public class IssuerApi extends VcxJava.API {
         ParamGuard.notNullOrWhiteSpace(sourceId, "sourceId");
         ParamGuard.notNullOrWhiteSpace(sourceId, "credentialDefId");
         ParamGuard.notNullOrWhiteSpace(sourceId, "SchemaId");
+        logger.debug("issuerCreateCredential() called with: sourceId = [" + sourceId + "], credentialDefId = [" + credentialDefId + "], issuerId = [" + issuerId + "], credentialData = [" + credentialData + "], credentialName = [" + credentialName + "], price = [" + price + "]");
         //TODO: Check for more mandatory params in vcx to add in PamaGuard
         CompletableFuture<Integer> future = new CompletableFuture<>();
         int issue = addFuture(future);
@@ -53,6 +57,7 @@ public class IssuerApi extends VcxJava.API {
     private static Callback issuerSendcredentialOfferCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
         public void callback(int commandHandle, int err) {
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "]");
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             // TODO complete with exception if we find error
@@ -69,6 +74,7 @@ public class IssuerApi extends VcxJava.API {
                                                                        int connectionHandle) throws VcxException {
         ParamGuard.notNull(credentialOffer, "credentialOffer");
         ParamGuard.notNull(connectionHandle, "connectionHandle");
+        logger.debug("issuerSendcredentialOffer() called with: credentialOffer = [" + credentialOffer + "], connectionHandle = [" + connectionHandle + "]");
         CompletableFuture<Integer> future = new CompletableFuture<>();
         int issue = addFuture(future);
 
@@ -85,6 +91,7 @@ public class IssuerApi extends VcxJava.API {
     private static Callback issuerCredntialUpdateStateCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
         public void callback(int commandHandle, int err, LibVcx.State state) {
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "], state = [" + state + "]");
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             future.complete(state.ordinal());
@@ -93,6 +100,7 @@ public class IssuerApi extends VcxJava.API {
 
     public static CompletableFuture<Integer> issuerCredntialUpdateState(int credentialHandle) throws VcxException {
         ParamGuard.notNull(credentialHandle, "credentialHandle");
+        logger.debug("issuerCredntialUpdateState() called with: credentialHandle = [" + credentialHandle + "]");
         CompletableFuture<Integer> future = new CompletableFuture<>();
         int issue = addFuture(future);
         int result = LibVcx.api.vcx_connection_get_state(issue, credentialHandle, issuerCredntialUpdateStateCB);
@@ -103,6 +111,7 @@ public class IssuerApi extends VcxJava.API {
     private static Callback issuerCredntialGetStateCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
         public void callback(int commandHandle, int err, LibVcx.State state) {
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "], state = [" + state + "]");
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             future.complete(state.ordinal());
@@ -111,6 +120,7 @@ public class IssuerApi extends VcxJava.API {
 
     public static CompletableFuture<Integer> issuerCredntialGetState(int credentialHandle) throws VcxException {
         ParamGuard.notNull(credentialHandle, "credentialHandle");
+        logger.debug("issuerCredntialGetState() called with: credentialHandle = [" + credentialHandle + "]");
         CompletableFuture<Integer> future = new CompletableFuture<>();
         int issue = addFuture(future);
         int result = LibVcx.api.vcx_connection_get_state(issue, credentialHandle, issuerCredntialGetStateCB);
@@ -120,6 +130,7 @@ public class IssuerApi extends VcxJava.API {
     private static Callback issuerSendCredentialCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
         public void callback(int commandHandle, int err, String credentialDefId) {
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "], credentialDefId = [" + credentialDefId + "]");
             CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             future.complete(credentialDefId);
@@ -130,6 +141,7 @@ public class IssuerApi extends VcxJava.API {
                                                                  int connectionHandle) throws VcxException {
         ParamGuard.notNull(credentialHandle, "credentialHandle");
         ParamGuard.notNull(connectionHandle, "connectionHandle");
+        logger.debug("issuerSendCredential() called with: credentialHandle = [" + credentialHandle + "], connectionHandle = [" + connectionHandle + "]");
         CompletableFuture<String> future = new CompletableFuture<>();
         int issue = addFuture(future);
 
@@ -146,6 +158,7 @@ public class IssuerApi extends VcxJava.API {
     private static Callback issuerCredentialSerializeCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
         public void callback(int commandHandle, int err, String serializedData) {
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "], serializedData = [" + serializedData + "]");
             CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             // TODO complete with exception if we find error
@@ -161,6 +174,7 @@ public class IssuerApi extends VcxJava.API {
 
     public static CompletableFuture<String> issuerCredentialSerialize(int credentialHandle) throws VcxException {
         ParamGuard.notNull(credentialHandle, "credentialHandle");
+        logger.debug("issuerCredentialSerialize() called with: credentialHandle = [" + credentialHandle + "]");
         CompletableFuture<String> future = new CompletableFuture<>();
         int issue = addFuture(future);
 
@@ -176,6 +190,7 @@ public class IssuerApi extends VcxJava.API {
     private static Callback issuerCredentialDeserializeCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
         public void callback(int commandHandle, int err, int handle) {
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "], handle = [" + handle + "]");
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             // TODO complete with exception if we find error
@@ -191,6 +206,7 @@ public class IssuerApi extends VcxJava.API {
 
     public static CompletableFuture<Integer> issuerCredentialDeserialize(String serializedData) throws VcxException {
         ParamGuard.notNull(serializedData, "serializedData");
+        logger.debug("issuerCredentialDeserialize() called with: serializedData = [" + serializedData + "]");
         CompletableFuture<Integer> future = new CompletableFuture<>();
         int issue = addFuture(future);
 
@@ -213,6 +229,7 @@ public class IssuerApi extends VcxJava.API {
         ParamGuard.notNull(credentialHandle, "credentialHandle");
         ParamGuard.notNull(state, "state");
         ParamGuard.notNullOrWhiteSpace(msg, "msg");
+        logger.debug("issuerTerminateCredential() called with: credentialHandle = [" + credentialHandle + "], state = [" + state + "], msg = [" + msg + "]");
         CompletableFuture<Integer> future = new CompletableFuture<>();
         int issue = addFuture(future);
 
@@ -230,6 +247,7 @@ public class IssuerApi extends VcxJava.API {
             int credentialHandle
     ) throws VcxException {
         ParamGuard.notNull(credentialHandle, "credentialHandle");
+        logger.debug("issuerCredntialRelease() called with: credentialHandle = [" + credentialHandle + "]");
         CompletableFuture<Integer> future = new CompletableFuture<>();
 
         int result = LibVcx.api.vcx_issuer_credential_release(credentialHandle);
@@ -244,6 +262,7 @@ public class IssuerApi extends VcxJava.API {
 
         ParamGuard.notNull(credentialHandle, "credentialHandle");
         ParamGuard.notNull(credentialRequest, "credentialRequest");
+        logger.debug("issuercredentialRequest() called with: credentialHandle = [" + credentialHandle + "], credentialRequest = [" + credentialRequest + "]");
         CompletableFuture<Integer> future = new CompletableFuture<>();
 
         int result = LibVcx.api.vcx_issuer_get_credential_request(
@@ -258,6 +277,7 @@ public class IssuerApi extends VcxJava.API {
             int credentialHandle) throws VcxException {
 
         ParamGuard.notNull(credentialHandle, "credentialHandle");
+        logger.debug("issuerAcceptRequest() called with: credentialHandle = [" + credentialHandle + "]");
         CompletableFuture<Integer> future = new CompletableFuture<>();
 
         int result = LibVcx.api.vcx_issuer_accept_credential(

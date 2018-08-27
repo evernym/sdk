@@ -5,6 +5,8 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -19,7 +21,8 @@ import java9.util.concurrent.CompletableFuture;
  * by the Java wrapper of libvcx.
  */
 public class VcxJava {
-	static String TAG ="JAVA_WRAPPER::VCX_JAVA ";
+
+	private static final Logger logger = LoggerFactory.getLogger("VcxJava");
 	/*
 	 * API
 	 */
@@ -57,7 +60,7 @@ public class VcxJava {
 			int commandHandle = newCommandHandle();
 			assert(! futures.containsKey(commandHandle));
 			futures.put(commandHandle, future);
-
+			logger.debug("added future with command handle: {}", commandHandle);
 			return commandHandle;
 		}
 
@@ -68,7 +71,7 @@ public class VcxJava {
 		 * @return The future associated with the command handle.
 		 */
 		protected static CompletableFuture<?> removeFuture(int commandHandle) {
-
+			logger.debug("removeFuture: callback completed for command handle: {}", commandHandle);
 			CompletableFuture<?> future = futures.remove(commandHandle);
 			assert(future != null);
 
@@ -128,7 +131,11 @@ public class VcxJava {
 		 */
 		protected static void checkResult(int err) throws VcxException {
 			ErrorCode errorCode = ErrorCode.valueOf(err);
-			if (! ErrorCode.SUCCESS.equals(errorCode)) throw VcxException.fromSdkError(err);
+			if (! ErrorCode.SUCCESS.equals(errorCode)){
+				throw VcxException.fromSdkError(err);
+			} else{
+				logger.debug("checkResult() returned: " + err);
+			}
 		}
 
 		/*

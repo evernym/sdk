@@ -11,6 +11,9 @@ import com.evernym.sdk.vcx.VcxException;
 import com.evernym.sdk.vcx.VcxJava;
 import com.sun.jna.Callback;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java9.util.concurrent.CompletableFuture;
 
 /**
@@ -19,14 +22,14 @@ import java9.util.concurrent.CompletableFuture;
 
 public class ConnectionApi extends VcxJava.API {
 
-
-    private static String TAG = "JAVA_WRAPPER::API_CONNECTION";
+    private static final Logger logger = LoggerFactory.getLogger("ConnectionApi");
 
     private static Callback vcxConnectionCreateCB = new Callback() {
         // TODO: This callback and jna definition needs to be fixed for this API
         // it should accept connection handle as well
         @SuppressWarnings({"unused", "unchecked"})
         public void callback(int commandHandle, int err, int connectionHandle) {
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "], connectionHandle = [" + connectionHandle + "]");
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             Integer result = connectionHandle;
@@ -36,6 +39,7 @@ public class ConnectionApi extends VcxJava.API {
 
     public static CompletableFuture<Integer> vcxConnectionCreate(String sourceId) throws VcxException {
         ParamGuard.notNullOrWhiteSpace(sourceId, "sourceId");
+        logger.debug("vcxConnectionCreate() called with: sourceId = [ {} ]",sourceId);
         CompletableFuture<Integer> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
 
@@ -51,6 +55,7 @@ public class ConnectionApi extends VcxJava.API {
     private static Callback vcxUpdateStateCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
         public void callback(int commandHandle, int err, LibVcx.State s) {
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "], s = [" + s + "]");
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             Integer result = s.ordinal();
@@ -59,6 +64,7 @@ public class ConnectionApi extends VcxJava.API {
     };
 
     public static CompletableFuture<Integer> vcxConnectionUpdateState(int connectionHandle) throws VcxException {
+        logger.debug("vcxConnectionUpdateState() called with: connectionHandle = [" + connectionHandle + "]");
         CompletableFuture<Integer> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
 
@@ -75,6 +81,7 @@ public class ConnectionApi extends VcxJava.API {
     private static Callback vcxCreateConnectionWithInviteCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
         public void callback(int commandHandle, int err, int connectionHandle) {
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "], connectionHandle = [" + connectionHandle + "]");
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             // TODO complete with exception if we find error
@@ -91,6 +98,7 @@ public class ConnectionApi extends VcxJava.API {
     public static CompletableFuture<Integer> vcxCreateConnectionWithInvite(String invitationId, String inviteDetails) throws VcxException {
         ParamGuard.notNullOrWhiteSpace(invitationId, "invitationId");
         ParamGuard.notNullOrWhiteSpace(inviteDetails, "inviteDetails");
+        logger.debug("vcxCreateConnectionWithInvite() called with: invitationId = [" + invitationId + "], inviteDetails = [" + inviteDetails + "]");
         CompletableFuture<Integer> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
 
@@ -107,6 +115,7 @@ public class ConnectionApi extends VcxJava.API {
     private static Callback vcxAcceptInvitationCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
         public void callback(int commandHandle, int err, String inviteDetails) {
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "], inviteDetails = [" + inviteDetails + "]");
             CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             // TODO complete with exception if we find error
@@ -123,6 +132,7 @@ public class ConnectionApi extends VcxJava.API {
     public static CompletableFuture<String> vcxAcceptInvitation(int connectionHandle, String connectionType) throws VcxException {
         ParamGuard.notNull(connectionHandle, "connectionHandle");
         ParamGuard.notNullOrWhiteSpace(connectionType, "connectionType");
+        logger.debug("vcxAcceptInvitation() called with: connectionHandle = [" + connectionHandle + "], connectionType = [" + connectionType + "]");
         CompletableFuture<String> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
 
@@ -139,6 +149,7 @@ public class ConnectionApi extends VcxJava.API {
     private static Callback vcxConnectionSerializeCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
         public void callback(int commandHandle, int err, String serializedData) {
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "], serializedData = [" + serializedData + "]");
             CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             // TODO complete with exception if we find error
@@ -153,6 +164,7 @@ public class ConnectionApi extends VcxJava.API {
 
     public static CompletableFuture<String> connectionSerialize(int connectionHandle) throws VcxException {
         ParamGuard.notNull(connectionHandle, "connectionHandle");
+        logger.debug("connectionSerialize() called with: connectionHandle = [" + connectionHandle + "]");
         CompletableFuture<String> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
 
@@ -168,6 +180,7 @@ public class ConnectionApi extends VcxJava.API {
     private static Callback vcxConnectionDeserializeCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
         public void callback(int commandHandle, int err, int connectionHandle) {
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "], connectionHandle = [" + connectionHandle + "]");
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             // TODO complete with exception if we find error
@@ -182,6 +195,7 @@ public class ConnectionApi extends VcxJava.API {
 
     public static CompletableFuture<Integer> connectionDeserialize(String connectionData) throws VcxException {
         ParamGuard.notNull(connectionData, "connectionData");
+        logger.debug("connectionDeserialize() called with: connectionData = [" + connectionData + "]");
         CompletableFuture<Integer> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
 
@@ -198,6 +212,7 @@ public class ConnectionApi extends VcxJava.API {
     private static Callback vcxConnectionDeleteCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
         public void callback(int commandHandle, int err) {
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "]");
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             future.complete(0);
@@ -205,6 +220,7 @@ public class ConnectionApi extends VcxJava.API {
     };
 
     public static CompletableFuture<Integer> deleteConnection(int connectionHandle) throws VcxException {
+        logger.debug("deleteConnection() called with: connectionHandle = [" + connectionHandle + "]");
         CompletableFuture<Integer> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
 
@@ -216,6 +232,7 @@ public class ConnectionApi extends VcxJava.API {
     private static Callback vcxConnectionInviteDetailsCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
         public void callback(int commandHandle, int err, String details) {
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "], details = [" + details + "]");
             CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             future.complete(details);
@@ -223,6 +240,7 @@ public class ConnectionApi extends VcxJava.API {
     };
 
     public static CompletableFuture<String> connectionInviteDetails(int connectionHandle, int abbreviated) throws VcxException {
+        logger.debug("connectionInviteDetails() called with: connectionHandle = [" + connectionHandle + "], abbreviated = [" + abbreviated + "]");
         CompletableFuture<String> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
         int result = LibVcx.api.vcx_connection_invite_details(commandHandle, connectionHandle, abbreviated, vcxConnectionInviteDetailsCB);
@@ -230,13 +248,21 @@ public class ConnectionApi extends VcxJava.API {
         return future;
     }
 
-    public static int connectionRelease(int connnectionHandle) {
-        return LibVcx.api.vcx_connection_release(connnectionHandle);
+    public static CompletableFuture<Integer> connectionRelease(int handle) throws VcxException {
+        logger.debug("connectionRelease() called with: handle = [" + handle + "]");
+        ParamGuard.notNull(handle, "handle");
+        CompletableFuture<Integer> future = new CompletableFuture<>();
+
+        int result = LibVcx.api.vcx_connection_release(handle);
+        checkResult(result);
+
+        return future;
     }
 
     private static Callback vcxConnectionGetStateCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
         public void callback(int commandHandle, int err, LibVcx.State state) {
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "], state = [" + state + "]");
             CompletableFuture<Integer> future = (CompletableFuture<Integer>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             future.complete(state.ordinal());
@@ -244,6 +270,7 @@ public class ConnectionApi extends VcxJava.API {
     };
 
     public static CompletableFuture<Integer> connectionGetState(int connnectionHandle) throws VcxException {
+        logger.debug("connectionGetState() called with: connnectionHandle = [" + connnectionHandle + "]");
         CompletableFuture<Integer> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
         int result = LibVcx.api.vcx_connection_get_state(commandHandle, connnectionHandle, vcxConnectionGetStateCB);
