@@ -20,5 +20,5 @@ sdk.dir=/home/vcx/android-sdk-linux
 EOT
 
     ./gradlew --no-daemon test
-    ./gradlew --no-daemon clean assemble
+    ./gradlew clean build --project-dir=android
 popd
