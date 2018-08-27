@@ -76,9 +76,7 @@ mod tests {
     #[test]
     fn test_real_proof() {
         use ::utils::devsetup::tests::setup_local_env;
-        use ::utils::devsetup::tests::delete_indy_client_wallet_files;
         settings::set_defaults();
-        delete_indy_client_wallet_files();
 	    setup_local_env("test_real_proof");
         let institution_did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
         let (faber, alice) = ::connection::tests::create_connected_connections();
@@ -121,10 +119,10 @@ mod tests {
         assert_eq!(VcxStateType::VcxStateAccepted as u32, credential::get_state(credential).unwrap());
         // AS INSTITUTION SEND PROOF REQUEST
         tests::set_institution();
-        let address1 = "Address1";
+        let address1 = "address1";
         let address2 = "address2";
-        let city = "CITY";
-        let state = "State";
+        let city = "city";
+        let state = "state";
         let zip = "zip";
         let requested_attrs = json!([
            {
@@ -185,25 +183,21 @@ mod tests {
         let requests = serde_json::to_string(&requests[0]).unwrap();
         let proof_handle = disclosed_proof::create_proof(::utils::constants::DEFAULT_PROOF_NAME.to_string(), requests).unwrap();
         println!("retrieving matching credentials");
-        let retrieved_credentials = disclosed_proof::retrieve_credentials(proof_handle).unwrap();
-        let matching_credentials: Value = serde_json::from_str(&retrieved_credentials).unwrap();
-        println!("Matching Credentials[0]:\n********\n{:?}", matching_credentials[0]);
-        let matching_credentials: Value = serde_json::from_str(&retrieved_credentials).unwrap();
-
-        println!("Matching Credentials:\n{}", serde_json::to_string_pretty(&matching_credentials).unwrap());
+        let retrieved_credentials:Vec<Value> = serde_json::from_str(&disclosed_proof::retrieve_credentials(proof_handle).unwrap()).unwrap();
+        let map:Value = serde_json::from_str(retrieved_credentials[0].as_str().unwrap()).unwrap();
         let selected_credentials : Value = json!({
                "attrs":{
-                  address1:matching_credentials["attrs"][address1][0],
-                  address2:matching_credentials["attrs"][address2][0],
-                  city:matching_credentials["attrs"][city][0],
-                  state:matching_credentials["attrs"][state][0],
-                  zip:matching_credentials["attrs"][zip][0]
+                  address1: map,
+                  address2: map,
+                  city: map,
+                  state: map,
+                  zip: map,
                },
                "predicates":{
                }
             });
-        println!("Selected Credentials:\n{}", serde_json::to_string_pretty(&selected_credentials).unwrap());
-        disclosed_proof::generate_proof(proof_handle, selected_credentials.to_string(), "{}".to_string()).unwrap();
+        let selected_credentials: String = serde_json::to_string(&selected_credentials).unwrap();
+        disclosed_proof::generate_proof(proof_handle, selected_credentials, "{}".to_string()).unwrap();
         println!("sending proof");
         disclosed_proof::send_proof(proof_handle, faber).unwrap();
         assert_eq!(VcxStateType::VcxStateAccepted as u32, disclosed_proof::get_state(proof_handle).unwrap());

@@ -127,6 +127,7 @@ impl DisclosedProof {
         let proof_req = self.proof_request.as_ref().ok_or(ProofError::ProofNotReadyError())?;
         let indy_proof_req = serde_json::to_string(&proof_req.proof_request_data)
             .or(Err(ProofError::CommonError(error::INVALID_JSON.code_num)))?;
+
         anoncreds::libindy_prover_get_credentials_for_proof_req(&indy_proof_req)
             .map_err(|err| ProofError::CommonError(err))
     }
@@ -227,7 +228,6 @@ impl DisclosedProof {
                                                           &credential_defs_json,
                                                           revoc_regs_json).map_err(|ec| ProofError::CommonError(ec))?;
 
-        println!("PROOF\n********\n{}\n********", proof);
         let mut proof_msg = ProofMessage::new();
         proof_msg.libindy_proof = proof;
         self.proof = Some(proof_msg);
@@ -496,11 +496,6 @@ mod tests {
     use utils::constants::{ ADDRESS_CRED_ID, LICENCE_CRED_ID, ADDRESS_SCHEMA_ID, ADDRESS_CRED_DEF_ID, CRED_DEF_ID, SCHEMA_ID };
     use serde_json::Value;
 
-    fn pretty_json(s: &str) -> String {
-        let v: Value = serde_json::from_str(&s).unwrap();
-        serde_json::to_string_pretty(&v).unwrap()
-    }
-
     #[test]
     fn test_create_proof() {
         settings::set_defaults();
@@ -661,12 +656,10 @@ mod tests {
 
         let mut proof_req = ProofRequestMessage::create();
         let mut proof: DisclosedProof = Default::default();
-        println!("req: {}", pretty_json(&req));
         proof_req.proof_request_data = serde_json::from_str(&req).unwrap();
         proof.proof_request = Some(proof_req);
 
         let retrieved_creds = proof.retrieve_credentials().unwrap();
-//        println!("retrieved creds: {}", pretty_json(&retrieved_creds));
         assert!(retrieved_creds.len() > 500);
 
         ::utils::devsetup::tests::cleanup_dev_env(wallet_name);
@@ -675,6 +668,7 @@ mod tests {
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_case_for_proof_req_doesnt_matter_for_retrieve_creds() {
+        use serde_json::Map;
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         let wallet_name = "test_retrieve_credentials";
@@ -701,23 +695,27 @@ mod tests {
         proof.proof_request = Some(proof_req.clone());
 
         // All lower case
-        println!("{}", pretty_json(&serde_json::to_string(&proof_req.proof_request_data).unwrap()));
-        let retrieved_creds = proof.retrieve_credentials().unwrap();
-        assert!(retrieved_creds.contains(r#""zip":"84000""#));
+        let retrieved_creds:String = proof.retrieve_credentials().unwrap();
+        assert!(retrieved_creds.len() > 1);
+        let retrieved_creds:Vec<Value> = serde_json::from_str(&retrieved_creds).unwrap();
+        let map:Value = serde_json::from_str(retrieved_creds[0].as_str().unwrap()).unwrap();
+        assert_eq!(map["cred_info"]["attrs"]["zip"], "84000");
 
         // First letter upper
         req["requested_attributes"]["zip_1"]["name"] = json!("Zip");
         proof_req.proof_request_data = serde_json::from_str(&req.to_string()).unwrap();
         proof.proof_request = Some(proof_req.clone());
-        let retrieved_creds2 = proof.retrieve_credentials().unwrap();
-        assert!(retrieved_creds2.contains(r#""zip":"84000""#));
+        let retrieved_creds:Vec<Value> = serde_json::from_str(&proof.retrieve_credentials().unwrap()).unwrap();
+        let map:Value = serde_json::from_str(retrieved_creds[0].as_str().unwrap()).unwrap();
+        assert_eq!(map["cred_info"]["attrs"]["zip"], "84000");
 
         //entire word upper
         req["requested_attributes"]["zip_1"]["name"] = json!("ZIP");
         proof_req.proof_request_data = serde_json::from_str(&req.to_string()).unwrap();
         proof.proof_request = Some(proof_req.clone());
-        let retrieved_creds3 = proof.retrieve_credentials().unwrap();
-        assert!(retrieved_creds3.contains(r#""zip":"84000""#));
+        let retrieved_creds:Vec<Value> = serde_json::from_str(&proof.retrieve_credentials().unwrap()).unwrap();
+        let map:Value = serde_json::from_str(retrieved_creds[0].as_str().unwrap()).unwrap();
+        assert_eq!(map["cred_info"]["attrs"]["zip"], "84000");
         ::utils::devsetup::tests::cleanup_dev_env(wallet_name);
     }
 

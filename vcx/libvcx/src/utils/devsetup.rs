@@ -36,21 +36,6 @@ pub mod tests {
     pub const C_AGENCY_DID: &'static str = "Nv9oqGX57gy15kPSJzo2i4";
     pub const C_AGENCY_VERKEY: &'static str = "CwpcjCc6MtVNdQgwoonNMFoR6dhzmRXHHaUCRSrjh8gj";
 
-    pub fn delete_indy_client_wallet_files(){
-        use std::fs::remove_dir_all;
-        use std::env::home_dir;
-        use std::path::PathBuf;
-        let p = match home_dir() {
-            Some(path) => path,
-            None => panic!("Cannot find home directory"),
-        };
-        let mut path = PathBuf::new();
-        path.push(p);
-        path.push(".indy_client");
-        path.push("wallet");
-        remove_dir_all(path).unwrap_or(());
-    }
-
     pub fn set_trustee_did() {
         let (my_did, _) = ::utils::libindy::signus::create_and_store_my_did(wallet::get_wallet_handle(), Some(TRUSTEE)).unwrap();
         let did = settings::set_config_value(settings::CONFIG_INSTITUTION_DID, &my_did);

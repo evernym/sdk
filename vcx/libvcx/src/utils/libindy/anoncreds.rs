@@ -75,8 +75,6 @@ pub fn libindy_prover_create_proof(proof_req_json: &str,
                                    credential_defs_json: &str,
                                    revoc_states_json: Option<&str>) -> Result<String, u32> {
     let revoc_states_json = revoc_states_json.unwrap_or("{}");
-    println!("Proof Req Json\n{}", proof_req_json);
-    println!("Requested Credentials Json\n{}", requested_credentials_json);
     Prover::create_proof(get_wallet_handle(),
                          proof_req_json,
                          requested_credentials_json,
@@ -91,23 +89,28 @@ pub fn libindy_prover_get_credentials_for_proof_req(proof_req: &str) -> Result<S
     use serde_json;
     use serde_json::Value;
     use serde_json::Map;
-    static REQUESTED_ATTRIBUTES: &str = "requested_attributes";
+    use utils::constants::{REQUESTED_ATTRIBUTES, MAX_CREDENTIAL_SEARCH_COUNT};
+    use utils::error::{INVALID_JSON, INVALID_PROOF_REQUEST, INVALID_CREDENTIAL_JSON, CREDENTIAL_ATTRIBUTES_NOT_FOUND};
     let mut creds: Vec<String> = vec![];
     let wallet_handle = get_wallet_handle();
     let search_handle = Prover::search_credentials_for_proof_req(wallet_handle, proof_req, None).map_err(map_rust_indy_sdk_error_code)?;
-    let proof_request_json:Map<String, Value> = serde_json::from_str(proof_req).unwrap();
-    let requested_attributes: Map<String, Value> = serde_json::from_value(proof_request_json.get(REQUESTED_ATTRIBUTES).unwrap().clone()).unwrap();
-    println!("Requested Attributes: {:?}", requested_attributes);
-    for k in requested_attributes.keys().into_iter() {
-        let count = 10;
-        let item_referent = k;
-        println!("item_referent: {}", k);
-        creds.push(Prover::_fetch_credentials_for_proof_req(search_handle, item_referent, count).unwrap());
+    let proof_request_json:Map<String, Value> = serde_json::from_str(proof_req).map_err(|_| INVALID_PROOF_REQUEST.code_num)?;
+    let requested_attributes: Map<String, Value> =
+        serde_json::from_value(proof_request_json
+            .get(REQUESTED_ATTRIBUTES).map_err(|_| {
+                error!("Credentials Format from Libindy Does Not Contain {}", REQUESTED_ATTRIBUTES);
+                CREDENTIAL_ATTRIBUTES_NOT_FOUND.code_num }).clone())
+            .map_err(|_| {
+                error!("Invalid Json Parsing of Requested Attributes Retrieved From Libindy");
+                INVALID_CREDENTIAL_JSON.code_num})?;
+    for item_referent in requested_attributes.keys().into_iter() {
+        let search_hits:Vec<Value> = serde_json::from_str(&Prover::_fetch_credentials_for_proof_req(search_handle, item_referent, MAX_CREDENTIAL_SEARCH_COUNT).unwrap()).unwrap();
+        for credential in search_hits.into_iter() {
+            creds.push(c.to_string());
+        }
     }
-    println!("Creds:\n {:?}", creds);
     let c = creds.iter().map(|s| s.clone()).collect::<Value>();
-    println!("Collected Creds:\n {}", c);
-    Ok(serde_json::to_string(&c).unwrap())
+    serde_json::to_string(&c).map_err(|_| { error!("Invalid Json Parsing of Credentials to String"); INVALID_JSON.code_num})
 }
 
 pub fn libindy_prover_create_credential_req(prover_did: &str,
@@ -187,7 +190,6 @@ pub mod tests {
     }
 
     pub fn write_schema(request: &str) {
-        println!("request: {}", request);
         let (payment_info, response) = ::utils::libindy::payments::pay_for_txn(&request, SCHEMA_TXN_TYPE).unwrap();
     }
 
@@ -293,7 +295,7 @@ pub mod tests {
             cred_def_id: cred_def_json,
         }).to_string();
 
-//       libindy_prover_get_credentials_for_proof_req(&proof_req).unwrap();
+       libindy_prover_get_credentials_for_proof_req(&proof_req).unwrap();
 
         let proof = libindy_prover_create_proof(
             &proof_req,
@@ -370,34 +372,5 @@ pub mod tests {
         assert!(result.is_ok());
         let proof_validation = result.unwrap();
         assert!(proof_validation, true);
-    }
-
-    #[test]
-    fn test_json_stuff() {
-        use std::iter::IntoIterator;
-        let j:serde_json::Value = json!({
-            "zip_1": {
-                  "name": "zip",
-                  "restrictions": [
-                    {
-                      "cred_def_id": null,
-                      "issuer_did": "V4SGRU86Z58d6TV7PBUe6f",
-                      "schema_id": null,
-                      "schema_issuer_did": null,
-                      "schema_name": null,
-                      "schema_version": null
-                    }]
-            },
-            "foobar" : ""
-        });
-        println!("before");
-        let mut i:u32 = 1;
-        for k in j.as_object().unwrap().keys() {
-            println!("i: {}", i);
-            println!("{:?}", k);
-            println!("value: {}", j[k]);
-            i = i + 1;
-        }
-        println!("after");
     }
 }

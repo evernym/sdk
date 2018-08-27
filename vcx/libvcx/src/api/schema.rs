@@ -343,7 +343,6 @@ mod tests {
     #[allow(unused_imports)]
     use utils::constants::{ SCHEMA_ID, SCHEMA_WITH_VERSION, DEFAULT_SCHEMA_ATTRS, DEFAULT_SCHEMA_ID, DEFAULT_SCHEMA_NAME };
     use utils::libindy::return_types_u32;
-    use utils::devsetup::tests::delete_indy_client_wallet_files;
 
     fn set_default_and_enable_test_mode() {
         settings::set_defaults();
@@ -485,7 +484,6 @@ mod tests {
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_vcx_schema_serialize_contains_version() {
-        delete_indy_client_wallet_files();
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
 	    let wallet_name = "vcx_schema_serialize_contains_version";
