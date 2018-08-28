@@ -57,28 +57,32 @@ retrieve_prebuilt_binaries() {
 
 generate_flags(){
     if [ -z $1 ]; then
-        echo "please provide the arch e.g arm, x86 or arm64"
+        echo "please provide the arch e.g arm, arm64, armv7, x86, or x86_64"
         exit 1
     fi
     if [ $1 == "arm" ]; then
         export ARCH="arm"
         export TRIPLET="arm-linux-androideabi"
         export PLATFORM="16"
-        export ABI="armeabi-v7a"
-    fi
-
-    if [ $1 == "x86" ]; then
-        export ARCH="x86"
-        export TRIPLET="i686-linux-android"
-        export PLATFORM="16"
-        export ABI="x86"
-    fi
-
-    if [ $1 == "arm64" ]; then
+    elif [ $1 == "arm64" ]; then
         export ARCH="arm64"
         export TRIPLET="aarch64-linux-android"
         export PLATFORM="21"
-        export ABI="arm64-v8a"
+    elif [ $1 == "armv7" ]; then
+        export ARCH="armv7"
+        export TRIPLET="armv7-linux-androideabi"
+        export PLATFORM="16"
+    elif [ $1 == "x86" ]; then
+        export ARCH="x86"
+        export TRIPLET="i686-linux-android"
+        export PLATFORM="16"
+    elif [ $1 == "x86_64" ]; then
+        export ARCH="x86_64"
+        export TRIPLET="x86_64-linux-android"
+        export PLATFORM="21"
+    else
+        echo "please provide the arch e.g arm, arm64, armv7, x86, or x86_64"
+        exit 1
     fi
 }
 
@@ -107,7 +111,7 @@ get_libsovtoken() {
     set -xv
     # Todo: This artifact was manually uploaded to this repo. Eventually, the file format will change. That is why it is hardcoded
     if [ -z ${LIBSOVTOKEN_DIR} ]; then
-        LIBSOVTOKEN_ZIP=libsovtoken_0.9.0-201808150545-5fb8db8_android.zip
+        LIBSOVTOKEN_ZIP=libsovtoken_0.9.0-201808271619-7791a3b_all.zip
         if [ ! -d "libsovtoken" ]; then
             echo "retrieving libsovtoken prebuilt library"
             wget ${EVERNYM_REPO}/${LIBSOVTOKEN_ZIP}
