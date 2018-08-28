@@ -47,6 +47,8 @@ pub mod tests {
             Err(x) => (),
         };
 
+        pool::tests::delete_test_pool();
+
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_WALLET_KEY,settings::TEST_WALLET_KEY);
         settings::set_config_value(settings::CONFIG_WALLET_NAME, wallet_name);
