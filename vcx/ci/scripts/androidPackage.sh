@@ -18,7 +18,7 @@ cat <<EOT >> local.properties
 ndk.dir=/home/vcx/android-sdk-linux/ndk-bundle
 sdk.dir=/home/vcx/android-sdk-linux
 EOT
-    # Enable testing once all the tests starting to pass again
+    # Enable testing once all the tests start to pass again
     # ./gradlew --no-daemon test
     ./gradlew clean build --project-dir=android
 popd
