@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -e
-ANDROID_JNI_LIB=vcx/wrappers/java/vcx/android/src/main/jniLibs
+ANDROID_JNI_LIB=vcx/wrappers/java/android/src/main/jniLibs
 
 mkdir -p ${ANDROID_JNI_LIB}/arm
 mkdir -p ${ANDROID_JNI_LIB}/x86
@@ -18,7 +18,7 @@ cat <<EOT >> local.properties
 ndk.dir=/home/vcx/android-sdk-linux/ndk-bundle
 sdk.dir=/home/vcx/android-sdk-linux
 EOT
-    # Enable testing once all the tests start to pass again
-    # ./gradlew --no-daemon test
-    ./gradlew clean build --project-dir=android
+    pushd ../ci
+        ./buildAar.sh
+    popd
 popd
