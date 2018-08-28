@@ -73,6 +73,7 @@ mod tests {
 
     #[cfg(feature = "agency")]
     #[cfg(feature = "pool_tests")]
+    #[cfg(feature = "sovtoken")]
     #[test]
     fn test_real_proof() {
         use ::utils::devsetup::tests::setup_local_env;
@@ -89,7 +90,7 @@ mod tests {
                                                             institution_did.clone(),
                                                             "credential_name".to_string(),
                                                             credential_data.to_owned(),
-                                                            1).unwrap();
+                                                            0).unwrap();
         println!("sending credential offer");
         issuer_credential::send_credential_offer(credential_offer, alice).unwrap();
         thread::sleep(Duration::from_millis(2000));
@@ -119,10 +120,10 @@ mod tests {
         assert_eq!(VcxStateType::VcxStateAccepted as u32, credential::get_state(credential).unwrap());
         // AS INSTITUTION SEND PROOF REQUEST
         tests::set_institution();
-        let address1 = "address1";
+        let address1 = "Address1";
         let address2 = "address2";
-        let city = "city";
-        let state = "state";
+        let city = "CITY";
+        let state = "State";
         let zip = "zip";
         let requested_attrs = json!([
            {
@@ -183,8 +184,9 @@ mod tests {
         let requests = serde_json::to_string(&requests[0]).unwrap();
         let proof_handle = disclosed_proof::create_proof(::utils::constants::DEFAULT_PROOF_NAME.to_string(), requests).unwrap();
         println!("retrieving matching credentials");
-        let retrieved_credentials:Vec<Value> = serde_json::from_str(&disclosed_proof::retrieve_credentials(proof_handle).unwrap()).unwrap();
-        let map:Value = serde_json::from_str(retrieved_credentials[0].as_str().unwrap()).unwrap();
+
+        let retrieved_credentials:Vec<String> = serde_json::from_str(&disclosed_proof::retrieve_credentials(proof_handle).unwrap()).unwrap();
+        let map:Value = serde_json::from_str(&retrieved_credentials[0]).unwrap();
         let selected_credentials : Value = json!({
                "attrs":{
                   address1: map,
