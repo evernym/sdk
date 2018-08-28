@@ -9,7 +9,7 @@ do
     cp -v runtime_android_build/libvcx_${arch}/libvcx.so ${ANDROID_JNI_LIB}/${arch}/libvcx.so
 done
 
-pushd vcx/wrappers/java/vcx/android
+pushd vcx/wrappers/java/android
     if [ -e local.properties ]; then
        rm local.properties
     fi
