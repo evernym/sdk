@@ -214,10 +214,8 @@ impl DisclosedProof {
         let proof_req_data_json = serde_json::to_string(&proof_req.proof_request_data)
             .or(Err(ProofError::CommonError(error::INVALID_JSON.code_num)))?;
 
-        println!("credentials {}", credentials);
 
         let credentials_identifiers = credential_def_identifiers(credentials)?;
-        println!("credentials_identifiers {:?}", credentials_identifiers);
         let requested_credentials = self._build_requested_credentials(&credentials_identifiers,
                                                                       self_attested_attrs)?;
         let schemas = self._find_schemas(&credentials_identifiers)?;
@@ -664,7 +662,6 @@ mod tests {
         proof.proof_request = Some(proof_req);
 
         let retrieved_creds = proof.retrieve_credentials().unwrap();
-        println!("{:?}", retrieved_creds);
         assert!(retrieved_creds.len() > 500);
 
         ::utils::devsetup::tests::cleanup_dev_env(wallet_name);
@@ -703,7 +700,6 @@ mod tests {
         let retrieved_creds:String = proof.retrieve_credentials().unwrap();
         assert!(retrieved_creds.len() > 1);
         let retrieved_creds:Vec<Value> = serde_json::from_str(&retrieved_creds).unwrap();
-        println!("Retrieved Creds: {:?}", retrieved_creds);
         let map:Value = serde_json::from_str(retrieved_creds[0].as_str().unwrap()).unwrap();
         assert_eq!(map["cred_info"]["attrs"]["zip"], "84000");
 
