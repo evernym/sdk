@@ -262,7 +262,7 @@ fn _submit_fees_request(req: &str, inputs: &str, outputs: &str) -> Result<(Strin
 }
 
 pub fn pay_a_payee(price: u64, address: &str) -> Result<(PaymentTxn, String), PaymentError> {
-
+    info!("sending {} tokens to address {}", price, address);
     let (remainder, input, refund_address) = inputs(price)?;
     let output = outputs(remainder, &refund_address, Some(address.to_string()), Some(price))?;
 
@@ -270,6 +270,7 @@ pub fn pay_a_payee(price: u64, address: &str) -> Result<(PaymentTxn, String), Pa
     let my_did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
 
     if settings::test_indy_mode_enabled() { return Ok((PaymentTxn::from_parts(r#"["pay:null:9UFgyjuJxi1i1HD"]"#,r#"[{"amount":4,"extra":null,"recipient":"pay:null:xkIsxem0YNtHrRO"}]"#,1).unwrap(), SUBMIT_SCHEMA_RESPONSE.to_string())); }
+    
     match Payment::build_payment_req(get_wallet_handle(), &my_did, &input, &output, None) {
         Ok((request, payment_method)) => {
             let result = libindy_submit_request( &request).map_err(|ec| PaymentError::CommonError(ec))?;
