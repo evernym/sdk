@@ -669,7 +669,6 @@ mod tests {
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_case_for_proof_req_doesnt_matter_for_retrieve_creds() {
-        ::std::fs::remove_dir_all("/home/mark/.indy_client/").unwrap_or(());
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         let wallet_name = "test_retrieve_credentials";
