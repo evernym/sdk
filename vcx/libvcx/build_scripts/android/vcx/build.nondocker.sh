@@ -4,6 +4,7 @@ WORKDIR=${PWD}
 TARGET_ARCH=$1
 TARGET_API=$2
 CROSS_COMPILE=$3
+NDK_LIB_DIR="lib"
 
 if [ -z "${TARGET_ARCH}" ]; then
     echo STDERR "Missing TARGET_ARCH argument"
@@ -26,6 +27,10 @@ if [ -z "${CROSS_COMPILE}" ]; then
     exit 1
 fi
 
+if [ "${TARGET_ARCH}" = "x86_64" ]; then
+    NDK_LIB_DIR="lib64"
+fi
+
 
 if [ -z "${OPENSSL_DIR}" ]; then
     OPENSSL_DIR="openssl_${TARGET_ARCH}"
@@ -38,6 +43,7 @@ if [ -z "${OPENSSL_DIR}" ]; then
     else
         OPENSSL_DIR=$4
     fi
+    export OPENSSL_DIR=${OPENSSL_DIR}
 fi
 
 if [ -z "${SODIUM_DIR}" ] ; then
@@ -51,7 +57,10 @@ if [ -z "${SODIUM_DIR}" ] ; then
     else
         SODIUM_DIR=$5
     fi
+
+
 fi
+
 
 if [ -z "${LIBZMQ_DIR}" ] ; then
     LIBZMQ_DIR="libzmq_${TARGET_ARCH}"
@@ -64,7 +73,9 @@ if [ -z "${LIBZMQ_DIR}" ] ; then
     else
         LIBZMQ_DIR=$6
     fi
+
 fi
+
 
 if [ -z "${LIBINDY_DIR}" ] ; then
     LIBINDY_DIR="libindy_${TARGET_ARCH}"
@@ -77,15 +88,15 @@ if [ -z "${LIBINDY_DIR}" ] ; then
     else
         LIBINDY_DIR=$7
     fi
+    export LIBINDY_DIR=${LIBINDY_DIR}
+fi
 
-    if [ -d "${LIBINDY_DIR}/lib" ] ; then
+if [ -d "${LIBINDY_DIR}/lib" ] ; then
             LIBINDY_DIR="${LIBINDY_DIR}/lib"
-    fi
 fi
 
 if [ -z "${LIBSOVTOKEN_DIR}" ] ; then
     LIBSOVTOKEN_DIR="libsovtoken"
-    PAYMENT_PLUGIN="sovtoken"
     if [ -d "${LIBSOVTOKEN_DIR}" ] ; then
         echo "Found ${LIBSOVTOKEN_DIR}"
     elif [ -z "$8" ] ; then
@@ -98,7 +109,12 @@ if [ -z "${LIBSOVTOKEN_DIR}" ] ; then
     if [ -d "${LIBSOVTOKEN_DIR}/${CROSS_COMPILE}" ] ; then
         LIBSOVTOKEN_DIR=${LIBSOVTOKEN_DIR}/${CROSS_COMPILE}
     fi
+    export LIBSOVTOKEN_DIR=${LIBSOVTOKEN_DIR}
 fi
+if [ -d "${LIBSOVTOKEN_DIR}/lib" ] ; then
+            LIBSOVTOKEN_DIR="${LIBSOVTOKEN_DIR}/lib"
+fi
+
 
 
 
@@ -138,33 +154,38 @@ fi
 #cp -rf ./../../../../../vcx/libvcx/src ${LIBVCX}
 #cp -rf ./../../../../../vcx/libvcx/build.rs ${LIBVCX}
 #cp -rf ./../../../../../vcx/libvcx/Cargo.toml ${LIBVCX}
-LIBVCX=../../../
 
+LIBVCX=../../../
+CROSS_COMPILE_DIR=${CROSS_COMPILE}
+TARGET_ARCH_DIR=${TARGET_ARCH}
+if [ "${TARGET_ARCH}" = "armv7" ]; then
+    TARGET_ARCH_DIR="arm"
+    CROSS_COMPILE_DIR="arm-linux-androideabi"
+fi
+
+export PAYMENT_PLUGIN="sovtoken"
+export SODIUM_LIB_DIR=${SODIUM_DIR}/lib
+export SODIUM_INCLUDE_DIR=${SODIUM_DIR}/include
+export LIBZMQ_LIB_DIR=${LIBZMQ_DIR}/lib
+export LIBZMQ_INCLUDE_DIR=${LIBZMQ_DIR}/include
 export PKG_CONFIG_ALLOW_CROSS=1
 export CARGO_INCREMENTAL=1
 export RUST_LOG=indy=trace
 export RUST_TEST_THREADS=1
 export RUST_BACKTRACE=1
-export OPENSSL_DIR=${WORKDIR}/${OPENSSL_DIR}
-export SODIUM_LIB_DIR=${WORKDIR}/${SODIUM_DIR}/lib
-export SODIUM_INCLUDE_DIR=${WORKDIR}/${SODIUM_DIR}/include
-export LIBZMQ_LIB_DIR=${WORKDIR}/${LIBZMQ_DIR}/lib
-export LIBZMQ_INCLUDE_DIR=${WORKDIR}/${LIBZMQ_DIR}/include
-export LIBINDY_DIR=${WORKDIR}/${LIBINDY_DIR}
-export LIBSOVTOKEN_DIR=${WORKDIR}/${LIBSOVTOKEN_DIR}
-export TOOLCHAIN_DIR=${TOOLCHAIN_PREFIX}/${TARGET_ARCH}
+export TOOLCHAIN_DIR=${TOOLCHAIN_PREFIX}/${TARGET_ARCH_DIR}
 export PATH=${TOOLCHAIN_DIR}/bin:${PATH}
 export PKG_CONFIG_ALLOW_CROSS=1
-export CC=${TOOLCHAIN_DIR}/bin/${CROSS_COMPILE}-clang
-export AR=${TOOLCHAIN_DIR}/bin/${CROSS_COMPILE}-ar
-export CXX=${TOOLCHAIN_DIR}/bin/${CROSS_COMPILE}-clang++
-export CXXLD=${TOOLCHAIN_DIR}/bin/${CROSS_COMPILE}-ld
-export RANLIB=${TOOLCHAIN_DIR}/bin/${CROSS_COMPILE}-ranlib
+export CC=${TOOLCHAIN_DIR}/bin/${CROSS_COMPILE_DIR}-clang
+export AR=${TOOLCHAIN_DIR}/bin/${CROSS_COMPILE_DIR}-ar
+export CXX=${TOOLCHAIN_DIR}/bin/${CROSS_COMPILE_DIR}-clang++
+export CXXLD=${TOOLCHAIN_DIR}/bin/${CROSS_COMPILE_DIR}-ld
+export RANLIB=${TOOLCHAIN_DIR}/bin/${CROSS_COMPILE_DIR}-ranlib
 export TARGET=android
 
 printenv
 
-python3 ${ANDROID_NDK_ROOT}/build/tools/make_standalone_toolchain.py --arch ${TARGET_ARCH} --api ${TARGET_API} --install-dir ${TOOLCHAIN_DIR}
+python3 ${ANDROID_NDK_ROOT}/build/tools/make_standalone_toolchain.py --arch ${TARGET_ARCH_DIR} --api ${TARGET_API} --install-dir ${TOOLCHAIN_DIR}
 cat << EOF > ~/.cargo/config
 [target.${CROSS_COMPILE}]
 ar = "${AR}"
@@ -175,7 +196,7 @@ rustup target add ${CROSS_COMPILE}
 
 pushd $LIBVCX
 export OPENSSL_STATIC=1
-cargo clean
+#cargo clean
 cargo build --release --no-default-features --features "ci ${PAYMENT_PLUGIN}" --target=${CROSS_COMPILE}
 popd
 
@@ -183,15 +204,15 @@ LIBVCX_BUILDS=${WORKDIR}/libvcx_${TARGET_ARCH}
 mkdir -p ${LIBVCX_BUILDS}
 $CC -v -shared -o ${LIBVCX_BUILDS}/libvcx.so -Wl,--whole-archive \
 ${LIBVCX}/target/${CROSS_COMPILE}/release/libvcx.a \
-${TOOLCHAIN_DIR}/sysroot/usr/lib/libz.so \
-${TOOLCHAIN_DIR}/sysroot/usr/lib/libm.a \
-${TOOLCHAIN_DIR}/sysroot/usr/lib/liblog.so \
+${TOOLCHAIN_DIR}/sysroot/usr/${NDK_LIB_DIR}/libz.so \
+${TOOLCHAIN_DIR}/sysroot/usr/${NDK_LIB_DIR}/libm.a \
+${TOOLCHAIN_DIR}/sysroot/usr/${NDK_LIB_DIR}/liblog.so \
 ${LIBINDY_DIR}/libindy.a \
 ${LIBSOVTOKEN_DIR}/libsovtoken.a \
-${TOOLCHAIN_DIR}/${CROSS_COMPILE}/lib/libgnustl_shared.so \
+${TOOLCHAIN_DIR}/${CROSS_COMPILE_DIR}/${NDK_LIB_DIR}/libgnustl_shared.so \
 ${OPENSSL_DIR}/lib/libssl.a \
 ${OPENSSL_DIR}/lib/libcrypto.a \
 ${SODIUM_LIB_DIR}/libsodium.a \
 ${LIBZMQ_LIB_DIR}/libzmq.a \
-${TOOLCHAIN_DIR}/${CROSS_COMPILE}/lib/libgnustl_shared.so -Wl,--no-whole-archive -z muldefs
+${TOOLCHAIN_DIR}/${CROSS_COMPILE_DIR}/${NDK_LIB_DIR}/libgnustl_shared.so -Wl,--no-whole-archive -z muldefs
 cp "${LIBVCX}/target/${CROSS_COMPILE}/release/libvcx.a" ${LIBVCX_BUILDS}/

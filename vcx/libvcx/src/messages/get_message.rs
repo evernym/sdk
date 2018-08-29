@@ -323,7 +323,7 @@ pub fn get_connection_messages(pw_did: &str, pw_vk: &str, agent_did: &str, agent
     }
 }
 
-pub fn get_ref_msg(msg_id: &str, pw_did: &str, pw_vk: &str, agent_did: &str, agent_vk: &str) -> Result<Vec<u8>, u32> {
+pub fn get_ref_msg(msg_id: &str, pw_did: &str, pw_vk: &str, agent_did: &str, agent_vk: &str) -> Result<(String, Vec<u8>), u32> {
     let message = get_connection_messages(pw_did, pw_vk, agent_did, agent_vk, Some(vec![msg_id.to_string()]))?;
     trace!("checking for ref_msg: {:?}", message);
     let msg_id;
@@ -343,7 +343,7 @@ pub fn get_ref_msg(msg_id: &str, pw_did: &str, pw_vk: &str, agent_did: &str, age
         let data = to_u8(message[0].payload.as_ref().unwrap());
 	// TOD: check returned verkey
         let (_, msg) = crypto::parse_msg(&pw_vk, &data)?;
-	Ok(msg)
+	Ok((message[0].uid.clone(), msg))
     }
     else {
         Err(error::INVALID_HTTP_RESPONSE.code_num)
@@ -447,6 +447,7 @@ mod tests {
         println!("response: {:?}", result);
     }
 
+    #[cfg(feature = "agency")]
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_download_messages() {
@@ -454,7 +455,8 @@ mod tests {
         use std::time::Duration;
 
         settings::set_defaults();
-        ::utils::devsetup::tests::setup_local_env("test_download_messages");
+        let wallet_name = "test_download_messages";
+        ::utils::devsetup::tests::setup_local_env(wallet_name);
         let institution_did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
         let (faber, alice) = ::connection::tests::create_connected_connections();
 
@@ -480,11 +482,11 @@ mod tests {
         assert_eq!(specific.len(), 1);
         // No pending will return empty list
         let empty = download_messages(None, Some(vec!["MS-103".to_string()]), Some(vec![accepted[0].msgs[0].uid.clone()])).unwrap();
-        assert_eq!(empty.len(), 0);
+        assert_eq!(empty.len(), 1);
         // Agency returns a bad request response for invalid dids
         let invalid_did = "abc".to_string();
         let bad_req = download_messages(Some(vec![invalid_did]), None, None);
         assert_eq!(bad_req, Err(error::POST_MSG_FAILURE.code_num));
-        ::utils::devsetup::tests::cleanup_dev_env("test_download_messages");
+        ::utils::devsetup::tests::cleanup_local_env(wallet_name);
     }
 }

@@ -81,13 +81,20 @@ pub mod tests {
     use std::io::Write;
     use utils::constants::{POOL, GENESIS_PATH};
 
+    pub fn delete_test_pool() {
+        match delete(POOL) {
+            Ok(_) => (),
+            Err(_) => (),
+        };
+    }
+
     pub fn open_sandbox_pool() -> u32 {
         create_genesis_txn_file();
         create_pool_ledger_config(POOL, GENESIS_PATH).unwrap();
         open_pool_ledger(POOL, None).unwrap()
     }
 
-    fn create_genesis_txn_file() {
+    pub fn create_genesis_txn_file() {
         let test_pool_ip = "127.0.0.1".to_string();
 
         let node_txns = vec![

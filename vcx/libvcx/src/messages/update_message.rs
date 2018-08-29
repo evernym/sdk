@@ -107,6 +107,7 @@ mod tests {
         let result = parse_update_messages_response(::utils::constants::UPDATE_MESSAGES_RESPONSE.to_vec()).unwrap();
     }
 
+    #[cfg(feature = "agency")]
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_update_agency_messages() {
@@ -114,7 +115,8 @@ mod tests {
         use std::thread;
         use std::time::Duration;
         settings::set_defaults();
-        ::utils::devsetup::tests::setup_local_env("test_update_agency_messages");
+        let wallet_name = "test_update_agency_messages";
+        ::utils::devsetup::tests::setup_local_env(wallet_name);
         let institution_did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
         let (faber, alice) = ::connection::tests::create_connected_connections();
 
@@ -140,6 +142,6 @@ mod tests {
         let updated = ::messages::get_message::download_messages(None, Some(vec!["MS-106".to_string()]), None).unwrap();
         assert_eq!(pending[0].msgs[0].uid, updated[0].msgs[0].uid);
 
-        ::utils::devsetup::tests::cleanup_dev_env("test_update_agency_messages");
+        ::utils::devsetup::tests::cleanup_local_env(wallet_name);
     }
 }
