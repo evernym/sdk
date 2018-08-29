@@ -222,12 +222,12 @@ pub mod tests {
                                                                          Some(constants::GENESIS_PATH.to_string())).unwrap();
 
         unsafe {
-            INSTITUTION_CONFIG = CONFIG_STRING.add(config).unwrap();
+            INSTITUTION_CONFIG = CONFIG_STRING.add(_config_with_wallet_handle(&wallet_name, &config)).unwrap();
         }
 
         pool::tests::open_sandbox_pool();
 
-        wallet::open_wallet(wallet_name).unwrap();
+        //wallet::open_wallet(wallet_name).unwrap();
         set_institution();
 
         let alice = build_connection("alice").unwrap();
