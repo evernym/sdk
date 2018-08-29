@@ -91,7 +91,7 @@ mod tests {
                                                             institution_did.clone(),
                                                             "credential_name".to_string(),
                                                             credential_data.to_owned(),
-                                                            0).unwrap();
+                                                            1).unwrap();
         println!("sending credential offer");
         issuer_credential::send_credential_offer(credential_offer, alice).unwrap();
         thread::sleep(Duration::from_millis(2000));
