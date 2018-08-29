@@ -91,7 +91,7 @@ mod tests {
                                                             institution_did.clone(),
                                                             "credential_name".to_string(),
                                                             credential_data.to_owned(),
-                                                            1).unwrap();
+                                                            0).unwrap();
         println!("sending credential offer");
         issuer_credential::send_credential_offer(credential_offer, alice).unwrap();
         thread::sleep(Duration::from_millis(2000));
@@ -186,18 +186,20 @@ mod tests {
         let proof_handle = disclosed_proof::create_proof(::utils::constants::DEFAULT_PROOF_NAME.to_string(), requests).unwrap();
         println!("retrieving matching credentials");
 
-        let retrieved_credentials:Vec<String> = serde_json::from_str(&disclosed_proof::retrieve_credentials(proof_handle).unwrap()).unwrap();
-        let map:Value = serde_json::from_str(&retrieved_credentials[0]).unwrap();
+        let retrieved_credentials:String = disclosed_proof::retrieve_credentials(proof_handle).unwrap();
+        let matching_credentials:Value = serde_json::from_str(&retrieved_credentials).unwrap();
+        // We are using a different libindy call to retrieve the credentials, and the format
+        // of the return strings do not have a field "cred_info", which in the past we were able
+        // to just pass directly back into libindy, but now we must format differently.
         let selected_credentials : Value = json!({
                "attrs":{
-                  address1: map,
-                  address2: map,
-                  city: map,
-                  state: map,
-                  zip: map,
+                  address1: { "cred_info": matching_credentials[0] },
+                  address2: { "cred_info": matching_credentials[0] },
+                  city: { "cred_info": matching_credentials[0] },
+                  state:{ "cred_info": matching_credentials[0] },
+                  zip: { "cred_info": matching_credentials[0] },
                },
-               "predicates":{
-               }
+               "predicates":{ }
             });
         let selected_credentials: String = serde_json::to_string(&selected_credentials).unwrap();
         disclosed_proof::generate_proof(proof_handle, selected_credentials, "{}".to_string()).unwrap();

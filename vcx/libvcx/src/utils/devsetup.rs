@@ -140,7 +140,7 @@ pub mod tests {
                                                                          C_AGENCY_VERKEY,
                                                                          Some(consumer_wallet_name.clone()),
                                                                          None,
-                                                                         None,
+                                                                         Some(TRUSTEE.to_string()),
                                                                          settings::TEST_WALLET_KEY,
                                                                          Some("consumer".to_string()),
                                                                          Some("http://www.logo.com".to_string()),
