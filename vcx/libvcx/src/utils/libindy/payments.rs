@@ -264,7 +264,6 @@ fn _submit_fees_request(req: &str, inputs: &str, outputs: &str) -> Result<(Strin
 }
 
 pub fn pay_a_payee(price: u64, address: &str) -> Result<(PaymentTxn, String), PaymentError> {
-    info!("sending {} tokens to address {}", price, address);
 
     let ledger_cost = get_txn_price(TRANSFER_TXN_TYPE).map_err(|e| PaymentError::CommonError(e))?;
     let (remainder, input, refund_address) = inputs(price + ledger_cost)?;
@@ -499,7 +498,6 @@ pub mod tests {
         let name = "test_get_ledger_fees_real";
         ::utils::devsetup::tests::setup_ledger_env(name);
         let fees = get_ledger_fees().unwrap();
-        println!("{}", fees);
         assert!(fees.contains(r#""101":2"#));
         assert!(fees.contains(r#""1":0"#));
         ::utils::devsetup::tests::cleanup_dev_env(name);

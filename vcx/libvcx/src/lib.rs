@@ -73,6 +73,7 @@ mod tests {
 
     #[cfg(feature = "agency")]
     #[cfg(feature = "pool_tests")]
+    #[cfg(feature = "sovtoken")]
     #[test]
     fn test_real_proof() {
         use ::utils::devsetup::tests::setup_local_env;
@@ -184,20 +185,24 @@ mod tests {
         let requests = serde_json::to_string(&requests[0]).unwrap();
         let proof_handle = disclosed_proof::create_proof(::utils::constants::DEFAULT_PROOF_NAME.to_string(), requests).unwrap();
         println!("retrieving matching credentials");
-        let retrieved_credentials = disclosed_proof::retrieve_credentials(proof_handle).unwrap();
-        let matching_credentials: Value = serde_json::from_str(&retrieved_credentials).unwrap();
+
+        let retrieved_credentials:String = disclosed_proof::retrieve_credentials(proof_handle).unwrap();
+        let matching_credentials:Value = serde_json::from_str(&retrieved_credentials).unwrap();
+        // We are using a different libindy call to retrieve the credentials, and the format
+        // of the return strings do not have a field "cred_info", which in the past we were able
+        // to just pass directly back into libindy, but now we must format differently.
         let selected_credentials : Value = json!({
                "attrs":{
-                  address1:matching_credentials["attrs"][address1][0],
-                  address2:matching_credentials["attrs"][address2][0],
-                  city:matching_credentials["attrs"][city][0],
-                  state:matching_credentials["attrs"][state][0],
-                  zip:matching_credentials["attrs"][zip][0]
+                  address1: { "cred_info": matching_credentials[0] },
+                  address2: { "cred_info": matching_credentials[0] },
+                  city: { "cred_info": matching_credentials[0] },
+                  state:{ "cred_info": matching_credentials[0] },
+                  zip: { "cred_info": matching_credentials[0] },
                },
-               "predicates":{
-               }
+               "predicates":{ }
             });
-        disclosed_proof::generate_proof(proof_handle, selected_credentials.to_string(), "{}".to_string()).unwrap();
+        let selected_credentials: String = serde_json::to_string(&selected_credentials).unwrap();
+        disclosed_proof::generate_proof(proof_handle, selected_credentials, "{}".to_string()).unwrap();
         println!("sending proof");
         disclosed_proof::send_proof(proof_handle, faber).unwrap();
         assert_eq!(VcxStateType::VcxStateAccepted as u32, disclosed_proof::get_state(proof_handle).unwrap());
