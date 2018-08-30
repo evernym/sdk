@@ -14,6 +14,7 @@
 # $1 = Name of output archive
 #####
 
+set -e
 source ./shared.functions.sh
 
 START_DIR=$PWD

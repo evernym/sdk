@@ -1,5 +1,6 @@
 #!/bin/bash
 
+set -e
 export SCRIPTS_PATH="vcx/libvcx/build_scripts/ios/mac"
 export BASE_DIR="../../../../.."
 export WRAPPER_LIBS="vcx/wrappers/ios/vcx/lib"
