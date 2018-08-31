@@ -38,12 +38,6 @@ if [ "$CLEAN_BUILD" = "cleanbuild" ]; then
     cargo clean
     rm -rf ${BUILD_CACHE}/target
     # cargo update
-else
-    # THE CACHE WAS BREAKING THE BUILD...FIX?
-    # if [ -d ${BUILD_CACHE}/target ]; then
-    #     echo "Optimizing iOS build using folder: $(abspath ${BUILD_CACHE}/target)"
-    #     cp -rfp ${BUILD_CACHE}/target .
-    # fi
 fi
 
 git log -1 > $WORK_DIR/evernym.vcx-sdk.git.commit.log
@@ -104,8 +98,5 @@ do
 done
 mkdir -p ./target/universal/release
 lipo -create $to_combine -o ./target/universal/release/libvcx.a
-
-echo "Copying iOS target folder into directory: $(abspath "${BUILD_CACHE}")"
-cp -rfp ./target ${BUILD_CACHE}
 
 export OPENSSL_LIB_DIR=$OPENSSL_LIB_DIR_DARWIN
