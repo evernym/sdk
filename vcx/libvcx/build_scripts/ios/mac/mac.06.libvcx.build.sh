@@ -39,10 +39,11 @@ if [ "$CLEAN_BUILD" = "cleanbuild" ]; then
     rm -rf ${BUILD_CACHE}/target
     # cargo update
 else
-    if [ -d ${BUILD_CACHE}/target ]; then
-        echo "Optimizing iOS build using folder: $(abspath ${BUILD_CACHE}/target)"
-        cp -rfp ${BUILD_CACHE}/target .
-    fi
+    # THE CACHE WAS BREAKING THE BUILD...FIX?
+    # if [ -d ${BUILD_CACHE}/target ]; then
+    #     echo "Optimizing iOS build using folder: $(abspath ${BUILD_CACHE}/target)"
+    #     cp -rfp ${BUILD_CACHE}/target .
+    # fi
 fi
 
 git log -1 > $WORK_DIR/evernym.vcx-sdk.git.commit.log

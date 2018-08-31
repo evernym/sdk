@@ -68,7 +68,7 @@ fi
 mkdir -p $VCX_SDK/vcx/wrappers/ios/vcx/tmp/vcx/
 cp -rvp vcx.framework $VCX_SDK/vcx/wrappers/ios/vcx/tmp/vcx/
 cd $VCX_SDK/vcx/wrappers/ios/vcx/tmp
-cp -rf $WORK_DIR/evernym.vcx-sdk.git.commit.log $VCX_SDK/vcx/wrappers/ios/vcx/tmp/vcx/ || true
+cp $WORK_DIR/evernym.vcx-sdk.git.commit.log $VCX_SDK/vcx/wrappers/ios/vcx/tmp/vcx/ || true
 cp $WORK_DIR/hyperledger.indy-sdk.git.commit.log $VCX_SDK/vcx/wrappers/ios/vcx/tmp/vcx/ || true
 
 zip -r vcx.${COMBINED_LIB}_${DATETIME}_universal.zip vcx
