@@ -3,6 +3,7 @@ package com.evernym.sdk.vcx;
 
 import com.evernym.sdk.vcx.connection.ConnectionApi;
 import com.evernym.sdk.vcx.credential.CredentialApi;
+import com.evernym.sdk.vcx.credentialDef.CredentialDefApi;
 import java9.util.concurrent.CompletableFuture;
 import org.json.simple.JSONArray;
 import org.json.simple.parser.ParseException;
@@ -72,6 +73,17 @@ class TestHelper {
         CompletableFuture<Integer> futureResult = CredentialApi.credentialCreateWithOffer("1",obj.toJSONString());
         Awaitility.await().until(futureResult::isDone);
         return futureResult.get();
+    }
+    static int _createCredentialDef() throws VcxException, ExecutionException, InterruptedException {
+        return  getResultFromFuture(CredentialDefApi.credentialDefCreate(
+                "testCredentialDefSourceId",
+                "testCredentialDefName",
+                "testCredentialDefSchemaId",
+                null,
+                "tag1",
+                "{\"support_revocation\":false}'",
+                0
+                ));
     }
 
     static  <T> T getResultFromFuture(CompletableFuture<T> future) throws ExecutionException, InterruptedException {

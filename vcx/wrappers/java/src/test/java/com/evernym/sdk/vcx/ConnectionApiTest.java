@@ -21,14 +21,10 @@ class ConnectionApiTest {
     @BeforeEach
     void setup() throws Exception {
         System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "DEBUG");
-
-
         if (!TestHelper.vcxInitialized) {
-            CompletableFuture<Integer> result = VcxApi.vcxInit(TestHelper.VCX_CONFIG_TEST_MODE);
-            result.get();
+            TestHelper.getResultFromFuture(VcxApi.vcxInit(TestHelper.VCX_CONFIG_TEST_MODE));
             TestHelper.vcxInitialized = true;
         }
-
     }
 
 
