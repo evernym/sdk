@@ -34,7 +34,7 @@ class ConnectionApiTest {
 
     @Test
     @DisplayName("create a connection")
-    public void createConnection() throws VcxException {
+    void createConnection() throws VcxException {
 
         long connectionHandle = _createConnection();
         assertNotSame(null,connectionHandle);
@@ -43,7 +43,7 @@ class ConnectionApiTest {
 
     @Test
     @DisplayName("connect connection without phone number")
-    public void connectConnectionWithoutPhone() throws VcxException {
+    void connectConnectionWithoutPhone() throws VcxException {
         String payload= "{ 'connection_type': 'SMS' }";
         Integer connectionHandle = _createConnection();
         CompletableFuture<String> future = ConnectionApi.vcxConnectionConnect(connectionHandle,TestHelper.convertToValidJson(payload));
@@ -53,7 +53,7 @@ class ConnectionApiTest {
 
     @Test
     @DisplayName("connect connection with phone number")
-    public void connectConnectionWithPhone() throws VcxException {
+    void connectConnectionWithPhone() throws VcxException {
         String payload= "{ 'connection_type': 'SMS', 'phone':'7202200000' }";
         Integer connectionHandle = _createConnection();
         CompletableFuture<String> future = ConnectionApi.vcxConnectionConnect(connectionHandle,TestHelper.convertToValidJson(payload));
@@ -65,7 +65,7 @@ class ConnectionApiTest {
 
     @Test
     @DisplayName("throw invalid connection handle exception for wrong handle")
-    public void throwInvalidConnectionHandleException() {
+    void throwInvalidConnectionHandleException() {
 
         Assertions.assertThrows(InvalidConnectionHandleException.class, ()-> {
             String payload= "{ 'connection_type': 'SMS', 'phone':'7202200000' }";
@@ -79,7 +79,7 @@ class ConnectionApiTest {
 
     @Test
     @DisplayName("serialize a connection")
-    public void serializeConnection() throws VcxException {
+    void serializeConnection() throws VcxException {
         Integer connectionHandle = _createConnection();
         CompletableFuture<String> future = ConnectionApi.connectionSerialize(connectionHandle);
         Awaitility.await().until(future::isDone);
@@ -92,7 +92,7 @@ class ConnectionApiTest {
 
     @Test
     @DisplayName("throw invalid connection handle exception for serializing invalid connection ")
-    public void serializeConnectionWithBadHandle() {
+    void serializeConnectionWithBadHandle() {
         Assertions.assertThrows(InvalidConnectionHandleException.class, ()-> {
             CompletableFuture<String> future = ConnectionApi.connectionSerialize(0);
             Awaitility.await().until(future::isDone);
@@ -102,7 +102,7 @@ class ConnectionApiTest {
 
     @Test
     @DisplayName("delete a connection")
-    public void deleteConnection() throws VcxException, ExecutionException, InterruptedException {
+    void deleteConnection() throws VcxException, ExecutionException, InterruptedException {
         Integer connectionHandle = _createConnection();
         CompletableFuture<Integer> futureDelete= ConnectionApi.deleteConnection(connectionHandle);
         Awaitility.await().until(futureDelete::isDone);
@@ -111,7 +111,7 @@ class ConnectionApiTest {
 
     @Test
     @DisplayName("throw invalid connection handle exception if trying to serialize deleted connection ")
-    public void serlializeDeletedConnection() {
+    void serlializeDeletedConnection() {
 
         Assertions.assertThrows(InvalidConnectionHandleException.class, ()-> {
             Integer connectionHandle = _createConnection();
@@ -125,7 +125,7 @@ class ConnectionApiTest {
 
     @Test
     @DisplayName("throw invalid connection handle exception if trying to serialize released connection")
-    public void serlializeReleasedConnection() {
+    void serlializeReleasedConnection() {
         Assertions.assertThrows(InvalidConnectionHandleException.class, ()-> {
             Integer connectionHandle = _createConnection();
             int releaseResult= ConnectionApi.connectionRelease(connectionHandle);
@@ -137,7 +137,7 @@ class ConnectionApiTest {
 
     @Test
     @DisplayName("release a connection")
-    public void releaseConnection() throws VcxException {
+    void releaseConnection() throws VcxException {
         Integer connectionHandle = _createConnection();
         int result= ConnectionApi.connectionRelease(connectionHandle);
         assert(result == 0 );
@@ -145,7 +145,7 @@ class ConnectionApiTest {
 
     @Test
     @DisplayName("initialise a connction")
-    public void initialiseConnection() throws VcxException, ExecutionException, InterruptedException {
+    void initialiseConnection() throws VcxException, ExecutionException, InterruptedException {
         Integer connectionHandle = _createConnection();
         CompletableFuture<Integer> futureUpdateState= ConnectionApi.vcxConnectionUpdateState(connectionHandle);
         Awaitility.await().until(futureUpdateState::isDone);
@@ -158,7 +158,7 @@ class ConnectionApiTest {
     }
     @Test
     @DisplayName("send offer connection")
-    public void sendOfferConnection() throws VcxException, ExecutionException, InterruptedException {
+    void sendOfferConnection() throws VcxException, ExecutionException, InterruptedException {
         String payload= "{ 'connection_type': 'SMS', 'phone':'7202200000' }";
         Integer connectionHandle = _createConnection();
         CompletableFuture<String> future = ConnectionApi.vcxConnectionConnect(connectionHandle,TestHelper.convertToValidJson(payload));
@@ -171,7 +171,7 @@ class ConnectionApiTest {
 
     @Test
     @DisplayName("get abbreviated invite detials")
-    public void inviteDetailsAbbreviatedConnection() throws VcxException, ExecutionException, InterruptedException {
+    void inviteDetailsAbbreviatedConnection() throws VcxException, ExecutionException, InterruptedException {
         String payload= "{ 'connection_type': 'SMS', 'phone':'7202200000' }";
         int connectionHandle = _createConnection();
         CompletableFuture<String> acceptInvitation = ConnectionApi.vcxConnectionConnect(connectionHandle,TestHelper.convertToValidJson(payload));
@@ -184,7 +184,7 @@ class ConnectionApiTest {
 
     @Test
     @DisplayName("get un-abbreviated invite detials")
-    public void inviteDetailsUnAbbreviatedConnection() throws VcxException, ExecutionException, InterruptedException {
+    void inviteDetailsUnAbbreviatedConnection() throws VcxException, ExecutionException, InterruptedException {
         String payload= "{ 'connection_type': 'SMS', 'phone':'7202200000' }";
         int connectionHandle = _createConnection();
         CompletableFuture<String> acceptInvitation = ConnectionApi.vcxConnectionConnect(connectionHandle,TestHelper.convertToValidJson(payload));

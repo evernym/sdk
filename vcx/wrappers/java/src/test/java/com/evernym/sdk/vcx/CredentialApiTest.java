@@ -19,9 +19,9 @@ import java.util.concurrent.ExecutionException;
 import static junit.framework.Assert.assertNotSame;
 import static junit.framework.TestCase.assertEquals;
 
-public class CredentialApiTest {
+class CredentialApiTest {
     @BeforeEach
-    public void setup() throws Exception {
+    void setup() throws Exception {
         System.setProperty(org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY, "DEBUG");
 
 
@@ -35,13 +35,13 @@ public class CredentialApiTest {
 
     @Test
     @DisplayName("create a credential with a offer")
-    public void createCredential() throws VcxException, ExecutionException, InterruptedException, ParseException {
+    void createCredential() throws VcxException, ExecutionException, InterruptedException, ParseException {
         int credential = TestHelper._createCredential();
         assertNotSame(0,credential);
     }
     @Test
     @DisplayName("create a credential with invalid offer")
-    public void createCredentialWithInvalidOffer() {
+    void createCredentialWithInvalidOffer() {
         Assertions.assertThrows(InvalidOptionException.class, ()-> {
             TestHelper.getResultFromFuture(CredentialApi.credentialCreateWithOffer("1",""));
         });
@@ -50,7 +50,7 @@ public class CredentialApiTest {
 
     @Test
     @DisplayName("create a credential with message id")
-    public void createCredentialWithMsgId() throws VcxException, ExecutionException, InterruptedException {
+    void createCredentialWithMsgId() throws VcxException, ExecutionException, InterruptedException {
         int connection = TestHelper._createConnection();
         GetCredentialCreateMsgidResult result = TestHelper.getResultFromFuture(CredentialApi.credentialCreateWithMsgid("1",connection,"1"));
         assertNotSame(0,result.getCredential_handle());
@@ -62,7 +62,7 @@ public class CredentialApiTest {
 
     @Test
     @DisplayName("serialize credential")
-    public void serializeCredential() throws InterruptedException, VcxException, ParseException, ExecutionException {
+    void serializeCredential() throws InterruptedException, VcxException, ParseException, ExecutionException {
         int credential = TestHelper._createCredential();
         assertNotSame(0,credential);
         String serializedCredential = TestHelper.getResultFromFuture(CredentialApi.credentialSerialize(credential));
@@ -72,7 +72,7 @@ public class CredentialApiTest {
     }
     @Test
     @DisplayName("should throw invalid credential handle exception when serializing invalid credential")
-    public void serializeCredentialShouldThrow() throws InterruptedException, VcxException, ExecutionException {
+    void serializeCredentialShouldThrow() {
         Assertions.assertThrows(InvalidCredentialHandleException.class, ()-> {
             TestHelper.getResultFromFuture(CredentialApi.credentialSerialize(0));
         });
@@ -81,7 +81,7 @@ public class CredentialApiTest {
     }
     @Test
     @DisplayName("deserialize credential")
-    public void deserializeCredential() throws InterruptedException, VcxException, ParseException, ExecutionException {
+    void deserializeCredential() throws InterruptedException, VcxException, ParseException, ExecutionException {
         int credential = TestHelper._createCredential();
         assertNotSame(0,credential);
         String serializedCredential = TestHelper.getResultFromFuture(CredentialApi.credentialSerialize(credential));
@@ -92,16 +92,16 @@ public class CredentialApiTest {
     }
     @Test
     @DisplayName("should throw invalid credential handle when deserializing invalid credential")
-    public void deserializeCredentialShouldTrow() throws InterruptedException, VcxException, ExecutionException {
+    void deserializeCredentialShouldTrow() {
         Assertions.assertThrows(InvalidOptionException.class, ()-> {
-            int credentialHandle = TestHelper.getResultFromFuture(CredentialApi.credentialDeserialize(""));
+            TestHelper.getResultFromFuture(CredentialApi.credentialDeserialize(""));
         });
 
 
     }
     @Test
     @DisplayName("update state of credential")
-    public void updateState() throws VcxException, ExecutionException, InterruptedException, ParseException {
+    void updateState() throws VcxException, ExecutionException, InterruptedException, ParseException {
         int credential = TestHelper._createCredential();
         assertNotSame(0,credential);
         TestHelper.getResultFromFuture(CredentialApi.credentialUpdateState(credential));
@@ -111,7 +111,7 @@ public class CredentialApiTest {
     }
     @Test
     @DisplayName("send credential request")
-    public void sendRequest() throws VcxException, ExecutionException, InterruptedException, ParseException {
+    void sendRequest() throws VcxException, ExecutionException, InterruptedException, ParseException {
         int credential = TestHelper._createCredential();
         int connection = TestHelper._createConnection();
         assertNotSame(0,credential);
@@ -122,7 +122,7 @@ public class CredentialApiTest {
     }
     @Test
     @DisplayName("send credential request with message id")
-    public void sendRequestWithMsgId() throws VcxException, ExecutionException, InterruptedException, ParseException {
+    void sendRequestWithMsgId() throws VcxException, ExecutionException, InterruptedException {
         int connection = TestHelper._createConnection();
         GetCredentialCreateMsgidResult credential = TestHelper.getResultFromFuture(CredentialApi.credentialCreateWithMsgid("1",connection,"1"));
         assertNotSame(0,credential);
@@ -134,7 +134,7 @@ public class CredentialApiTest {
 
     @Test
     @DisplayName("get credential offers for a connection")
-    public void getOffers() throws VcxException, ExecutionException, InterruptedException, ParseException {
+    void getOffers() throws VcxException, ExecutionException, InterruptedException, ParseException {
         int connection = TestHelper._createConnection();
         String offers = TestHelper.getResultFromFuture(CredentialApi.credentialGetOffers(connection));
         assert(offers != null);
