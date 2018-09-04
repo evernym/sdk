@@ -13,3 +13,7 @@ RUN yes | .//home/java/android-sdk-linux/tools/android update sdk --no-ui
 RUN yes | .//home/java/android-sdk-linux/tools/bin/sdkmanager "ndk-bundle"
 
 RUN echo "java ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers 
+
+COPY vcx/libvcx/target/debian/*.deb .
+RUN dpkg -i *.deb
+USER java
