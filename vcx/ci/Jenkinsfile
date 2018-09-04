@@ -87,9 +87,9 @@ def mainUbuntu() {
                 }
             }
             stage('Test Java Wrapper'){
-                python = docker.build("java", "--build-arg uid=${uid} -f ${javaDockerfile} .")
-                python.inside() {
-                    sh 'vcx/wrappers/java/ci/test.sh'
+                java = docker.build("java", "--build-arg uid=${uid} -f ${javaDockerfile} .")
+                java.inside() {
+                    sh 'cd vcx/wrappers/java && ./gradlew test'
                 }
             }
             stage('Package Node Wrapper') {
@@ -103,7 +103,6 @@ def mainUbuntu() {
                 }
             }
             stage('Package Java Wrapper') {
-                java = docker.build("java", "-f ${javaDockerfile} .")
                 java.inside() {
                     sh 'vcx/wrappers/java/ci/buildJar.sh'
                 }
