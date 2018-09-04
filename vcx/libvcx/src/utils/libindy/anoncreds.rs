@@ -1,11 +1,10 @@
 extern crate libc;
 
 use serde_json;
-use serde_json::Value;
-use serde_json::Map;
+use serde_json::{ map::Map, Value};
 use settings;
 use utils::constants::{ LIBINDY_CRED_OFFER, REQUESTED_ATTRIBUTES };
-use utils::error::{ INVALID_PROOF_REQUEST, INVALID_CREDENTIAL_JSON, INVALID_ATTRIBUTES_STRUCTURE };
+use utils::error::{ INVALID_PROOF_REQUEST } ;
 use utils::libindy::{ error_codes::map_rust_indy_sdk_error_code, mock_libindy_rc, wallet::get_wallet_handle };
 use utils::timeout::TimeoutUtils;
 use indy::anoncreds::{ Verifier, Prover, Issuer };
@@ -87,27 +86,25 @@ pub fn libindy_prover_create_proof(proof_req_json: &str,
         .map_err(map_rust_indy_sdk_error_code)
 }
 
-fn fetch_credentials(search_handle: i32, count: usize) -> Result<String, u32> {
-    Prover::fetch_credentials(search_handle, count).map_err(map_rust_indy_sdk_error_code)
-}
-
 pub fn libindy_prover_get_credentials_for_proof_req(proof_req: &str) -> Result<String, u32> {
     let wallet_handle = get_wallet_handle();
-    let proof_request_json:Map<String, Value> = serde_json::from_str(proof_req).map_err(|_| INVALID_PROOF_REQUEST.code_num)?;
-    let (search_handle, count) = Prover::search_credentials(wallet_handle, Some("{}")).map_err(map_rust_indy_sdk_error_code)?;
+    let search_handle = Prover::search_credentials_for_proof_req(wallet_handle, proof_req, None).map_err(map_rust_indy_sdk_error_code).map(|ec| ec)?;
 
-    // since the search_credentials_for_proof request validates that the proof_req is properly structured, this get()
-    // fn should never fail, unless libindy changes their formats.
-    let v = proof_request_json.get(REQUESTED_ATTRIBUTES).ok_or(INVALID_ATTRIBUTES_STRUCTURE.code_num)?;
+    // not very clean, but does the job of converting into a Map
+    let proof_request_json: Value = serde_json::from_str(proof_req).map_err(|_| INVALID_PROOF_REQUEST.code_num)?;
+    let requested_attr_map:Map<String,Value> = serde_json::from_str(&proof_request_json[REQUESTED_ATTRIBUTES].to_string()).map_err(|_| INVALID_PROOF_REQUEST.code_num )?;
 
-    let requested_attributes: Map<String, Value> = serde_json::from_value(v.clone())
-        .map_err(|_| { error!("Invalid Json Parsing of Requested Attributes Retrieved From Libindy. Did Libindy change its structure?"); INVALID_CREDENTIAL_JSON.code_num})?;
-    let creds: String = fetch_credentials(search_handle, count)?;
-    Prover::close_credentials_search(search_handle)
-        .map_err(|ec| { error!("Error closing search handle"); map_rust_indy_sdk_error_code(ec)})?;
-    Ok(creds)
+    let mut creds: Vec<String> = vec![];
+    for k in requested_attr_map.keys().into_iter() {
+        let c = Prover::_fetch_credentials_for_proof_req(search_handle, &k, 100).map_err(map_rust_indy_sdk_error_code)?;
+        creds.push(c);
+    }
+    Prover::_close_credentials_search_for_proof_req(search_handle).map_err(|ec| {
+        error!("Error closing search handle");
+        map_rust_indy_sdk_error_code(ec)
+    })?;
+    Ok(creds[0].clone())
 }
-
 pub fn libindy_prover_create_credential_req(prover_did: &str,
                                             credential_offer_json: &str,
                                             credential_def_json: &str) -> Result<(String, String), u32> {
@@ -157,6 +154,7 @@ pub fn libindy_issuer_create_schema(issuer_did: &str,
                           attrs)
         .map_err(map_rust_indy_sdk_error_code)
 }
+
 
 #[cfg(test)]
 pub mod tests {
@@ -372,7 +370,7 @@ pub mod tests {
     #[cfg(feature = "pool_tests")]
     #[test]
     fn tests_libindy_prover_get_credentials() {
-        use utils::error::INVALID_WALLET_HANDLE;
+        use utils::error::LIBINDY_INVALID_STRUCTURE;
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         let wallet_name = "tests_libindy_prover_get_credentials";
@@ -380,7 +378,7 @@ pub mod tests {
         ::utils::devsetup::tests::setup_ledger_env(wallet_name);
         let proof_req = "{";
         let result = libindy_prover_get_credentials_for_proof_req(&proof_req);
-        assert_eq!(result.err(), Some(INVALID_PROOF_REQUEST.code_num));
+        assert_eq!(result.err(), Some(LIBINDY_INVALID_STRUCTURE.code_num));
         let proof_req = json!({
            "nonce":"123432421212",
            "name":"proof_req_1",
@@ -396,21 +394,12 @@ pub mod tests {
            "requested_predicates": json!({}),
         }).to_string();
         let result = libindy_prover_get_credentials_for_proof_req(&proof_req);
-        assert!(result.is_ok());
         let result_malformed_json = libindy_prover_get_credentials_for_proof_req("{}");
-        let invalid_requested_attributes = json!({
-            "foobar12345" : {}
-        });
         let wallet_handle = get_wallet_handle();
-        let (search_handle, count) = Prover::search_credentials(wallet_handle, Some("{}")).unwrap();
-        let v:Value = serde_json::from_str(&proof_req).unwrap();
-        let v = &v[REQUESTED_ATTRIBUTES];
-        let requested_attributes: Map<String, Value> = serde_json::from_value(v.clone()).unwrap();
-        let fetch_result = fetch_credentials(search_handle, count);
-        let fetch_result_invalid_search_handle = fetch_credentials(123456, count);
+        let proof_req_str:String = serde_json::to_string(&proof_req).unwrap();
         ::utils::devsetup::tests::cleanup_dev_env(wallet_name);
-        assert!(fetch_result.is_ok());
-        assert_eq!(fetch_result_invalid_search_handle.err(), Some(INVALID_WALLET_HANDLE.code_num));
-        assert_eq!(result_malformed_json.err(), Some(INVALID_ATTRIBUTES_STRUCTURE.code_num));
+        assert!(result.is_ok());
+        assert_eq!(result_malformed_json.err(), Some(LIBINDY_INVALID_STRUCTURE.code_num));
     }
+
 }
