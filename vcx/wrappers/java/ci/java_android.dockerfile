@@ -3,10 +3,6 @@ FROM libindy
 ARG uid=1000
 RUN useradd -ms /bin/bash -u $uid java
 
-# Install Gradle
-RUN wget https://services.gradle.org/distributions/gradle-3.4.1-bin.zip
-RUN mkdir /opt/gradle
-RUN unzip -d /opt/gradle gradle-3.4.1-bin.zip
 
 # Install Android SDK and NDK 
 RUN mkdir -m 777 /home/java/android-sdk-linux
