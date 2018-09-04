@@ -55,7 +55,7 @@ def mainUbuntu() {
         def libvcxDockerfile = 'vcx/ci/libvcx.dockerfile'
         def pythonDockerfile = 'vcx/wrappers/python3/ci/python.dockerfile'
         def nodeDockerfile = 'vcx/wrappers/node/ci/node.dockerfile'
-        def javaDockerfile = 'vcx/ci/android.dockerfile' // We can reuse the android dockerfile for java
+        def javaDockerfile = 'vcx/wrappers/java/ci/java_android.dockerfile'
         def uid= sh(returnStdout: true, script: 'id -u').trim()
         def libvcx
         def python
@@ -84,6 +84,12 @@ def mainUbuntu() {
                 python = docker.build("python", "--build-arg uid=${uid} -f ${pythonDockerfile} .")
                 python.inside() {
                     sh 'vcx/wrappers/python3/ci/test.sh'
+                }
+            }
+            stage('Test Java Wrapper'){
+                python = docker.build("java", "--build-arg uid=${uid} -f ${javaDockerfile} .")
+                python.inside() {
+                    sh 'vcx/wrappers/java/ci/test.sh'
                 }
             }
             stage('Package Node Wrapper') {
@@ -164,7 +170,7 @@ def android() {
         node('ubuntu') {
             try {
                 checkout scm
-                android = build('android', 'vcx/ci/android.dockerfile', 'vcx')
+                android = docker.build("android", "--build-arg uid=${uid} -f 'vcx/wrappers/java/ci/java_android.dockerfile' .")
                 stage('Android Packaging') {
                     //Package .so files into .aar 
                     packageAndroid(android)
