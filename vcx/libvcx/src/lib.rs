@@ -185,15 +185,17 @@ mod tests {
         let requests = serde_json::to_string(&requests[0]).unwrap();
         let proof_handle = disclosed_proof::create_proof(::utils::constants::DEFAULT_PROOF_NAME.to_string(), requests).unwrap();
         println!("retrieving matching credentials");
+        let retrieved_credentials:Vec<String> = serde_json::from_str(&disclosed_proof::retrieve_credentials(proof_handle).unwrap()).unwrap();
+        let map:Value = serde_json::from_str(&retrieved_credentials[0]).unwrap();
         let retrieved_credentials:String = disclosed_proof::retrieve_credentials(proof_handle).unwrap();
         let matching_credentials:Value = serde_json::from_str(&retrieved_credentials).unwrap();
         let selected_credentials : Value = json!({
                "attrs":{
-                  address1: matching_credentials[0],
-                  address2: matching_credentials[0],
-                  city: matching_credentials[0],
-                  state: matching_credentials[0],
-                  zip:matching_credentials[0],
+                  address1: map,
+                  address2: map,
+                  city: map,
+                  state: map,
+                  zip: map,
                },
                "predicates":{ }
             });

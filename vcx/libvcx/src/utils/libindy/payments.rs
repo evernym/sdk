@@ -264,6 +264,7 @@ fn _submit_fees_request(req: &str, inputs: &str, outputs: &str) -> Result<(Strin
 }
 
 pub fn pay_a_payee(price: u64, address: &str) -> Result<(PaymentTxn, String), PaymentError> {
+    info!("sending {} tokens to address {}", price, address);
 
     let ledger_cost = get_txn_price(TRANSFER_TXN_TYPE).map_err(|e| PaymentError::CommonError(e))?;
     let (remainder, input, refund_address) = inputs(price + ledger_cost)?;

@@ -698,7 +698,8 @@ mod tests {
         let retrieved_creds:String = proof.retrieve_credentials().unwrap();
         assert!(retrieved_creds.len() > 1);
         let retrieved_creds:Vec<Value> = serde_json::from_str(&retrieved_creds).unwrap();
-        assert_eq!(retrieved_creds[0]["cred_info"]["attrs"]["zip"], "84000");
+        let map:Value = serde_json::from_str(retrieved_creds[0].as_str().unwrap()).unwrap();
+        assert_eq!(map["cred_info"]["attrs"]["zip"], "84000");
 
         // First letter upper
         req["requested_attributes"]["zip_1"]["name"] = json!("Zip");
@@ -706,7 +707,8 @@ mod tests {
         proof.proof_request = Some(proof_req.clone());
         let retrieved_creds:String = proof.retrieve_credentials().unwrap();
         let retrieved_creds:Vec<Value> = serde_json::from_str(&retrieved_creds).unwrap();
-        assert_eq!(retrieved_creds[0]["cred_info"]["attrs"]["zip"], "84000");
+        let map:Value = serde_json::from_str(retrieved_creds[0].as_str().unwrap()).unwrap();
+        assert_eq!(map["cred_info"]["attrs"]["zip"], "84000");
 
         //entire word upper
         req["requested_attributes"]["zip_1"]["name"] = json!("ZIP");
@@ -714,7 +716,8 @@ mod tests {
         proof.proof_request = Some(proof_req.clone());
         let retrieved_creds:String = proof.retrieve_credentials().unwrap();
         let retrieved_creds:Vec<Value> = serde_json::from_str(&retrieved_creds).unwrap();
-        assert_eq!(retrieved_creds[0]["cred_info"]["attrs"]["zip"], "84000");
+        let map:Value = serde_json::from_str(retrieved_creds[0].as_str().unwrap()).unwrap();
+        assert_eq!(map["cred_info"]["attrs"]["zip"], "84000");
         ::utils::devsetup::tests::cleanup_dev_env(wallet_name);
     }
 
