@@ -4,7 +4,7 @@ use serde_json;
 use serde_json::{ map::Map, Value};
 use settings;
 use utils::constants::{ LIBINDY_CRED_OFFER, REQUESTED_ATTRIBUTES, ATTRS};
-use utils::error::{ INVALID_PROOF_REQUEST, INVALID_JSON, INVALID_CREDENTIAL_JSON, INVALID_ATTRIBUTES_STRUCTURE, INVALID_CONFIGURATION } ;
+use utils::error::{ INVALID_PROOF_REQUEST, INVALID_ATTRIBUTES_STRUCTURE, INVALID_CONFIGURATION } ;
 use utils::libindy::{ error_codes::map_rust_indy_sdk_error_code, mock_libindy_rc, wallet::get_wallet_handle };
 use utils::timeout::TimeoutUtils;
 use indy::anoncreds::{ Verifier, Prover, Issuer };

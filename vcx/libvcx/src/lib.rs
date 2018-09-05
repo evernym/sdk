@@ -121,13 +121,10 @@ mod tests {
         assert_eq!(VcxStateType::VcxStateAccepted as u32, credential::get_state(credential).unwrap());
         // AS INSTITUTION SEND PROOF REQUEST
         tests::set_institution();
-//        let address1 = "Address1";
-        let address1 = "address1";
+        let address1 = "Address1";
         let address2 = "address2";
-//        let city = "CITY";
-        let city = "city";
-//        let state = "State";
-        let state = "state";
+        let city = "CITY";
+        let state = "State";
         let zip = "zip";
         let requested_attrs = json!([
            {
@@ -189,7 +186,6 @@ mod tests {
         println!("retrieving matching credentials");
         let retrieved_credentials = disclosed_proof::retrieve_credentials(proof_handle).unwrap();
         let matching_credentials: Value = serde_json::from_str(&retrieved_credentials).unwrap();
-        println!("matching credential\n----------\n{}\n", matching_credentials);
         let selected_credentials : Value = json!({
                "attrs":{
                   address1:matching_credentials["attrs"][address1][0],
@@ -201,7 +197,6 @@ mod tests {
                "predicates":{
                }
             });
-        println!("selected_credential\n----------\n{}\n", selected_credentials);
         disclosed_proof::generate_proof(proof_handle, selected_credentials.to_string(), "{}".to_string()).unwrap();
         println!("sending proof");
         disclosed_proof::send_proof(proof_handle, faber).unwrap();
@@ -215,38 +210,5 @@ mod tests {
         let wallet = ::utils::libindy::payments::get_wallet_token_info().unwrap();
         cleanup_local_env(wallet_name);
     }
-//        set_consumer();
-//        let requests = disclosed_proof::get_proof_request_messages(faber, None).unwrap();
-//        let requests: Value = serde_json::from_str(&requests).unwrap();
-//        let requests = serde_json::to_string(&requests[0]).unwrap();
-//        let proof_handle = disclosed_proof::create_proof(::utils::constants::DEFAULT_PROOF_NAME.to_string(), requests).unwrap();
-//        println!("retrieving matching credentials");
-//        let retrieved_credentials:Vec<String> = serde_json::from_str(&disclosed_proof::retrieve_credentials(proof_handle).unwrap()).unwrap();
-//        let map:Value = serde_json::from_str(&retrieved_credentials[0]).unwrap();
-//        let retrieved_credentials:String = disclosed_proof::retrieve_credentials(proof_handle).unwrap();
-//        let matching_credentials:Value = serde_json::from_str(&retrieved_credentials).unwrap();
-//        let selected_credentials : Value = json!({
-//               "attrs":{
-//                  address1: map,
-//                  address2: map,
-//                  city: map,
-//                  state: map,
-//                  zip: map,
-//               },
-//               "predicates":{ }
-//            });
-//        let selected_credentials: String = serde_json::to_string(&selected_credentials).unwrap();
-//        disclosed_proof::generate_proof(proof_handle, selected_credentials, "{}".to_string()).unwrap();
-//        println!("sending proof");
-//        disclosed_proof::send_proof(proof_handle, faber).unwrap();
-//        assert_eq!(VcxStateType::VcxStateAccepted as u32, disclosed_proof::get_state(proof_handle).unwrap());
-//        thread::sleep(Duration::from_millis(5000));
-//        // AS INSTITUTION VALIDATE PROOF
-//        set_institution();
-//        proof::update_state(proof_req_handle).unwrap();
-//        assert_eq!(proof::get_proof_state(proof_req_handle).unwrap(), ProofStateType::ProofValidated as u32);
-//        println!("proof validated!");
-//        let wallet = ::utils::libindy::payments::get_wallet_token_info().unwrap();
-//        cleanup_local_env(wallet_name);
-//    }
+
 }
