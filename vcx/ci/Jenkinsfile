@@ -238,7 +238,7 @@ def buildAndroid(arch) {
     node('ubuntu') {
         try {
             checkout scm
-            android = build('android', 'vcx/ci/android.dockerfile', 'vcx')
+            android =  docker.build("android", "--build-arg uid=${uid} -f 'vcx/wrappers/java/ci/java_android.dockerfile' .")
 
             android.inside {
                 ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
