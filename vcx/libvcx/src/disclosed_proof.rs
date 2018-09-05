@@ -695,31 +695,80 @@ mod tests {
         proof.proof_request = Some(proof_req.clone());
 
         // All lower case
-        let retrieved_creds:String = proof.retrieve_credentials().unwrap();
-        assert!(retrieved_creds.len() > 1);
-        let retrieved_creds:Vec<Value> = serde_json::from_str(&retrieved_creds).unwrap();
-        let map:Value = serde_json::from_str(retrieved_creds[0].as_str().unwrap()).unwrap();
-        assert_eq!(map["cred_info"]["attrs"]["zip"], "84000");
-
+        let retrieved_creds = proof.retrieve_credentials().unwrap();
+        assert!(retrieved_creds.contains(r#""zip":"84000""#));
+        let ret_creds_as_value:Value = serde_json::from_str(&retrieved_creds).unwrap();
+        assert_eq!(ret_creds_as_value["attrs"]["zip_1"][0]["cred_info"]["attrs"]["zip"], "84000");
         // First letter upper
         req["requested_attributes"]["zip_1"]["name"] = json!("Zip");
         proof_req.proof_request_data = serde_json::from_str(&req.to_string()).unwrap();
         proof.proof_request = Some(proof_req.clone());
-        let retrieved_creds:String = proof.retrieve_credentials().unwrap();
-        let retrieved_creds:Vec<Value> = serde_json::from_str(&retrieved_creds).unwrap();
-        let map:Value = serde_json::from_str(retrieved_creds[0].as_str().unwrap()).unwrap();
-        assert_eq!(map["cred_info"]["attrs"]["zip"], "84000");
+        let retrieved_creds2 = proof.retrieve_credentials().unwrap();
+        assert!(retrieved_creds2.contains(r#""zip":"84000""#));
 
         //entire word upper
         req["requested_attributes"]["zip_1"]["name"] = json!("ZIP");
         proof_req.proof_request_data = serde_json::from_str(&req.to_string()).unwrap();
         proof.proof_request = Some(proof_req.clone());
-        let retrieved_creds:String = proof.retrieve_credentials().unwrap();
-        let retrieved_creds:Vec<Value> = serde_json::from_str(&retrieved_creds).unwrap();
-        let map:Value = serde_json::from_str(retrieved_creds[0].as_str().unwrap()).unwrap();
-        assert_eq!(map["cred_info"]["attrs"]["zip"], "84000");
+        let retrieved_creds3 = proof.retrieve_credentials().unwrap();
+        assert!(retrieved_creds3.contains(r#""zip":"84000""#));
         ::utils::devsetup::tests::cleanup_dev_env(wallet_name);
     }
+
+//    #[cfg(feature = "pool_tests")]
+//    #[test]
+//    fn test_proof_request_attrs_are_not_case_sensitive() {
+//        settings::set_defaults();
+//        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
+//        let wallet_name = "test_retrieve_credentials";
+//        ::utils::devsetup::tests::setup_ledger_env(wallet_name);
+//        ::utils::libindy::payments::mint_tokens_and_set_fees(None, Some(10000000), None, None).unwrap();
+//        ::utils::libindy::anoncreds::tests::create_and_store_credential();
+//        let did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
+//        let mut req = json!({
+//           "nonce":"123432421212",
+//           "name":"proof_req_1",
+//           "version":"0.1",
+//           "requested_attributes": json!({
+//               "zip_1": json!({
+//                   "name":"zip",
+//                   "restrictions": [json!({ "issuer_did": did })]
+//               })
+//           }),
+//           "requested_predicates": json!({}),
+//        });
+//
+//        let mut proof_req = ProofRequestMessage::create();
+//        let mut proof: DisclosedProof = Default::default();
+//        proof_req.proof_request_data = serde_json::from_str(&req.to_string()).unwrap();
+//        proof.proof_request = Some(proof_req.clone());
+//
+//        // All lower case
+//        let retrieved_creds:String = proof.retrieve_credentials().unwrap();
+//        assert!(retrieved_creds.len() > 1);
+//        let retrieved_creds:Vec<Value> = serde_json::from_str(&retrieved_creds).unwrap();
+//        let map = &retrieved_creds[0];
+//        assert_eq!(map["cred_info"]["attrs"]["zip"], "84000");
+//
+//        // First letter upper
+//        req["requested_attributes"]["zip_1"]["name"] = json!("Zip");
+//        proof_req.proof_request_data = serde_json::from_str(&req.to_string()).unwrap();
+//        proof.proof_request = Some(proof_req.clone());
+//        let retrieved_creds:String = proof.retrieve_credentials().unwrap();
+//        let retrieved_creds:Vec<Value> = serde_json::from_str(&retrieved_creds).unwrap();
+//        let map = &retrieved_creds[0];
+//        assert_eq!(map["cred_info"]["attrs"]["zip"], "84000");
+//
+//        //entire word upper
+//        req["requested_attributes"]["zip_1"]["name"] = json!("ZIP");
+//        proof_req.proof_request_data = serde_json::from_str(&req.to_string()).unwrap();
+//        proof.proof_request = Some(proof_req.clone());
+//        let retrieved_creds:String = proof.retrieve_credentials().unwrap();
+//        let retrieved_creds:Vec<Value> = serde_json::from_str(&retrieved_creds).unwrap();
+//        let map = &retrieved_creds[0];
+//        assert_eq!(map["cred_info"]["attrs"]["zip"], "84000");
+//        ::utils::devsetup::tests::cleanup_dev_env(wallet_name);
+//    }
 
     #[test]
     fn test_fail_retrieve_credentials_with_no_proof_req() {

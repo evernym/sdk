@@ -3,7 +3,7 @@ extern crate libc;
 use serde_json;
 use serde_json::{ map::Map, Value};
 use settings;
-use utils::constants::{ LIBINDY_CRED_OFFER, REQUESTED_ATTRIBUTES };
+use utils::constants::{ LIBINDY_CRED_OFFER, REQUESTED_ATTRIBUTES, ATTRS};
 use utils::error::{ INVALID_PROOF_REQUEST, INVALID_JSON, INVALID_CREDENTIAL_JSON, INVALID_ATTRIBUTES_STRUCTURE, INVALID_CONFIGURATION } ;
 use utils::libindy::{ error_codes::map_rust_indy_sdk_error_code, mock_libindy_rc, wallet::get_wallet_handle };
 use utils::timeout::TimeoutUtils;
@@ -86,45 +86,57 @@ pub fn libindy_prover_create_proof(proof_req_json: &str,
         .map_err(map_rust_indy_sdk_error_code)
 }
 
-fn fetch_credentials(search_handle: i32, requested_attributes: Map<String, Value>) -> Result<Vec<String>, u32> {
-    let mut creds: Vec<String> = vec![];
+fn fetch_credentials(search_handle: i32, requested_attributes: Map<String, Value>) -> Result<String, u32> {
+    let mut v: Value = json!({});
     for item_referent in requested_attributes.keys().into_iter() {
-        let search_hits:Vec<Value> = serde_json::from_str(
-            &Prover::_fetch_credentials_for_proof_req(search_handle, item_referent, 100)
-                .map_err(map_rust_indy_sdk_error_code)?)
-            .map_err(|_|{
+        v[ATTRS][item_referent] = serde_json::from_str(&Prover::_fetch_credentials_for_proof_req(search_handle, item_referent, 100)
+            .map_err(map_rust_indy_sdk_error_code)?)
+            .map_err(|_| {
                 error!("Invalid Json Parsing of Object Returned from Libindy. Did Libindy change its structure?");
-                INVALID_CONFIGURATION.code_num})?;
-        for credential in search_hits.into_iter() {
-            creds.push(credential.to_string());
-        }
+                INVALID_CONFIGURATION.code_num
+            })?
     }
-    Ok(creds)
+    Ok(v.to_string())
 }
+
+fn close_search_handle(search_handle: i32) -> Result<(), u32> {
+    Prover::_close_credentials_search_for_proof_req(search_handle).map_err(|ec| {
+        error!("Error closing search handle");
+        map_rust_indy_sdk_error_code(ec)
+    })
+}
+
 pub fn libindy_prover_get_credentials_for_proof_req(proof_req: &str) -> Result<String, u32> {
     let wallet_handle = get_wallet_handle();
 
     // this may be too redundant since Prover::search_credentials will validate the proof reqeuest already.
     let proof_request_json:Map<String, Value> = serde_json::from_str(proof_req).map_err(|_| INVALID_PROOF_REQUEST.code_num)?;
 
-    let search_handle = Prover::search_credentials_for_proof_req(wallet_handle, proof_req, None).map_err(map_rust_indy_sdk_error_code)?;
-
     // since the search_credentials_for_proof request validates that the proof_req is properly structured, this get()
     // fn should never fail, unless libindy changes their formats.
-    let v = proof_request_json.get(REQUESTED_ATTRIBUTES).ok_or(INVALID_ATTRIBUTES_STRUCTURE.code_num)?;
+    let requested_attributes:Option<Map<String,Value>> = proof_request_json.get(REQUESTED_ATTRIBUTES).and_then(|v| {
+        serde_json::from_value(v.clone()).map_err(|_| {
+            error!("Invalid Json Parsing of Requested Attributes Retrieved From Libindy. Did Libindy change its structure?");
+        }).ok()
+    });
 
-    let requested_attributes: Map<String, Value> = serde_json::from_value(v.clone())
-        .map_err(|_| { error!("Invalid Json Parsing of Requested Attributes Retrieved From Libindy. Did Libindy change its structure?"); INVALID_CREDENTIAL_JSON.code_num})?;
-    let creds: Vec<String> = fetch_credentials(search_handle, requested_attributes)?;
-    let c = creds.iter().map(|s| s.clone()).collect::<Value>();
+    match requested_attributes {
+        Some(attrs) => {
+            let search_handle = Prover::search_credentials_for_proof_req(wallet_handle, proof_req, None).map_err(|ec| {
+                error!("Opening Indy Search for Credentials Failed");
+                map_rust_indy_sdk_error_code(ec)
+            })?;
+            let creds: String = fetch_credentials(search_handle, attrs)?;
+            // should an error on closing a search handle throw an error, or just a warning?
+            // for now we're are just outputting to the user that there is an issue, and continuing on.
+            let _ = close_search_handle(search_handle);
+            Ok(creds)
+        },
+        None => {
+            Err(INVALID_ATTRIBUTES_STRUCTURE.code_num)
+        }
+    }
 
-    // close search handle
-    Prover::_close_credentials_search_for_proof_req(search_handle).map_err(|ec| {
-        error!("Error closing search handle");
-        map_rust_indy_sdk_error_code(ec)
-    })?;
-
-    serde_json::to_string(&c).map_err(|_| { error!("Invalid Json Parsing of Credentials to String"); INVALID_JSON.code_num})
 }
 
 pub fn libindy_prover_create_credential_req(prover_did: &str,
@@ -400,7 +412,7 @@ pub mod tests {
         ::utils::devsetup::tests::setup_ledger_env(wallet_name);
         let proof_req = "{";
         let result = libindy_prover_get_credentials_for_proof_req(&proof_req);
-        assert_eq!(result.err(), Some(LIBINDY_INVALID_STRUCTURE.code_num));
+        assert_eq!(result.err(), Some(INVALID_PROOF_REQUEST.code_num));
         let proof_req = json!({
            "nonce":"123432421212",
            "name":"proof_req_1",
@@ -421,7 +433,7 @@ pub mod tests {
         let proof_req_str:String = serde_json::to_string(&proof_req).unwrap();
         ::utils::devsetup::tests::cleanup_dev_env(wallet_name);
         assert!(result.is_ok());
-        assert_eq!(result_malformed_json.err(), Some(LIBINDY_INVALID_STRUCTURE.code_num));
+        assert_eq!(result_malformed_json.err(), Some(INVALID_ATTRIBUTES_STRUCTURE.code_num));
     }
 
 }
