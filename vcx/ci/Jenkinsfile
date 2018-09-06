@@ -168,6 +168,7 @@ def android() {
         }
         node('ubuntu') {
             try {
+                def uid= sh(returnStdout: true, script: 'id -u').trim()
                 checkout scm
                 android = docker.build("android", "--build-arg uid=${uid} -f 'vcx/wrappers/java/ci/java_android.dockerfile' .")
                 stage('Android Packaging') {
@@ -237,6 +238,7 @@ def fail() {
 def buildAndroid(arch) {    
     node('ubuntu') {
         try {
+            def uid= sh(returnStdout: true, script: 'id -u').trim()
             checkout scm
             android =  docker.build("android", "--build-arg uid=${uid} -f 'vcx/wrappers/java/ci/java_android.dockerfile' .")
 
