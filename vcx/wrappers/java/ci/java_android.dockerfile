@@ -2,6 +2,7 @@
 FROM libindy
 ARG uid=1000
 RUN useradd -ms /bin/bash -u $uid java
+RUN usermod -aG sudo java
 
 
 # Install Android SDK and NDK 
