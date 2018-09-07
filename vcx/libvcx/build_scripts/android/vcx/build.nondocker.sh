@@ -202,15 +202,15 @@ cargo build --release --no-default-features --features "ci ${PAYMENT_PLUGIN}" --
 # TEMPORARY HACK (need to build libvcx without duplicate .o object files):
 # There are duplicate .o object files inside the libvcx.a file and these
 # lines of logic remove those duplicate .o object files
-rm -rf target/${CROSS_COMPILE}/release/tmpobjs
-mkdir target/${CROSS_COMPILE}/release/tmpobjs
-pushd target/${CROSS_COMPILE}/release/tmpobjs
-    ${AR} -x ../libvcx.a
-    ls > ../objfiles
-    xargs ${AR} cr ../libvcx.a.new < ../objfiles
-    ${STRIP} -S -x -o ../libvcx.a.stripped ../libvcx.a.new
-    mv ../libvcx.a.stripped ../libvcx.a
-popd
+#rm -rf target/${CROSS_COMPILE}/release/tmpobjs
+#mkdir target/${CROSS_COMPILE}/release/tmpobjs
+#pushd target/${CROSS_COMPILE}/release/tmpobjs
+#    ${AR} -x ../libvcx.a
+#    ls > ../objfiles
+#    xargs ${AR} cr ../libvcx.a.new < ../objfiles
+#    ${STRIP} -S -x -o ../libvcx.a.stripped ../libvcx.a.new
+#    mv ../libvcx.a.stripped ../libvcx.a
+#popd
 popd
 
 LIBVCX_BUILDS=${WORKDIR}/libvcx_${TARGET_ARCH}
