@@ -1,5 +1,4 @@
 extern crate libc;
-extern crate futures;
 
 use self::libc::c_char;
 use utils::cstring::CStringUtils;
@@ -48,7 +47,7 @@ pub extern fn vcx_proof_create(command_handle: u32,
     info!("vcx_proof_create(command_handle: {}, source_id: {}, requested_attrs: {}, requested_predicates: {}, name: {})",
           command_handle, source_id, requested_attrs, requested_predicates, name);
 
-    spawn(futures::lazy(move|| {
+    spawn(move|| {
         let ( rc, handle) = match proof::create_proof(source_id, requested_attrs, requested_predicates, name) {
             Ok(x) => {
                 info!("vcx_proof_create_cb(command_handle: {}, rc: {}, handle: {}), source_id: {:?}",
@@ -64,7 +63,7 @@ pub extern fn vcx_proof_create(command_handle: u32,
         cb(command_handle, rc, handle);
 
         Ok(())
-    }));
+    });
 
     error::SUCCESS.code_num
 }
@@ -94,7 +93,7 @@ pub extern fn vcx_proof_update_state(command_handle: u32,
         return error::INVALID_PROOF_HANDLE.code_num;
     }
 
-    spawn(futures::lazy(move|| {
+    spawn(move|| {
         match proof::update_state(proof_handle) {
             Ok(x) => {
                 info!("vcx_proof_update_state_cb(command_handle: {}, rc: {}, proof_handle: {}, state: {}), source_id: {:?}",
@@ -109,7 +108,7 @@ pub extern fn vcx_proof_update_state(command_handle: u32,
         }
 
         Ok(())
-    }));
+    });
 
     error::SUCCESS.code_num
 }
@@ -128,7 +127,7 @@ pub extern fn vcx_proof_get_state(command_handle: u32,
         return error::INVALID_PROOF_HANDLE.code_num;
     }
 
-    spawn(futures::lazy(move|| {
+    spawn(move|| {
         match proof::get_state(proof_handle) {
             Ok(x) => {
                 info!("vcx_proof_get_state_cb(command_handle: {}, rc: {}, proof_handle: {}, state: {}), source_id: {:?}",
@@ -143,7 +142,7 @@ pub extern fn vcx_proof_get_state(command_handle: u32,
         }
 
         Ok(())
-    }));
+    });
 
     error::SUCCESS.code_num
 }
@@ -173,7 +172,7 @@ pub extern fn vcx_proof_serialize(command_handle: u32,
         return error::INVALID_PROOF_HANDLE.code_num;
     };
 
-    spawn(futures::lazy(move|| {
+    spawn(move|| {
         match proof::to_string(proof_handle) {
             Ok(x) => {
                 info!("vcx_proof_serialize_cb(command_handle: {}, proof_handle: {}, rc: {}, state: {}), source_id: {:?}",
@@ -189,7 +188,7 @@ pub extern fn vcx_proof_serialize(command_handle: u32,
         };
 
         Ok(())
-    }));
+    });
 
     error::SUCCESS.code_num
 }
@@ -216,7 +215,7 @@ pub extern fn vcx_proof_deserialize(command_handle: u32,
     info!("vcx_proof_deserialize(command_handle: {}, proof_data: {})",
           command_handle, proof_data);
 
-    spawn(futures::lazy(move|| {
+    spawn(move|| {
         let (rc, handle) = match proof::from_string(&proof_data) {
             Ok(x) => {
                 info!("vcx_proof_deserialize_cb(command_handle: {}, rc: {}, handle: {}), source_id: {:?}",
@@ -232,7 +231,7 @@ pub extern fn vcx_proof_deserialize(command_handle: u32,
         cb(command_handle, rc, handle);
 
         Ok(())
-    }));
+    });
 
     error::SUCCESS.code_num
 }
@@ -286,7 +285,7 @@ pub extern fn vcx_proof_send_request(command_handle: u32,
         return error::INVALID_CONNECTION_HANDLE.code_num;
     }
 
-    spawn(futures::lazy(move|| {
+    spawn(move|| {
         let err = match proof::send_proof_request(proof_handle, connection_handle) {
             Ok(x) => {
                 info!("vcx_proof_send_request_cb(command_handle: {}, rc: {}, proof_handle: {})", command_handle, 0, proof_handle);
@@ -301,7 +300,7 @@ pub extern fn vcx_proof_send_request(command_handle: u32,
         cb(command_handle,err);
 
         Ok(())
-    }));
+    });
 
     error::SUCCESS.code_num
 }
@@ -335,7 +334,7 @@ pub extern fn vcx_get_proof(command_handle: u32,
         return error::INVALID_CONNECTION_HANDLE.code_num;
     }
 
-    spawn(futures::lazy(move|| {
+    spawn(move|| {
         //update the state to see if proof has come, ignore any errors
         match proof::update_state(proof_handle) {
             Ok(_) => (),
@@ -346,16 +345,16 @@ pub extern fn vcx_get_proof(command_handle: u32,
             Ok(x) => {
                 info!("vcx_get_proof_cb(command_handle: {}, proof_handle: {}, rc: {}, proof: {})", command_handle, proof_handle, 0, x);
                 let msg = CStringUtils::string_to_cstring(x);
-                cb(command_handle, error::SUCCESS.code_num, proof::get_proof_state(proof_handle).unwrap(), msg.as_ptr());
+                cb(command_handle, error::SUCCESS.code_num, proof::get_proof_state(proof_handle).unwrap_or(0), msg.as_ptr());
             },
             Err(x) => {
                 warn!("vcx_get_proof_cb(command_handle: {}, proof_handle: {}, rc: {}, proof: {})", command_handle, proof_handle, x.to_error_code(), "null");
-                cb(command_handle, x.to_error_code(), proof::get_proof_state(proof_handle).unwrap(), ptr::null_mut());
+                cb(command_handle, x.to_error_code(), proof::get_proof_state(proof_handle).unwrap_or(0), ptr::null_mut());
             },
         };
 
         Ok(())
-    }));
+    });
 
     error::SUCCESS.code_num
 }
@@ -379,7 +378,6 @@ mod tests {
     use api::{ ProofStateType };
     use utils::constants::*;
     use utils::libindy::return_types_u32;
-    use settings::tests::test_init;
 
     static DEFAULT_PROOF_NAME: &'static str = "PROOF_NAME";
 
@@ -396,7 +394,7 @@ mod tests {
 
     #[test]
     fn test_vcx_create_proof_success() {
-        test_init("true");
+        init!("true");
         let (cb, rc) = create_proof_util();
         assert_eq!(rc, error::SUCCESS.code_num);
         cb.receive(Some(Duration::from_secs(10))).unwrap();
@@ -404,7 +402,7 @@ mod tests {
 
     #[test]
     fn test_vcx_create_proof_fails() {
-        test_init("true");
+        init!("true");
         let cb = return_types_u32::Return_U32_U32::new().unwrap();
         assert_eq!(vcx_proof_create(cb.command_handle,
                                     ptr::null(),
@@ -417,7 +415,7 @@ mod tests {
 
     #[test]
     fn test_vcx_proof_serialize() {
-        test_init("true");
+        init!("true");
         let (cb, rc) = create_proof_util();
         assert_eq!(rc, error::SUCCESS.code_num);
         let proof_handle = cb.receive(Some(Duration::from_secs(10))).unwrap();
@@ -431,7 +429,7 @@ mod tests {
 
     #[test]
     fn test_vcx_proof_deserialize_succeeds() {
-        test_init("true");
+        init!("true");
         let cb = return_types_u32::Return_U32_U32::new().unwrap();
         let original = r#"{"nonce":"123456","version":"1.0","handle":1,"msg_uid":"","ref_msg_id":"","name":"Name Data","prover_vk":"","agent_did":"","agent_vk":"","remote_did":"","remote_vk":"","prover_did":"8XFh8yBzrpJQmNyZzgoTqB","requested_attrs":"{\"attrs\":[{\"name\":\"person name\"},{\"schema_seq_no\":1,\"name\":\"address_1\"},{\"schema_seq_no\":2,\"issuer_did\":\"ISSUER_DID2\",\"name\":\"address_2\"},{\"schema_seq_no\":1,\"name\":\"city\"},{\"schema_seq_no\":1,\"name\":\"state\"},{\"schema_seq_no\":1,\"name\":\"zip\"}]}","requested_predicates":"{\"attr_name\":\"age\",\"p_type\":\"GE\",\"value\":18,\"schema_seq_no\":1,\"issuer_did\":\"DID1\"}","source_id":"source id","state":2,"proof_state":0,"proof":null,"proof_request":null}"#;
         assert_eq!(vcx_proof_deserialize(cb.command_handle,
@@ -444,7 +442,7 @@ mod tests {
 
     #[test]
     fn test_proof_update_state() {
-        test_init("true");
+        init!("true");
 
         let (cb, rc) = create_proof_util();
         assert_eq!(rc, error::SUCCESS.code_num);
@@ -461,7 +459,7 @@ mod tests {
 
     #[test]
     fn test_vcx_proof_send_request() {
-        test_init("true");
+        init!("true");
 
         let (cb, rc) = create_proof_util();
         assert_eq!(rc, error::SUCCESS.code_num);
@@ -482,7 +480,7 @@ mod tests {
 
     #[test]
     fn test_get_proof_fails_when_not_ready_with_proof() {
-        test_init("true");
+        init!("true");
         let (cb, rc) = create_proof_util();
         assert_eq!(rc, error::SUCCESS.code_num);
         let proof_handle = cb.receive(Some(Duration::from_secs(10))).unwrap();
@@ -501,7 +499,7 @@ mod tests {
 
     #[test]
     fn test_get_proof_returns_proof_with_proof_state_invalid() {
-        test_init("true");
+        init!("true");
         let connection_handle = connection::build_connection("test_get_proof_returns_proof_with_proof_state_invalid").unwrap();
         connection::set_pw_did(connection_handle, "XXFh7yBzrpJQmNyZzgoTqB").unwrap();
         let proof_handle = proof::from_string(PROOF_WITH_INVALID_STATE).unwrap();
@@ -518,7 +516,7 @@ mod tests {
 
     #[test]
     fn test_vcx_connection_get_state() {
-        test_init("true");
+        init!("true");
         let cb = return_types_u32::Return_U32_U32::new().unwrap();
         let handle = proof::from_string(PROOF_OFFER_SENT).unwrap();
         assert!(handle > 0);

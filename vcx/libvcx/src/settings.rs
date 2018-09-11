@@ -36,7 +36,6 @@ pub static CONFIG_WALLET_HANDLE: &'static str = "wallet_handle";
 pub static CONFIG_THREADPOOL_SIZE: &'static str = "threadpool_size";
 
 pub static UNINITIALIZED_WALLET_KEY: &str = "<KEY_IS_NOT_SET>";
-pub static UNINITIALIZED_BACKUP_KEY: &str = "<KEY_IS_NOT_SET>";
 pub static DEFAULT_GENESIS_PATH: &str = "/tmp/genesis.txn";
 pub static DEFAULT_EXPORTED_WALLET_PATH: &str = "/tmp/wallet.txn";
 pub static DEFAULT_WALLET_NAME: &str = "LIBVCX_SDK_WALLET";
@@ -50,7 +49,6 @@ pub static DEFAULT_ENABLE_TEST_MODE: &str = "false";
 pub static DEFAULT_WALLET_BACKUP_KEY: &str = "backup_wallet_key";
 pub static DEFAULT_WALLET_KEY: &str = "foobar1234";
 pub static DEFAULT_THREADPOOL_SIZE: usize = 8;
-pub static TEST_WALLET_KEY: &str = "key";
 pub static MASK_VALUE: &str = "********";
 
 pub static MAX_THREADPOOL_SIZE: usize = 128;
@@ -88,10 +86,10 @@ pub fn set_defaults() -> u32 {
     settings.insert(CONFIG_INSTITUTION_LOGO_URL.to_string(),DEFAULT_URL.to_string());
     settings.insert(CONFIG_SDK_TO_REMOTE_DID.to_string(),DEFAULT_DID.to_string());
     settings.insert(CONFIG_SDK_TO_REMOTE_VERKEY.to_string(),DEFAULT_VERKEY.to_string());
-    settings.insert(CONFIG_WALLET_KEY.to_string(),TEST_WALLET_KEY.to_string());
+    settings.insert(CONFIG_WALLET_KEY.to_string(),DEFAULT_WALLET_KEY.to_string());
     settings.insert(CONFIG_LINK_SECRET_ALIAS.to_string(), DEFAULT_LINK_SECRET_ALIAS.to_string());
     settings.insert(CONFIG_EXPORTED_WALLET_PATH.to_string(), DEFAULT_EXPORTED_WALLET_PATH.to_string());
-    settings.insert(CONFIG_WALLET_BACKUP_KEY.to_string(), UNINITIALIZED_BACKUP_KEY.to_string());
+    settings.insert(CONFIG_WALLET_BACKUP_KEY.to_string(), DEFAULT_WALLET_BACKUP_KEY.to_string());
     settings.insert(CONFIG_THREADPOOL_SIZE.to_string(), DEFAULT_THREADPOOL_SIZE.to_string());
 
     error::SUCCESS.code_num
@@ -178,18 +176,16 @@ pub fn test_agency_mode_enabled() -> bool {
 }
 
 pub fn process_config_string(config: &str) -> Result<u32, u32> {
-    let configuration: Value = serde_json::from_str(config)
-        .or(Err(error::INVALID_JSON.code_num))?;
+    let configuration: Value = serde_json::from_str(config).or(Err(error::INVALID_JSON.code_num))?;
     if let Value::Object(ref map) = configuration {
         for (key, value) in map {
-            if value.is_string() {
-                set_config_value(key, value.as_str().unwrap());
-            }
+            set_config_value(key, value.as_str().ok_or(error::INVALID_JSON.code_num)?);
         }
     }
 
-    let config = SETTINGS.read().unwrap();
-    validate_config(&config.clone())
+    validate_config(
+        &SETTINGS.read().or(Err(error::INVALID_CONFIGURATION.code_num))?.clone()
+    )
 }
 
 pub fn process_config_file(path: &str) -> Result<u32, u32> {
@@ -202,10 +198,11 @@ pub fn process_config_file(path: &str) -> Result<u32, u32> {
 }
 
 pub fn get_config_value(key: &str) -> Result<String, u32> {
-    match SETTINGS.read().unwrap().get(key) {
-        None => Err(error::INVALID_CONFIGURATION.code_num),
-        Some(value) => Ok(value.to_string()),
-    }
+    SETTINGS
+        .read()
+        .or(Err(error::INVALID_CONFIGURATION.code_num))?
+        .get(key)
+        .map_or(Err(error::INVALID_CONFIGURATION.code_num), |v| Ok(v.to_string()))
 }
 
 pub fn set_config_value(key: &str, value: &str) {
@@ -252,25 +249,6 @@ pub fn clear_config() {
 #[cfg(test)]
 pub mod tests {
     use super::*;
-
-    pub fn test_init(mode: &str) {
-        ::utils::threadpool::init();
-        clear_config();
-        match mode {
-            "true" => {
-                set_defaults();
-                set_config_value(CONFIG_ENABLE_TEST_MODE,"true");
-            },
-            "false" => {
-                set_config_value(CONFIG_ENABLE_TEST_MODE,"false");
-            },
-            "indy" => {
-                set_defaults();
-                set_config_value(CONFIG_ENABLE_TEST_MODE,"indy");
-            },
-            _ => {panic!("Invalid test mode");},
-        };
-    }
 
     #[test]
     fn test_bad_path() {

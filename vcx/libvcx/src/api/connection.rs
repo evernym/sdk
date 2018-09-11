@@ -1,5 +1,4 @@
 extern crate libc;
-extern crate futures;
 
 use self::libc::c_char;
 use utils::cstring::CStringUtils;
@@ -38,7 +37,7 @@ pub extern fn vcx_connection_delete_connection(command_handle: u32,
         return ConnectionError::InvalidHandle().to_error_code()
     }
     info!("vcx_connection_delete_connection(command_handle: {}, connection_handle: {})", command_handle, connection_handle);
-    spawn(futures::lazy(move|| {
+    spawn(move|| {
         match delete_connection(connection_handle) {
             Ok(_) => {
                 info!("vcx_connection_delete_connection_cb(command_handle: {}, rc: {})", command_handle, 0);
@@ -51,7 +50,7 @@ pub extern fn vcx_connection_delete_connection(command_handle: u32,
         }
 
         Ok(())
-    }));
+    });
 
     error::SUCCESS.code_num
 }
@@ -75,7 +74,7 @@ pub extern fn vcx_connection_create(command_handle: u32,
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
     check_useful_c_str!(source_id, error::INVALID_OPTION.code_num);
     info!("vcx_connection_create(command_handle: {}, source_id: {})", command_handle, source_id);
-    spawn(futures::lazy(move|| {
+    spawn(move|| {
         match build_connection(&source_id) {
             Ok(handle) => {
                 info!("vcx_connection_create_cb(command_handle: {}, rc: {}, handle: {})",
@@ -90,7 +89,7 @@ pub extern fn vcx_connection_create(command_handle: u32,
         };
 
         Ok(())
-    }));
+    });
 
     error::SUCCESS.code_num
 }
@@ -118,7 +117,7 @@ pub extern fn vcx_connection_create_with_invite(command_handle: u32,
     check_useful_c_str!(source_id, error::INVALID_OPTION.code_num);
     check_useful_c_str!(invite_details, error::INVALID_OPTION.code_num);
     info!("vcx_connection_create_with_invite(command_handle: {}, source_id: {})", command_handle, source_id);
-    spawn(futures::lazy(move|| {
+    spawn(move|| {
         match build_connection_with_invite(&source_id, &invite_details) {
             Ok(handle) => {
                 info!("vcx_connection_create_with_invite_cb(command_handle: {}, rc: {}, handle: {})",
@@ -133,7 +132,7 @@ pub extern fn vcx_connection_create_with_invite(command_handle: u32,
         };
 
         Ok(())
-    }));
+    });
 
     error::SUCCESS.code_num
 }
@@ -178,7 +177,7 @@ pub extern fn vcx_connection_connect(command_handle:u32,
     info!("vcx_connection_connect(command_handle: {}, connection_handle: {}, connection_options: {:?}), source_id: {:?}",
           command_handle, connection_handle, options, source_id);
 
-    spawn(futures::lazy(move|| {
+    spawn(move|| {
         match connect(connection_handle, options) {
             Ok(_) => {
                 match get_invite_details(connection_handle,true) {
@@ -203,7 +202,7 @@ pub extern fn vcx_connection_connect(command_handle:u32,
         };
 
         Ok(())
-    }));
+    });
 
     error::SUCCESS.code_num
 }
@@ -235,7 +234,7 @@ pub extern fn vcx_connection_serialize(command_handle: u32,
         return error::INVALID_CONNECTION_HANDLE.code_num;
     }
 
-    spawn(futures::lazy(move|| {
+    spawn(move|| {
         match to_string(connection_handle) {
             Ok(json) => {
                 info!("vcx_connection_serialize_cb(command_handle: {}, connection_handle: {}, rc: {}, state: {}), source_id: {:?}",
@@ -251,7 +250,7 @@ pub extern fn vcx_connection_serialize(command_handle: u32,
         };
 
         Ok(())
-    }));
+    });
 
     error::SUCCESS.code_num
 }
@@ -277,7 +276,7 @@ pub extern fn vcx_connection_deserialize(command_handle: u32,
 
     info!("vcx_connection_deserialize(command_handle: {}, connection_data: {})", command_handle, connection_data);
 
-    spawn(futures::lazy(move|| {
+    spawn(move|| {
         let (rc, handle) = match from_string(&connection_data) {
             Ok(x) => {
                 let source_id = get_source_id(x).unwrap_or_default();
@@ -295,7 +294,7 @@ pub extern fn vcx_connection_deserialize(command_handle: u32,
         cb(command_handle, rc, handle);
 
         Ok(())
-    }));
+    });
 
     error::SUCCESS.code_num
 }
@@ -328,7 +327,7 @@ pub extern fn vcx_connection_update_state(command_handle: u32,
         return error::INVALID_CONNECTION_HANDLE.code_num;
     }
 
-    spawn(futures::lazy(move|| {
+    spawn(move|| {
         let rc = match update_state(connection_handle) {
             Ok(x) => {
                 info!("vcx_connection_update_state_cb(command_handle: {}, rc: {}, connection_handle: {}, state: {}), source_id: {:?}",
@@ -346,7 +345,7 @@ pub extern fn vcx_connection_update_state(command_handle: u32,
         cb(command_handle, rc, state);
 
         Ok(())
-    }));
+    });
 
     error::SUCCESS.code_num
 }
@@ -367,13 +366,13 @@ pub extern fn vcx_connection_get_state(command_handle: u32,
         return error::INVALID_CONNECTION_HANDLE.code_num;
     }
 
-    spawn(futures::lazy(move|| {
+    spawn(move|| {
         info!("vcx_connection_get_state_cb(command_handle: {}, rc: {}, connection_handle: {}, state: {}), source_id: {:?}",
               command_handle, error_string(0), connection_handle, get_state(connection_handle), source_id);
         cb(command_handle, error::SUCCESS.code_num, get_state(connection_handle));
 
         Ok(())
-    }));
+    });
 
     error::SUCCESS.code_num
 }
@@ -408,7 +407,7 @@ pub extern fn vcx_connection_invite_details(command_handle: u32,
         return error::INVALID_CONNECTION_HANDLE.code_num;
     }
 
-    spawn(futures::lazy(move|| {
+    spawn(move|| {
         match get_invite_details(connection_handle, abbreviated){
             Ok(str) => {
                 info!("vcx_connection_invite_details_cb(command_handle: {}, connection_handle: {}, rc: {}, details: {}), source_id: {:?}",
@@ -424,7 +423,7 @@ pub extern fn vcx_connection_invite_details(command_handle: u32,
         };
 
         Ok(())
-    }));
+    });
 
     error::SUCCESS.code_num
 }
@@ -461,11 +460,10 @@ mod tests {
     use utils::constants::GET_MESSAGES_RESPONSE;
     use utils::libindy::return_types_u32;
     use utils::error::SUCCESS;
-    use settings::tests::test_init;
 
     #[test]
     fn test_vcx_connection_create() {
-        test_init("true");
+        init!("true");
         let cb = return_types_u32::Return_U32_U32::new().unwrap();
         let rc = vcx_connection_create(cb.command_handle,
                                        CString::new("test_create").unwrap().into_raw(),
@@ -476,7 +474,7 @@ mod tests {
 
     #[test]
     fn test_vcx_connection_create_fails() {
-        test_init("true");
+        init!("true");
         let rc = vcx_connection_create(0,
                                        CString::new("test_create_fails").unwrap().into_raw(),
                                        None);
@@ -490,7 +488,7 @@ mod tests {
 
     #[test]
     fn test_vcx_connection_connect() {
-        test_init("true");
+        init!("true");
         let cb = return_types_u32::Return_U32_STR::new().unwrap();
         let rc = vcx_connection_connect(cb.command_handle, 0, CString::new("{}").unwrap().into_raw(),Some(cb.get_callback()));
         assert_eq!(rc, error::INVALID_CONNECTION_HANDLE.code_num);
@@ -505,7 +503,7 @@ mod tests {
 
     #[test]
     fn test_vcx_connection_update_state() {
-        test_init("true");
+        init!("true");
         let handle = build_connection("test_vcx_connection_update_state").unwrap();
         assert!(handle > 0);
         let cb = return_types_u32::Return_U32_U32::new().unwrap();
@@ -517,14 +515,14 @@ mod tests {
 
     #[test]
     fn test_vcx_connection_update_state_fails() {
-        test_init("true");
+        init!("true");
         let rc = vcx_connection_update_state(0,0,None);
         assert_eq!(rc, error::INVALID_OPTION.code_num);
     }
 
     #[test]
     fn test_vcx_connection_serialize() {
-        test_init("true");
+        init!("true");
         let handle = build_connection("test_vcx_connection_get_data").unwrap();
         assert!(handle > 0);
 
@@ -538,7 +536,7 @@ mod tests {
 
     #[test]
     fn test_vcx_connection_release() {
-        test_init("true");
+        init!("true");
         let handle = build_connection("test_vcx_connection_release").unwrap();
         assert!(handle > 0);
 
@@ -551,7 +549,7 @@ mod tests {
 
     #[test]
     fn test_vcx_connection_deserialize_succeeds() {
-        test_init("true");
+        init!("true");
         let string = ::utils::constants::DEFAULT_CONNECTION;
         let cb = return_types_u32::Return_U32_U32::new().unwrap();
         let err = vcx_connection_deserialize(cb.command_handle,
@@ -564,7 +562,7 @@ mod tests {
 
     #[test]
     fn test_vcx_connection_get_state() {
-        test_init("true");
+        init!("true");
         let handle = build_connection("test_vcx_connection_get_state").unwrap();
         assert!(handle > 0);
         let cb = return_types_u32::Return_U32_U32::new().unwrap();
@@ -579,7 +577,7 @@ mod tests {
 
     #[test]
     fn test_vcx_connection_delete_connection() {
-        test_init("true");
+        init!("true");
         let test_name = "test_vcx_connection_delete_connection";
         let connection_handle = build_connection(test_name).unwrap();
         let command_handle = 0;
