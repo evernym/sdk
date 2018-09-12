@@ -185,7 +185,7 @@ mod tests {
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE, "false");
         settings::set_config_value(settings::CONFIG_WALLET_KEY, settings::DEFAULT_WALLET_KEY);
         delete_indy_client();
-        create_genesis_txn_file("local");
+        create_genesis_txn_file("127.0.0.1");
         let vcx_config = provision_agent().unwrap();
         init_vcx(&vcx_config).unwrap();
         vcx_shutdown(false);
@@ -200,7 +200,7 @@ mod tests {
     fn test_token_balance() {
         use vcx::api::vcx::vcx_mint_tokens;
         delete_indy_client();
-        create_genesis_txn_file("local");
+        create_genesis_txn_file("127.0.0.1");
         let vcx_config = provision_agent().unwrap();
         init_vcx(&vcx_config).unwrap();
         vcx_mint_tokens(ptr::null_mut(),ptr::null_mut());
