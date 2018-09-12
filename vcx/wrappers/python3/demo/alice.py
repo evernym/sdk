@@ -34,11 +34,6 @@ async def main():
     print("#8 Initialize libvcx with new configuration")
     await vcx_init_with_config(json.dumps(config))
 
-    # For testing, mint tokens
-    mint_tokens()
-    info = await Wallet.get_token_info(0)
-    print(info)
-
     print("#9 Input faber.py invitation details")
     details = input('invite details: ')
 

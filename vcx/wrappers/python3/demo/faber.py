@@ -43,11 +43,6 @@ async def main():
     print("#2 Initialize libvcx with new configuration")
     await vcx_init_with_config(json.dumps(config))
 
-    # For testing, mint tokens (set fees, etc)
-    mint_tokens()
-    info = await Wallet.get_token_info(0)
-    print(info)
-
     print("#3 Create a new schema on the ledger")
     version = format("%d.%d.%d" % (random.randint(1,101),random.randint(1,101),random.randint(1,101)))
     schema = await Schema.create('schema_uuid','degree schema',version,['name','date','degree'],0)
@@ -80,7 +75,7 @@ async def main():
     }
 
     print("#12 Create an IssuerCredential object using the schema and credential definition")
-    credential = await IssuerCredential.create('alice_degree',schema_attrs,cred_def_id,'cred',1)
+    credential = await IssuerCredential.create('alice_degree',schema_attrs,cred_def_id,'cred',0)
 
     print("#13 Issue credential offer to alice")
     await credential.send_offer(connection_to_alice)
