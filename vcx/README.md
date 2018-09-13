@@ -1,8 +1,8 @@
 # VCX
 ## Linux
 1) Install rust and rustup (https://www.rust-lang.org/install.html).
-2) Install libindy_1.6.5 (https://repo.sovrin.org/sdk/deb/pool/xenial/stable/libi/libindy/)
-2) Install libnullpay_1.6.5 (https://repo.sovrin.org/sdk/deb/pool/xenial/stable/libn/libnullpay/)
+2) Install libindy_1.6.6 (https://repo.sovrin.org/sdk/deb/pool/xenial/stable/libi/libindy/)
+2) Install libnullpay_1.6.6 (https://repo.sovrin.org/sdk/deb/pool/xenial/stable/libn/libnullpay/)
 3) Clone this repo to your local machine.
 4) From the sdk/vcx/libvcx folder inside this local repository run the following commands to verify everything works:
     ```
