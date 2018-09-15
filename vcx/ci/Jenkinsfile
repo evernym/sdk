@@ -3,8 +3,6 @@
 def rust
 def vcx_python
 def libindy
-def libvcx
-def vcx_nodejs
 
 // ******** Artifacts Created ********
 // libvcx_<ver>.deb (Debian Installable Library) ----> published Debian to https://repo.corp.evernym.com/deb/pool/main/libv/libvcx/
@@ -17,13 +15,11 @@ def vcx_nodejs
 testing()
 
 def testing() {
-    stage('Testing') {
-        parallel([
-            'Xenial' : { mainUbuntu() },
-            'Android': { android() },
-            'iOS' : { ios() }
-        ])
-    }
+    parallel([
+        'Xenial' : { mainUbuntu() },
+        'Android': { android() }
+        // 'iOS' : { ios() }
+    ])
 }
 
 def getUserUid() {
@@ -47,10 +43,10 @@ def mainUbuntu() {
     node('ubuntu') {
 
         checkout scm
-
-        def volumeInternalDir = "/sdk/vcx/output"
-        def revNumber = getRevNumber()
-        def volumeName = "vcx-volume1-${revNumber}"
+        sh 'ls -al'
+        sh 'echo #####################'
+        sh 'pwd'
+        sh 'echo #####################'
         def libindyDockerfile = 'vcx/ci/libindy.dockerfile'
         def libvcxDockerfile = 'vcx/ci/libvcx.dockerfile'
         def pythonDockerfile = 'vcx/wrappers/python3/ci/python.dockerfile'
@@ -66,7 +62,7 @@ def mainUbuntu() {
                 // ******** Build the libindy base image (pulls down dependent debians from sovrin repo, and installs a majority of the dependencies)
                 libindy = docker.build("libindy", "-f ${libindyDockerfile} .")
             }
-            sh 'mkdir output'
+            sh 'mkdir -p output'
             stage('Build Libvcx Image, Tests Rust Code') {
 
                 libvcx = docker.build("libvcx", "--build-arg uid=${uid} -f ${libvcxDockerfile} .")
