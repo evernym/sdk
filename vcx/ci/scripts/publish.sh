@@ -1,9 +1,9 @@
 #!/bin/bash
 
-if [ $# -ne 2 ]; then
-    echo "USAGE: $0 CREDENTIALS FILE URL"
-    exit 1
-fi
+# if [ $# -ne 2 ]; then
+#     echo "USAGE: $0 CREDENTIALS FILE URL"
+#     exit 1
+# fi
 
 CREDENTIALS=$KRAKEN_CREDENTIALS
 FILENAME=$1
