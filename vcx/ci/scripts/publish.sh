@@ -8,16 +8,22 @@ fi
 CREDENTIALS=$KRAKEN_CREDENTIALS
 FILENAME=$1
 URL=$2
-LOOKUP_DIR="output"
+LOOKUP_DIR=$3
+
+if [ ! -z "$LOOKUP_DIR" ]; then
+    LOOKUP_DIR="./output"
+fi
+
 
 echo "Filename: ${FILENAME}"
 echo "TYPE: ${TYPE}"
 echo "URL: $URL"
+echo "LOOKUP_DIR: $LOOKUP_DIR"
 
 echo 'info:'
 pwd
 ls -al
 echo 'end info'
 
-find "./output" -type f -name ${FILENAME} -exec curl -u $CREDENTIALS -X POST $URL -F 'file=@{}' \;
+find $LOOKUP_DIR -type f -name ${FILENAME} -exec curl -u $CREDENTIALS -X POST $URL -F 'file=@{}' \;
 
