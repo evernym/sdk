@@ -27,7 +27,7 @@ IFS="$bkpIFS"
 cd $VCX_SDK/vcx/wrappers/ios/vcx
 #mv lib/libvcx.a lib/libvcx.a.original
 cp -v lib/${COMBINED_LIB}.a lib/libvcx.a
-xcodebuild -project vcx.xcodeproj -scheme vcx -configuration Debug CONFIGURATION_BUILD_DIR=. clean
+xcodebuild -project vcx.xcodeproj -scheme vcx -configuration Debug CONFIGURATION_BUILD_DIR=. clean test | xcpretty
 
 rm -rf vcx.framework.previousbuild
 IPHONE_SDK=iphoneos

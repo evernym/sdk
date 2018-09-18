@@ -29,7 +29,7 @@
     // Use XCTAssert and related functions to verify your tests produce the correct results.
 }
 
-- (void)testRootTestWorking {
+- (void)testRootWorks {
     NSString *testString = @"root vcxTest";
     XCTAssert([testString length] != 0);
 }
