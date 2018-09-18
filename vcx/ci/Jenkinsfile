@@ -170,7 +170,7 @@ def android() {
             try {
                 def uid= sh(returnStdout: true, script: 'id -u').trim()
                 checkout scm
-                android = docker.build("android", "--build-arg uid=${uid} -f 'vcx/wrappers/java/ci/android.dockerfile' .")
+                android = docker.build("android", "--build-arg uid=${uid} -f vcx/wrappers/java/ci/android.dockerfile .")
                 stage('Android Packaging') {
                     //Package .so files into .aar
                     packageAndroid(android)
@@ -240,7 +240,7 @@ def buildAndroid(arch) {
         try {
             def uid= sh(returnStdout: true, script: 'id -u').trim()
             checkout scm
-            android =  docker.build("android", "--build-arg uid=${uid} -f 'vcx/wrappers/java/ci/android.dockerfile' .")
+            android =  docker.build("android", "--build-arg uid=${uid} -f vcx/wrappers/java/ci/android.dockerfile .")
 
             android.inside {
                 ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
