@@ -94,36 +94,17 @@ pub fn connect_register_provision(endpoint: &str,
         Err(_) => (),  // If MS is already in wallet then just continue
     };
 
-    let seed = match seed {
-        Some(x) => x,
-        None => "".to_string(),
-    };
-
-    let name = match name {
-        Some(x) => x,
-        None => "<CHANGE_ME>".to_string(),
-    };
-
-    let logo = match logo {
-        Some(x) => x,
-        None => "<CHANGE_ME>".to_string(),
-    };
-
-    let path = match path {
-        Some(x) => x,
-        None => "<CHANGE_ME>".to_string(),
-    };
+    let seed = seed.unwrap_or("".to_string());
+    let name = name.unwrap_or("<CHANGE_ME>".to_string());
+    let logo = logo.unwrap_or("<CHANGE_ME>".to_string());
+    let path = path.unwrap_or("<CHANGE_ME>".to_string());
 
     let seed_opt = if seed.len() > 0 {Some(seed.as_ref())} else {None};
-    let (my_did, my_vk) = create_and_store_my_did(wallet::get_wallet_handle(), seed_opt)?;
+    let (my_did, my_vk) = create_and_store_my_did(seed_opt)?;
 
-    let issuer_seed = match issuer_seed {
-        Some(x) => x,
-        None => "".to_string(),
-    };
-
+    let issuer_seed = issuer_seed.unwrap_or("".to_string());
     let issuer_seed_opt = if issuer_seed.len() > 0 {Some(issuer_seed.as_ref())} else {None};
-    let (issuer_did, issuer_vk) = create_and_store_my_did(wallet::get_wallet_handle(), issuer_seed_opt)?;
+    let (issuer_did, issuer_vk) = create_and_store_my_did(issuer_seed_opt)?;
 
     settings::set_config_value(settings::CONFIG_INSTITUTION_DID,&my_did);
     settings::set_config_value(settings::CONFIG_SDK_TO_REMOTE_VERKEY,&my_vk);
@@ -142,13 +123,17 @@ pub fn connect_register_provision(endpoint: &str,
         from_did: my_did.to_string(),
         from_vk: my_vk.to_string(),
     };
-    let data = Bundled::create(encode::to_vec_named(&payload).unwrap()).encode()?;
+    let data = Bundled::create(
+        encode::to_vec_named(&payload).or(Err(error::UNKNOWN_ERROR.code_num))?
+    ).encode()?;
     let data = bundle_for_agency(data, &agency_did)?;
-    let data = unbundle_from_agency(httpclient::post_u8(&data).map_err(|e|error::INVALID_HTTP_RESPONSE.code_num).unwrap())?;
+    let data = unbundle_from_agency(
+        httpclient::post_u8(&data).map_err(|e|error::INVALID_HTTP_RESPONSE.code_num)?
+    )?;
 
     trace!("deserializing connect response: {:?}", data);
     let mut de = Deserializer::new(&data[0][..]);
-    let response: ConnectResponseMsg = Deserialize::deserialize(&mut de).map_err(|ec| {error::INVALID_OPTION.code_num}).unwrap();
+    let response: ConnectResponseMsg = Deserialize::deserialize(&mut de).map_err(|ec| {error::INVALID_OPTION.code_num})?;
     //self.my_vk = Some(connection::get_pw_verkey(connection_handle).map_err(|ec| CredentialError::CommonError(ec.to_error_code()))?);
     let agency_pw_vk = response.from_vk.to_owned();
     let agency_pw_did = response.from_did.to_owned();
@@ -161,28 +146,39 @@ pub fn connect_register_provision(endpoint: &str,
         msg_type: MsgType { name: "SIGNUP".to_string(), ver: "1.0".to_string(), },
     };
 
-    let data = encode::to_vec_named(&payload).unwrap();
-    let data = Bundled::create(data).encode().unwrap();
+    let data = encode::to_vec_named(&payload)
+        .or(Err(error::UNKNOWN_ERROR.code_num))?;
+    let data = Bundled::create(data)
+        .encode()
+        .or(Err(error::UNKNOWN_ERROR.code_num))?;
     let data = bundle_for_agency(data, &agency_pw_did)?;
-    let data = unbundle_from_agency(httpclient::post_u8(&data).map_err(|e|error::INVALID_HTTP_RESPONSE.code_num).unwrap())?;
+    let data = unbundle_from_agency(
+        httpclient::post_u8(&data).map_err(|e|error::INVALID_HTTP_RESPONSE.code_num)?
+    )?;
 
     trace!("deserializing register response: {:?}", data);
     let mut de = Deserializer::new(&data[0][..]);
-    let response: RegisterResponse = Deserialize::deserialize(&mut de).map_err(|e|error::INVALID_HTTP_RESPONSE.code_num).unwrap();
+    let response: RegisterResponse = Deserialize::deserialize(&mut de)
+        .map_err(|e|error::INVALID_HTTP_RESPONSE.code_num)?;
 
     /* STEP 3 - CREATE AGENT */
     let payload = GenericMsg {
         msg_type: MsgType { name: "CREATE_AGENT".to_string(), ver: "1.0".to_string(), },
     };
 
-    let data = encode::to_vec_named(&payload).unwrap();
-    let data = Bundled::create(data).encode().unwrap();
+    let data = encode::to_vec_named(&payload)
+        .or(Err(error::UNKNOWN_ERROR.code_num))?;
+    let data = Bundled::create(data).encode()
+        .or(Err(error::UNKNOWN_ERROR.code_num))?;
     let data = bundle_for_agency(data, &agency_pw_did)?;
-    let data = unbundle_from_agency(httpclient::post_u8(&data).map_err(|e|error::INVALID_HTTP_RESPONSE.code_num).unwrap())?;
+    let data = unbundle_from_agency(
+        httpclient::post_u8(&data).map_err(|e|error::INVALID_HTTP_RESPONSE.code_num)?
+    )?;
 
     trace!("deserializing provision response: {:?}", data);
     let mut de = Deserializer::new(&data[0][..]);
-    let response: ConnectResponseMsg = Deserialize::deserialize(&mut de).map_err(|e|error::INVALID_HTTP_RESPONSE.code_num).unwrap();
+    let response: ConnectResponseMsg = Deserialize::deserialize(&mut de)
+        .map_err(|e|error::INVALID_HTTP_RESPONSE.code_num)?;
     let agent_did = response.from_did;
     let agent_vk = response.from_vk;
 
@@ -235,10 +231,17 @@ pub fn update_agent_info(id: &str, value: &str) -> Result<(), u32> {
     let to_did = settings::get_config_value(settings::CONFIG_REMOTE_TO_SDK_DID)?;
     let endpoint = settings::get_config_value(settings::CONFIG_AGENCY_ENDPOINT)?;
 
-    let data = encode::to_vec_named(&new_config).unwrap();
-    let data = Bundled::create(data).encode().unwrap();
+    let data = encode::to_vec_named(&new_config)
+        .or(Err(error::UNKNOWN_ERROR.code_num))?;
+
+    let data = Bundled::create(data).encode()
+        .or(Err(error::UNKNOWN_ERROR.code_num))?;
+
     let data = bundle_for_agency(data, &to_did)?;
-    let data = unbundle_from_agency(httpclient::post_u8(&data).map_err(|e|error::INVALID_HTTP_RESPONSE.code_num).unwrap())?;
+
+    let data = unbundle_from_agency(
+        httpclient::post_u8(&data) .map_err(|e|error::INVALID_HTTP_RESPONSE.code_num)?
+    )?;
 
     Ok(())
 }
@@ -251,8 +254,7 @@ mod tests {
 
     #[test]
     fn test_connect_register_provision() {
-        settings::set_defaults();
-        settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
+        init!("true");
 
         let agency_did = "Ab8TvZa3Q19VNkQVzAWVL7";
         let agency_vk = "5LXaR43B1aQyeh94VBP8LG1Sgvjk7aNfqiksBCSjwqbf";
@@ -270,37 +272,35 @@ mod tests {
                                                 None,
                                                 None).unwrap();
         assert!(result.len() > 0);
-        wallet::delete_wallet("test_connect_register_provision").unwrap();
     }
 
     #[ignore]
     #[test]
     fn test_real_connect_register_provision() {
-        let config_path = "/tmp/test_real_agency_connect.json";
+        settings::set_defaults();
 
+        let config_path = "/tmp/test_real_agency_connect.json";
         let agency_did = "YRuVCckY6vfZfX9kcQZe3u";
         let agency_vk = "J8Yct6FwmarXjrE2khZesUXRVVSVczSoa9sFaGe6AD2v";
         let host = "https://enym-eagency.pdev.evernym.com";
-        let wallet_name = "test_real_connect_register_provision";
 
         let result = connect_register_provision(&host,
                                                 &agency_did,
                                                 &agency_vk,
-                                                Some(wallet_name.to_string()),
+                                                None,
                                                 None,
                                                 Some(DEMO_ISSUER_PW_SEED.to_string()),
-                                                "key",
+                                                settings::DEFAULT_WALLET_KEY,
                                                 None,
                                                 None,
                                                 None).unwrap();
         assert!(result.len() > 0);
         println!("result: {}", result);
-
-        wallet::delete_wallet(&wallet_name).unwrap();
     }
 
     #[test]
     fn test_update_agent_info() {
+        init!("true");
         settings::set_defaults();
         settings::set_config_value(settings::CONFIG_ENABLE_TEST_MODE,"true");
 

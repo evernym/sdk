@@ -56,29 +56,25 @@ mod tests {
     use rand::Rng;
     use std::thread;
     use std::time::Duration;
-    use ::utils::devsetup::tests::{set_institution, set_consumer, cleanup_dev_env, cleanup_local_env};
+    use ::utils::devsetup::tests::{set_institution, set_consumer};
 
     #[cfg(feature = "agency")]
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_delete_connection() {
-        let test_name = "test_delete_connection";
-        settings::set_defaults();
-        ::utils::devsetup::tests::setup_local_env(test_name);
+        init!("agency");
         let alice = connection::build_connection("alice").unwrap();
         connection::delete_connection(alice).unwrap();
         assert!(connection::release(alice).is_err());
-        cleanup_local_env(test_name);
+        teardown!("agency");
     }
 
     #[cfg(feature = "agency")]
     #[cfg(feature = "pool_tests")]
+    #[cfg(feature = "sovtoken")]
     #[test]
     fn test_real_proof() {
-        use ::utils::devsetup::tests::setup_local_env;
-        settings::set_defaults();
-        let wallet_name = "test_real_proof";
-	    setup_local_env(wallet_name);
+        init!("agency");
         let institution_did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
         let (faber, alice) = ::connection::tests::create_connected_connections();
         // AS INSTITUTION SEND CREDENTIAL OFFER
@@ -96,7 +92,7 @@ mod tests {
         thread::sleep(Duration::from_millis(2000));
         // AS CONSUMER SEND CREDENTIAL REQUEST
         set_consumer();
-        let credential_offers = credential::get_credential_offer_messages(faber, None).unwrap();
+        let credential_offers = credential::get_credential_offer_messages(faber).unwrap();
         let offers: Value = serde_json::from_str(&credential_offers).unwrap();
         let offers = serde_json::to_string(&offers[0]).unwrap();
         let credential = credential::credential_create_with_offer("TEST_CREDENTIAL", &offers).unwrap();
@@ -177,12 +173,11 @@ mod tests {
         println!("sending proof request");
         proof::send_proof_request(proof_req_handle, alice).unwrap();
         thread::sleep(Duration::from_millis(2000));
-        // AS CONSUMER SEND PROOF
         set_consumer();
         let requests = disclosed_proof::get_proof_request_messages(faber, None).unwrap();
         let requests: Value = serde_json::from_str(&requests).unwrap();
         let requests = serde_json::to_string(&requests[0]).unwrap();
-        let proof_handle = disclosed_proof::create_proof(::utils::constants::DEFAULT_PROOF_NAME.to_string(), requests).unwrap();
+        let proof_handle = disclosed_proof::create_proof(::utils::constants::DEFAULT_PROOF_NAME, &requests).unwrap();
         println!("retrieving matching credentials");
         let retrieved_credentials = disclosed_proof::retrieve_credentials(proof_handle).unwrap();
         let matching_credentials: Value = serde_json::from_str(&retrieved_credentials).unwrap();
@@ -208,6 +203,7 @@ mod tests {
         assert_eq!(proof::get_proof_state(proof_req_handle).unwrap(), ProofStateType::ProofValidated as u32);
         println!("proof validated!");
         let wallet = ::utils::libindy::payments::get_wallet_token_info().unwrap();
-        cleanup_local_env(wallet_name);
+        teardown!("agency");
     }
+
 }

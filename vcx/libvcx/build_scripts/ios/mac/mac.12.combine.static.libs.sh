@@ -114,6 +114,24 @@ do
 
     # Delete intermediate files
     #rm ${source_libraries}
+
+    # TEMPORARY HACK (build libvcx without duplicate .o object files):
+    # There are duplicate .o object files inside the libvcx.a file and these
+    # lines of logic remove those duplicate .o object files
+    rm -rf ${BUILD_CACHE}/arch_libs/tmpobjs
+    mkdir ${BUILD_CACHE}/arch_libs/tmpobjs
+    pushd ${BUILD_CACHE}/arch_libs/tmpobjs
+        ar -x ../${COMBINED_LIB}_${arch}.a
+        ls > ../objfiles
+        xargs ar cr ../${COMBINED_LIB}_${arch}.a.new < ../objfiles
+        if [ "$DEBUG_SYMBOLS" = "nodebug" ]; then
+            strip -S -x -o ../${COMBINED_LIB}_${arch}.a.stripped -r ../${COMBINED_LIB}_${arch}.a.new
+            mv ../${COMBINED_LIB}_${arch}.a.stripped ../${COMBINED_LIB}_${arch}.a
+        else
+            mv ../${COMBINED_LIB}_${arch}.a.new ../${COMBINED_LIB}_${arch}.a
+        fi
+    popd
+
 done
 
 echo "Using source_combined: ${source_combined} to create ${COMBINED_LIB}.a"

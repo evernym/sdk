@@ -65,13 +65,7 @@ pub fn delete(pool_name: &str) -> Result<(), u32> {
 }
 
 pub fn get_pool_handle() -> Result<i32, u32> {
-    let h = POOL_HANDLE.read().unwrap();
-    if h.is_none() {
-        Err(error::NO_POOL_OPEN.code_num)
-    }
-    else {
-        Ok(h.unwrap())
-    }
+    Ok(POOL_HANDLE.read().or(Err(error::NO_POOL_OPEN.code_num))?.ok_or(error::NO_POOL_OPEN.code_num)?)
 }
 
 #[cfg(test)]
@@ -115,9 +109,7 @@ pub mod tests {
     #[test]
     fn test_open_close_pool() {
         use super::*;
-        let wallet_name = "test_open_close_pool";
-        ::utils::devsetup::tests::setup_ledger_env(wallet_name);
+        init!("ledger");
         assert!(get_pool_handle().unwrap() > 0);
-        ::utils::devsetup::tests::cleanup_dev_env(wallet_name);
     }
 }

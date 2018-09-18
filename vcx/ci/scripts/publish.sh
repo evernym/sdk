@@ -1,13 +1,13 @@
 #!/bin/bash
 
-if [ $# -ne 3 ]; then
+if [ $# -ne 2 ]; then
     echo "USAGE: $0 CREDENTIALS FILE URL"
     exit 1
 fi
 
-CREDENTIALS=$1
-FILENAME=$2
-URL=$3
+CREDENTIALS=$KRAKEN_CREDENTIALS
+FILENAME=$1
+URL=$2
 LOOKUP_DIR="output"
 
 echo "Filename: ${FILENAME}"
