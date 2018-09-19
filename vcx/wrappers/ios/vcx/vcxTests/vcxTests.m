@@ -31,7 +31,7 @@
 
 - (void)testRoot {
     NSString *testString = @"root vcxTest";
-    XCTAssert([testString length] != 0);
+    XCTAssert([testString length] != 0, "ROOT TEST");
 }
 
 - (void)testPerformanceExample {
