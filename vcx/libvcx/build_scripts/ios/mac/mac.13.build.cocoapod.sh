@@ -29,7 +29,10 @@ cd $VCX_SDK/vcx/wrappers/ios/vcx
 cp -v lib/${COMBINED_LIB}.a lib/libvcx.a
 
 xcodebuild -project vcx.xcodeproj -scheme vcx -configuration Debug CONFIGURATION_BUILD_DIR=. clean
+
+if [ "${COMBINED_LIB}" = "libvcxall" ]; then
 xcodebuild test -project vcx.xcodeproj -scheme vcxTests -destination 'platform=iOS Simulator,name=iPhone 8,OS=11.2' -configuration Debug CONFIGURATION_BUILD_DIR=. clean
+fi
 
 rm -rf vcx.framework.previousbuild
 IPHONE_SDK=iphoneos
