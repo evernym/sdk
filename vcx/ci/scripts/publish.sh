@@ -12,6 +12,16 @@ echo "Filename: ${FILENAME}"
 echo "TYPE: ${TYPE}"
 echo "URL: $URL"
 echo "LOOKUP_DIR: $LOOKUP_DIR"
+echo "KRAKEN_CREDENTIALS:"
+echo "========"
+echo $KRAKEN_CREDENTIALS
+echo "========"
+echo "$KRAKEN_CREDENTIALS"
+echo "========"
+echo ${KRAKEN_CREDENTIALS}
+echo "========"
+echo '$KRAKEN_CREDENTIALS'
+echo "========"
 
 echo 'info:'
 pwd
