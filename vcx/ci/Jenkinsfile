@@ -89,7 +89,7 @@ def mainUbuntu() {
             stage('Test Java Wrapper'){
                 java = docker.build("java", "--build-arg uid=${uid} -f ${javaDockerfile} .")
                 java.inside() {
-                    sh 'cd vcx/wrappers/java && ./gradlew test'
+                    sh 'cd vcx/wrappers/java && ./gradlew --no-daemon test'
                 }
             }
             stage('Package Node Wrapper') {
