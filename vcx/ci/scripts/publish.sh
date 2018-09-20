@@ -18,5 +18,5 @@ pwd
 ls -al
 echo 'end info'
 
-find "./output" -type f -name ${FILENAME} -exec curl -u \"${KRAKEN_CREDENTIALS}\" -X POST $URL -F 'file=@{}' \;
+find "./output" -type f -name \"${FILENAME}\" -exec curl -u \"${KRAKEN_CREDENTIALS}\" -X POST $URL -F 'file=@{}' \;
 
