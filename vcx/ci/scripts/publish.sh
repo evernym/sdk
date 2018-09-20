@@ -5,7 +5,6 @@ if [ $# -ne 2 ]; then
     exit 1
 fi
 
-CREDENTIALS=$KRAKEN_CREDENTIALS
 FILENAME=$1
 URL=$2
 
@@ -18,5 +17,5 @@ pwd
 ls -al
 echo 'end info'
 
-find "./output" -type f -name ${FILENAME} -exec curl -u $CREDENTIALS -X POST $URL -F 'file=@{}' \;
+find "./output" -type f -name ${FILENAME} -exec curl -u \"${KRAKEN_CREDENTIALS}\" -X POST $URL -F 'file=@{}' \;
 
