@@ -1,9 +1,9 @@
 #!/bin/bash
 
-if [ $# -ne 2 ]; then
-    echo "USAGE: $0 CREDENTIALS FILE URL"
-    exit 1
-fi
+# if [ $# -ne 2 ]; then
+#     echo "USAGE: $0 CREDENTIALS FILE URL"
+#     exit 1
+# fi
 
 FILENAME=$1
 URL=$2
@@ -11,6 +11,7 @@ URL=$2
 echo "Filename: ${FILENAME}"
 echo "TYPE: ${TYPE}"
 echo "URL: $URL"
+echo "LOOKUP_DIR: $LOOKUP_DIR"
 
 echo 'info:'
 pwd
