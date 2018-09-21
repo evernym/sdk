@@ -111,7 +111,7 @@ get_libsovtoken() {
     set -xv
     # Todo: This artifact was manually uploaded to this repo. Eventually, the file format will change. That is why it is hardcoded
     if [ -z ${LIBSOVTOKEN_DIR} ]; then
-        LIBSOVTOKEN_ZIP=libsovtoken_0.9.3-201809211716-2d02370_all.zip
+        LIBSOVTOKEN_ZIP=libsovtoken_0.9.3-201809211729-2d02370_all.zip
         if [ ! -d "libsovtoken" ]; then
             echo "retrieving libsovtoken prebuilt library"
             wget ${SOVRIN_REPO}/${LIBSOVTOKEN_ZIP}
