@@ -45,7 +45,7 @@ def mainUbuntu() {
     node('ubuntu') {
 
         checkout scm
-
+        def libindyDockerfile = 'vcx/ci/libindy.dockerfile'
         try {
             stage('Echoing') {
                 libindy = docker.build("libindy", "-f ${libindyDockerfile} .")
