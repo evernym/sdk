@@ -1,7 +1,9 @@
 #!/bin/bash
+set -e
 
 FILENAME=$1
 URL=$2
+LOOKUP_DIR='./output'
 
 echo "Filename: ${FILENAME}"
 echo "TYPE: ${TYPE}"
@@ -19,5 +21,5 @@ echo '${env.KRAKEN_CREDENTIALS}'
 echo "========="
 echo 'end info'
 
-find ${env.LOOKUP_DIR} -type f -name ${FILENAME} -exec curl -u ${env.KRAKEN_CREDENTIALS} -X POST $URL -F 'file=@{}' \;
+find ${LOOKUP_DIR} -type f -name ${FILENAME} -exec curl -u ${env.KRAKEN_CREDENTIALS} -X POST $URL -F 'file=@{}' \;
 
