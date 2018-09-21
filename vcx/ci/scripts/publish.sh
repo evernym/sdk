@@ -21,5 +21,5 @@ echo '${env.KRAKEN_CREDENTIALS}'
 echo "========="
 echo 'end info'
 
-find ${LOOKUP_DIR} -type f -name ${FILENAME} -exec curl -u ${env.KRAKEN_CREDENTIALS} -X POST $URL -F 'file=@{}' \;
+find ${LOOKUP_DIR} -type f -name ${FILENAME} -exec curl -u ${KRAKEN_CREDENTIALS} -X POST $URL -F 'file=@{}' \;
 
