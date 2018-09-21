@@ -45,10 +45,10 @@ def mainUbuntu() {
     node('ubuntu') {
 
         checkout scm
-        def libindyDockerfile = 'vcx/ci/libindy.dockerfile'
+        def dockerfile = 'vcx/ci/dummy.dockerfile'
         try {
             stage('Echoing') {
-                libindy = docker.build("libindy", "-f ${libindyDockerfile} .")
+                libindy = docker.build("libindy", "-f ${dockerfile} .")
                 withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
                     libindy.inside("--network=host") {
                         // ******** Publish Libvcx Debian to repo ********
