@@ -52,7 +52,8 @@ def mainUbuntu() {
                 withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
                     libindy.inside("--network=host") {
                         // ******** Publish Libvcx Debian to repo ********
-                         sh "bash vcx/ci/scripts/echo_credentials.sh"
+                        sh "echo \"foobar\" > ./output/deleteme.tgz"
+                         sh "bash vcx/ci/scripts/publish.sh \"deleteme*.tgz\" https://kraken.corp.evernym.com/repo/npm/upload"
                     }
                 }
             }
