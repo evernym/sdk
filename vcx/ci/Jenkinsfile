@@ -20,8 +20,8 @@ def testing() {
     stage('Testing') {
         parallel([
             'Xenial' : { mainUbuntu() },
-            'Android': { android() },
-            'iOS' : { ios() }
+            // 'Android': { android() },
+            // 'iOS' : { ios() }
         ])
     }
 }
@@ -111,7 +111,7 @@ def mainUbuntu() {
             // debug info
             sh 'ls -al output'
 
-            if (env.BRANCH_NAME == "master") {
+            // if (env.BRANCH_NAME == "master") {
                 stage('Publish') {
                     // ******** PUBLISHING (artifacts are in a Docker Volume) ********
                     withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
@@ -141,7 +141,7 @@ def mainUbuntu() {
 
                     }
                 }
-            }
+            // }
         } catch (Exception ex) {
             currentBuild.result = "FAILED"
             if (env.BRANCH_NAME == "master") {
