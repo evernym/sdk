@@ -13,11 +13,11 @@ echo 'info:'
 pwd
 ls -al
 echo "========="
-echo ${env.KRAKEN_CREDENTIALS}
+# echo ${env.KRAKEN_CREDENTIALS}
 echo "========="
-echo "${env.KRAKEN_CREDENTIALS}"
+# echo "${env.KRAKEN_CREDENTIALS}"
 echo "========="
-echo '${env.KRAKEN_CREDENTIALS}'
+# echo '${env.KRAKEN_CREDENTIALS}'
 echo "========="
 echo 'end info'
 
