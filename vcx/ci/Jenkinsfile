@@ -20,8 +20,8 @@ def testing() {
     stage('Testing') {
         parallel([
             'Xenial' : { mainUbuntu() },
-            'Android': { android() },
-            'iOS' : { ios() }
+            // 'Android': { android() },
+            // 'iOS' : { ios() }
         ])
     }
 }
@@ -111,11 +111,13 @@ def mainUbuntu() {
             // debug info
             sh 'ls -al output'
 
-            if (env.BRANCH_NAME == "master") {
+            // if (env.BRANCH_NAME == "master") {
                 stage('Publish') {
                     // ******** PUBLISHING (artifacts are in a Docker Volume) ********
                     withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
                         libvcx.inside("--network=host") {
+                            env.KRAKEN_CREDENTIALS = $KRAKEN_CREDENTIALS
+                            env.LOOKUP_DIR = './output'
                             // ******** Publish Libvcx Debian to repo ********
                             sh "vcx/ci/scripts/publish.sh \"libvcx*.deb\" https://kraken.corp.evernym.com/repo/portal_dev/upload"
                             sh "vcx/ci/scripts/publish.sh \"libvcx*.deb\" https://kraken.corp.evernym.com/repo/agency_dev/upload"
@@ -141,7 +143,7 @@ def mainUbuntu() {
 
                     }
                 }
-            }
+            // }
         } catch (Exception ex) {
             currentBuild.result = "FAILED"
             if (env.BRANCH_NAME == "master") {
