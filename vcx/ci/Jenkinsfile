@@ -48,7 +48,7 @@ def mainUbuntu() {
 
         try {
             stage('Echoing') {
-                ubuntu = docker.build("ubuntu:16-04", ".")
+                ubuntu = docker.build("ubuntu", ".")
                 withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
                     ubuntu.inside("--network=host") {
                         // ******** Publish Libvcx Debian to repo ********
