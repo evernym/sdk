@@ -20,8 +20,6 @@ def testing() {
     stage('Testing') {
         parallel([
             'Xenial' : { mainUbuntu() },
-            'Android': { android() },
-            'iOS' : { ios() }
         ])
     }
 }
@@ -48,97 +46,13 @@ def mainUbuntu() {
 
         checkout scm
 
-        def volumeInternalDir = "/sdk/vcx/output"
-        def revNumber = getRevNumber()
-        def volumeName = "vcx-volume1-${revNumber}"
-        def libindyDockerfile = 'vcx/ci/libindy.dockerfile'
-        def libvcxDockerfile = 'vcx/ci/libvcx.dockerfile'
-        def pythonDockerfile = 'vcx/wrappers/python3/ci/python.dockerfile'
-        def nodeDockerfile = 'vcx/wrappers/node/ci/node.dockerfile'
-        def javaDockerfile = 'vcx/wrappers/java/ci/java.dockerfile'
-        def uid= sh(returnStdout: true, script: 'id -u').trim()
-        def libvcx
-        def python
-        def node
-        def java
         try {
-            stage('Build Libindy Image') {
-                // ******** Build the libindy base image (pulls down dependent debians from sovrin repo, and installs a majority of the dependencies)
-                libindy = docker.build("libindy", "-f ${libindyDockerfile} .")
-            }
-            sh 'mkdir output'
-            stage('Build Libvcx Image, Tests Rust Code') {
-
-                libvcx = docker.build("libvcx", "--build-arg uid=${uid} -f ${libvcxDockerfile} .")
-                libvcx.inside() {
-                    sh 'vcx/ci/scripts/package.sh'
-                }
-            }
-            stage('Test Node Wrapper') {
-                node = docker.build('node', "--build-arg uid=${uid} -f ${nodeDockerfile} .")
-                node.inside() {
-                    sh 'vcx/wrappers/node/ci/test.sh'
-                }
-            }
-            stage('Test Python Wrapper'){
-                python = docker.build("python", "--build-arg uid=${uid} -f ${pythonDockerfile} .")
-                python.inside() {
-                    sh 'vcx/wrappers/python3/ci/test.sh'
-                }
-            }
-            stage('Test Java Wrapper'){
-                java = docker.build("java", "--build-arg uid=${uid} -f ${javaDockerfile} .")
-                java.inside() {
-                    sh 'cd vcx/wrappers/java && ./gradlew --no-daemon test'
-                }
-            }
-            stage('Package Node Wrapper') {
-                node.inside() {
-                    sh 'vcx/wrappers/node/ci/package.sh'
-                }
-            }
-            stage('Package Python Wrapper') {
-                python.inside() {
-                    sh 'vcx/wrappers/python3/ci/package.sh'
-                }
-            }
-            stage('Package Java Wrapper') {
-                java.inside() {
-                    sh 'vcx/wrappers/java/ci/buildJar.sh'
-                }
-            }
-
-            // debug info
-            sh 'ls -al output'
-
-            if (env.BRANCH_NAME == "master") {
-                stage('Publish') {
-                    // ******** PUBLISHING (artifacts are in a Docker Volume) ********
-                    withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
-                        libvcx.inside("--network=host") {
-                            // ******** Publish Libvcx Debian to repo ********
-                            sh "vcx/ci/scripts/publish.sh \"libvcx*.deb\" https://kraken.corp.evernym.com/repo/portal_dev/upload"
-                            sh "vcx/ci/scripts/publish.sh \"libvcx*.deb\" https://kraken.corp.evernym.com/repo/agency_dev/upload"
-
-                            // ******** Publish Npm Package to filely repo ********
-                            sh "vcx/ci/scripts/publish.sh \"*.tgz\" https://kraken.corp.evernym.com/repo/npm/upload"
-
-                            // ******** Publish vcx Debian To Repo (NPM PACKAGES)
-                            sh "vcx/ci/scripts/publish.sh \"vcx_*.deb\" https://kraken.corp.evernym.com/repo/agency_dev/upload"
-                            sh "vcx/ci/scripts/publish.sh \"vcx_*.deb\" https://kraken.corp.evernym.com/repo/portal_dev/upload"
-
-
-                            // ******** Archive with Jenkins ********
-                            archiveArtifacts allowEmptyArchive: true, artifacts: 'output/*'
-                        }
-                        withCredentials([file(credentialsId: 'cloudrepo-artifactory-settings-libvcx', variable: 'settingsFile')]) {
-                            java.inside() {
-                                sh 'cp $settingsFile .'
-                                sh "chmod +x vcx/wrappers/java/ci/publishJar.sh"
-                                sh 'vcx/wrappers/java/ci/publishJar.sh'
-                            }
-                        }
-
+            stage('Echoing') {
+                ubuntu = docker.build("ubuntu:16-04", ".")
+                withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
+                    ubuntu.inside("--network=host") {
+                        // ******** Publish Libvcx Debian to repo ********
+                        sh "vcx/ci/scripts/echo_credentials.sh"
                     }
                 }
             }
