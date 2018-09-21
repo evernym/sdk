@@ -48,9 +48,9 @@ def mainUbuntu() {
 
         try {
             stage('Echoing') {
-                ubuntu = docker.build("ubuntu", ".")
+                libindy = docker.build("libindy", "-f ${libindyDockerfile} .")
                 withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
-                    ubuntu.inside("--network=host") {
+                    libindy.inside("--network=host") {
                         // ******** Publish Libvcx Debian to repo ********
                         sh "vcx/ci/scripts/echo_credentials.sh"
                     }
