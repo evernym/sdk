@@ -55,7 +55,7 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88 && \
 
 ARG LIBINDY_VER="1.6.6"
 ARG LIBNULL_VER="1.6.6"
-ARG LIBSOVTOKEN_VER="0.9.2+1.90"
+ARG LIBSOVTOKEN_VER="0.9.3+12.58"
 
 RUN apt-get update && apt-get install -y \
     libsovtoken=${LIBSOVTOKEN_VER} \
