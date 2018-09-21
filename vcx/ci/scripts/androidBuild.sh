@@ -114,7 +114,7 @@ get_libsovtoken() {
         LIBSOVTOKEN_ZIP=libsovtoken_0.9.3-201809201729-7cf825d_all.zip
         if [ ! -d "libsovtoken" ]; then
             echo "retrieving libsovtoken prebuilt library"
-            wget ${EVERNYM_REPO}/${LIBSOVTOKEN_ZIP}
+            wget ${SOVRIN_REPO}/${LIBSOVTOKEN_ZIP}
             unzip ${LIBSOVTOKEN_ZIP}
         fi
         export LIBSOVTOKEN_DIR="${PWD}/libsovtoken/${TRIPLET}"
