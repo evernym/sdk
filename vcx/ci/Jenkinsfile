@@ -55,7 +55,7 @@ def mainUbuntu() {
         def libvcxDockerfile = 'vcx/ci/libvcx.dockerfile'
         def pythonDockerfile = 'vcx/wrappers/python3/ci/python.dockerfile'
         def nodeDockerfile = 'vcx/wrappers/node/ci/node.dockerfile'
-        def javaDockerfile = 'vcx/ci/android.dockerfile' // We can reuse the android dockerfile for java
+        def javaDockerfile = 'vcx/wrappers/java/ci/java.dockerfile'
         def uid= sh(returnStdout: true, script: 'id -u').trim()
         def libvcx
         def python
@@ -86,6 +86,12 @@ def mainUbuntu() {
                     sh 'vcx/wrappers/python3/ci/test.sh'
                 }
             }
+            stage('Test Java Wrapper'){
+                java = docker.build("java", "--build-arg uid=${uid} -f ${javaDockerfile} .")
+                java.inside() {
+                    sh 'cd vcx/wrappers/java && ./gradlew --no-daemon test'
+                }
+            }
             stage('Package Node Wrapper') {
                 node.inside() {
                     sh 'vcx/wrappers/node/ci/package.sh'
@@ -97,7 +103,6 @@ def mainUbuntu() {
                 }
             }
             stage('Package Java Wrapper') {
-                java = docker.build("java", "-f ${javaDockerfile} .")
                 java.inside() {
                     sh 'vcx/wrappers/java/ci/buildJar.sh'
                 }
@@ -163,8 +168,9 @@ def android() {
         }
         node('ubuntu') {
             try {
+                def uid= sh(returnStdout: true, script: 'id -u').trim()
                 checkout scm
-                android = build('android', 'vcx/ci/android.dockerfile', 'vcx')
+                android = docker.build("android", "--build-arg uid=${uid} -f vcx/wrappers/java/ci/android.dockerfile .")
                 stage('Android Packaging') {
                     //Package .so files into .aar
                     packageAndroid(android)
@@ -201,11 +207,12 @@ def ios() {
                 sh "source vcx/ci/scripts/iosBuild.sh"
 
                 // Publish to Kraken
-
                 if (env.BRANCH_NAME == "master") {
                     withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
                         sh "find /Users/jenkins/IOSBuilds/libvcxpartial/ -type f -name 'vcx.libvcxpartial_*_universal.zip' -exec curl -u \"${KRAKEN_CREDENTIALS}\" -X POST  https://kraken.corp.evernym.com/repo/ios/upload -F 'file=@{}' \\;"
                         sh "find /Users/jenkins/IOSBuilds/libvcxall/ -type f -name 'vcx.libvcxall_*_universal.zip' -exec curl -u \"${KRAKEN_CREDENTIALS}\" -X POST  https://kraken.corp.evernym.com/repo/ios/upload -F 'file=@{}' \\;"
+                        // sh "vcx/ci/scripts/publish.sh 'vcx.libvcxpartial_*_universal.zip' https://kraken.corp.evernym.com/repo/ios/upload /Users/jenkins/IOSBuilds/libvcxpartial/"
+                        // sh "vcx/ci/scripts/publish.sh 'vcx.libvcxall_*_universal.zip' https://kraken.corp.evernym.com/repo/ios/upload /Users/jenkins/IOSBuilds/libvcxall/"
                     }
                 }
             } catch (Exception ex) {
@@ -232,8 +239,9 @@ def fail() {
 def buildAndroid(arch) {
     node('ubuntu') {
         try {
+            def uid= sh(returnStdout: true, script: 'id -u').trim()
             checkout scm
-            android = build('android', 'vcx/ci/android.dockerfile', 'vcx')
+            android =  docker.build("android", "--build-arg uid=${uid} -f vcx/wrappers/java/ci/android.dockerfile .")
 
             android.inside {
                 ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
