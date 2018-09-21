@@ -116,7 +116,7 @@ def mainUbuntu() {
                     // ******** PUBLISHING (artifacts are in a Docker Volume) ********
                     withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
                         libvcx.inside("--network=host") {
-                            env.KRAKEN_CREDENTIALS = $KRAKEN_CREDENTIALS
+                            env.KRAKEN_CREDENTIALS = ${KRAKEN_CREDENTIALS}
                             env.LOOKUP_DIR = './output'
                             // ******** Publish Libvcx Debian to repo ********
                             sh "vcx/ci/scripts/publish.sh \"libvcx*.deb\" https://kraken.corp.evernym.com/repo/portal_dev/upload"
