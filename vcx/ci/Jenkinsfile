@@ -52,7 +52,7 @@ def mainUbuntu() {
                 withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
                     libindy.inside("--network=host") {
                         // ******** Publish Libvcx Debian to repo ********
-                        sh "vcx/ci/scripts/echo_credentials.sh"
+                         sh "bash vcx/ci/scripts/echo_credentials.sh"
                     }
                 }
             }
