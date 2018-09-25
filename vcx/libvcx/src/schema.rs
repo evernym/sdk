@@ -331,7 +331,6 @@ pub mod tests {
     use super::*;
     #[allow(unused_imports)]
     use rand::Rng;
-    use settings;
     use utils::error::INVALID_JSON;
 
     #[test]
@@ -411,6 +410,7 @@ pub mod tests {
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_create_schema_with_pool(){
+        use settings;
         init!("ledger");
         let data = r#"["address1","address2","zip","city","state"]"#.to_string();
         let schema_name: String = rand::thread_rng().gen_ascii_chars().take(25).collect::<String>();
@@ -429,6 +429,7 @@ pub mod tests {
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_create_schema_no_fees_with_pool(){
+        use settings;
         init!("ledger");
         ::utils::libindy::payments::mint_tokens_and_set_fees(Some(0),Some(0),Some(r#"{"101":0, "102":0}"#.to_string()), None).unwrap();
 
@@ -447,6 +448,7 @@ pub mod tests {
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_create_duplicate_fails(){
+        use settings;
         init!("ledger");
         let did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
 
@@ -464,6 +466,7 @@ pub mod tests {
     #[cfg(feature = "pool_tests")]
     #[test]
     fn from_pool_ledger_with_id(){
+        use settings;
         init!("ledger");
         let did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
         let (schema_id, schema_json) = ::utils::libindy::anoncreds::tests::create_and_write_test_schema(::utils::constants::DEFAULT_SCHEMA_ATTRS);

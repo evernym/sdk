@@ -202,7 +202,6 @@ pub mod tests {
     use std::time::Duration;
 
     pub fn create_schema(attr_list: &str) -> (String, String) {
-        use utils::constants::DEFAULT_SCHEMA_ATTRS_5;
         let data = DEFAULT_SCHEMA_ATTRS.to_string();
         let data = attr_list.to_string();
         let schema_name: String = rand::thread_rng().gen_ascii_chars().take(25).collect::<String>();

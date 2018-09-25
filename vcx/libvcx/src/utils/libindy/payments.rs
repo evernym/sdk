@@ -409,7 +409,6 @@ fn add_new_trustee_did() -> Result<(String, String), u32> {
 #[cfg(test)]
 pub mod tests {
     use super::*;
-    use utils::constants::PAYMENT_ADDRESS;
 
     pub fn token_setup(number_of_addresses: Option<u32>, tokens_per_address: Option<u64>) {
         init_payments().unwrap_or(());
@@ -583,6 +582,7 @@ pub mod tests {
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_build_payment_request() {
+        use utils::constants::PAYMENT_ADDRESS;
         ::utils::logger::LoggerUtils::init_test_logging("trace");
         init!("ledger");
         let price = get_my_balance();
@@ -606,6 +606,7 @@ pub mod tests {
     #[cfg(feature = "pool_tests")]
     #[test]
     fn test_fees_transferring_tokens() {
+        use utils::constants::PAYMENT_ADDRESS;
         init!("ledger");
 
         let initial_wallet_balance = 100000000000;
