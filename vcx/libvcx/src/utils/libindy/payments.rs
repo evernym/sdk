@@ -552,7 +552,7 @@ pub mod tests {
     #[test]
     fn test_pay_for_txn_real() {
         init!("ledger");
-        let (_, schema_json) = ::utils::libindy::anoncreds::tests::create_schema();
+        let (_, schema_json) = ::utils::libindy::anoncreds::tests::create_schema(::utils::constants::DEFAULT_SCHEMA_ATTRS);
         let create_schema_req = ::utils::libindy::anoncreds::tests::create_schema_req(&schema_json);
         let start_wallet = get_wallet_token_info().unwrap();
 
@@ -572,7 +572,7 @@ pub mod tests {
         init!("ledger");
         mint_tokens_and_set_fees(Some(0), Some(0), Some(r#"{"101":50000000001}"#.to_string()), None).unwrap();
 
-        let (_, schema_json) = ::utils::libindy::anoncreds::tests::create_schema();
+        let (_, schema_json) = ::utils::libindy::anoncreds::tests::create_schema(::utils::constants::DEFAULT_SCHEMA_ATTRS);
         let create_schema_req = ::utils::libindy::anoncreds::tests::create_schema_req(&schema_json);
 
         let rc= pay_for_txn(&create_schema_req, "101");
@@ -635,7 +635,7 @@ pub mod tests {
     fn test_submit_fees_with_insufficient_tokens_on_ledger() {
         init!("ledger");
 
-        let (_, schema_json) = ::utils::libindy::anoncreds::tests::create_schema();
+        let (_, schema_json) = ::utils::libindy::anoncreds::tests::create_schema(::utils::constants::DEFAULT_SCHEMA_ATTRS);
         let req = ::utils::libindy::anoncreds::tests::create_schema_req(&schema_json);
         let (remainder, inputs, refund_address) = inputs(2).unwrap();
         let output = outputs(remainder, &refund_address, None, None).unwrap();
@@ -700,7 +700,7 @@ pub mod tests {
         init!("ledger");
         let fees = get_ledger_fees().unwrap();
         println!("fees: {}", fees);
-        ::utils::libindy::anoncreds::tests::create_and_write_test_schema();
+        ::utils::libindy::anoncreds::tests::create_and_write_test_schema(::utils::constants::DEFAULT_SCHEMA_ATTRS);
     }
 
     #[cfg(feature = "pool_tests")]
@@ -710,7 +710,7 @@ pub mod tests {
         mint_tokens_and_set_fees(Some(0), Some(0), Some("{\"101\":0, \"102\":0}".to_string()), None).unwrap();
         let fees = get_ledger_fees().unwrap();
         println!("fees: {}", fees);
-        ::utils::libindy::anoncreds::tests::create_and_write_test_schema();
+        ::utils::libindy::anoncreds::tests::create_and_write_test_schema(::utils::constants::DEFAULT_SCHEMA_ATTRS);
     }
 
     #[cfg(feature = "pool_tests")]

@@ -403,7 +403,7 @@ pub mod tests {
     fn test_get_schema_attrs_from_ledger(){
         init!("ledger");
 
-        let (schema_id, _) = ::utils::libindy::anoncreds::tests::create_and_write_test_schema();
+        let (schema_id, _) = ::utils::libindy::anoncreds::tests::create_and_write_test_schema(::utils::constants::DEFAULT_SCHEMA_ATTRS);
         let (_, schema_attrs ) = get_schema_attrs("id".to_string(), schema_id.clone()).unwrap();
         assert!(schema_attrs.contains(&schema_id));
     }
@@ -466,7 +466,7 @@ pub mod tests {
     fn from_pool_ledger_with_id(){
         init!("ledger");
         let did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
-        let (schema_id, schema_json) = ::utils::libindy::anoncreds::tests::create_and_write_test_schema();
+        let (schema_id, schema_json) = ::utils::libindy::anoncreds::tests::create_and_write_test_schema(::utils::constants::DEFAULT_SCHEMA_ATTRS);
 
         let rc = LedgerSchema::retrieve_schema(&did, &schema_id);
 
