@@ -128,13 +128,11 @@ impl DisclosedProof {
         let mut rtn: HashMap<String, Value> = HashMap::new();
 
         for &(ref attr_id, ref cred_uuid, ref schema_id, ref cred_def_id) in credentials_identifiers {
-            let schema = LedgerSchema::new_from_ledger(schema_id)
-                .or( Err(ProofError::InvalidSchema()))?;
-
-            let schema_json = serde_json::from_str(&schema.schema_json)
-                .or(Err(ProofError::InvalidSchema()))?;
-
-            rtn.insert(schema_id.to_owned(), schema_json);
+            if !rtn.contains_key(schema_id) {
+                let schema = LedgerSchema::new_from_ledger(schema_id).or( Err(ProofError::InvalidSchema()))?;
+                let schema_json = serde_json::from_str(&schema.schema_json).or(Err(ProofError::InvalidSchema()))?;
+                rtn.insert(schema_id.to_owned(), schema_json);
+            }
         }
 
         match rtn.is_empty() {
@@ -150,14 +148,13 @@ impl DisclosedProof {
         let mut rtn: HashMap<String, Value> = HashMap::new();
 
         for &(ref attr_id, ref cred_uuid, ref schema_id, ref cred_def_id) in credentials_identifiers {
-
-            let (_, credential_def) = retrieve_credential_def(cred_def_id)
-                .or(Err(ProofError::InvalidCredData()))?;
-
-            let credential_def = serde_json::from_str(&credential_def)
-                .or(Err(ProofError::InvalidCredData()))?;
-
-            rtn.insert(cred_def_id.to_owned(), credential_def);
+            if !rtn.contains_key(cred_def_id) {
+                let (_, credential_def) = retrieve_credential_def(cred_def_id)
+                    .or(Err(ProofError::InvalidCredData()))?;
+                let credential_def = serde_json::from_str(&credential_def)
+                    .or(Err(ProofError::InvalidCredData()))?;
+                rtn.insert(cred_def_id.to_owned(), credential_def);
+            }
         }
 
         match rtn.is_empty() {
@@ -212,14 +209,12 @@ impl DisclosedProof {
         let schemas = self._find_schemas(&credentials_identifiers)?;
         let credential_defs_json = self._find_credential_def(&credentials_identifiers)?;
         let revoc_regs_json = Some("{}");
-
         let proof = anoncreds::libindy_prover_create_proof(&proof_req_data_json,
                                                            &requested_credentials,
                                                           &self.link_secret_alias,
                                                            &schemas,
                                                           &credential_defs_json,
                                                           revoc_regs_json).map_err(|ec| ProofError::CommonError(ec))?;
-
         let mut proof_msg = ProofMessage::new();
         proof_msg.libindy_proof = proof;
         self.proof = Some(proof_msg);
@@ -631,7 +626,7 @@ mod tests {
     #[test]
     fn test_retrieve_credentials() {
         init!("ledger");
-        ::utils::libindy::anoncreds::tests::create_and_store_credential();
+        ::utils::libindy::anoncreds::tests::create_and_store_credential(::utils::constants::DEFAULT_SCHEMA_ATTRS);
         let (_, _, req, _) = ::utils::libindy::anoncreds::tests::create_proof();
 
         let mut proof_req = ProofRequestMessage::create();
@@ -647,7 +642,7 @@ mod tests {
     #[test]
     fn test_case_for_proof_req_doesnt_matter_for_retrieve_creds() {
         init!("ledger");
-        ::utils::libindy::anoncreds::tests::create_and_store_credential();
+        ::utils::libindy::anoncreds::tests::create_and_store_credential(::utils::constants::DEFAULT_SCHEMA_ATTRS);
         let did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
         let mut req = json!({
            "nonce":"123432421212",
@@ -748,7 +743,7 @@ mod tests {
     fn test_generate_proof() {
         init!("ledger");
         let did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
-        let (schema_id, _, cred_def_id, _, _, _, _, cred_id) = ::utils::libindy::anoncreds::tests::create_and_store_credential();
+        let (schema_id, _, cred_def_id, _, _, _, _, cred_id) = ::utils::libindy::anoncreds::tests::create_and_store_credential(::utils::constants::DEFAULT_SCHEMA_ATTRS);
 
         let mut proof_req = ProofRequestMessage::create();
         let indy_proof_req = json!({
