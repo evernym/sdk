@@ -37,22 +37,6 @@ typedef unsigned int vcx_bool_t;
 typedef unsigned int count_t;
 typedef unsigned long vcx_price_t;
 
-typedef struct {
-
-  union {
-    vcx_schema_handle_t schema_handle;
-    vcx_credentialdef_handle_t credentialdef_handle;
-    vcx_connection_handle_t connection_handle;
-    vcx_credential_handle_t credential_handle;
-    vcx_proof_handle_t proof_handle;
-  } handle;
-
-  vcx_error_t status;
-  char *msg;
-
-} vcx_status_t;
-
-
 /**
  * Initialize the SDK
  */
