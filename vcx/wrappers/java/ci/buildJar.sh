@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+set -e
 SCRIPT_PATH=${BASH_SOURCE[0]}      # this script's name
 SCRIPT_NAME=${SCRIPT_PATH##*/}       # basename of script (strip path)
 SCRIPT_DIR="$(cd "$(dirname "${SCRIPT_PATH:-$PWD}")" 2>/dev/null 1>&2 && pwd)"
