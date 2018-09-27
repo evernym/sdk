@@ -14,5 +14,5 @@ find . -type f -name 'node-vcx-wrapper*.tgz' -exec create_npm_deb.py {} \;
 
 cd $CURDIR
 cp $DIR/node-vcx*.tgz $OUTPUTDIR
-cp $DIR/node-vcx_*.deb $OUTPUTDIR
+cp $DIR/node-vcx-wrapper_*.deb $OUTPUTDIR
 
