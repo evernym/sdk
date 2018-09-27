@@ -5,7 +5,7 @@ This version of libVCX represents a major step forward. The last version of libv
 ## Changelog
 
 -   Schema IDs and credential definition IDs have changed (see libindy migrating guides here: https://github.com/hyperledger/indy-sdk/tree/master/doc).  
--   The vcx_claimdef_* family of functions is now the vcx_credential_* family.
+-   The vcx_claimdef_* family of functions is now the vcx_credentialdef_* family.
 -   vcx_credential_* - family of functions for receiving credential offers, sending credential requests and storing issued credentials in the wallet.
 -   vcx_disclosed_proof_* - family of functions for receiving proof requests, retrieving credentials relevant to a particular proof request and generating and sending proofs in response to proof requests.
 -   Many changes to vcxconfig.json parameter names
