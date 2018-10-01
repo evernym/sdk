@@ -114,7 +114,7 @@ vcx_error_t vcx_schema_serialize(vcx_command_handle_t command_handle, vcx_schema
 vcx_error_t vcx_schema_deserialize(vcx_command_handle_t command_handle, const char *serialized_schema, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, vcx_schema_handle_t schema_handle));
 
 /** Populates data with the contents of the schema handle. */
-vcx_error_t vcx_schema_get_attributes(vcx_command_handle_t command_handle, const char *source_id, vcx_schema_handle_t sequence_no,  void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, const char *schema_attrs));
+vcx_error_t vcx_schema_get_attributes(vcx_command_handle_t command_handle, const char *source_id, const char *schema_id,  void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, vcx_schema_handle_t schema_handle, const char *schema_attrs));
 
 /** Retrieves schema_id from schema object. */
 vcx_error_t vcx_schema_get_schema_id(vcx_command_handle_t command_handle, vcx_schema_handle_t schema_handle, void (*cb)(vcx_command_handle_t xcommand_handle, vcx_error_t err, const char *schema_id));

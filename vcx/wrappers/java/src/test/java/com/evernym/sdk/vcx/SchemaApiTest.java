@@ -24,10 +24,35 @@ public class SchemaApiTest {
     }
 
     @Test
-    @DisplayName("create a proof")
+    @DisplayName("create a schema")
     void createSchema() throws VcxException, ExecutionException, InterruptedException {
         int schemaHandle = TestHelper.getResultFromFuture(SchemaApi.schemaCreate(sourceId, schemaName, schemaVersion,TestHelper.convertToValidJson(schemaData),0));
         assert(schemaHandle != 0 );
+    }
+
+    @Test
+    @DisplayName("serialise a schema")
+    void serialiseSchema() throws VcxException, ExecutionException, InterruptedException {
+        int schemaHandle = TestHelper.getResultFromFuture(SchemaApi.schemaCreate(sourceId, schemaName, schemaVersion,TestHelper.convertToValidJson(schemaData),0));
+        String serialisedSchema = TestHelper.getResultFromFuture(SchemaApi.schemaSerialize(schemaHandle));
+        assert(serialisedSchema.contains(schemaName) );
+    }
+
+    @Test
+    @DisplayName("deserialise a schema")
+    void deserialiseSchema() throws VcxException, ExecutionException, InterruptedException {
+        int schemaHandle = TestHelper.getResultFromFuture(SchemaApi.schemaCreate(sourceId, schemaName, schemaVersion,TestHelper.convertToValidJson(schemaData),0));
+        String serialisedSchema = TestHelper.getResultFromFuture(SchemaApi.schemaSerialize(schemaHandle));
+        int deserilaisedSchemaHandle = TestHelper.getResultFromFuture(SchemaApi.schemaDeserialize(serialisedSchema));
+        assert(deserilaisedSchemaHandle != 0 );
+    }
+
+    @Test
+    @DisplayName("get attr from schema")
+    void getAttributes() throws VcxException, ExecutionException, InterruptedException {
+        int schemaHandle = TestHelper.getResultFromFuture(SchemaApi.schemaCreate(sourceId, schemaName, schemaVersion,TestHelper.convertToValidJson(schemaData),0));
+        String attr = TestHelper.getResultFromFuture(SchemaApi.schemaGetAttributes(sourceId,"2hoqvcwupRTUNkXn6ArYzs:2:test-licence:4.4.4"));
+        assert(attr.contains("height"));
     }
 
 }

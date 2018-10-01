@@ -63,7 +63,7 @@ public abstract class LibVcx {
         /**
          * Populates data with the contents of the schema handle.
          */
-        public int vcx_schema_get_attributes(int command_handle, String source_id, int sequence_no, Callback cb);
+        public int vcx_schema_get_attributes(int command_handle, String source_id, String schema_handle, Callback cb);
 
         /**
          * Populates sequence_no with the actual sequence number of the schema on the sovrin ledger.

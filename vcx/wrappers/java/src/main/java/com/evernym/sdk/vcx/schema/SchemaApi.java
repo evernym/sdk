@@ -118,20 +118,20 @@ public class SchemaApi extends VcxJava.API {
 
     private static Callback schemaGetAttributesCB = new Callback() {
         @SuppressWarnings({"unused", "unchecked"})
-        public void callback(int commandHandle, int err, String schemaAttributes) {
-            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "], schemaAttributes = [" + schemaAttributes + "]");
+        public void callback(int commandHandle, int err,int schemaHandle, String schemaAttributes) {
+            logger.debug("callback() called with: commandHandle = [" + commandHandle + "], err = [" + err + "], schemaHandle = [" + schemaHandle +  "],  schemaAttributes = [" + schemaAttributes + "]");
             CompletableFuture<String> future = (CompletableFuture<String>) removeFuture(commandHandle);
             if (!checkCallback(future, err)) return;
             future.complete(schemaAttributes);
         }
     };
 
-    public static CompletableFuture<String> schemaGetAttributes( String sourceId, int sequenceNo) throws VcxException {
+    public static CompletableFuture<String> schemaGetAttributes( String sourceId, String schemaHandle) throws VcxException {
         ParamGuard.notNullOrWhiteSpace(sourceId, "sourceId");
-        logger.debug("schemaGetAttributes() called with: sourceId = [" + sourceId + "], sequenceNo = [" + sequenceNo + "]");
+        logger.debug("schemaGetAttributes() called with: sourceId = [" + sourceId + "], schemaHandle = [" + schemaHandle + "]");
         CompletableFuture<String> future = new CompletableFuture<>();
         int commandHandle = addFuture(future);
-        int result = LibVcx.api.vcx_schema_get_attributes(commandHandle, sourceId,sequenceNo, schemaGetSchemaID);
+        int result = LibVcx.api.vcx_schema_get_attributes(commandHandle, sourceId,schemaHandle, schemaGetAttributesCB);
         checkResult(result);
         return future;
     }
