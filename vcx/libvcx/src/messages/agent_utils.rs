@@ -194,40 +194,29 @@ pub fn connect_register_provision(config: &str) -> Result<String,u32> {
     let agent_did = response.from_did;
     let agent_vk = response.from_vk;
 
-    let final_config = format!("{{\
-    \"wallet_key\":\"{}\",\
-    {}\
-    \"agency_endpoint\":\"{}\",\
-    \"agency_did\":\"{}\",\
-    \"agency_verkey\":\"{}\",\
-    \"sdk_to_remote_did\":\"{}\",\
-    \"sdk_to_remote_verkey\":\"{}\",\
-    \"institution_did\":\"{}\",\
-    \"institution_verkey\":\"{}\",\
-    \"remote_to_sdk_did\":\"{}\",\
-    \"remote_to_sdk_verkey\":\"{}\",\
-    \"institution_name\":\"{}\",\
-    \"institution_logo_url\":\"{}\",\
-    \"genesis_path\":\"{}\"\
-    }}",
-        &my_config.wallet_key,
-        wallet_name_string,
-        my_config.agency_url,
-        my_config.agency_did,
-        my_config.agency_verkey,
-        my_did,
-        my_vk,
-        issuer_did,
-        issuer_vk,
-        agent_did,
-        agent_vk,
-        name,
-        logo,
-        path);
+    let mut final_config = json!({
+        "wallet_key": &my_config.wallet_key,
+        "wallet_name": wallet_name,
+        "agency_endpoint": &my_config.agency_url,
+        "agency_did": &my_config.agency_did,
+        "agency_verkey": &my_config.agency_verkey,
+        "sdk_to_remote_did": my_did,
+        "sdk_to_remote_verkey": my_vk,
+        "institution_did": issuer_did,
+        "institution_verkey": issuer_vk,
+        "remote_to_sdk_did": agent_did,
+        "remote_to_sdk_verkey": agent_vk,
+        "institution_name": name,
+        "institution_logo_url": logo,
+        "genesis_path": path,
+    });
+    if let Some(_key_derivation) = &my_config.wallet_key_derivation {
+        final_config["wallet_key_derivation"] = json!(_key_derivation);
+    }
 
     wallet::close_wallet()?;
 
-    Ok(final_config.to_owned())
+    Ok(final_config.to_string())
 }
 
 pub fn update_agent_info(id: &str, value: &str) -> Result<(), u32> {
