@@ -29,11 +29,13 @@ public class SchemaApi extends VcxJava.API {
 
     public static CompletableFuture<Integer> schemaCreate(String sourceId,
                                                           String schemaName,
-                                                          String schemaDate) throws VcxException {
+                                                          String version,
+                                                          String data,
+                                                          int paymentHandle) throws VcxException {
         ParamGuard.notNullOrWhiteSpace(sourceId, "sourceId");
         ParamGuard.notNullOrWhiteSpace(sourceId, "schemaName");
-        ParamGuard.notNullOrWhiteSpace(sourceId, "schemaDate");
-        logger.debug("schemaCreate() called with: sourceId = [" + sourceId + "], schemaName = [" + schemaName + "], schemaDate = [" + schemaDate + "]");
+        ParamGuard.notNullOrWhiteSpace(sourceId, "version");
+        logger.debug("schemaCreate() called with: sourceId = [" + sourceId + "], schemaName = [" + schemaName + "], version = [" + version + "]" + " data = <" + data + ">" + " payment_handle = <" + paymentHandle + ">");
         CompletableFuture<Integer> future = new CompletableFuture<Integer>();
         int commandHandle = addFuture(future);
 
@@ -41,7 +43,9 @@ public class SchemaApi extends VcxJava.API {
                 commandHandle,
                 sourceId,
                 schemaName,
-                schemaDate,
+                version,
+                data,
+                paymentHandle,
                 schemaCreateCB
         );
         checkResult(result);

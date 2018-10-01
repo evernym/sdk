@@ -5,7 +5,6 @@ import com.sun.jna.Callback;
 import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.NativeLibrary;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +48,7 @@ public abstract class LibVcx {
         /**
          * Creates a schema from a json string. Populates a handle to the new schema.
          */
-        public int vcx_schema_create(int command_handle, String source_id, String schema_name, String schema_data, Callback cb);
+        public int vcx_schema_create(int command_handle, String source_id, String schema_name, String version, String schema_data, int payment_handle, Callback cb);
 
         /**
          * Populates status with the current State of this claim.
