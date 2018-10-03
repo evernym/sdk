@@ -361,7 +361,7 @@ public abstract class LibVcx {
         public int vcx_wallet_delete_record(int command_handle, String recordType, String recordId, Callback cb);
 
         /** Get a record from wallet */
-        public int vcx_wallet_get_record(int command_handle, String recordType, String recordId, String recordTag, Callback cb);
+        public int vcx_wallet_get_record(int command_handle, String recordType, String recordId, String optionsJson, Callback cb);
 
         /** Update a record in wallet */
         public int vcx_wallet_update_record_value(int command_handle, String recordType, String recordId, String recordValue, Callback cb);
