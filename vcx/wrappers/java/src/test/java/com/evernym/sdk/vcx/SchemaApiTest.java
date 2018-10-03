@@ -40,8 +40,7 @@ public class SchemaApiTest {
         assert (serialisedSchema.contains(schemaName));
     }
 
-    //        Assertions.assertThrows( , () -> {
-//    });
+
     @Test
     @DisplayName("serialise a bad schema throws InvalidSchemahandleException")
     void serialiseBadSchema() {
