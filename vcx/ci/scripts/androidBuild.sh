@@ -8,11 +8,7 @@ setup() {
     export PATH=$PATH:/opt/gradle/gradle-3.4.1/bin
     export PATH=${PATH}:$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/build-tools/25.0.2/
     export PATH=${HOME}/.cargo/bin:${PATH}
-<<<<<<< HEAD
-    export SOVRIN_REPO=https://repo.sovrin.org/android/libsovtoken
-=======
     export SOVRIN_REPO=https://repo.sovrin.org/android/libsovtoken/stable
->>>>>>> upstream/master
     export VCX_BASE=../vcx
     # For docker
     # export VCX_BASE=${HOME}/vcx
