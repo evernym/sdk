@@ -35,7 +35,6 @@ pub extern fn vcx_provision_agent(config: *const c_char) -> *mut c_char {
         Err(e) => {
             // Ensure state of libvcx is clean
             ::api::vcx::vcx_shutdown(false);
-            ::vcx::vcx_shutdown(false);
             error!("Provision Agent Error {}.", e);
             return ptr::null_mut();
         },
