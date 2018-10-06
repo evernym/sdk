@@ -37,6 +37,8 @@ pub extern fn vcx_init_with_config(command_handle: u32,
     } else {
         match settings::process_config_string(&config) {
             Err(e) => {
+                // Ensure state of libvcx is clean
+                vcx_shutdown(false);
                 error!("Invalid configuration specified: {}", e);
                 return e;
             },
@@ -76,6 +78,8 @@ pub extern fn vcx_init (command_handle: u32,
         } else {
             match settings::process_config_file(&config_path) {
                 Err(e) => {
+                    // Ensure state of libvcx is clean
+                    vcx_shutdown(false);
                     println!("Invalid configuration specified: {}", e);
                     return error::INVALID_CONFIGURATION.code_num;
                 },
