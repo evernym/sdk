@@ -33,6 +33,8 @@ pub extern fn vcx_provision_agent(config: *const c_char) -> *mut c_char {
 
     match messages::agent_utils::connect_register_provision(&config) {
         Err(e) => {
+            // Ensure state of libvcx is clean
+            ::api::vcx::vcx_shutdown(false);
             error!("Provision Agent Error {}.", e);
             return ptr::null_mut();
         },
@@ -71,6 +73,8 @@ pub extern fn vcx_agent_provision_async(command_handle : u32,
     thread::spawn(move|| {
         match messages::agent_utils::connect_register_provision(&config) {
             Err(e) => {
+                // Ensure state of libvcx is clean
+                ::api::vcx::vcx_shutdown(false);
                 error!("vcx_agent_provision_async_cb(command_handle: {}, rc: {}, config: NULL", command_handle, error_string(e));
                 cb(command_handle, e, ptr::null_mut());
             },
