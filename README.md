@@ -1,3 +1,5 @@
+THIS REPOSITORY IS DEPRECATED!!!  Please submit PRs to [Indy SDK](https://www.github.com/hyperledger/indy-sdk).
+---------------------------------------------------------------------------------------------------------------
 This repository contains the Evernym SDKs for managing Verifiable Credential eXchange against an Indy network. For specific instructions on building each SDK see the README in the corresponding directory.
 
 To use this repository, you should first be familiar with the [Indy SDK](https://github.com/hyperledger/indy-sdk).
