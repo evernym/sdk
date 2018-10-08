@@ -180,10 +180,10 @@ def android() {
                     packageAndroid(android)
                 }
                 stage('Android Publishing') {
-                    if (env.BRANCH_NAME == "master") {
+                    // if (env.BRANCH_NAME == "master") {
                         //Publish package on aptly
                         publishAndroid(android)
-                    }
+                    // }
                 }
             } catch (Exception ex) {
                 currentBuild.result = "FAILED"
@@ -211,14 +211,14 @@ def ios() {
                 sh "source vcx/ci/scripts/iosBuild.sh"
 
                 // Publish to Kraken
-                if (env.BRANCH_NAME == "master") {
+                // if (env.BRANCH_NAME == "master") {
                     withCredentials([usernameColonPassword(credentialsId: 'jenkins-kraken-svc', variable: 'KRAKEN_CREDENTIALS')]) {
                         sh "find /Users/jenkins/IOSBuilds/libvcxpartial/ -type f -name 'vcx.libvcxpartial_*_universal.zip' -exec curl -u \"${KRAKEN_CREDENTIALS}\" -X POST  https://kraken.corp.evernym.com/repo/ios/upload -F 'file=@{}' \\;"
                         sh "find /Users/jenkins/IOSBuilds/libvcxall/ -type f -name 'vcx.libvcxall_*_universal.zip' -exec curl -u \"${KRAKEN_CREDENTIALS}\" -X POST  https://kraken.corp.evernym.com/repo/ios/upload -F 'file=@{}' \\;"
                         // sh "vcx/ci/scripts/publish.sh 'vcx.libvcxpartial_*_universal.zip' https://kraken.corp.evernym.com/repo/ios/upload /Users/jenkins/IOSBuilds/libvcxpartial/"
                         // sh "vcx/ci/scripts/publish.sh 'vcx.libvcxall_*_universal.zip' https://kraken.corp.evernym.com/repo/ios/upload /Users/jenkins/IOSBuilds/libvcxall/"
                     }
-                }
+                // }
             } catch (Exception ex) {
                 currentBuild.result = "FAILED"
                 if (env.BRANCH_NAME == "master") {
@@ -249,9 +249,9 @@ def buildAndroid(arch) {
 
             android.inside {
                 ANDROID_SCRIPT_PATH = 'vcx/ci/scripts/androidBuild.sh'
-                LIBINDY_BRANCH="stable"
-                LIBINDY_VERSION="1.6.6"
-                LIBINDY_TAG=""
+                LIBINDY_BRANCH="rc"
+                LIBINDY_VERSION="1.6.7"
+                LIBINDY_TAG="30"
 
                 sh 'sudo ./vcx/ci/scripts/installCert.sh'
                 sh "LIBINDY_BRANCH=${LIBINDY_BRANCH} LIBINDY_VERSION=${LIBINDY_VERSION} LIBINDY_TAG=${LIBINDY_TAG} ./${ANDROID_SCRIPT_PATH} ${arch}"
