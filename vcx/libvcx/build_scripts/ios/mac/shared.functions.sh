@@ -2,7 +2,7 @@
 
 export LIBSOVTOKEN_IOS_BUILD_URL="https://repo.sovrin.org/ios/libsovtoken/stable/libsovtoken_0.9.3-201809211716-2d02370_all.zip"
 # export LIBINDY_IOS_BUILD_URL="https://repo.sovrin.org/ios/libindy/stable/libindy-core/1.6.6/libindy.tar.gz"
-export LIBINDY_IOS_BUILD_URL="https://repo.sovrin.org/ios/libindy/rc/libindy-core/1.6.7-30/libindy.tar.gz"
+export LIBINDY_IOS_BUILD_URL="https://repo.sovrin.org/ios/libindy/rc/libindy-core/1.6.7-39/libindy.tar.gz"
 # export LIBINDY_IOS_BUILD_URL="https://repo.sovrin.org/ios/libindy/rc/libindy-core/1.6.6-28/libindy.tar.gz"
 
 export LIBSOVTOKEN_FILE=$(basename ${LIBSOVTOKEN_IOS_BUILD_URL})
