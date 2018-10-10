@@ -114,7 +114,8 @@ get_libsovtoken() {
         LIBSOVTOKEN_ZIP=libsovtoken_0.9.3-201809211729-2d02370_all.zip
         if [ ! -d "libsovtoken" ]; then
             echo "retrieving libsovtoken prebuilt library"
-            wget ${SOVRIN_REPO}/${LIBSOVTOKEN_ZIP}
+            wget https://repo.corp.evernym.com/filely/android/libsovtoken_0.9.4-201810091643-94a47a5_all.zip
+            # wget ${SOVRIN_REPO}/${LIBSOVTOKEN_ZIP}
             unzip ${LIBSOVTOKEN_ZIP}
         fi
         export LIBSOVTOKEN_DIR="${PWD}/libsovtoken/${TRIPLET}"
