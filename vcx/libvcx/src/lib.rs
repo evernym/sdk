@@ -76,7 +76,7 @@ mod tests {
     #[cfg(feature = "sovtoken")]
     #[test]
     fn test_real_proof() {
-        let number_of_attributes = 50;
+        let number_of_attributes = 10;
         init!("agency");
         let institution_did = settings::get_config_value(settings::CONFIG_INSTITUTION_DID).unwrap();
         let (faber, alice) = ::connection::tests::create_connected_connections();
