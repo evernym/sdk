@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 setup() {
     echo "Working Directory: ${PWD}"
     set -e

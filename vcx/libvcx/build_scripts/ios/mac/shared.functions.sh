@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 export LIBSOVTOKEN_IOS_BUILD_URL="https://repo.sovrin.org/ios/libsovtoken/stable/libsovtoken_0.9.6-201811211710-4901e95_all.zip"
 export LIBINDY_IOS_BUILD_URL="https://repo.sovrin.org/ios/libindy/stable/libindy-core/1.7.0/libindy.tar.gz"
 # export LIBINDY_IOS_BUILD_URL="https://repo.sovrin.org/ios/libindy/rc/libindy-core/1.6.6-28/libindy.tar.gz"
