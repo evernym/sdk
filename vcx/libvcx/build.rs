@@ -121,6 +121,7 @@ fn main() {
           println!("cargo:rustc-link-lib=nullpay");
         } else if cfg!(feature = "sovtoken") {
             println!("cargo:rustc-link-lib=sovtoken");
+        }
     }else if target.contains("-windows-") {
         println!("cargo:rustc-link-lib=indy.dll");
 
