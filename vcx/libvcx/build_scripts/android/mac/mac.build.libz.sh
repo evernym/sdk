@@ -14,13 +14,13 @@ mkdir -p $WORK_DIR/libz-android/zlib/include
 ZLIB_DIR=$WORK_DIR/libz-android/zlib-1.2.11
 cd $WORK_DIR/libz-android
 if [ ! -f zlib-1.2.11.tar.gz ]; then
-    wget https://zlib.net/zlib-1.2.11.tar.gz
+    wget -q https://zlib.net/zlib-1.2.11.tar.gz
 fi
 if [ ! -d $ZLIB_DIR ]; then
     tar -zxf zlib-1.2.11.tar.gz
 fi
 cd $ZLIB_DIR
-cp zconf.h $WORK_DIR/libz-android/zlib/include/ 
+cp zconf.h $WORK_DIR/libz-android/zlib/include/
 cp zlib.h $WORK_DIR/libz-android/zlib/include/
 
 
