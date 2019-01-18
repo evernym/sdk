@@ -19,9 +19,9 @@ testing()
 def testing() {
     stage('Testing') {
         parallel([
-            'Xenial' : { mainUbuntu() },
+            //'Xenial' : { mainUbuntu() },
             'Android': { android() },
-            'iOS' : { ios() }
+            //'iOS' : { ios() }
         ])
     }
 }
@@ -180,10 +180,10 @@ def android() {
                     packageAndroid(android)
                 }
                 stage('Android Publishing') {
-                    if (env.BRANCH_NAME == "master") {
+                    //if (env.BRANCH_NAME == "master") {
                         //Publish package on aptly
                         publishAndroid(android)
-                    }
+                    //}
                 }
             } catch (Exception ex) {
                 currentBuild.result = "FAILED"
