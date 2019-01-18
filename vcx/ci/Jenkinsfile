@@ -275,7 +275,8 @@ def buildAndroid(arch) {
 }
 
 def packageAndroid(android) {
-    all_archs = ["arm", "arm64", "armv7", "x86", "x86_64"]
+    //all_archs = ["arm", "arm64", "armv7", "x86", "x86_64"]
+    all_archs = ["x86"]
     for (arch in all_archs) {
         dir("runtime_android_build/libvcx_${arch}") {
             unstash name: "libvcx_${arch}"
