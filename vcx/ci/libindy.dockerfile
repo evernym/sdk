@@ -22,7 +22,7 @@ RUN apt-get update -y && apt-get install -y \
     curl \
 	libffi-dev \
     ruby \
-    ruby-dev \ 
+    ruby-dev \
 	sudo \
     rubygems \
     libzmq5 \
@@ -36,17 +36,17 @@ RUN apt-get update -y && apt-get install -y \
     unzip \
     vim
 
-# Install Nodejs 
+# Install Nodejs
 RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - \
     && apt-get install -y nodejs
 
 # Install Rust
-ARG RUST_VER="1.27.0"
+ARG RUST_VER="1.31.1"
 ENV RUST_ARCHIVE=rust-${RUST_VER}-x86_64-unknown-linux-gnu.tar.gz
 ENV RUST_DOWNLOAD_URL=https://static.rust-lang.org/dist/$RUST_ARCHIVE
 
 # Install Gradle
-RUN wget https://services.gradle.org/distributions/gradle-3.4.1-bin.zip
+RUN wget -q https://services.gradle.org/distributions/gradle-3.4.1-bin.zip
 RUN mkdir /opt/gradle
 RUN unzip -d /opt/gradle gradle-3.4.1-bin.zip
 
@@ -66,8 +66,8 @@ RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 68DB5E88 && \
     add-apt-repository 'deb https://repo.corp.evernym.com/deb evernym-agency-dev-ubuntu main' && \
     curl https://repo.corp.evernym.com/repo.corp.evenym.com-sig.key | apt-key add -
 
-ARG LIBINDY_VER="1.6.8"
-ARG LIBNULL_VER="1.6.8"
+ARG LIBINDY_VER="1.7.0"
+ARG LIBNULL_VER="1.7.0"
 ARG LIBSOVTOKEN_VER="0.9.6"
 
 RUN apt-get update && apt-get install -y \

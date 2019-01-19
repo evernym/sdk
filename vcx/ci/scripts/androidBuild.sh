@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 setup() {
     echo "Working Directory: ${PWD}"
     set -e
@@ -94,9 +96,9 @@ get_libindy() {
 
         if [ ! -d "libindy_${ARCH}" ]; then
             if [ "$LIBINDY_BRANCH" = "stable" ]; then
-                wget https://repo.sovrin.org/android/libindy/${LIBINDY_BRANCH}/${LIBINDY_VERSION}/libindy_android_${ARCH}_${LIBINDY_VERSION}.zip
+                wget -q https://repo.sovrin.org/android/libindy/${LIBINDY_BRANCH}/${LIBINDY_VERSION}/libindy_android_${ARCH}_${LIBINDY_VERSION}.zip
             else
-                wget https://repo.sovrin.org/android/libindy/${LIBINDY_BRANCH}/${LIBINDY_VERSION}-${LIBINDY_TAG}/libindy_android_${ARCH}_${LIBINDY_VERSION}.zip
+                wget -q https://repo.sovrin.org/android/libindy/${LIBINDY_BRANCH}/${LIBINDY_VERSION}-${LIBINDY_TAG}/libindy_android_${ARCH}_${LIBINDY_VERSION}.zip
             fi
 
             unzip libindy_android_${ARCH}_${LIBINDY_VERSION}.zip
@@ -114,7 +116,7 @@ get_libsovtoken() {
         LIBSOVTOKEN_ZIP=libsovtoken_0.9.6-201811211720-4901e95_all.zip
         if [ ! -d "libsovtoken" ]; then
             echo "retrieving libsovtoken prebuilt library"
-            wget ${SOVRIN_REPO}/${LIBSOVTOKEN_ZIP}
+            wget -q ${SOVRIN_REPO}/${LIBSOVTOKEN_ZIP}
             unzip ${LIBSOVTOKEN_ZIP}
         fi
         export LIBSOVTOKEN_DIR="${PWD}/libsovtoken/${TRIPLET}"

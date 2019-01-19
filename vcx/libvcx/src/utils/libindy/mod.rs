@@ -4,13 +4,13 @@ pub mod signus;
 pub mod wallet;
 pub mod callback;
 pub mod callback_u32;
-pub mod return_types;
-pub mod return_types_u32;
 pub mod pool;
 pub mod crypto;
 pub mod payments;
+pub mod cache;
+pub mod logger;
 
-mod error_codes;
+pub mod error_codes;
 
 extern crate libc;
 
@@ -28,15 +28,17 @@ pub fn set_libindy_rc(rc: u32) {NEXT_LIBINDY_RC.lock().unwrap().push(rc as i32);
 
 static COMMAND_HANDLE_COUNTER: AtomicUsize = ATOMIC_USIZE_INIT;
 
-fn next_i32_command_handle() -> i32 {
+pub fn next_i32_command_handle() -> i32 {
     (COMMAND_HANDLE_COUNTER.fetch_add(1, Ordering::SeqCst) + 1) as i32
 }
 
-fn next_u32_command_handle() -> u32 {
+pub fn next_u32_command_handle() -> u32 {
     (COMMAND_HANDLE_COUNTER.fetch_add(1, Ordering::SeqCst) + 1) as u32
 }
 
 pub fn init_pool() -> Result<(), u32>  {
+    trace!("init_pool >>>");
+
     if settings::test_indy_mode_enabled() {return Ok (()); }
 
     let pool_name = settings::get_config_value(settings::CONFIG_POOL_NAME)
@@ -71,6 +73,6 @@ mod tests {
         wallet::close_wallet().unwrap();
         pool::close().unwrap();
         init_pool().unwrap();
-        wallet::init_wallet(settings::DEFAULT_WALLET_NAME).unwrap();
+        wallet::init_wallet(settings::DEFAULT_WALLET_NAME, None).unwrap();
     }
 }

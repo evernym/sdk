@@ -10,11 +10,11 @@ cd /tmp/NDK
 
 if [ "$(uname)" == "Darwin" ]; then
     echo "Downloading NDK for OSX"
-    wget https://dl.google.com/android/repository/android-ndk-r16b-darwin-x86_64.zip
+    wget -q https://dl.google.com/android/repository/android-ndk-r16b-darwin-x86_64.zip
     unzip android-ndk-r16b-darwin-x86_64.zip
 elif [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
     echo "Downloading NDK for Linux"
-    wget https://dl.google.com/android/repository/android-ndk-r16b-linux-x86_64.zip
+    wget -q https://dl.google.com/android/repository/android-ndk-r16b-linux-x86_64.zip
     unzip android-ndk-r16b-linux-x86_64.zip
 fi
 

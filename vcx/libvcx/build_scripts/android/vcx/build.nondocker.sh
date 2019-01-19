@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 WORKDIR=${PWD}
 TARGET_ARCH=$1
 TARGET_API=$2
