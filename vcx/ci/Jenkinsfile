@@ -19,9 +19,9 @@ testing()
 def testing() {
     stage('Testing') {
         parallel([
-            //'Xenial' : { mainUbuntu() },
+            'Xenial' : { mainUbuntu() },
             'Android': { android() },
-            //'iOS' : { ios() }
+            'iOS' : { ios() }
         ])
     }
 }
@@ -164,10 +164,10 @@ def android() {
         stage('Android Build') {
             parallel([
                 "x86" : { buildAndroid("x86") },
-                //"x86_64" : { buildAndroid("x86_64") },
-                //"arm" : { buildAndroid("arm") },
-                //"arm64" : { buildAndroid("arm64") },
-                //"armv7" : { buildAndroid("armv7") }
+                "x86_64" : { buildAndroid("x86_64") },
+                "arm" : { buildAndroid("arm") },
+                "arm64" : { buildAndroid("arm64") },
+                "armv7" : { buildAndroid("armv7") }
             ])
         }
         node('ubuntu') {
@@ -180,10 +180,10 @@ def android() {
                     packageAndroid(android)
                 }
                 stage('Android Publishing') {
-                    //if (env.BRANCH_NAME == "master") {
+                    if (env.BRANCH_NAME == "master") {
                         //Publish package on aptly
                         publishAndroid(android)
-                    //}
+                    }
                 }
             } catch (Exception ex) {
                 currentBuild.result = "FAILED"
