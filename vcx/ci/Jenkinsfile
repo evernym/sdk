@@ -1,5 +1,14 @@
 #!groovy
 
+class Package {
+                String url
+                String glob
+                Package(glob, url) {
+                    this.glob = glob
+                    this.url = url
+                }
+}
+
 def rust
 def vcx_python
 def libindy
@@ -111,6 +120,10 @@ def mainUbuntu() {
             // debug info
             sh 'ls -al output'
 
+            
+
+            def libvcx_deb = Package("libvcx*.deb", "https://kraken.corp.evernym.com/repo/portal_dev/upload" )
+
             if (env.BRANCH_NAME == "master") {
                 stage('Publish') {
                     // ******** PUBLISHING (artifacts are in a Docker Volume) ********
@@ -118,18 +131,18 @@ def mainUbuntu() {
                         libvcx.inside("--network=host") {
                             // env.KRAKEN_CREDENTIALS = "${KRAKEN_CREDENTIALS}"
                             // ******** Publish Libvcx Debian to repo ********
-                            sh "vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"libvcx*.deb\" https://kraken.corp.evernym.com/repo/portal_dev/upload"
-                            sh "vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"libvcx*.deb\" https://kraken.corp.evernym.com/repo/agency_dev/upload"
+                            echo "vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" ${libvcx_deb.glob} ${libvcx_deb.url}"
+                            echo "vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"libvcx*.deb\" https://kraken.corp.evernym.com/repo/agency_dev/upload"
 
                             // ******** Publish Npm Package to filely repo ********
-                            sh "vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"node-vcx-wrapper*.tgz\" https://kraken.corp.evernym.com/repo/npm/upload"
+                            echo "vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"node-vcx-wrapper*.tgz\" https://kraken.corp.evernym.com/repo/npm/upload"
 
                             // ******** Publish Python Package to filely repo *********
-                            sh "vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"python3-vcx-wrapper*.tar.gz\" https://kraken.corp.evernym.com/repo/python/upload"
+                            echo "vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"python3-vcx-wrapper*.tar.gz\" https://kraken.corp.evernym.com/repo/python/upload"
 
                             // ******** Publish vcx Debian To Repo (NPM PACKAGES)
-                            sh "vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"vcx_*.deb\" https://kraken.corp.evernym.com/repo/agency_dev/upload"
-                            sh "vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"vcx_*.deb\" https://kraken.corp.evernym.com/repo/portal_dev/upload"
+                            echo "vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"vcx_*.deb\" https://kraken.corp.evernym.com/repo/agency_dev/upload"
+                            echo "vcx/ci/scripts/publish.sh \"${KRAKEN_CREDENTIALS}\" \"vcx_*.deb\" https://kraken.corp.evernym.com/repo/portal_dev/upload"
 
 
                             // ******** Archive with Jenkins ********
