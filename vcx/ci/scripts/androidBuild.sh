@@ -91,15 +91,16 @@ get_libindy() {
     if [ -z ${LIBINDY_DIR} ]; then
         [ -z ${LIBINDY_BRANCH} ] && exit 1
         [ -z ${LIBINDY_VERSION} ] && exit 1
-
+		SIMPLE_LIBINDY_VERSION=$(echo ${LIBINDY_VERSION} | cut -f1 -d'-')
         if [ ! -d "libindy_${ARCH}" ]; then
+
             if [ "$LIBINDY_BRANCH" = "stable" ]; then
                 wget https://repo.sovrin.org/android/libindy/${LIBINDY_BRANCH}/${LIBINDY_VERSION}/libindy_android_${ARCH}_${LIBINDY_VERSION}.zip
             else
-                wget https://repo.sovrin.org/android/libindy/${LIBINDY_BRANCH}/${LIBINDY_VERSION}-${LIBINDY_TAG}/libindy_android_${ARCH}_${LIBINDY_VERSION}.zip
+                wget https://repo.sovrin.org/android/libindy/${LIBINDY_BRANCH}/1.7.0-934/libindy_android_${ARCH}_${SIMPLE_LIBINDY_VERSION}.zip
             fi
 
-            unzip libindy_android_${ARCH}_${LIBINDY_VERSION}.zip
+            unzip libindy_android_${ARCH}_${SIMPLE_LIBINDY_VERSION}.zip
 
         fi
         export LIBINDY_DIR="${PWD}/libindy_${ARCH}"
@@ -122,6 +123,28 @@ get_libsovtoken() {
 
 }
 
+get_libnullpay() {
+    set -xv
+    if [ -z ${LIBNULLPAY_DIR} ]; then
+        [ -z ${LIBINDY_BRANCH} ] && exit 1
+        [ -z ${LIBINDY_VERSION} ] && exit 1
+		SIMPLE_LIBINDY_VERSION=$(echo ${LIBINDY_VERSION} | cut -f1 -d'-')
+        if [ ! -d "libnullpay_${ARCH}" ]; then
+
+            if [ "$LIBINDY_BRANCH" = "stable" ]; then
+                wget https://repo.sovrin.org/android/libnullpay/${LIBINDY_BRANCH}/${LIBINDY_VERSION}/libnullpay_android_${ARCH}_${LIBINDY_VERSION}.zip
+            else
+                wget https://repo.sovrin.org/android/libnullpay/${LIBINDY_BRANCH}/1.7.0-934/libnullpay_android_${ARCH}_${SIMPLE_LIBINDY_VERSION}.zip
+            fi
+
+            unzip libnullpay_android_${ARCH}_${SIMPLE_LIBINDY_VERSION}.zip
+
+        fi
+        export LIBNULLPAY_DIR="${PWD}/libnullpay_${ARCH}"
+    fi
+
+}
+
 build_vcx() {
     # For Jenkins
     LIBVCX_PATH=${VCX_BASE}/libvcx/build_scripts/android/vcx/
@@ -134,14 +157,18 @@ build_vcx() {
         echo "missing libindy_${ARCH} directory. Cannot proceed without it."
         exit 1
     fi
-    if [ ! -d ${LIBSOVTOKEN_DIR} ]; then
-        echo "missing libsovtoken directory. Cannot proceed without it."
+#    if [ ! -d ${LIBSOVTOKEN_DIR} ]; then
+#        echo "missing libsovtoken directory. Cannot proceed without it."
+#        exit 1
+#    fi
+
+    if [ ! -d ${LIBNULLPAY_DIR} ]; then
+        echo "missing libnullpay directory. Cannot proceed without it."
         exit 1
     fi
-
     pushd ${LIBVCX_PATH}
     mkdir -p toolchains/
-    ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} ${OPENSSL_DIR} ${SODIUM_DIR} ${LIBZMQ_DIR} ${LIBINDY_DIR} ${LIBSOVTOKEN_DIR}
+    ./build.nondocker.sh ${ARCH} ${PLATFORM} ${TRIPLET} ${OPENSSL_DIR} ${SODIUM_DIR} ${LIBZMQ_DIR} ${LIBINDY_DIR} ${LIBSOVTOKEN_DIR} ${LIBNULLPAY_DIR}
     popd
     rm -rf libvcx_${ARCH}
     mv ${LIBVCX_PATH}libvcx_${ARCH} .
@@ -151,4 +178,5 @@ build_vcx() {
 setup $1
 get_libindy $1
 get_libsovtoken
+get_libnullpay
 build_vcx $1
