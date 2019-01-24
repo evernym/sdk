@@ -109,7 +109,7 @@ do
     export LIBNULLPAY_DIR=${libnullpay_dir}/${target_arch}
 #    export LIBSOVTOKEN_DIR=${libsovtoken_dir}/${target_arch}
 
-    cargo build --target "${target}" --release --no-default-features --features "ci sovtoken"
+    cargo build --target "${target}" --release --no-default-features --features "ci nullpay"
     to_combine="${to_combine} ./target/${target}/release/libvcx.a"
 
 done
