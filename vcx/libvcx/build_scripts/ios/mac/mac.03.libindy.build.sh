@@ -113,4 +113,21 @@ else
         rm -rf __MACOSX
         rm ${LIBSOVTOKEN_VERSION}-${LIBSOVTOKEN_FILE}
     fi
+
+    #########################################################################################################################
+    # Now setup libnullpay
+    #########################################################################################################################
+
+    if [ -e ${BUILD_CACHE}/libnullpay/${LIBNULLPAY_VERSION}/libnullpay.a ]; then
+        echo "libnullpay build for ios already exist"
+    else
+        mkdir -p ${BUILD_CACHE}/libnullpay/${LIBNULLPAY_VERSION}
+        cd ${BUILD_CACHE}/libnullpay/${LIBNULLPAY_VERSION}
+        curl -o ${LIBNULLPAY_VERSION}-${LIBNULLPAY_FILE} $LIBNULLPAY_IOS_BUILD_URL
+        tar -xvzf ${LIBNULLPAY_VERSION}-${LIBNULLPAY_FILE}
+
+        # Deletes extra folders that we don't need
+        rm -rf __MACOSX
+        rm ${LIBNULLPAY_VERSION}-${LIBNULLPAY_FILE}
+    fi
 fi
