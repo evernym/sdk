@@ -6,7 +6,6 @@ build
 .cache
 .DS_Store
 Podfile.lock
-Cargo.lock
 local.properties
 .swp
 

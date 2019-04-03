@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 WORKDIR=${PWD}
 TARGET_ARCH=$1
 TARGET_API=$2
@@ -115,7 +117,27 @@ if [ -d "${LIBSOVTOKEN_DIR}/lib" ] ; then
             LIBSOVTOKEN_DIR="${LIBSOVTOKEN_DIR}/lib"
 fi
 
-
+echo ${LIBNULLPAY_DIR}
+if [ -z "${LIBNULLPAY_DIR}" ] ; then
+    LIBNULLPAY_DIR="libnullpay"
+    if [ -d "${LIBNULLPAY_DIR}" ] ; then
+        echo "Found ${LIBNULLPAY_DIR}"
+    elif [ -z "$9" ] ; then
+        echo STDERR "Missing LIBNULLPAY_DIR argument and environment variable"
+        echo STDERR "e.g. set LIBNULLPAY_DIR=<path> for environment or libnullpay"
+        exit 1
+    else
+        LIBNULLPAY_DIR=$9
+    fi
+    if [ -d "${LIBNULLPAY_DIR}/${CROSS_COMPILE}" ] ; then
+        LIBNULLPAY_DIR=${LIBNULLPAY_DIR}/${CROSS_COMPILE}
+    fi
+    export LIBNULLPAY_DIR=${LIBNULLPAY_DIR}
+fi
+if [ -d "${LIBNULLPAY_DIR}/lib" ] ; then
+    LIBNULLPAY_DIR="${LIBNULLPAY_DIR}/lib"
+    echo ${LIBNULLPAY_DIR}
+fi
 
 
 if [ "$(uname)" == "Darwin" ]; then
@@ -163,7 +185,7 @@ if [ "${TARGET_ARCH}" = "armv7" ]; then
     CROSS_COMPILE_DIR="arm-linux-androideabi"
 fi
 
-export PAYMENT_PLUGIN="sovtoken"
+export PAYMENT_PLUGIN="nullpay"
 export SODIUM_LIB_DIR=${SODIUM_DIR}/lib
 export SODIUM_INCLUDE_DIR=${SODIUM_DIR}/include
 export LIBZMQ_LIB_DIR=${LIBZMQ_DIR}/lib
@@ -221,7 +243,7 @@ ${TOOLCHAIN_DIR}/sysroot/usr/${NDK_LIB_DIR}/libz.so \
 ${TOOLCHAIN_DIR}/sysroot/usr/${NDK_LIB_DIR}/libm.a \
 ${TOOLCHAIN_DIR}/sysroot/usr/${NDK_LIB_DIR}/liblog.so \
 ${LIBINDY_DIR}/libindy.a \
-${LIBSOVTOKEN_DIR}/libsovtoken.a \
+${LIBNULLPAY_DIR}/libnullpay.a \
 ${TOOLCHAIN_DIR}/${CROSS_COMPILE_DIR}/${NDK_LIB_DIR}/libgnustl_shared.so \
 ${OPENSSL_DIR}/lib/libssl.a \
 ${OPENSSL_DIR}/lib/libcrypto.a \

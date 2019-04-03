@@ -73,15 +73,16 @@ do
     libtool="/usr/bin/libtool"
     libsovtoken_dir="${BUILD_CACHE}/libsovtoken-ios/${LIBSOVTOKEN_VERSION}/libsovtoken"
     libindy_dir="${BUILD_CACHE}/libindy/${LIBINDY_VERSION}"
+    libnullpay_dir="${BUILD_CACHE}/libnullpay/${LIBNULLPAY_VERSION}"
 
-    if [ -e ${libsovtoken_dir}/${target_arch}/libsovtoken.a ]; then
-        echo "${target_arch} libsovtoken architecture already extracted"
-    else
-        mkdir -p ${libsovtoken_dir}/${target_arch}
-        lipo -extract $target_arch ${libsovtoken_dir}/universal/libsovtoken.a -o ${libsovtoken_dir}/${target_arch}/libsovtoken.a
-        ${libtool} -static ${libsovtoken_dir}/${target_arch}/libsovtoken.a -o ${libsovtoken_dir}/${target_arch}/libsovtoken_libtool.a
-        mv ${libsovtoken_dir}/${target_arch}/libsovtoken_libtool.a ${libsovtoken_dir}/${target_arch}/libsovtoken.a
-    fi
+#    if [ -e ${libsovtoken_dir}/${target_arch}/libsovtoken.a ]; then
+#        echo "${target_arch} libsovtoken architecture already extracted"
+#    else
+#        mkdir -p ${libsovtoken_dir}/${target_arch}
+#        lipo -extract $target_arch ${libsovtoken_dir}/universal/libsovtoken.a -o ${libsovtoken_dir}/${target_arch}/libsovtoken.a
+#        ${libtool} -static ${libsovtoken_dir}/${target_arch}/libsovtoken.a -o ${libsovtoken_dir}/${target_arch}/libsovtoken_libtool.a
+#        mv ${libsovtoken_dir}/${target_arch}/libsovtoken_libtool.a ${libsovtoken_dir}/${target_arch}/libsovtoken.a
+#    fi
 
     if [ -e ${libindy_dir}/${target_arch}/libindy.a ]; then
         echo "${target_arch} libindy architecture already extracted"
@@ -92,13 +93,23 @@ do
         mv ${libindy_dir}/${target_arch}/libindy_libtool.a ${libindy_dir}/${target_arch}/libindy.a
     fi
 
+    if [ -e ${libnullpay_dir}/${target_arch}/libnullpay.a ]; then
+        echo "${target_arch} libnullpay architecture already extracted"
+    else
+        mkdir -p ${libnullpay_dir}/${target_arch}
+        lipo -extract $target_arch ${libnullpay_dir}/libnullpay.a -o ${libnullpay_dir}/${target_arch}/libnullpay.a
+        ${libtool} -static ${libnullpay_dir}/${target_arch}/libnullpay.a -o ${libnullpay_dir}/${target_arch}/libnullpay_libtool.a
+        mv ${libnullpay_dir}/${target_arch}/libnullpay_libtool.a ${libnullpay_dir}/${target_arch}/libnullpay.a
+    fi
+
     export OPENSSL_LIB_DIR=$WORK_DIR/OpenSSL-for-iPhone/lib/${target_arch}
     export IOS_SODIUM_LIB=$WORK_DIR/libzmq-ios/libsodium-ios/dist/ios/lib/${target_arch}
     export IOS_ZMQ_LIB=$WORK_DIR/libzmq-ios/dist/ios/lib/${target_arch}
     export LIBINDY_DIR=${libindy_dir}/${target_arch}
-    export LIBSOVTOKEN_DIR=${libsovtoken_dir}/${target_arch}
+    export LIBNULLPAY_DIR=${libnullpay_dir}/${target_arch}
+#    export LIBSOVTOKEN_DIR=${libsovtoken_dir}/${target_arch}
 
-    cargo build --target "${target}" --release --no-default-features --features "ci sovtoken"
+    cargo build --target "${target}" --release --no-default-features --features "ci nullpay"
     to_combine="${to_combine} ./target/${target}/release/libvcx.a"
 
 done
