@@ -21,8 +21,28 @@ pub struct UpdateAgentInfo {
 /// Provision an agent in the agency, populate configuration and wallet for this agent.
 /// NOTE: for asynchronous call use vcx_agent_provision_async
 ///
+/// <daniel>
+/// Because this is a sync function, is it only used in testing and should be deprecated in
+/// production? If yes, say so. If no, then I worry about the quality of the error reporting
+/// mechanism here; we don't have any way to tell the caller what went wrong--only that the
+/// function failed.
+///
+/// What preconditions apply to this function? For example, is it only callable once the
+/// agency has been through some sort of initialization phase?
+///
+/// Which errors are retryable?
+///
+/// Is there anything to protect us from provisioning multiple agents for the same person?
+///
+/// If we have errors that are very serious (e.g., agency isn't functional; no agent can ever
+/// be provisioned), do we have a way to transition the agency into a degraded state? See
+/// this design spec, which we may need to work harder to follow:
+///   https://github.com/evernym/design/blob/master/blueprints/agency/app-lifecycle.md
+/// </daniel>
+///
 /// #Params
 /// config: configuration
+/// <daniel>Need an example of valid config here.</daniel>
 ///
 /// #Returns
 /// Configuration (wallet also populated), on error returns NULL
@@ -49,6 +69,9 @@ pub extern fn vcx_provision_agent(config: *const c_char) -> *mut c_char {
 
 /// Provision an agent in the agency, populate configuration and wallet for this agent.
 /// NOTE: for synchronous call use vcx_provision_agent
+///
+/// <daniel>See my comments on the sync version of the func--especially the part about
+/// needing to communicate errors better.</daniel>
 ///
 /// #Params
 /// command_handle: command handle to map callback to user context.
@@ -92,10 +115,20 @@ pub extern fn vcx_agent_provision_async(command_handle : u32,
 
 /// Update information on the agent (ie, comm method and type)
 ///
+/// <daniel>I assume this function has a precondition that the agent has to have been
+/// successfully provisioned? What happens if the agent has not only been provisioned, but also
+/// decommissioned or deleted?
+///
+/// How is this function protected for concurrency (if agent info is updated at the same
+/// time it is being looked up, do we have a problem? I'm assuming Rust race condition guarantees
+/// tied to object ownership protect us, but I'm just wanting to confirm.
+/// </daniel>
+///
 /// #Params
 /// command_handle: command handle to map callback to user context.
 ///
 /// json: updated configuration
+/// <daniel>Need example of valid JSON here.</daniel>
 ///
 /// cb: Callback that provides configuration or error status
 ///
@@ -146,6 +179,14 @@ pub extern fn vcx_agent_update_info(command_handle: u32,
 /// command_handle: command handle to map callback to user context.
 ///
 /// cb: Callback that provides the fee structure for the sovrin network
+///
+/// <daniel>
+/// We are ignoring the time element here (assuming the question is always, "What are the fees
+/// at the current instant?". We may want to introduce a new param to account for time. Or not.
+/// If we don't, we should clarify that the question is always asked about now.
+///
+/// Need to provide sample string that communicates the fees info in the callback.
+/// </daniel>
 ///
 /// #Returns
 /// Error code as a u32

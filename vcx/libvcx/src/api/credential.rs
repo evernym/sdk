@@ -14,6 +14,15 @@ use utils::threadpool::spawn;
 
 /// Retrieves Payment Info from a Credential
 ///
+/// <daniel>What does a response look like in each of these cases: credential is free; credential
+/// has a one-time payment to issuer; credential wants a payment on each use?
+///
+/// Also, is this a call about payment info for a *credential*, or a *credential definition*? If
+/// it's about a credential, is it one that's already been issued, or about one where issuance
+/// is under active negotiation? If it's a credential under active negotiation, why wouldn't we
+/// be using a credential definition rather than a credential object?
+/// </daniel>
+///
 /// #Params
 /// command_handle: command handle to map callback to user context.
 ///
@@ -27,7 +36,12 @@ use utils::threadpool::spawn;
 #[allow(unused_variables, unused_mut)]
 pub extern fn vcx_credential_get_payment_info(command_handle: u32,
                                                credential_handle: u32,
-                                               cb: Option<extern fn(xcommand_handle: u32, err: u32, *const c_char)>) -> u32 {
+                                               cb: Option<extern fn(xcommand_handle: u32, err: u32,
+                                               // <daniel>This parameter needs to be named. It is also
+                                               // probably the most important param to be documented,
+                                               // by providing some sample JSON? that shows what it
+                                               // might contain.</daniel>
+                                               *const c_char)>) -> u32 {
     check_useful_c_callback!(cb, error::INVALID_OPTION.code_num);
     spawn(move|| {
         match credential::get_payment_information(credential_handle) {
@@ -61,6 +75,13 @@ pub extern fn vcx_credential_get_payment_info(command_handle: u32,
     error::SUCCESS.code_num
 }
 /// Create a Credential object that requests and receives a credential for an institution
+///
+/// <daniel>
+/// Need clarification here about what it means to "create a credential" with an offer.
+/// I'm guessing that we create a credential object to represent a *potential* credential, not an
+/// issued one. Is that true? If so, is this only called by issuers, or could holders use this
+/// function as well? Also, do we call this before or after we have a credential request in hand?
+/// </daniel>
 ///
 /// #Params
 /// command_handle: command handle to map callback to user context.

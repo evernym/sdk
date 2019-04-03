@@ -10,17 +10,37 @@ use error::ToErrorCode;
 use error::connection::ConnectionError;
 use connection::{get_source_id, build_connection, build_connection_with_invite, connect, to_string, get_state, release, is_valid_handle, update_state, from_string, get_invite_details, delete_connection};
 
-/// Delete a Connection object and release its handle
+/// Delete a Connection object and release its handle.
+///
+/// <daniel>
+/// What effect does deleting the Connection object have on the state of the underlying conn that it
+///   manages, as perceived by the two parties? Does it send a signal to the other party that the
+///   conn is being closed? Does it remove the other party's verkey from the local wallet? Does
+///   it cause the verkey for the local DID to be set to 0 so the connection is unrecoverable?
+///
+/// Document the preconditions:
+///   - valid connection_handle
+///   - valid pointer to callback
+///
+/// If this function fails, what cleanup is necessary?
+///
+/// What happens if another thread is using the connection_handle while this function is called?
+///
+/// Is this function idempotent (calling it multiple times on the same handle is harmless)? It looks
+/// like the answer is No (assuming that is_valid_handle() will return false on something that's
+/// already closed). Should it be? Document, either way.
+/// </daniel>
 ///
 /// #Params
-/// command_handle: command handle to map callback to user context.
+/// command_handle: command handle to map callback to user context. <daniel>I suggest calling it a
+///   "caller context" rather than a "user context".</daniel>
 ///
-/// connection_handle: handle of the connection to delete.
+/// connection_handle: handle of the connection to delete. <daniel>Precondition: must be valid.</daniel>
 ///
-/// cb: Callback that provides feedback of the api call.
+/// cb: Callback that provides feedback of the api call. <daniel>Precondition: must be non-null.</daniel>
 ///
 /// #Returns
-/// Error code as a u32
+/// Error code as a u32 <daniel>List common errors that could occur, if we know what they are.</daniel>
 #[no_mangle]
 #[allow(unused_assignments)]
 pub extern fn vcx_connection_delete_connection(command_handle: u32,
@@ -51,17 +71,31 @@ pub extern fn vcx_connection_delete_connection(command_handle: u32,
     error::SUCCESS.code_num
 }
 
-/// -> Create a Connection object that provides a pairwise connection for an institution's user
+/// -> Create a Connection object that provides a pairwise connection for an institution's user.
+///
+/// <daniel_notes>
+/// Need to clarify ordering assumptions -- do we call this as a means of exchanging the connection
+///   request/response, or as a precondition to sending such messages?
+///
+/// If this function fails, what cleanup is necessary?
+///
+/// What happens if I call this function twice on the same source_id?
+/// </daniel_notes>
 ///
 /// #Params
 /// command_handle: command handle to map callback to user context.
 ///
-/// source_id: institution's personal identification for the user
+/// source_id: institution's personal identification for the user <daniel>Need link to some place
+///   that describes this notion in more detail -- why we're not using DIDs, what some examples
+///   of this sort of identifier might be, etc. Precondition: cannot be null. But what other
+///   differences are significant? For example, is whitespace? Case? Unicode normalized vs. unnormalized
+///   form?
+/// </daniel>
 ///
-/// cb: Callback that provides connection handle and error status of request
+/// cb: Callback that provides connection handle and error status of request<daniel>. Precondition: cannot be null.</daniel>
 ///
 /// #Returns
-/// Error code as a u32
+/// Error code as a u32 <daniel>List common errors that could occur, if we know what they are.</daniel>
 #[no_mangle]
 #[allow(unused_assignments)]
 pub extern fn vcx_connection_create(command_handle: u32,
@@ -91,6 +125,19 @@ pub extern fn vcx_connection_create(command_handle: u32,
 }
 
 /// Create a Connection object from the given invite_details that provides a pairwise connection.
+/// <daniel>Need to provide some more commentary here, such as: "This function is typically called
+/// by the party that *receives* a connection invitation, not the first mover that sends the invitation
+/// to begin with. It is the second step in the following workflow: <hyperlink to sequence diagram>."
+///
+/// What can go wrong, and how are such problems handled? For example, if invite_details are
+/// unsupported (bad version, malformed), do we reply with an error to the sender of the invite?
+/// What cleanup do we have to do on error?
+///
+/// Are there any timeouts on callbacks? If not, what happens if we get into an infinite wait for
+/// the connection to complete?
+///
+/// Is a long-running command interruptible by command handle?
+/// </daniel>
 ///
 /// #Params
 /// command_handle: command handle to map callback to user context.
@@ -98,11 +145,12 @@ pub extern fn vcx_connection_create(command_handle: u32,
 /// source_id: institution's personal identification for the user
 ///
 /// invite_details: Provided via the other end of the connection calling "vcx_connection_connect" or "vcx_connection_invite_details"
+/// <daniel>Provide an example here, inline in the comments, so people can see what it looks like.</daniel>
 ///
-/// cb: Callback that provides connection handle and error status of request
+/// cb: Callback that provides connection handle and error status of request<daniel>. Precondition: cannot be null.</daniel>
 ///
 /// #Returns
-/// Error code as a u32
+/// Error code as a u32 <daniel>List common errors that could occur, if we know what they are.</daniel>
 #[no_mangle]
 pub extern fn vcx_connection_create_with_invite(command_handle: u32,
                                                 source_id: *const c_char,
@@ -135,12 +183,24 @@ pub extern fn vcx_connection_create_with_invite(command_handle: u32,
 
 /// Establishes connection between institution and its user
 ///
+/// <daniel>
+/// This function should be renamed, or else we should not claim that it only operates between
+/// institution and user; hopefully, the latter. We want connections to work the same way between
+/// two people, or between institutions and other institutions, etc.
+///
+/// On failure, should I call vcx_connection_delete_connection()? Are (some) errors retryable?
+///
+/// What happens if I call this function on a connection that's already connected?
+/// </daniel>
+///
 /// #Params
 /// command_handle: command handle to map callback to user context.
 ///
 /// connection_handle: Connection handle that identifies connection object
 ///
 /// connection_options: Provides details indicating if the connection will be established by text or QR Code
+///   <daniel>Need to clarify that null/empty string is allowed, and what it will mean if that is used
+///   as the value.</daniel>
 ///
 /// # Examples connection_options -> "{"connection_type":"SMS","phone":"123"}" OR: "{"connection_type":"QR","phone":""}"
 ///
@@ -186,6 +246,9 @@ pub extern fn vcx_connection_connect(command_handle:u32,
                     Err(e) => {
                         warn!("vcx_connection_connect_cb(command_handle: {}, connection_handle: {}, rc: {}, details: {}), source_id: {:?}",
                               command_handle, connection_handle, error_string(0), "null", source_id);
+                        // <daniel>Explain why we would be reporting success here even though we did
+                        // not find invite details. Could be fine that we are--but that raised my
+                        // eyebrows when I read the code.</daniel>
                         cb(command_handle, error::SUCCESS.code_num, ptr::null_mut());
                     },
                 }
